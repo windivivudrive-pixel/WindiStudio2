@@ -1,0 +1,5 @@
+{
+  "name": "WindiStudio v2.0",
+  "description": "A magical AI-powered studio for concept copying and virtual try-on experiences using Gemini 3 Pro Image.",
+  "requestFramePermissions": []
+}
