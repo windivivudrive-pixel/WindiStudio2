@@ -15,7 +15,7 @@ export const ensureApiKey = async (): Promise<boolean> => {
     return true;
   }
   // Fallback if local dev or not embedded in AI Studio, check process.env
-  if (process.env.API_KEY) return true;
+  if (import.meta.env.VITE_GEMINI_API_KEY) return true;
   return false;
 };
 
@@ -64,7 +64,7 @@ export const generateStudioImage = async (
   }
 ): Promise<string[]> => {
 
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
   const results: string[] = [];
 
   // For AI Model consistency (Create Model mode), we store the face of the first result

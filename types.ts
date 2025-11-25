@@ -26,25 +26,49 @@ export enum BackgroundMode {
   EXACT = 'EXACT',
 }
 
+// Map to 'generations' table
 export interface HistoryItem {
-  id: string;
-  thumbnail: string;
-  images: string[]; // Changed from fullImage to support batches
+  id: string; // BigInt converted to string
+  thumbnail: string; // image_url
+  images: string[]; // For UI compatibility (batch logic)
   prompt: string;
-  timestamp: number;
+  timestamp: number; // created_at converted to timestamp
   mode: AppMode;
-  modelName?: string; // Added to track which model generated this
+  modelName?: string; 
+  cost?: number;
+}
+
+// Map to 'profiles' table
+export interface UserProfile {
+  id: string;
+  email: string;
+  full_name: string;
+  avatar_url: string;
+  payment_code: string;
+  credits: number;
+  referred_by_code?: string;
+}
+
+// Map to 'transactions' table
+export interface Transaction {
+  id: number;
+  user_id: string;
+  amount_vnd: number;
+  credits_added: number;
+  type: 'DEPOSIT' | 'BONUS_REF' | 'BONUS_NEW';
+  content: string;
+  status: 'PENDING' | 'SUCCESS' | 'FAILED';
+  created_at: string;
 }
 
 export interface GenerationConfig {
   mode: AppMode;
-  primaryImage: string | null; // Base64
-  secondaryImage: string | null; // Base64
+  primaryImage: string | null; 
+  secondaryImage: string | null;
   userPrompt: string;
   size: ImageSize;
   aspectRatio: AspectRatio;
   numberOfImages: number;
-  // Advanced features
   poseImage?: string | null;
   backgroundImage?: string | null;
   backgroundMode?: BackgroundMode;
