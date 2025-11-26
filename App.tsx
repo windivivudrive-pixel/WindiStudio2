@@ -293,12 +293,31 @@ const App: React.FC = () => {
     if (imageUrl) {
       const isBase64 = imageUrl.startsWith('data:');
       const doDownload = (url: string) => {
+        // Use Web Share API for Mobile (iOS/Android)
+        if (navigator.share && /Mobi|Android|iPhone/i.test(navigator.userAgent)) {
+          fetch(url)
+            .then(res => res.blob())
+            .then(blob => {
+              const file = new File([blob], "image.jpg", { type: "image/jpeg" });
+              if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                navigator.share({
+                  files: [file],
+                  title: 'WindiStudio Image',
+                  text: 'Check out this image I generated with WindiStudio!'
+                }).catch(console.error);
+                return;
+              }
+            });
+          return;
+        }
+
+        // Desktop Fallback
         const link = document.createElement('a');
         link.href = url;
         const sanitizedPrompt = promptText ? promptText.trim().replace(/[^a-zA-Z0-9\s-_]/g, '').replace(/\s+/g, '_').substring(0, 40) : "";
         const modelToUse = modelNameStr || selectedModel;
         const modelTag = modelToUse.includes('flash') ? 'flash' : 'pro';
-        link.download = `windistudio_${modelTag}_${sanitizedPrompt || 'art'}_${Date.now()}_${index}.png`;
+        link.download = `windistudio_${modelTag}_${sanitizedPrompt || 'art'}_${Date.now()}_${index}.jpg`;
         link.target = "_blank";
         document.body.appendChild(link);
         link.click();
@@ -306,8 +325,26 @@ const App: React.FC = () => {
       };
 
       if (isBase64) {
-        doDownload(imageUrl);
+        // Convert Base64 PNG to JPEG for smaller size & compatibility
+        const img = new Image();
+        img.src = imageUrl;
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          canvas.width = img.width;
+          canvas.height = img.height;
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.fillStyle = '#FFFFFF'; // White background for transparency
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(img, 0, 0);
+            const jpegUrl = canvas.toDataURL('image/jpeg', 0.9); // Quality 0.9
+            doDownload(jpegUrl);
+          } else {
+            doDownload(imageUrl); // Fallback
+          }
+        };
       } else {
+        // It's a URL (Supabase), fetch it and convert to blob to force download
         fetch(imageUrl)
           .then(resp => resp.blob())
           .then(blob => {
@@ -315,7 +352,10 @@ const App: React.FC = () => {
             doDownload(blobUrl);
             setTimeout(() => URL.revokeObjectURL(blobUrl), 100);
           })
-          .catch(() => doDownload(imageUrl));
+          .catch((err) => {
+            console.error("Download failed, falling back to direct link", err);
+            doDownload(imageUrl);
+          });
       }
     }
   };
@@ -334,19 +374,47 @@ const App: React.FC = () => {
 
   const handleConfirmPayment = async () => {
     if (userProfile) {
-      // SIMULATION: In a real app, you would verify webhook.
-      // Here we simulate instant success for the demo.
-      const newBalance = userProfile.credits + calculatedCoins;
-      setUserProfile({ ...userProfile, credits: newBalance });
-      await updateUserCredits(userProfile.id, newBalance);
-      await createTransaction(userProfile.id, parseInt(topUpAmount), calculatedCoins, `Nạp tiền: WINDI ${userProfile.payment_code}`);
+      // Here we just set status to PENDING or create a log.
+      // In real world, we wait for webhook.
+      // For simulation, we assume user clicked "I have transferred"
+      alert("Transaction recorded! Please wait a moment for the system to process.");
 
+      await createTransaction(userProfile.id, parseInt(topUpAmount), calculatedCoins, `Nạp tiền: WINDI ${userProfile.payment_code}`);
       setTopUpAmount('');
       setShowTopUpModal(false);
       setTopUpStep('INPUT');
-      alert(`Successfully added ${calculatedCoins} xu!`);
     }
   };
+
+  // Listen for realtime balance updates
+  useEffect(() => {
+    if (userProfile) {
+      const channel = supabase
+        .channel('balance-updates')
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'profiles',
+            filter: `id=eq.${userProfile.id}`
+          },
+          (payload) => {
+            const newProfile = payload.new as UserProfile;
+            if (newProfile.credits > userProfile.credits) {
+              const added = newProfile.credits - userProfile.credits;
+              alert(`Received ${added} xu successfully!`);
+            }
+            setUserProfile(newProfile);
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    }
+  }, [userProfile?.id]); // Re-sub if ID changes (rare)
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -445,7 +513,7 @@ const App: React.FC = () => {
                   </div>
                 </div>
                 <div className="absolute top-2 left-2 px-2 py-1 rounded-md bg-black/40 backdrop-blur-md border border-white/10 text-[10px] font-bold text-gray-300 uppercase">
-                  {item.modelName?.replace('gemini-', '').replace('-image', '') || 'AI'}
+                  {item.modelName ? (item.modelName.includes('flash') ? 'AIR' : 'PRO') : 'AI'}
                 </div>
               </div>
               <div className="p-4 flex-1 flex flex-col gap-2">

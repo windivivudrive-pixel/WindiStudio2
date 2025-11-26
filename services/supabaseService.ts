@@ -1,7 +1,7 @@
 
 import { supabase } from './supabaseClient';
 import { HistoryItem, UserProfile, AppMode, Transaction } from '../types';
-import { base64ToBlob } from '../utils/imageUtils';
+import { base64ToBlob, compressImage } from '../utils/imageUtils';
 
 // --- AUTHENTICATION ---
 
@@ -115,11 +115,12 @@ export const createTransaction = async (userId: string, amountVnd: number, credi
 
 export const uploadImageToStorage = async (base64Data: string, fileName: string): Promise<string | null> => {
   try {
-    const blob = await base64ToBlob(base64Data);
+    // Compress to JPEG (80% quality)
+    const blob = await compressImage(base64Data, 0.8);
     const { data, error } = await supabase.storage
       .from(import.meta.env.VITE_SUPABASE_BUCKET || 'windi-images')
       .upload(fileName, blob, {
-        contentType: 'image/png',
+        contentType: 'image/jpeg',
         upsert: true
       });
 
@@ -150,7 +151,7 @@ export const saveGenerationToDb = async (
   // 1. Upload Images
   for (let i = 0; i < item.images.length; i++) {
     const base64 = item.images[i];
-    const fileName = `${userId}/${item.timestamp}_${i}.png`;
+    const fileName = `${userId}/${item.timestamp}_${i}.jpg`;
     const publicUrl = await uploadImageToStorage(base64, fileName);
     if (publicUrl) uploadedUrls.push(publicUrl);
   }
