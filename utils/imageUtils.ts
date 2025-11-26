@@ -6,7 +6,7 @@ export const base64ToBlob = async (base64Data: string): Promise<Blob> => {
   return blob;
 };
 
-export const compressImage = async (base64Data: string, quality = 0.8): Promise<Blob> => {
+export const compressImage = async (base64Data: string, quality = 1.0): Promise<Blob> => {
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.src = base64Data;

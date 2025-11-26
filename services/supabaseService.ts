@@ -2,7 +2,7 @@
 import { supabase } from './supabaseClient';
 import { HistoryItem, UserProfile, AppMode, Transaction } from '../types';
 import { base64ToBlob, compressImage } from '../utils/imageUtils';
-import { uploadToR2 } from './r2Service';
+import { uploadToR2, deleteFromR2 } from './r2Service';
 
 // --- AUTHENTICATION ---
 
@@ -116,8 +116,8 @@ export const createTransaction = async (userId: string, amountVnd: number, credi
 
 export const uploadImageToStorage = async (base64Data: string, fileName: string): Promise<string | null> => {
   try {
-    // Compress to JPEG (80% quality)
-    const blob = await compressImage(base64Data, 0.8);
+    // Compress to JPEG (100% quality - no compression)
+    const blob = await compressImage(base64Data, 1.0);
 
     // Upload to Cloudflare R2
     const publicUrl = await uploadToR2(blob, fileName, 'image/jpeg');
@@ -250,6 +250,29 @@ export const deleteHistoryFromDb = async (id: string) => {
         if (storageError) {
           console.warn("Failed to delete image from storage", storageError);
         }
+      }
+    } else {
+      // R2 Deletion Logic
+      // Try to parse the URL to get the key
+      try {
+        const publicDomain = import.meta.env.VITE_R2_PUBLIC_DOMAIN;
+        let filePath = '';
+
+        if (publicDomain && record.image_url.includes(publicDomain)) {
+          // If URL matches configured domain, strip domain
+          const domain = publicDomain.replace(/\/$/, '');
+          filePath = record.image_url.replace(`${domain}/`, '');
+        } else {
+          // Fallback: use URL parsing
+          const url = new URL(record.image_url);
+          filePath = url.pathname.substring(1); // Remove leading slash
+        }
+
+        if (filePath) {
+          await deleteFromR2(filePath);
+        }
+      } catch (e) {
+        console.warn("Failed to delete from R2", e);
       }
     }
   }

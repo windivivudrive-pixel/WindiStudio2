@@ -5,6 +5,7 @@ import JSZip from 'jszip';
 import { AppMode, ImageSize, AspectRatio, HistoryItem, UserProfile, Transaction } from './types';
 import { ImageUploader } from './components/ImageUploader';
 import { ImageViewer } from './components/ImageViewer';
+import { AnimatedLogo } from './components/AnimatedLogo';
 import { generateStudioImage, ensureApiKey } from './services/geminiService';
 import {
   signInWithGoogle,
@@ -337,7 +338,7 @@ const App: React.FC = () => {
             ctx.fillStyle = '#FFFFFF'; // White background for transparency
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             ctx.drawImage(img, 0, 0);
-            const jpegUrl = canvas.toDataURL('image/jpeg', 0.9); // Quality 0.9
+            const jpegUrl = canvas.toDataURL('image/jpeg', 1.0); // Quality 1.0 (Max)
             doDownload(jpegUrl);
           } else {
             doDownload(imageUrl); // Fallback
@@ -744,9 +745,7 @@ const App: React.FC = () => {
       {/* Header */}
       <nav className="w-full h-16 lg:h-20 px-6 lg:px-8 flex justify-between items-center shrink-0 bg-black/20 backdrop-blur-xl border-b border-white/5 z-20 sticky top-0 lg:static">
         <div className="relative flex items-center gap-3 cursor-pointer" onClick={() => setCurrentView('STUDIO')}>
-          <div className="w-8 h-8 lg:w-10 lg:h-10 rounded-xl bg-gradient-to-br from-mystic-accent to-fuchsia-600 flex items-center justify-center shadow-glow animate-float">
-            <Wand2 className="text-white w-4 h-4 lg:w-5 lg:h-5" />
-          </div>
+          <AnimatedLogo className="w-10 h-10 lg:w-12 lg:h-12" />
           <div>
             <h1 className="text-lg lg:text-xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white via-indigo-100 to-gray-400 drop-shadow-sm">WindiStudio</h1>
             <p className="text-[8px] lg:text-[9px] text-indigo-300 uppercase tracking-widest font-semibold">Supabase Connected</p>

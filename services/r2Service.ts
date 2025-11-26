@@ -1,4 +1,4 @@
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
 
 const ACCOUNT_ID = import.meta.env.VITE_R2_ACCOUNT_ID;
 const ACCESS_KEY_ID = import.meta.env.VITE_R2_ACCESS_KEY_ID;
@@ -43,5 +43,25 @@ export const uploadToR2 = async (blob: Blob, fileName: string, contentType: stri
     } catch (error) {
         console.error("Error uploading to R2:", error);
         return null;
+    }
+};
+
+export const deleteFromR2 = async (fileName: string): Promise<boolean> => {
+    if (!ACCOUNT_ID || !ACCESS_KEY_ID || !SECRET_ACCESS_KEY) {
+        console.error("R2 Credentials missing");
+        return false;
+    }
+
+    try {
+        const command = new DeleteObjectCommand({
+            Bucket: BUCKET_NAME,
+            Key: fileName,
+        });
+
+        await R2.send(command);
+        return true;
+    } catch (error) {
+        console.error("Error deleting from R2:", error);
+        return false;
     }
 };
