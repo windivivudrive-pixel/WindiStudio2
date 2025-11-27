@@ -6,6 +6,7 @@ import { AppMode, ImageSize, AspectRatio, HistoryItem, UserProfile, Transaction 
 import { ImageUploader } from './components/ImageUploader';
 import { ImageViewer } from './components/ImageViewer';
 import { AnimatedLogo } from './components/AnimatedLogo';
+import { PrivacyPolicy } from './components/PrivacyPolicy';
 import { generateStudioImage, ensureApiKey } from './services/geminiService';
 import {
   signInWithGoogle,
@@ -30,7 +31,7 @@ const BANK_CONFIG = {
 
 const App: React.FC = () => {
   // Navigation State
-  const [currentView, setCurrentView] = useState<'STUDIO' | 'HISTORY' | 'PAYMENT'>('STUDIO');
+  const [currentView, setCurrentView] = useState<'STUDIO' | 'HISTORY' | 'PAYMENT' | 'PRIVACY'>('STUDIO');
 
   // Main State
   const [mode, setMode] = useState<AppMode>(AppMode.CREATIVE_POSE);
@@ -100,6 +101,14 @@ const App: React.FC = () => {
     });
 
     return () => subscription.unsubscribe();
+  }, []);
+
+  // Check URL for privacy policy
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('view') === 'privacy') {
+      setCurrentView('PRIVACY');
+    }
   }, []);
 
   const initializeUser = async (user: any) => {
@@ -791,6 +800,20 @@ const App: React.FC = () => {
       {currentView === 'STUDIO' && renderStudio()}
       {currentView === 'HISTORY' && renderHistoryPage()}
       {currentView === 'PAYMENT' && renderPaymentPage()}
+      {currentView === 'PRIVACY' && <PrivacyPolicy onBack={() => { setCurrentView('STUDIO'); window.history.pushState({}, '', window.location.pathname); }} />}
+
+      {/* Privacy Policy Link (Static Footer) */}
+      {currentView !== 'PRIVACY' && (
+        <div className="w-full py-6 mt-auto flex flex-col items-center gap-1 z-10 relative">
+          <button
+            onClick={() => { setCurrentView('PRIVACY'); window.history.pushState({}, '', '?view=privacy'); }}
+            className="text-[10px] text-gray-500 hover:text-gray-300 transition-colors uppercase tracking-widest font-bold px-2 py-1 rounded"
+          >
+            Chính Sách Bảo Mật
+          </button>
+          <span className="text-[9px] text-gray-700 font-medium tracking-wide">Copyright ©2025</span>
+        </div>
+      )}
 
       {/* LOGIN/ACCOUNT MODAL */}
       {showLoginModal && (
@@ -798,21 +821,12 @@ const App: React.FC = () => {
           <div className="relative w-full max-w-sm glass-panel rounded-3xl overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-300">
             <button onClick={() => setShowLoginModal(false)} className="absolute top-4 right-4 text-gray-400 hover:text-white"><X size={20} /></button>
 
+
+
             <div className="p-8 flex flex-col items-center gap-6">
-              <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-mystic-accent to-indigo-500 p-1 shadow-glow">
-                <div className="w-full h-full rounded-full bg-black/40 flex items-center justify-center overflow-hidden">
-                  {userProfile?.avatar_url ? <img src={userProfile.avatar_url} alt="Avt" /> : <User size={32} className="text-white" />}
-                </div>
-              </div>
-
-              <div className="text-center space-y-1">
-                <h2 className="text-xl font-bold text-white">Account</h2>
-                <p className="text-gray-400 text-xs">Manage your studio identity</p>
-              </div>
-
               {!session ? (
                 <>
-                  <div className="bg-[#1a1625] border border-white/10 p-8 rounded-[32px] max-w-sm w-full text-center relative overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300">
+                  <div className="bg-[#1a1625] border border-white/10 p-5 rounded-[32px] max-w-sm w-full text-center relative overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300">
                     <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-mystic-accent to-transparent" />
                     <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-6 border border-white/10 shadow-glass-inset">
                       <User size={32} className="text-mystic-accent" />
@@ -925,7 +939,8 @@ const App: React.FC = () => {
             </div>
           </div>
         </div>
-      )}
+      )
+      }
 
       {/* TOP UP MODAL (2-STEP) */}
       {showTopUpModal && (
