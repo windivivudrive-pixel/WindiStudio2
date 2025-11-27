@@ -88,6 +88,31 @@ export const updateUserCredits = async (userId: string, newBalance: number) => {
   if (error) console.error("Failed to update credits", error);
 };
 
+export const redeemPromoCode = async (code: string, userId: string) => {
+  console.log(`Attempting to redeem code: ${code} for user: ${userId}`);
+
+  if (userId === 'dev-user') {
+    // Mock redemption for dev user
+    if (code === 'TEST100') return { success: true, message: 'Mock Success! +100 Credits', new_balance: 10100, reward: 100 };
+    return { success: false, message: 'Invalid Mock Code' };
+  }
+
+  const { data, error } = await supabase.rpc('redeem_promo_code', {
+    code_input: code,
+    user_id_input: userId
+  });
+
+  console.log("RPC Response - Data:", data);
+  console.log("RPC Response - Error:", error);
+
+  if (error) {
+    console.error("Promo code error details:", error);
+    return { success: false, message: `System Error: ${error.message}` };
+  }
+
+  return data; // Returns JSON object from SQL function
+};
+
 // --- TRANSACTIONS ---
 
 export const fetchTransactions = async (userId: string): Promise<Transaction[]> => {

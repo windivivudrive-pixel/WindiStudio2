@@ -71,6 +71,17 @@ const App: React.FC = () => {
   const [calculatedCoins, setCalculatedCoins] = useState(0);
   const [qrUrl, setQrUrl] = useState('');
 
+  // Toast Notification State
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+
+  // Auto-dismiss toast
+  useEffect(() => {
+    if (toast) {
+      const timer = setTimeout(() => setToast(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
+
   // Refs
   const outputRef = useRef<HTMLDivElement>(null);
 
@@ -146,7 +157,7 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const numericAmount = parseInt(topUpAmount.replace(/\D/g, '') || '0');
-    setCalculatedCoins(Math.floor(numericAmount / 5000));
+    setCalculatedCoins(Math.floor(numericAmount / 1000));
   }, [topUpAmount]);
 
   const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -552,11 +563,11 @@ const App: React.FC = () => {
         {/* LEFT PANEL */}
         <div className="w-full lg:w-[380px] xl:w-[420px] flex flex-col border-b lg:border-b-0 lg:border-r border-white/5 bg-black/10 backdrop-blur-sm z-10 h-auto lg:h-full shrink-0">
           <div className="lg:flex-1 lg:overflow-y-auto custom-scrollbar p-6 space-y-6">
-            <div className="glass-panel p-2 rounded-[24px] grid grid-cols-4 gap-1.5 shrink-0">
+            <div className="glass-panel p-2 rounded-[24px] grid grid-cols-3 gap-1.5 shrink-0">
               <ModeButton active={mode === AppMode.CREATIVE_POSE} icon={Camera} label="Pose" onClick={() => setMode(AppMode.CREATIVE_POSE)} />
               <ModeButton active={mode === AppMode.VIRTUAL_TRY_ON} icon={Shirt} label="Try-On" onClick={() => setMode(AppMode.VIRTUAL_TRY_ON)} />
               <ModeButton active={mode === AppMode.CREATE_MODEL} icon={User} label="Model" onClick={() => setMode(AppMode.CREATE_MODEL)} />
-              <ModeButton active={mode === AppMode.COPY_CONCEPT} icon={Copy} label="Concept" onClick={() => setMode(AppMode.COPY_CONCEPT)} />
+              {/* <ModeButton active={mode === AppMode.COPY_CONCEPT} icon={Copy} label="Concept" onClick={() => setMode(AppMode.COPY_CONCEPT)} /> */}
             </div>
 
             <button onClick={handleGenerate} disabled={isGenerateDisabled} className={`w-full py-4 rounded-[20px] font-bold text-base tracking-wide text-white shadow-liquid shrink-0 liquid-btn-style transition-all duration-500 transform ${isGenerateDisabled ? 'opacity-50 grayscale cursor-not-allowed' : 'hover:scale-[1.01] active:scale-[0.99]'}`}>
@@ -694,7 +705,10 @@ const App: React.FC = () => {
         {/* RIGHT PANEL - SIDEBAR HISTORY */}
         <div className={`fixed inset-0 lg:static lg:inset-auto z-40 bg-black/95 lg:bg-black/10 lg:backdrop-blur-sm lg:border-l border-white/10 flex flex-col w-full lg:w-[280px] xl:w-[320px] transition-transform duration-300 shrink-0 lg:h-[calc(100vh-80px)] lg:overflow-hidden ${showMobileHistory ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'}`}>
           <div className="p-4 lg:p-5 border-b border-white/5 flex justify-between items-center bg-black/20 lg:bg-transparent shrink-0">
-            <h2 className="text-sm font-bold flex items-center gap-2 text-white uppercase tracking-widest"><History size={14} className="text-mystic-accent" />Recent</h2>
+            <button onClick={() => setCurrentView('HISTORY')} className="text-xs font-bold flex items-center gap-2 text-white uppercase tracking-widest cursor-pointer transition-all bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg px-4 py-2 shadow-sm hover:border-mystic-accent/50 hover:shadow-glow group">
+              <History size={14} className="text-mystic-accent group-hover:scale-110 transition-transform" />
+              Recent
+            </button>
             <div className="flex items-center gap-1">
               <button onClick={() => setShowMobileHistory(false)} className="lg:hidden p-1.5 hover:bg-white/10 rounded-md text-gray-400 hover:text-white transition-colors"><XCircle size={18} /></button>
             </div>
@@ -739,6 +753,16 @@ const App: React.FC = () => {
 
       <div className="fixed top-[-20%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-indigo-900/10 blur-3xl pointer-events-none" />
       <div className="fixed bottom-[-20%] right-[-10%] w-[50vw] h-[50vw] rounded-full bg-fuchsia-900/10 blur-3xl pointer-events-none" />
+
+      {/* Toast Notification */}
+      {toast && (
+        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[100] animate-in slide-in-from-top-4 fade-in duration-300">
+          <div className={`glass-panel px-6 py-3 rounded-full border flex items-center gap-3 shadow-2xl ${toast.type === 'success' ? 'border-green-500/30 bg-green-500/10 text-green-200' : 'border-red-500/30 bg-red-500/10 text-red-200'}`}>
+            {toast.type === 'success' ? <CheckCircle size={18} className="text-green-400" /> : <AlertCircle size={18} className="text-red-400" />}
+            <span className="text-sm font-bold tracking-wide">{toast.message}</span>
+          </div>
+        </div>
+      )}
 
       {/* Header */}
       <nav className="w-full h-16 lg:h-20 px-6 lg:px-8 flex justify-between items-center shrink-0 bg-black/20 backdrop-blur-xl border-b border-white/5 z-20 sticky top-0 lg:static">
@@ -852,6 +876,52 @@ const App: React.FC = () => {
                     </div>
                   </div>
 
+                  {/* Promo Code Section */}
+                  <div className="bg-white/5 border border-white/10 rounded-xl p-1 flex gap-2">
+                    <input
+                      type="text"
+                      placeholder="Enter Promo Code"
+                      className="flex-1 bg-transparent px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none uppercase"
+                      onKeyDown={async (e) => {
+                        if (e.key === 'Enter') {
+                          const code = e.currentTarget.value.trim().toUpperCase();
+                          if (!code) return;
+                          const btn = e.currentTarget.nextElementSibling as HTMLButtonElement;
+                          btn.click();
+                        }
+                      }}
+                    />
+                    <button
+                      onClick={async (e) => {
+                        const input = e.currentTarget.previousElementSibling as HTMLInputElement;
+                        const code = input.value.trim().toUpperCase();
+                        if (!code || !userProfile) return;
+
+                        const btn = e.currentTarget;
+                        const originalText = btn.innerText;
+                        btn.innerText = '...';
+                        btn.disabled = true;
+
+                        const { redeemPromoCode } = await import('./services/supabaseService');
+                        const result = await redeemPromoCode(code, userProfile.id);
+
+                        if (result.success) {
+                          setToast({ message: result.message, type: 'success' });
+                          setUserProfile(prev => prev ? ({ ...prev, credits: result.new_balance }) : null);
+                          input.value = '';
+                        } else {
+                          setToast({ message: result.message, type: 'error' });
+                        }
+
+                        btn.innerText = originalText;
+                        btn.disabled = false;
+                      }}
+                      className="bg-mystic-accent hover:bg-mystic-accent/80 text-white text-xs font-bold px-4 rounded-lg transition-colors"
+                    >
+                      REDEEM
+                    </button>
+                  </div>
+
                   <div className="grid grid-cols-2 gap-3">
                     <button onClick={() => { setCurrentView('HISTORY'); setShowLoginModal(false); }} className="p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 flex flex-col items-center gap-2 transition-all">
                       <ImageIcon size={20} className="text-mystic-accent" />
@@ -883,7 +953,7 @@ const App: React.FC = () => {
               {/* Header */}
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center shadow-lg"><Coins size={20} className="text-black" /></div>
-                <div><h2 className="text-lg font-bold text-white">Top Up Credits</h2><p className="text-[10px] text-gray-400 uppercase tracking-wider font-bold">1 XU = 5000 VND</p></div>
+                <div><h2 className="text-lg font-bold text-white">Top Up Credits</h2><p className="text-[10px] text-gray-400 uppercase tracking-wider font-bold">1 XU = 1000 VND</p></div>
               </div>
 
               {/* STEP 1: INPUT */}
@@ -893,7 +963,7 @@ const App: React.FC = () => {
                     <label className="text-xs font-semibold text-gray-400 ml-1">Amount (VND)</label>
                     <div className="relative">
                       <CreditCard className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" size={16} />
-                      <input type="number" value={topUpAmount} onChange={(e) => setTopUpAmount(e.target.value)} placeholder="min 10,000" className="w-full bg-black/40 border border-white/10 rounded-xl py-3 pl-12 pr-4 text-white focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500/50 transition-all" />
+                      <input type="number" value={topUpAmount} onChange={(e) => setTopUpAmount(e.target.value)} placeholder="min 50,000" className="w-full bg-black/40 border border-white/10 rounded-xl py-3 pl-12 pr-4 text-white focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500/50 transition-all" />
                     </div>
                   </div>
                   <div className="p-4 rounded-xl bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border border-yellow-500/20 flex justify-between items-center">

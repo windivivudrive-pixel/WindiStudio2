@@ -52,7 +52,7 @@ app.post('/', async (req, res) => {
         }
 
         // Convert VND to credits
-        const creditsToAdd = Math.floor(amount / 5000)
+        const creditsToAdd = Math.floor(amount / 1000)
         if (creditsToAdd <= 0) {
             return res.status(200).json({ message: "Amount too small" })
         }
