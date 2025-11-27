@@ -7,16 +7,10 @@ import { uploadToR2, deleteFromR2 } from './r2Service';
 // --- AUTHENTICATION ---
 
 export const signInWithGoogle = async () => {
-  // Thêm "/auth/callback" vào sau origin
-  // Kết quả sẽ là: http://192.168.2.228:3000/auth/callback
-  const redirectUrl = `${window.location.origin}/auth/callback`;
-
-  console.log("Initiating Google Login with redirect URL:", redirectUrl);
-
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: redirectUrl // Gửi đường dẫn đầy đủ
+      redirectTo: window.location.origin // Redirect to root (SPA handles it)
     }
   });
   return { data, error };
