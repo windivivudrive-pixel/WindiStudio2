@@ -290,73 +290,67 @@ const App: React.FC = () => {
     }
   };
 
-  const downloadImage = (imageUrl: string, index = 0, promptText = "", modelNameStr = "") => {
-    if (imageUrl) {
-      const isBase64 = imageUrl.startsWith('data:');
-      const doDownload = (url: string) => {
-        // Use Web Share API for Mobile (iOS/Android)
-        if (navigator.share && /Mobi|Android|iPhone/i.test(navigator.userAgent)) {
-          fetch(url)
-            .then(res => res.blob())
-            .then(blob => {
-              const file = new File([blob], "image.jpg", { type: "image/jpeg" });
-              if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                navigator.share({
-                  files: [file],
-                  title: 'WindiStudio Image',
-                  text: 'Check out this image I generated with WindiStudio!'
-                }).catch(console.error);
-                return;
-              }
+  const downloadImage = async (imageUrl: string, index = 0, promptText = "", modelNameStr = "") => {
+    if (!imageUrl) return;
+
+    // Helper to trigger download via link (Desktop or Fallback)
+    const triggerDownloadLink = (url: string) => {
+      const link = document.createElement('a');
+      link.href = url;
+      const sanitizedPrompt = promptText ? promptText.trim().replace(/[^a-zA-Z0-9\s-_]/g, '').replace(/\s+/g, '_').substring(0, 40) : "";
+      const modelToUse = modelNameStr || selectedModel;
+      const modelTag = modelToUse.includes('flash') ? 'flash' : 'pro';
+      link.download = `windistudio_${modelTag}_${sanitizedPrompt || 'art'}_${Date.now()}_${index}.jpg`;
+      link.target = "_blank";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    };
+
+    // Helper to handle Blob (Share or Download)
+    const handleBlob = async (blob: Blob) => {
+      // Try Web Share API first for Mobile
+      if (navigator.share && /Mobi|Android|iPhone/i.test(navigator.userAgent)) {
+        try {
+          const file = new File([blob], "image.jpg", { type: "image/jpeg" });
+          if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            await navigator.share({
+              files: [file],
+              title: 'WindiStudio Image',
+              text: 'Check out this image I generated with WindiStudio!'
             });
-          return;
-        }
-
-        // Desktop Fallback
-        const link = document.createElement('a');
-        link.href = url;
-        const sanitizedPrompt = promptText ? promptText.trim().replace(/[^a-zA-Z0-9\s-_]/g, '').replace(/\s+/g, '_').substring(0, 40) : "";
-        const modelToUse = modelNameStr || selectedModel;
-        const modelTag = modelToUse.includes('flash') ? 'flash' : 'pro';
-        link.download = `windistudio_${modelTag}_${sanitizedPrompt || 'art'}_${Date.now()}_${index}.jpg`;
-        link.target = "_blank";
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      };
-
-      if (isBase64) {
-        // Convert Base64 PNG to JPEG for smaller size & compatibility
-        const img = new Image();
-        img.src = imageUrl;
-        img.onload = () => {
-          const canvas = document.createElement('canvas');
-          canvas.width = img.width;
-          canvas.height = img.height;
-          const ctx = canvas.getContext('2d');
-          if (ctx) {
-            ctx.fillStyle = '#FFFFFF'; // White background for transparency
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.drawImage(img, 0, 0);
-            const jpegUrl = canvas.toDataURL('image/jpeg', 1.0); // Quality 1.0 (Max)
-            doDownload(jpegUrl);
-          } else {
-            doDownload(imageUrl); // Fallback
+            return; // Share successful
           }
-        };
-      } else {
-        // It's a URL (Supabase), fetch it and convert to blob to force download
-        fetch(imageUrl)
-          .then(resp => resp.blob())
-          .then(blob => {
-            const blobUrl = URL.createObjectURL(blob);
-            doDownload(blobUrl);
-            setTimeout(() => URL.revokeObjectURL(blobUrl), 100);
-          })
-          .catch((err) => {
-            console.error("Download failed, falling back to direct link", err);
-            doDownload(imageUrl);
-          });
+        } catch (err) {
+          console.warn("Share failed or cancelled, falling back to download", err);
+          // Fallback to download if share fails
+        }
+      }
+
+      // Fallback: Create Blob URL and download
+      const blobUrl = URL.createObjectURL(blob);
+      triggerDownloadLink(blobUrl);
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 100);
+    };
+
+    const isBase64 = imageUrl.startsWith('data:');
+
+    if (isBase64) {
+      // Convert Base64 to Blob
+      fetch(imageUrl)
+        .then(res => res.blob())
+        .then(handleBlob);
+    } else {
+      // Fetch URL (R2)
+      try {
+        const resp = await fetch(imageUrl, { mode: 'cors', cache: 'no-cache' });
+        if (!resp.ok) throw new Error(`Fetch failed: ${resp.status}`);
+        const blob = await resp.blob();
+        handleBlob(blob);
+      } catch (e) {
+        console.error("Download failed (CORS?), falling back to direct link", e);
+        // Final fallback: just open the URL
+        triggerDownloadLink(imageUrl);
       }
     }
   };
@@ -507,10 +501,10 @@ const App: React.FC = () => {
             <div key={item.id} className="glass-panel rounded-[24px] overflow-hidden group flex flex-col">
               <div className="relative aspect-[3/4] bg-black overflow-hidden">
                 <img src={item.thumbnail} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-4">
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-4 pointer-events-none">
                   <div className="flex justify-end gap-2">
-                    <button onClick={(e) => deleteHistoryItem(item.id, e)} className="p-2 rounded-full bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white transition-all"><Trash2 size={16} /></button>
-                    <button onClick={() => downloadImage(item.thumbnail, 0, item.prompt, item.modelName)} className="p-2 rounded-full bg-white/20 text-white hover:bg-mystic-accent transition-all"><Download size={16} /></button>
+                    <button onClick={(e) => deleteHistoryItem(item.id, e)} className="p-2 rounded-full bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white transition-all pointer-events-auto"><Trash2 size={16} /></button>
+                    <button onClick={() => downloadImage(item.thumbnail, 0, item.prompt, item.modelName)} className="p-2 rounded-full bg-white/20 text-white hover:bg-mystic-accent transition-all pointer-events-auto"><Download size={16} /></button>
                   </div>
                 </div>
                 <div className="absolute top-2 left-2 px-2 py-1 rounded-md bg-black/40 backdrop-blur-md border border-white/10 text-[10px] font-bold text-gray-300 uppercase">
@@ -672,6 +666,10 @@ const App: React.FC = () => {
                     <button onClick={() => downloadImage(results[selectedResultIndex], selectedResultIndex, prompt, selectedModel)} className="glass-button w-12 h-12 rounded-full flex items-center justify-center text-white hover:text-mystic-accent transition-all group shadow-glass" title="Save Image"><Download size={22} className="group-hover:translate-y-0.5 transition-transform" /></button>
                     {mode === AppMode.CREATIVE_POSE && (<button onClick={handleNewPose} className="glass-button w-12 h-12 rounded-full flex items-center justify-center text-white hover:text-pink-400 transition-all shadow-glass" title="Use as Pose"><Bone size={22} /></button>)}
                   </div>
+                  {/* Mobile Hint */}
+                  <div className="lg:hidden absolute bottom-4 left-0 right-0 text-center pointer-events-none z-20">
+                    <span className="text-[10px] text-white/50 bg-black/40 px-3 py-1 rounded-full backdrop-blur-sm">Long press image to save to Photos</span>
+                  </div>
                 </div>
                 {results.length > 1 && (
                   <div className="absolute right-4 top-1/2 -translate-y-1/2 z-30 p-2 bg-black/40 backdrop-blur-xl rounded-2xl border border-white/10 flex flex-col gap-3 shadow-2xl">
@@ -713,10 +711,10 @@ const App: React.FC = () => {
                       <img src={item.thumbnail} alt="" className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity duration-500" />
                       <div className="absolute top-2 right-2 p-1 rounded bg-black/50 text-[8px] text-white font-bold pointer-events-none">{item.images.length}</div>
                       {/* Sidebar Actions Overlay */}
-                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-between p-2">
+                      <div className="absolute inset-0 bg-black/40 flex flex-col justify-between p-2 pointer-events-none">
                         <div className="flex justify-between w-full">
-                          <button onClick={(e) => deleteHistoryItem(item.id, e)} className="p-1.5 rounded-full bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white transition-all backdrop-blur-sm"><Trash2 size={12} /></button>
-                          <button onClick={(e) => { e.stopPropagation(); downloadImage(item.thumbnail, 0, item.prompt, item.modelName); }} className="p-1.5 rounded-full bg-white/20 text-white hover:bg-mystic-accent transition-all backdrop-blur-sm"><Download size={12} /></button>
+                          <button onClick={(e) => deleteHistoryItem(item.id, e)} className="p-1.5 rounded-full bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white transition-all backdrop-blur-sm pointer-events-auto"><Trash2 size={12} /></button>
+                          <button onClick={(e) => { e.stopPropagation(); downloadImage(item.thumbnail, 0, item.prompt, item.modelName); }} className="p-1.5 rounded-full bg-white/20 text-white hover:bg-mystic-accent transition-all backdrop-blur-sm pointer-events-auto"><Download size={12} /></button>
                         </div>
                       </div>
                     </div>
@@ -805,10 +803,43 @@ const App: React.FC = () => {
               </div>
 
               {!session ? (
-                <button onClick={handleLogin} className="w-full py-3 rounded-xl bg-white text-black font-bold flex items-center justify-center gap-2 hover:bg-gray-100 transition-colors">
-                  <img src="https://www.svgrepo.com/show/475656/google-color.svg" className="w-5 h-5" alt="Google" />
-                  Login with Google
-                </button>
+                <>
+                  <div className="bg-[#1a1625] border border-white/10 p-8 rounded-[32px] max-w-sm w-full text-center relative overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300">
+                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-mystic-accent to-transparent" />
+                    <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-6 border border-white/10 shadow-glass-inset">
+                      <User size={32} className="text-mystic-accent" />
+                    </div>
+                    <h2 className="text-2xl font-bold text-white mb-2">Welcome Back</h2>
+                    <p className="text-sm text-gray-400 mb-8">Sign in to sync your gallery and credits across devices.</p>
+
+                    <button onClick={handleLogin} className="w-full py-3.5 rounded-xl bg-white text-black font-bold text-sm tracking-wide hover:scale-[1.02] active:scale-[0.98] transition-all shadow-glow flex items-center justify-center gap-3">
+                      <img src="https://www.google.com/favicon.ico" alt="G" className="w-4 h-4" />
+                      Continue with Google
+                    </button>
+
+                    {/* Dev Login Button */}
+                    {import.meta.env.DEV && (
+                      <button onClick={() => {
+                        const mockUser = { id: 'dev-user', email: 'dev@windistudio.com' };
+                        setSession({ user: mockUser });
+                        setUserProfile({
+                          id: 'dev-user',
+                          email: 'dev@windistudio.com',
+                          full_name: 'Dev User',
+                          avatar_url: '',
+                          payment_code: 'DEV123',
+                          credits: 10000
+                        });
+                        setShowLoginModal(false);
+                      }} className="w-full mt-3 py-3.5 rounded-xl bg-gray-800 text-white font-bold text-sm tracking-wide hover:bg-gray-700 transition-all flex items-center justify-center gap-3 border border-white/10">
+                        <code className="text-xs">{'<DEV />'}</code>
+                        Mock Login
+                      </button>
+                    )}
+
+                    <button onClick={() => setShowLoginModal(false)} className="mt-4 text-xs text-gray-500 hover:text-white transition-colors">Cancel</button>
+                  </div>
+                </>
               ) : (
                 <div className="w-full space-y-4">
                   <div className="flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/10">
