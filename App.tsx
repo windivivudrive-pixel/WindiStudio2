@@ -5,6 +5,7 @@ import JSZip from 'jszip';
 import { AppMode, ImageSize, AspectRatio, HistoryItem, UserProfile, Transaction } from './types';
 import { ImageUploader } from './components/ImageUploader';
 import { ImageViewer } from './components/ImageViewer';
+import { AnimatedLogo } from './components/AnimatedLogo';
 import { generateStudioImage, ensureApiKey } from './services/geminiService';
 import {
   signInWithGoogle,
@@ -293,12 +294,31 @@ const App: React.FC = () => {
     if (imageUrl) {
       const isBase64 = imageUrl.startsWith('data:');
       const doDownload = (url: string) => {
+        // Use Web Share API for Mobile (iOS/Android)
+        if (navigator.share && /Mobi|Android|iPhone/i.test(navigator.userAgent)) {
+          fetch(url)
+            .then(res => res.blob())
+            .then(blob => {
+              const file = new File([blob], "image.jpg", { type: "image/jpeg" });
+              if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                navigator.share({
+                  files: [file],
+                  title: 'WindiStudio Image',
+                  text: 'Check out this image I generated with WindiStudio!'
+                }).catch(console.error);
+                return;
+              }
+            });
+          return;
+        }
+
+        // Desktop Fallback
         const link = document.createElement('a');
         link.href = url;
         const sanitizedPrompt = promptText ? promptText.trim().replace(/[^a-zA-Z0-9\s-_]/g, '').replace(/\s+/g, '_').substring(0, 40) : "";
         const modelToUse = modelNameStr || selectedModel;
         const modelTag = modelToUse.includes('flash') ? 'flash' : 'pro';
-        link.download = `windistudio_${modelTag}_${sanitizedPrompt || 'art'}_${Date.now()}_${index}.png`;
+        link.download = `windistudio_${modelTag}_${sanitizedPrompt || 'art'}_${Date.now()}_${index}.jpg`;
         link.target = "_blank";
         document.body.appendChild(link);
         link.click();
@@ -306,8 +326,26 @@ const App: React.FC = () => {
       };
 
       if (isBase64) {
-        doDownload(imageUrl);
+        // Convert Base64 PNG to JPEG for smaller size & compatibility
+        const img = new Image();
+        img.src = imageUrl;
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          canvas.width = img.width;
+          canvas.height = img.height;
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.fillStyle = '#FFFFFF'; // White background for transparency
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(img, 0, 0);
+            const jpegUrl = canvas.toDataURL('image/jpeg', 1.0); // Quality 1.0 (Max)
+            doDownload(jpegUrl);
+          } else {
+            doDownload(imageUrl); // Fallback
+          }
+        };
       } else {
+        // It's a URL (Supabase), fetch it and convert to blob to force download
         fetch(imageUrl)
           .then(resp => resp.blob())
           .then(blob => {
@@ -315,7 +353,10 @@ const App: React.FC = () => {
             doDownload(blobUrl);
             setTimeout(() => URL.revokeObjectURL(blobUrl), 100);
           })
-          .catch(() => doDownload(imageUrl));
+          .catch((err) => {
+            console.error("Download failed, falling back to direct link", err);
+            doDownload(imageUrl);
+          });
       }
     }
   };
@@ -334,19 +375,47 @@ const App: React.FC = () => {
 
   const handleConfirmPayment = async () => {
     if (userProfile) {
-      // SIMULATION: In a real app, you would verify webhook.
-      // Here we simulate instant success for the demo.
-      const newBalance = userProfile.credits + calculatedCoins;
-      setUserProfile({ ...userProfile, credits: newBalance });
-      await updateUserCredits(userProfile.id, newBalance);
-      await createTransaction(userProfile.id, parseInt(topUpAmount), calculatedCoins, `Nạp tiền: WINDI ${userProfile.payment_code}`);
+      // Here we just set status to PENDING or create a log.
+      // In real world, we wait for webhook.
+      // For simulation, we assume user clicked "I have transferred"
+      alert("Transaction recorded! Please wait a moment for the system to process.");
 
+      await createTransaction(userProfile.id, parseInt(topUpAmount), calculatedCoins, `Nạp tiền: WINDI ${userProfile.payment_code}`);
       setTopUpAmount('');
       setShowTopUpModal(false);
       setTopUpStep('INPUT');
-      alert(`Successfully added ${calculatedCoins} xu!`);
     }
   };
+
+  // Listen for realtime balance updates
+  useEffect(() => {
+    if (userProfile) {
+      const channel = supabase
+        .channel('balance-updates')
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'profiles',
+            filter: `id=eq.${userProfile.id}`
+          },
+          (payload) => {
+            const newProfile = payload.new as UserProfile;
+            if (newProfile.credits > userProfile.credits) {
+              const added = newProfile.credits - userProfile.credits;
+              alert(`Received ${added} xu successfully!`);
+            }
+            setUserProfile(newProfile);
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    }
+  }, [userProfile?.id]); // Re-sub if ID changes (rare)
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -445,7 +514,7 @@ const App: React.FC = () => {
                   </div>
                 </div>
                 <div className="absolute top-2 left-2 px-2 py-1 rounded-md bg-black/40 backdrop-blur-md border border-white/10 text-[10px] font-bold text-gray-300 uppercase">
-                  {item.modelName?.replace('gemini-', '').replace('-image', '') || 'AI'}
+                  {item.modelName ? (item.modelName.includes('flash') ? 'AIR' : 'PRO') : 'AI'}
                 </div>
               </div>
               <div className="p-4 flex-1 flex flex-col gap-2">
@@ -676,9 +745,7 @@ const App: React.FC = () => {
       {/* Header */}
       <nav className="w-full h-16 lg:h-20 px-6 lg:px-8 flex justify-between items-center shrink-0 bg-black/20 backdrop-blur-xl border-b border-white/5 z-20 sticky top-0 lg:static">
         <div className="relative flex items-center gap-3 cursor-pointer" onClick={() => setCurrentView('STUDIO')}>
-          <div className="w-8 h-8 lg:w-10 lg:h-10 rounded-xl bg-gradient-to-br from-mystic-accent to-fuchsia-600 flex items-center justify-center shadow-glow animate-float">
-            <Wand2 className="text-white w-4 h-4 lg:w-5 lg:h-5" />
-          </div>
+          <AnimatedLogo className="w-10 h-10 lg:w-12 lg:h-12" />
           <div>
             <h1 className="text-lg lg:text-xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white via-indigo-100 to-gray-400 drop-shadow-sm">WindiStudio</h1>
             <p className="text-[8px] lg:text-[9px] text-indigo-300 uppercase tracking-widest font-semibold">Supabase Connected</p>
