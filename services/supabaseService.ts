@@ -7,10 +7,16 @@ import { uploadToR2, deleteFromR2 } from './r2Service';
 // --- AUTHENTICATION ---
 
 export const signInWithGoogle = async () => {
+  // Thêm "/auth/callback" vào sau origin
+  // Kết quả sẽ là: http://192.168.2.228:3000/auth/callback
+  const redirectUrl = `${window.location.origin}/auth/callback`;
+
+  console.log("Initiating Google Login with redirect URL:", redirectUrl);
+
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: window.location.origin
+      redirectTo: redirectUrl // Gửi đường dẫn đầy đủ
     }
   });
   return { data, error };
@@ -73,6 +79,7 @@ export const createProfileIfNotExists = async (user: any) => {
 };
 
 export const updateUserCredits = async (userId: string, newBalance: number) => {
+  if (userId === 'dev-user') return; // Mock update
   const { error } = await supabase
     .from('profiles')
     .update({ credits: newBalance })
@@ -81,9 +88,35 @@ export const updateUserCredits = async (userId: string, newBalance: number) => {
   if (error) console.error("Failed to update credits", error);
 };
 
+export const redeemPromoCode = async (code: string, userId: string) => {
+  console.log(`Attempting to redeem code: ${code} for user: ${userId}`);
+
+  if (userId === 'dev-user') {
+    // Mock redemption for dev user
+    if (code === 'TEST100') return { success: true, message: 'Mock Success! +100 Credits', new_balance: 10100, reward: 100 };
+    return { success: false, message: 'Invalid Mock Code' };
+  }
+
+  const { data, error } = await supabase.rpc('redeem_promo_code', {
+    code_input: code,
+    user_id_input: userId
+  });
+
+  console.log("RPC Response - Data:", data);
+  console.log("RPC Response - Error:", error);
+
+  if (error) {
+    console.error("Promo code error details:", error);
+    return { success: false, message: `System Error: ${error.message}` };
+  }
+
+  return data; // Returns JSON object from SQL function
+};
+
 // --- TRANSACTIONS ---
 
 export const fetchTransactions = async (userId: string): Promise<Transaction[]> => {
+  if (userId === 'dev-user') return []; // Mock transactions
   const { data, error } = await supabase
     .from('transactions')
     .select('*')
@@ -98,6 +131,7 @@ export const fetchTransactions = async (userId: string): Promise<Transaction[]> 
 };
 
 export const createTransaction = async (userId: string, amountVnd: number, credits: number, content: string) => {
+  if (userId === 'dev-user') return; // Mock transaction creation
   const { error } = await supabase
     .from('transactions')
     .insert({
@@ -140,6 +174,10 @@ export const saveGenerationToDb = async (
   cost: number,
   imageType: 'STANDARD' | 'PREMIUM'
 ) => {
+  if (userId === 'dev-user') {
+    return item; // Mock save, return item as is (images are already base64 or URLs)
+  }
+
   const uploadedUrls: string[] = [];
 
   // 1. Upload Images
@@ -191,6 +229,8 @@ export const saveGenerationToDb = async (
 };
 
 export const fetchHistoryFromDb = async (userId: string): Promise<HistoryItem[]> => {
+  if (userId === 'dev-user') return []; // Mock history
+
   const { data, error } = await supabase
     .from('generations')
     .select('*')
