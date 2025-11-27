@@ -320,23 +320,8 @@ const App: React.FC = () => {
 
     // Helper to handle Blob (Share or Download)
     const handleBlob = async (blob: Blob) => {
-      // Try Web Share API first for Mobile
-      if (navigator.share && /Mobi|Android|iPhone/i.test(navigator.userAgent)) {
-        try {
-          const file = new File([blob], "image.jpg", { type: "image/jpeg" });
-          if (navigator.canShare && navigator.canShare({ files: [file] })) {
-            await navigator.share({
-              files: [file],
-              title: 'WindiStudio Image',
-              text: 'Check out this image I generated with WindiStudio!'
-            });
-            return; // Share successful
-          }
-        } catch (err) {
-          console.warn("Share failed or cancelled, falling back to download", err);
-          // Fallback to download if share fails
-        }
-      }
+      // Web Share API removed as per user request to force direct download
+
 
       // Fallback: Create Blob URL and download
       const blobUrl = URL.createObjectURL(blob);
@@ -675,7 +660,7 @@ const App: React.FC = () => {
                   <ImageViewer originalImage={primaryImage} resultImage={results[selectedResultIndex] || results[0]} />
                   <div className="absolute top-4 right-4 flex flex-col gap-3 z-30">
                     <button onClick={() => downloadImage(results[selectedResultIndex], selectedResultIndex, prompt, selectedModel)} className="glass-button w-12 h-12 rounded-full flex items-center justify-center text-white hover:text-mystic-accent transition-all group shadow-glass" title="Save Image"><Download size={22} className="group-hover:translate-y-0.5 transition-transform" /></button>
-                    {mode === AppMode.CREATIVE_POSE && (<button onClick={handleNewPose} className="glass-button w-12 h-12 rounded-full flex items-center justify-center text-white hover:text-pink-400 transition-all shadow-glass" title="Use as Pose"><Bone size={22} /></button>)}
+                    <button onClick={handleNewPose} className="glass-button w-12 h-12 rounded-full flex items-center justify-center text-white hover:text-pink-400 transition-all shadow-glass" title="Use as Pose"><Bone size={22} /></button>
                   </div>
                   {/* Mobile Hint */}
                   <div className="lg:hidden absolute bottom-4 left-0 right-0 text-center pointer-events-none z-20">
@@ -724,12 +709,11 @@ const App: React.FC = () => {
                     <div className="w-full aspect-[3/4] bg-black relative">
                       <img src={item.thumbnail} alt="" className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity duration-500" />
                       <div className="absolute top-2 right-2 p-1 rounded bg-black/50 text-[8px] text-white font-bold pointer-events-none">{item.images.length}</div>
-                      {/* Sidebar Actions Overlay */}
-                      <div className="absolute inset-0 bg-black/40 flex flex-col justify-between p-2 pointer-events-none">
-                        <div className="flex justify-between w-full">
-                          <button onClick={(e) => deleteHistoryItem(item.id, e)} className="p-1.5 rounded-full bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white transition-all backdrop-blur-sm pointer-events-auto"><Trash2 size={12} /></button>
-                          <button onClick={(e) => { e.stopPropagation(); downloadImage(item.thumbnail, 0, item.prompt, item.modelName); }} className="p-1.5 rounded-full bg-white/20 text-white hover:bg-mystic-accent transition-all backdrop-blur-sm pointer-events-auto"><Download size={12} /></button>
-                        </div>
+
+                      {/* Sidebar Actions Overlay - Moved to bottom, removed full dark layer */}
+                      <div className="absolute inset-x-0 bottom-0 p-2 flex justify-between items-end opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 bg-gradient-to-t from-black/90 to-transparent">
+                        <button onClick={(e) => deleteHistoryItem(item.id, e)} className="p-1.5 rounded-full bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white transition-all backdrop-blur-sm pointer-events-auto"><Trash2 size={14} /></button>
+                        <button onClick={(e) => { e.stopPropagation(); downloadImage(item.thumbnail, 0, item.prompt, item.modelName); }} className="p-1.5 rounded-full bg-white/20 text-white hover:bg-mystic-accent transition-all backdrop-blur-sm pointer-events-auto"><Download size={14} /></button>
                       </div>
                     </div>
                     <div className="p-2 flex flex-col items-center justify-center bg-[#13111c]">
