@@ -38,7 +38,6 @@ const App: React.FC = () => {
   const [primaryImage, setPrimaryImage] = useState<string | null>(null);
   const [secondaryImage, setSecondaryImage] = useState<string | null>(null);
   const [prompt, setPrompt] = useState('');
-  const [size, setSize] = useState<ImageSize>(ImageSize.SIZE_1K);
   const [aspectRatio, setAspectRatio] = useState<AspectRatio>(AspectRatio.PORTRAIT);
   const [numberOfImages, setNumberOfImages] = useState(1);
   const [selectedModel, setSelectedModel] = useState('gemini-2.5-flash-image');
@@ -177,10 +176,10 @@ const App: React.FC = () => {
     if (selectedModel.includes('flash')) {
       cost = 5;
     } else {
-      if (size === ImageSize.SIZE_2K) cost = 30;
-      else cost = 25;
+      // Pro Model Pricing (Fixed)
+      cost = 25;
     }
-    if (prompt && prompt.trim().length > 0) cost += 3;
+    if (prompt && prompt.trim().length > 0) cost += 1;
     return cost;
   };
 
@@ -235,7 +234,6 @@ const App: React.FC = () => {
           primaryImage: primaryImage,
           secondaryImage: (mode === AppMode.CREATIVE_POSE || mode === AppMode.CREATE_MODEL) ? null : secondaryImage,
           userPrompt: prompt,
-          size,
           aspectRatio,
           flexibleMode,
           randomFace,
@@ -298,9 +296,10 @@ const App: React.FC = () => {
       setPrimaryImage(currentImage);
       setSecondaryImage(null);
       setNumberOfImages(1);
-      setPrompt("");
     }
   };
+
+
 
   const deleteHistoryItem = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -616,16 +615,7 @@ const App: React.FC = () => {
                         <ChevronDown size={12} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
                       </div>
                     </div>
-                    <div>
-                      <label className="text-[10px] font-semibold text-gray-500 uppercase ml-1 mb-1.5 block">Resolution</label>
-                      <div className="relative">
-                        <select value={size} onChange={(e) => setSize(e.target.value as ImageSize)} disabled={selectedModel === 'gemini-2.5-flash-image'} className={`w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-xs text-white appearance-none focus:border-mystic-accent outline-none ${selectedModel === 'gemini-2.5-flash-image' ? 'opacity-50 cursor-not-allowed' : ''}`}>
-                          <option value={ImageSize.SIZE_1K} className="bg-mystic-900">1K Standard</option>
-                          <option value={ImageSize.SIZE_2K} className="bg-mystic-900">2K High (Pro)</option>
-                        </select>
-                        <ChevronDown size={12} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
-                      </div>
-                    </div>
+
                   </div>
                   <div className="space-y-2 pt-1">
                     {(mode !== AppMode.CREATIVE_POSE && mode !== AppMode.CREATE_MODEL) && (
@@ -737,7 +727,7 @@ const App: React.FC = () => {
             </div>
           </div>
         </div>
-      </div>
+      </div >
     );
   };
 

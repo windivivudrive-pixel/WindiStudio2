@@ -6,12 +6,6 @@ export enum AppMode {
   COPY_CONCEPT = 'COPY_CONCEPT',
 }
 
-export enum ImageSize {
-  SIZE_1K = '1K',
-  SIZE_2K = '2K',
-  SIZE_4K = '4K',
-}
-
 export enum AspectRatio {
   SQUARE = '1:1',
   STANDARD = '2:3',
@@ -34,7 +28,7 @@ export interface HistoryItem {
   prompt: string;
   timestamp: number; // created_at converted to timestamp
   mode: AppMode;
-  modelName?: string; 
+  modelName?: string;
   cost?: number;
 }
 
@@ -63,10 +57,9 @@ export interface Transaction {
 
 export interface GenerationConfig {
   mode: AppMode;
-  primaryImage: string | null; 
+  primaryImage: string | null;
   secondaryImage: string | null;
   userPrompt: string;
-  size: ImageSize;
   aspectRatio: AspectRatio;
   numberOfImages: number;
   poseImage?: string | null;

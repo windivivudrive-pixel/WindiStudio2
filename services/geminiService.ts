@@ -1,4 +1,4 @@
-import { AppMode, ImageSize, AspectRatio, BackgroundMode } from "../types";
+import { AppMode, AspectRatio, BackgroundMode } from "../types";
 import { supabase } from "./supabaseClient";
 
 /**
@@ -99,7 +99,6 @@ export const generateStudioImage = async (
     primaryImage: string | null,
     secondaryImage: string | null,
     userPrompt: string,
-    size: ImageSize,
     aspectRatio: AspectRatio,
     faceReferences?: string[],
     conceptReferences?: string[],
@@ -118,7 +117,6 @@ export const generateStudioImage = async (
       primaryImage: config.primaryImage,
       secondaryImage: config.secondaryImage,
       userPrompt: config.userPrompt,
-      size: config.size,
       aspectRatio: config.aspectRatio,
       flexibleMode: config.flexibleMode,
       randomFace: config.randomFace,
