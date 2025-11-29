@@ -214,9 +214,18 @@ Deno.serve(async (req) => {
                 promptText += `\n\nUSER OVERRIDE INSTRUCTIONS: ${userPrompt}`;
             }
 
-            const imageConfig: any = {
-                aspectRatio: aspectRatio,
-            };
+            // Enforce Aspect Ratio in Prompt
+            if (aspectRatio) {
+                promptText += `\n Aspect ratio ${aspectRatio}.`;
+            }
+
+            // Add the text prompt to the parts
+            parts.push({ text: promptText });
+
+            const imageConfig: any = {};
+            if (aspectRatio) {
+                imageConfig.aspectRatio = aspectRatio;
+            }
 
             console.log(`Generating with config: Model=${modelName || activeModel}, AspectRatio=${aspectRatio}`);
 

@@ -124,9 +124,9 @@ export const fetchTransactions = async (userId: string): Promise<Transaction[]> 
   return data || [];
 };
 
-export const createTransaction = async (userId: string, amountVnd: number, credits: number, content: string) => {
-  if (userId === 'dev-user') return; // Mock transaction creation
-  const { error } = await supabase
+export const createTransaction = async (userId: string, amountVnd: number, credits: number, content: string, status: 'PENDING' | 'SUCCESS' = 'SUCCESS') => {
+  if (userId === 'dev-user') return { id: 99999 }; // Mock transaction creation
+  const { data, error } = await supabase
     .from('transactions')
     .insert({
       user_id: userId,
@@ -134,10 +134,16 @@ export const createTransaction = async (userId: string, amountVnd: number, credi
       credits_added: credits,
       type: 'DEPOSIT',
       content: content,
-      status: 'SUCCESS' // Simulating success
-    });
+      status: status
+    })
+    .select()
+    .single();
 
-  if (error) console.error("Failed to create transaction", error);
+  if (error) {
+    console.error("Failed to create transaction", error);
+    return null;
+  }
+  return data;
 };
 
 // --- STORAGE & GENERATIONS ---

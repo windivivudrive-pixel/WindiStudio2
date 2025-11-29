@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Sparkles, Shirt, Camera, Wand2, Download, AlertCircle, History, Trash2, ChevronDown, ChevronUp, User, Image as ImageIcon, Bone, Layers, ToggleLeft, ToggleRight, XCircle, Archive, Shuffle, Copy, ScanFace, RefreshCw, LogIn, Coins, X, CreditCard, Wallet, LogOut, Zap, Cloud, ArrowLeft, Calendar, FileText, CheckCircle, XOctagon, QrCode, Smartphone, Check } from 'lucide-react';
 import JSZip from 'jszip';
-import { AppMode, ImageSize, AspectRatio, HistoryItem, UserProfile, Transaction } from './types';
+import { AppMode, AspectRatio, HistoryItem, UserProfile, Transaction } from './types';
 import { ImageUploader } from './components/ImageUploader';
 import { ImageViewer } from './components/ImageViewer';
 import { AnimatedLogo } from './components/AnimatedLogo';
@@ -17,15 +17,16 @@ import {
   fetchHistoryFromDb,
   deleteHistoryFromDb,
   fetchTransactions,
-  createTransaction
+  createTransaction,
+  getProfile
 } from './services/supabaseService';
 import { supabase } from './services/supabaseClient';
 
 // --- CONFIG BANKING (THAY THÔNG TIN CỦA BẠN VÀO ĐÂY) ---
 const BANK_CONFIG = {
-  BANK_ID: 'MB', // VD: MB, VCB, TPB, ACB... (Mã ngân hàng)
-  ACCOUNT_NO: '0000123456789', // Số tài khoản của bạn
-  ACCOUNT_NAME: 'WINDI STUDIO ADMIN', // Tên chủ tài khoản
+  BANK_ID: 'TPB', // VD: MB, VCB, TPB, ACB... (Mã ngân hàng)
+  ACCOUNT_NO: '55111685555', // Số tài khoản của bạn
+  ACCOUNT_NAME: 'BUI QUOC HUNG', // Tên chủ tài khoản
   TEMPLATE: 'compact' // compact, print, qr_only
 };
 
@@ -359,29 +360,80 @@ const App: React.FC = () => {
     }
   };
 
-  // Payment Logic
-  const handleProceedToPayment = () => {
-    if (calculatedCoins > 0 && userProfile) {
-      // Generate VietQR URL
-      // Format: https://img.vietqr.io/image/<BANK_ID>-<ACCOUNT_NO>-<TEMPLATE>.png?amount=<AMOUNT>&addInfo=<CONTENT>
-      const content = `WINDI ${userProfile.payment_code}`;
-      const url = `https://img.vietqr.io/image/${BANK_CONFIG.BANK_ID}-${BANK_CONFIG.ACCOUNT_NO}-${BANK_CONFIG.TEMPLATE}.png?amount=${topUpAmount}&addInfo=${encodeURIComponent(content)}&accountName=${encodeURIComponent(BANK_CONFIG.ACCOUNT_NAME)}`;
-      setQrUrl(url);
+  const [currentTransactionId, setCurrentTransactionId] = useState<number | null>(null);
+
+  // Listen for transaction updates (Realtime Payment)
+  useEffect(() => {
+    if (!currentTransactionId) return;
+
+    const channel = supabase
+      .channel('transaction-update')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'transactions',
+          filter: `id=eq.${currentTransactionId}`
+        },
+        (payload) => {
+          console.log('Transaction updated:', payload);
+          if (payload.new.status === 'SUCCESS') {
+            setToast({ message: `Payment successful! +${payload.new.credits_added} xu`, type: 'success' });
+            setShowTopUpModal(false);
+            setTopUpStep('INPUT');
+            setTopUpAmount('');
+            setCurrentTransactionId(null);
+
+            // Refresh profile
+            if (userProfile) {
+              getProfile(userProfile.id).then(p => {
+                if (p) setUserProfile(p);
+              });
+            }
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [currentTransactionId, userProfile]);
+
+  const handleTopUpNext = async () => {
+    if (topUpStep === 'INPUT') {
+      if (!topUpAmount || parseInt(topUpAmount) < 10000) {
+        alert("Minimum amount is 10,000 VND");
+        return;
+      }
+
+      // Create PENDING transaction immediately
+      if (userProfile) {
+        const tx = await createTransaction(
+          userProfile.id,
+          parseInt(topUpAmount),
+          calculatedCoins,
+          `Payment: WINDI ${userProfile.payment_code}`,
+          'PENDING'
+        );
+        if (tx) {
+          setCurrentTransactionId(tx.id);
+        }
+      }
+
+      const link = `https://img.vietqr.io/image/${BANK_CONFIG.BANK_ID}-${BANK_CONFIG.ACCOUNT_NO}-${BANK_CONFIG.TEMPLATE}.png?amount=${topUpAmount}&addInfo=WINDI ${userProfile?.payment_code}&accountName=${encodeURIComponent(BANK_CONFIG.ACCOUNT_NAME)}`;
+      setQrUrl(link);
       setTopUpStep('QR');
-    }
-  };
-
-  const handleConfirmPayment = async () => {
-    if (userProfile) {
-      // Here we just set status to PENDING or create a log.
-      // In real world, we wait for webhook.
-      // For simulation, we assume user clicked "I have transferred"
-      alert("Transaction recorded! Please wait a moment for the system to process.");
-
-      await createTransaction(userProfile.id, parseInt(topUpAmount), calculatedCoins, `Nạp tiền: WINDI ${userProfile.payment_code}`);
-      setTopUpAmount('');
-      setShowTopUpModal(false);
-      setTopUpStep('INPUT');
+    } else {
+      // Manual check (fallback)
+      // User clicked "I have transferred" but we prefer auto-check.
+      // We can keep this as a "Refresh" button or remove it.
+      // For now, let's make it just close the modal if they insist, but warn them.
+      if (window.confirm("System is checking automatically. Are you sure you want to close?")) {
+        setShowTopUpModal(false);
+        setTopUpStep('INPUT');
+      }
     }
   };
 
@@ -959,7 +1011,7 @@ const App: React.FC = () => {
                     <span className="text-xs text-yellow-200/70 font-medium">You will receive:</span>
                     <span className="text-xl font-bold text-yellow-400 drop-shadow-sm">{calculatedCoins} xu</span>
                   </div>
-                  <button onClick={handleProceedToPayment} disabled={calculatedCoins < 2} className="w-full py-3.5 rounded-xl bg-gradient-to-r from-yellow-500 to-orange-600 text-black font-bold shadow-lg hover:shadow-yellow-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                  <button onClick={handleTopUpNext} disabled={calculatedCoins < 2} className="w-full py-3.5 rounded-xl bg-gradient-to-r from-yellow-500 to-orange-600 text-black font-bold shadow-lg hover:shadow-yellow-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
                     Next: Payment QR
                   </button>
                 </div>
@@ -987,11 +1039,14 @@ const App: React.FC = () => {
                     <Smartphone size={14} /> Open Banking App / Momo
                   </button>
 
-                  <div className="pt-2 border-t border-white/10 flex gap-3">
-                    <button onClick={() => setTopUpStep('INPUT')} className="flex-1 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-gray-400 text-xs font-bold transition-colors">Back</button>
-                    <button onClick={handleConfirmPayment} className="flex-[2] py-3 rounded-xl bg-green-500 text-white font-bold text-xs shadow-lg hover:bg-green-600 transition-colors flex items-center justify-center gap-2">
-                      <Check size={14} /> I have Transferred
-                    </button>
+                  <div className="flex justify-end gap-3 mt-6">
+                    <div className="flex items-center gap-3 w-full justify-between">
+                      <div className="flex items-center gap-2 text-mystic-accent animate-pulse">
+                        <RefreshCw size={16} className="animate-spin" />
+                        <span className="text-sm font-medium">Waiting for payment...</span>
+                      </div>
+                      <button onClick={() => setShowTopUpModal(false)} className="px-4 py-2 rounded-lg border border-white/10 text-gray-400 text-sm hover:bg-white/5">Close</button>
+                    </div>
                   </div>
                 </div>
               )}
