@@ -394,7 +394,9 @@ const App: React.FC = () => {
           }
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log("Realtime Subscription Status:", status);
+      });
 
     return () => {
       supabase.removeChannel(channel);
@@ -802,10 +804,9 @@ const App: React.FC = () => {
       {/* Header */}
       <nav className="w-full h-16 lg:h-20 px-6 lg:px-8 flex justify-between items-center shrink-0 bg-black/20 backdrop-blur-xl border-b border-white/5 z-20 sticky top-0 lg:static">
         <div className="relative flex items-center gap-3 cursor-pointer" onClick={() => setCurrentView('STUDIO')}>
-          <AnimatedLogo className="w-10 h-10 lg:w-12 lg:h-12" />
+
           <div>
-            <h1 className="text-lg lg:text-xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white via-indigo-100 to-gray-400 drop-shadow-sm">WindiStudio</h1>
-            <p className="text-[8px] lg:text-[9px] text-indigo-300 uppercase tracking-widest font-semibold">Supabase Connected</p>
+            <img src="/textlogo.png" alt="WinDiStudio" className="h-16 object-contain" style={{ marginTop: '12px' }} />
           </div>
         </div>
 
