@@ -20,10 +20,55 @@ export const ensureApiKey = async (): Promise<boolean> => {
 };
 
 /**
- * Helper to parse a Data URI into the format Gemini expects.
+ * Helper to fetch an image from a URL and convert it to a Base64 string.
  */
-const processImagePart = (dataUri: string) => {
-  const match = dataUri.match(/^data:([a-zA-Z0-9\/+\-]+);base64,(.+)$/);
+const fetchImageAsBase64 = async (url: string): Promise<{ mimeType: string; data: string }> => {
+  try {
+    const response = await fetch(url, { mode: 'cors' });
+    if (!response.ok) {
+      throw new Error(`Failed to fetch image: ${response.statusText}`);
+    }
+    const blob = await response.blob();
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64data = reader.result as string;
+        const match = base64data.match(/^data:([a-zA-Z0-9\/+\-]+);base64,(.+)$/);
+        if (match && match.length === 3) {
+          resolve({
+            mimeType: match[1],
+            data: match[2]
+          });
+        } else {
+          reject(new Error("Failed to parse base64 data"));
+        }
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  } catch (error) {
+    console.error("Error fetching image for base64 conversion:", error);
+    throw error;
+  }
+};
+
+/**
+ * Helper to parse a Data URI or URL into the format Gemini expects.
+ */
+const processImagePart = async (dataUriOrUrl: string) => {
+  // Check if it's a URL (http/https)
+  if (dataUriOrUrl.startsWith('http://') || dataUriOrUrl.startsWith('https://')) {
+    const { mimeType, data } = await fetchImageAsBase64(dataUriOrUrl);
+    return {
+      inlineData: {
+        mimeType,
+        data
+      }
+    };
+  }
+
+  // Handle Data URI
+  const match = dataUriOrUrl.match(/^data:([a-zA-Z0-9\/+\-]+);base64,(.+)$/);
 
   if (match && match.length === 3) {
     return {
@@ -34,7 +79,8 @@ const processImagePart = (dataUri: string) => {
     };
   }
 
-  const cleanData = dataUri.includes(',') ? dataUri.split(',')[1] : dataUri;
+  // Fallback: assume it's raw base64 data if not a URL and not a Data URI
+  const cleanData = dataUriOrUrl.includes(',') ? dataUriOrUrl.split(',')[1] : dataUriOrUrl;
   return {
     inlineData: {
       mimeType: 'image/png',
@@ -93,15 +139,15 @@ export const generateStudioImage = async (
 
       if (config.mode === AppMode.CREATIVE_POSE) {
         if (config.primaryImage) {
-          parts.push(processImagePart(config.primaryImage));
+          parts.push(await processImagePart(config.primaryImage));
         }
 
+        // TASK: Generate a Creative Studio Portrait based on Image 1.
         promptText = `
           I have provided a SOURCE IMAGE (Image 1).
-          
-          TASK: Generate a Creative Studio Portrait based on Image 1.
+
           ${STYLE_GUIDE}
-          
+
           SUBJECT LOGIC (CRITICAL):
           - Analyze Image 1.
           - STRICTLY PRESERVE the Subject's Face, Hair, Skin Tone, and Outfit from Image 1.
@@ -119,8 +165,8 @@ export const generateStudioImage = async (
 
       } else if (config.mode === AppMode.VIRTUAL_TRY_ON) {
 
-        if (config.primaryImage) parts.push(processImagePart(config.primaryImage));
-        if (config.secondaryImage) parts.push(processImagePart(config.secondaryImage));
+        if (config.primaryImage) parts.push(await processImagePart(config.primaryImage));
+        if (config.secondaryImage) parts.push(await processImagePart(config.secondaryImage));
 
         promptText = `
           I have provided a TARGET PERSON (Image 1) and an OUTFIT REFERENCE (Image 2).
@@ -141,12 +187,12 @@ export const generateStudioImage = async (
       } else if (config.mode === AppMode.CREATE_MODEL) {
 
         if (config.primaryImage) {
-          parts.push(processImagePart(config.primaryImage));
+          parts.push(await processImagePart(config.primaryImage));
         }
 
         // Handle Identity Consistency for Batch Generation
         if (generatedIdentityRef && !config.randomFace) {
-          parts.push(processImagePart(generatedIdentityRef));
+          parts.push(await processImagePart(generatedIdentityRef));
         }
 
         let faceInstruction = "";
@@ -166,8 +212,8 @@ export const generateStudioImage = async (
             ${variationInstruction}
           `;
       } else if (config.mode === AppMode.COPY_CONCEPT) {
-        if (config.secondaryImage) parts.push(processImagePart(config.secondaryImage)); // Image 1 (Concept)
-        if (config.primaryImage) parts.push(processImagePart(config.primaryImage)); // Image 2 (Face)
+        if (config.secondaryImage) parts.push(await processImagePart(config.secondaryImage)); // Image 1 (Concept)
+        if (config.primaryImage) parts.push(await processImagePart(config.primaryImage)); // Image 2 (Face)
 
 
         promptText = `

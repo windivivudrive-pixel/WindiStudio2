@@ -1,7 +1,8 @@
 
 import { supabase } from './supabaseClient';
 import { HistoryItem, UserProfile, AppMode, Transaction } from '../types';
-import { base64ToBlob } from '../utils/imageUtils';
+import { base64ToBlob, compressImage } from '../utils/imageUtils';
+import { uploadToR2, deleteFromR2 } from './r2Service';
 
 // --- AUTHENTICATION ---
 
@@ -9,7 +10,7 @@ export const signInWithGoogle = async () => {
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: window.location.origin
+      redirectTo: window.location.origin // Redirect to root (SPA handles it)
     }
   });
   return { data, error };
@@ -72,6 +73,7 @@ export const createProfileIfNotExists = async (user: any) => {
 };
 
 export const updateUserCredits = async (userId: string, newBalance: number) => {
+  if (userId === 'dev-user') return; // Mock update
   const { error } = await supabase
     .from('profiles')
     .update({ credits: newBalance })
@@ -80,9 +82,35 @@ export const updateUserCredits = async (userId: string, newBalance: number) => {
   if (error) console.error("Failed to update credits", error);
 };
 
+export const redeemPromoCode = async (code: string, userId: string) => {
+  console.log(`Attempting to redeem code: ${code} for user: ${userId}`);
+
+  if (userId === 'dev-user') {
+    // Mock redemption for dev user
+    if (code === 'TEST100') return { success: true, message: 'Mock Success! +100 Credits', new_balance: 10100, reward: 100 };
+    return { success: false, message: 'Invalid Mock Code' };
+  }
+
+  const { data, error } = await supabase.rpc('redeem_promo_code', {
+    code_input: code,
+    user_id_input: userId
+  });
+
+  console.log("RPC Response - Data:", data);
+  console.log("RPC Response - Error:", error);
+
+  if (error) {
+    console.error("Promo code error details:", error);
+    return { success: false, message: `System Error: ${error.message}` };
+  }
+
+  return data; // Returns JSON object from SQL function
+};
+
 // --- TRANSACTIONS ---
 
 export const fetchTransactions = async (userId: string): Promise<Transaction[]> => {
+  if (userId === 'dev-user') return []; // Mock transactions
   const { data, error } = await supabase
     .from('transactions')
     .select('*')
@@ -97,6 +125,7 @@ export const fetchTransactions = async (userId: string): Promise<Transaction[]> 
 };
 
 export const createTransaction = async (userId: string, amountVnd: number, credits: number, content: string) => {
+  if (userId === 'dev-user') return; // Mock transaction creation
   const { error } = await supabase
     .from('transactions')
     .insert({
@@ -115,22 +144,16 @@ export const createTransaction = async (userId: string, amountVnd: number, credi
 
 export const uploadImageToStorage = async (base64Data: string, fileName: string): Promise<string | null> => {
   try {
-    const blob = await base64ToBlob(base64Data);
-    const { data, error } = await supabase.storage
-      .from(import.meta.env.VITE_SUPABASE_BUCKET || 'windi-images')
-      .upload(fileName, blob, {
-        contentType: 'image/png',
-        upsert: true
-      });
+    // Compress to JPEG (100% quality - no compression)
+    const blob = await compressImage(base64Data, 1.0);
 
-    if (error) {
-      console.error('Error uploading image to bucket:', error);
+    // Upload to Cloudflare R2
+    const publicUrl = await uploadToR2(blob, fileName, 'image/jpeg');
+
+    if (!publicUrl) {
+      console.error('Error uploading image to R2');
       return null;
     }
-
-    const { data: { publicUrl } } = supabase.storage
-      .from(import.meta.env.VITE_SUPABASE_BUCKET || 'windi-images')
-      .getPublicUrl(fileName);
 
     return publicUrl;
   } catch (err) {
@@ -145,12 +168,16 @@ export const saveGenerationToDb = async (
   cost: number,
   imageType: 'STANDARD' | 'PREMIUM'
 ) => {
+  if (userId === 'dev-user') {
+    return item; // Mock save, return item as is (images are already base64 or URLs)
+  }
+
   const uploadedUrls: string[] = [];
 
   // 1. Upload Images
   for (let i = 0; i < item.images.length; i++) {
     const base64 = item.images[i];
-    const fileName = `${userId}/${item.timestamp}_${i}.png`;
+    const fileName = `${userId}/${item.timestamp}_${i}.jpg`;
     const publicUrl = await uploadImageToStorage(base64, fileName);
     if (publicUrl) uploadedUrls.push(publicUrl);
   }
@@ -196,6 +223,8 @@ export const saveGenerationToDb = async (
 };
 
 export const fetchHistoryFromDb = async (userId: string): Promise<HistoryItem[]> => {
+  if (userId === 'dev-user') return []; // Mock history
+
   const { data, error } = await supabase
     .from('generations')
     .select('*')
@@ -233,22 +262,51 @@ export const deleteHistoryFromDb = async (id: string) => {
   }
 
   if (record?.image_url) {
-    // 2. Extract file path from Public URL
-    // Format: .../storage/v1/object/public/{bucket}/{path}
-    const bucketName = import.meta.env.VITE_SUPABASE_BUCKET || 'windi-images';
-    // Split by bucket name to get the path relative to the bucket
-    const urlParts = record.image_url.split(`/${bucketName}/`);
+    // TODO: Implement R2 deletion if needed.
+    // For now, we skip storage deletion for R2 items to avoid errors with Supabase Storage client.
+    const isSupabaseUrl = record.image_url.includes('supabase.co');
 
-    if (urlParts.length > 1) {
-      const filePath = urlParts[1]; // This should be "userId/filename.png"
+    if (isSupabaseUrl) {
+      // 2. Extract file path from Public URL
+      // Format: .../storage/v1/object/public/{bucket}/{path}
+      const bucketName = import.meta.env.VITE_SUPABASE_BUCKET || 'windi-images';
+      // Split by bucket name to get the path relative to the bucket
+      const urlParts = record.image_url.split(`/${bucketName}/`);
 
-      // 3. Delete from Storage
-      const { error: storageError } = await supabase.storage
-        .from(bucketName)
-        .remove([filePath]);
+      if (urlParts.length > 1) {
+        const filePath = urlParts[1]; // This should be "userId/filename.png"
 
-      if (storageError) {
-        console.warn("Failed to delete image from storage", storageError);
+        // 3. Delete from Storage
+        const { error: storageError } = await supabase.storage
+          .from(bucketName)
+          .remove([filePath]);
+
+        if (storageError) {
+          console.warn("Failed to delete image from storage", storageError);
+        }
+      }
+    } else {
+      // R2 Deletion Logic
+      // Try to parse the URL to get the key
+      try {
+        const publicDomain = import.meta.env.VITE_R2_PUBLIC_DOMAIN;
+        let filePath = '';
+
+        if (publicDomain && record.image_url.includes(publicDomain)) {
+          // If URL matches configured domain, strip domain
+          const domain = publicDomain.replace(/\/$/, '');
+          filePath = record.image_url.replace(`${domain}/`, '');
+        } else {
+          // Fallback: use URL parsing
+          const url = new URL(record.image_url);
+          filePath = url.pathname.substring(1); // Remove leading slash
+        }
+
+        if (filePath) {
+          await deleteFromR2(filePath);
+        }
+      } catch (e) {
+        console.warn("Failed to delete from R2", e);
       }
     }
   }

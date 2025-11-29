@@ -1,139 +1,147 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>WindiStudio</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-      tailwind.config = {
-        theme: {
-          extend: {
-            colors: {
-              mystic: {
-                950: '#05040a',
-                900: '#0f0c1d', 
-                800: '#1a162e',
-                700: '#282245',
-                accent: '#8b5cf6', 
-                glow: '#d8b4fe',
-                glass: 'rgba(255, 255, 255, 0.05)',
-                'glass-strong': 'rgba(255, 255, 255, 0.12)',
-              }
-            },
-            fontFamily: {
-              sans: ['SF Pro Display', 'Inter', 'system-ui', 'sans-serif'],
-            },
-            animation: {
-              'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-              'liquid': 'liquid 3s linear infinite',
-              'float': 'float 6s ease-in-out infinite',
-            },
-            keyframes: {
-              liquid: {
-                '0%': { backgroundPosition: '0% 50%' },
-                '50%': { backgroundPosition: '100% 50%' },
-                '100%': { backgroundPosition: '0% 50%' },
-              },
-              float: {
-                '0%, 100%': { transform: 'translateY(0)' },
-                '50%': { transform: 'translateY(-10px)' },
-              }
-            },
-            boxShadow: {
-              'glass': '0 8px 32px 0 rgba(0, 0, 0, 0.5)',
-              'glass-sm': '0 4px 16px 0 rgba(0, 0, 0, 0.3)',
-              'glass-inset': 'inset 0 1px 1px 0 rgba(255, 255, 255, 0.15), inset 0 -1px 1px 0 rgba(0, 0, 0, 0.3)',
-              'glow': '0 0 25px rgba(139, 92, 246, 0.4)',
-              'glow-strong': '0 0 40px rgba(139, 92, 246, 0.6)',
-              'liquid': '0 10px 40px -10px rgba(124, 58, 237, 0.7), inset 0 2px 20px rgba(255,255,255,0.4)',
-            },
-            backdropBlur: {
-              'xs': '2px',
-              '3xl': '64px',
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WindiStudio</title>
+  <link rel="icon" type="image/png" href="/favicon.png" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            mystic: {
+              950: '#05040a',
+              900: '#0f0c1d',
+              800: '#1a162e',
+              700: '#282245',
+              accent: '#8b5cf6',
+              glow: '#d8b4fe',
+              glass: 'rgba(255, 255, 255, 0.05)',
+              'glass-strong': 'rgba(255, 255, 255, 0.12)',
             }
           },
+          fontFamily: {
+            sans: ['SF Pro Display', 'Inter', 'system-ui', 'sans-serif'],
+          },
+          animation: {
+            'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            'liquid': 'liquid 3s linear infinite',
+            'float': 'float 6s ease-in-out infinite',
+          },
+          keyframes: {
+            liquid: {
+              '0%': { backgroundPosition: '0% 50%' },
+              '50%': { backgroundPosition: '100% 50%' },
+              '100%': { backgroundPosition: '0% 50%' },
+            },
+            float: {
+              '0%, 100%': { transform: 'translateY(0)' },
+              '50%': { transform: 'translateY(-10px)' },
+            }
+          },
+          boxShadow: {
+            'glass': '0 8px 32px 0 rgba(0, 0, 0, 0.5)',
+            'glass-sm': '0 4px 16px 0 rgba(0, 0, 0, 0.3)',
+            'glass-inset': 'inset 0 1px 1px 0 rgba(255, 255, 255, 0.15), inset 0 -1px 1px 0 rgba(0, 0, 0, 0.3)',
+            'glow': '0 0 25px rgba(139, 92, 246, 0.4)',
+            'glow-strong': '0 0 40px rgba(139, 92, 246, 0.6)',
+            'liquid': '0 10px 40px -10px rgba(124, 58, 237, 0.7), inset 0 2px 20px rgba(255,255,255,0.4)',
+          },
+          backdropBlur: {
+            'xs': '2px',
+            '3xl': '64px',
+          }
         },
-      }
-    </script>
-    <style>
-      body {
-        background-color: #000000;
-        color: #e2e8f0;
-        background-image: 
-          radial-gradient(circle at 50% 0%, rgba(56, 30, 114, 0.3), transparent 60%),
-          radial-gradient(circle at 0% 50%, rgba(29, 16, 70, 0.4), transparent 50%),
-          radial-gradient(circle at 100% 50%, rgba(46, 16, 101, 0.4), transparent 50%);
-        background-attachment: fixed;
-      }
-      
-      /* Glassmorphism Utilities */
-      .glass-panel {
-        background: rgba(20, 20, 25, 0.4);
-        backdrop-filter: blur(24px);
-        -webkit-backdrop-filter: blur(24px);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        box-shadow: 0 20px 40px rgba(0,0,0,0.4);
-      }
+      },
+    }
+  </script>
+  <style>
+    body {
+      background-color: #000000;
+      color: #e2e8f0;
+      background-image:
+        radial-gradient(circle at 50% 0%, rgba(56, 30, 114, 0.3), transparent 60%),
+        radial-gradient(circle at 0% 50%, rgba(29, 16, 70, 0.4), transparent 50%),
+        radial-gradient(circle at 100% 50%, rgba(46, 16, 101, 0.4), transparent 50%);
+      background-attachment: fixed;
+    }
 
-      .glass-button {
-        background: linear-gradient(145deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        box-shadow: inset 0 1px 1px rgba(255,255,255,0.2), 0 4px 12px rgba(0,0,0,0.2);
-        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-      }
-      .glass-button:hover {
-        background: linear-gradient(145deg, rgba(255,255,255,0.15), rgba(255,255,255,0.05));
-        border-color: rgba(255, 255, 255, 0.25);
-        box-shadow: inset 0 1px 1px rgba(255,255,255,0.3), 0 8px 24px rgba(0,0,0,0.3), 0 0 15px rgba(255,255,255,0.05);
-        transform: translateY(-2px);
-      }
-      .glass-button:active {
-        transform: translateY(0px) scale(0.98);
-        box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
-      }
+    /* Glassmorphism Utilities */
+    .glass-panel {
+      background: rgba(20, 20, 25, 0.4);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+    }
 
-      .glass-button-active {
-        background: rgba(139, 92, 246, 0.2) !important;
-        border-color: rgba(139, 92, 246, 0.5) !important;
-        box-shadow: 0 0 20px rgba(139, 92, 246, 0.3), inset 0 1px 1px rgba(255,255,255,0.2) !important;
-      }
+    .glass-button {
+      background: linear-gradient(145deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02));
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.2), 0 4px 12px rgba(0, 0, 0, 0.2);
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
 
-      /* Liquid Primary Button */
-      .liquid-btn-style {
-        background-size: 200% auto;
-        background-image: linear-gradient(90deg, #7c3aed, #ec4899, #7c3aed);
-        animation: liquid 3s linear infinite;
-        border: none;
-        position: relative;
-        z-index: 1;
-        overflow: hidden;
-      }
-      .liquid-btn-style::after {
-        content: '';
-        position: absolute;
-        inset: 0;
-        background: linear-gradient(to bottom, rgba(255,255,255,0.4) 0%, transparent 50%, rgba(0,0,0,0.1) 100%);
-        pointer-events: none;
-      }
+    .glass-button:hover {
+      background: linear-gradient(145deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.05));
+      border-color: rgba(255, 255, 255, 0.25);
+      box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.3), 0 8px 24px rgba(0, 0, 0, 0.3), 0 0 15px rgba(255, 255, 255, 0.05);
+      transform: translateY(-2px);
+    }
 
-      /* Scrollbar */
-      ::-webkit-scrollbar {
-        width: 6px;
-      }
-      ::-webkit-scrollbar-track {
-        background: transparent;
-      }
-      ::-webkit-scrollbar-thumb {
-        background: rgba(255, 255, 255, 0.15);
-        border-radius: 10px;
-      }
-      ::-webkit-scrollbar-thumb:hover {
-        background: rgba(255, 255, 255, 0.3);
-      }
-    </style>
+    .glass-button:active {
+      transform: translateY(0px) scale(0.98);
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .glass-button-active {
+      background: rgba(139, 92, 246, 0.2) !important;
+      border-color: rgba(139, 92, 246, 0.5) !important;
+      box-shadow: 0 0 20px rgba(139, 92, 246, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.2) !important;
+    }
+
+    /* Liquid Primary Button */
+    .liquid-btn-style {
+      background-size: 200% auto;
+      background-image: linear-gradient(90deg, #7c3aed, #ec4899, #7c3aed);
+      animation: liquid 3s linear infinite;
+      border: none;
+      position: relative;
+      z-index: 1;
+      overflow: hidden;
+    }
+
+    .liquid-btn-style::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to bottom, rgba(255, 255, 255, 0.4) 0%, transparent 50%, rgba(0, 0, 0, 0.1) 100%);
+      pointer-events: none;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 10px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+  </style>
   <script type="importmap">
 {
   "imports": {
@@ -147,10 +155,12 @@
   }
 }
 </script>
-<link rel="stylesheet" href="/index.css">
+  <link rel="stylesheet" href="/index.css">
 </head>
-  <body>
-    <div id="root"></div>
+
+<body>
+  <div id="root"></div>
   <script type="module" src="/index.tsx"></script>
 </body>
+
 </html>

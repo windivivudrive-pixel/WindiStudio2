@@ -5,6 +5,8 @@ import JSZip from 'jszip';
 import { AppMode, ImageSize, AspectRatio, HistoryItem, UserProfile, Transaction } from './types';
 import { ImageUploader } from './components/ImageUploader';
 import { ImageViewer } from './components/ImageViewer';
+import { AnimatedLogo } from './components/AnimatedLogo';
+import { PrivacyPolicy } from './components/PrivacyPolicy';
 import { generateStudioImage, ensureApiKey } from './services/geminiService';
 import {
   signInWithGoogle,
@@ -29,7 +31,7 @@ const BANK_CONFIG = {
 
 const App: React.FC = () => {
   // Navigation State
-  const [currentView, setCurrentView] = useState<'STUDIO' | 'HISTORY' | 'PAYMENT'>('STUDIO');
+  const [currentView, setCurrentView] = useState<'STUDIO' | 'HISTORY' | 'PAYMENT' | 'PRIVACY'>('STUDIO');
 
   // Main State
   const [mode, setMode] = useState<AppMode>(AppMode.CREATIVE_POSE);
@@ -70,6 +72,17 @@ const App: React.FC = () => {
   const [calculatedCoins, setCalculatedCoins] = useState(0);
   const [qrUrl, setQrUrl] = useState('');
 
+  // Toast Notification State
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+
+  // Auto-dismiss toast
+  useEffect(() => {
+    if (toast) {
+      const timer = setTimeout(() => setToast(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
+
   // Refs
   const outputRef = useRef<HTMLDivElement>(null);
 
@@ -88,6 +101,14 @@ const App: React.FC = () => {
     });
 
     return () => subscription.unsubscribe();
+  }, []);
+
+  // Check URL for privacy policy
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('view') === 'privacy') {
+      setCurrentView('PRIVACY');
+    }
   }, []);
 
   const initializeUser = async (user: any) => {
@@ -145,7 +166,7 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const numericAmount = parseInt(topUpAmount.replace(/\D/g, '') || '0');
-    setCalculatedCoins(Math.floor(numericAmount / 5000));
+    setCalculatedCoins(Math.floor(numericAmount / 1000));
   }, [topUpAmount]);
 
   const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -289,33 +310,52 @@ const App: React.FC = () => {
     }
   };
 
-  const downloadImage = (imageUrl: string, index = 0, promptText = "", modelNameStr = "") => {
-    if (imageUrl) {
-      const isBase64 = imageUrl.startsWith('data:');
-      const doDownload = (url: string) => {
-        const link = document.createElement('a');
-        link.href = url;
-        const sanitizedPrompt = promptText ? promptText.trim().replace(/[^a-zA-Z0-9\s-_]/g, '').replace(/\s+/g, '_').substring(0, 40) : "";
-        const modelToUse = modelNameStr || selectedModel;
-        const modelTag = modelToUse.includes('flash') ? 'flash' : 'pro';
-        link.download = `windistudio_${modelTag}_${sanitizedPrompt || 'art'}_${Date.now()}_${index}.png`;
-        link.target = "_blank";
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      };
+  const downloadImage = async (imageUrl: string, index = 0, promptText = "", modelNameStr = "") => {
+    if (!imageUrl) return;
 
-      if (isBase64) {
-        doDownload(imageUrl);
-      } else {
-        fetch(imageUrl)
-          .then(resp => resp.blob())
-          .then(blob => {
-            const blobUrl = URL.createObjectURL(blob);
-            doDownload(blobUrl);
-            setTimeout(() => URL.revokeObjectURL(blobUrl), 100);
-          })
-          .catch(() => doDownload(imageUrl));
+    // Helper to trigger download via link (Desktop or Fallback)
+    const triggerDownloadLink = (url: string) => {
+      const link = document.createElement('a');
+      link.href = url;
+      const sanitizedPrompt = promptText ? promptText.trim().replace(/[^a-zA-Z0-9\s-_]/g, '').replace(/\s+/g, '_').substring(0, 40) : "";
+      const modelToUse = modelNameStr || selectedModel;
+      const modelTag = modelToUse.includes('flash') ? 'flash' : 'pro';
+      link.download = `windistudio_${modelTag}_${sanitizedPrompt || 'art'}_${Date.now()}_${index}.jpg`;
+      link.target = "_blank";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    };
+
+    // Helper to handle Blob (Share or Download)
+    const handleBlob = async (blob: Blob) => {
+      // Web Share API removed as per user request to force direct download
+
+
+      // Fallback: Create Blob URL and download
+      const blobUrl = URL.createObjectURL(blob);
+      triggerDownloadLink(blobUrl);
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 100);
+    };
+
+    const isBase64 = imageUrl.startsWith('data:');
+
+    if (isBase64) {
+      // Convert Base64 to Blob
+      fetch(imageUrl)
+        .then(res => res.blob())
+        .then(handleBlob);
+    } else {
+      // Fetch URL (R2)
+      try {
+        const resp = await fetch(imageUrl, { mode: 'cors', cache: 'no-cache' });
+        if (!resp.ok) throw new Error(`Fetch failed: ${resp.status}`);
+        const blob = await resp.blob();
+        handleBlob(blob);
+      } catch (e) {
+        console.error("Download failed (CORS?), falling back to direct link", e);
+        // Final fallback: just open the URL
+        triggerDownloadLink(imageUrl);
       }
     }
   };
@@ -334,19 +374,47 @@ const App: React.FC = () => {
 
   const handleConfirmPayment = async () => {
     if (userProfile) {
-      // SIMULATION: In a real app, you would verify webhook.
-      // Here we simulate instant success for the demo.
-      const newBalance = userProfile.credits + calculatedCoins;
-      setUserProfile({ ...userProfile, credits: newBalance });
-      await updateUserCredits(userProfile.id, newBalance);
-      await createTransaction(userProfile.id, parseInt(topUpAmount), calculatedCoins, `Nạp tiền: WINDI ${userProfile.payment_code}`);
+      // Here we just set status to PENDING or create a log.
+      // In real world, we wait for webhook.
+      // For simulation, we assume user clicked "I have transferred"
+      alert("Transaction recorded! Please wait a moment for the system to process.");
 
+      await createTransaction(userProfile.id, parseInt(topUpAmount), calculatedCoins, `Nạp tiền: WINDI ${userProfile.payment_code}`);
       setTopUpAmount('');
       setShowTopUpModal(false);
       setTopUpStep('INPUT');
-      alert(`Successfully added ${calculatedCoins} xu!`);
     }
   };
+
+  // Listen for realtime balance updates
+  useEffect(() => {
+    if (userProfile) {
+      const channel = supabase
+        .channel('balance-updates')
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'profiles',
+            filter: `id=eq.${userProfile.id}`
+          },
+          (payload) => {
+            const newProfile = payload.new as UserProfile;
+            if (newProfile.credits > userProfile.credits) {
+              const added = newProfile.credits - userProfile.credits;
+              alert(`Received ${added} xu successfully!`);
+            }
+            setUserProfile(newProfile);
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    }
+  }, [userProfile?.id]); // Re-sub if ID changes (rare)
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -438,14 +506,14 @@ const App: React.FC = () => {
             <div key={item.id} className="glass-panel rounded-[24px] overflow-hidden group flex flex-col">
               <div className="relative aspect-[3/4] bg-black overflow-hidden">
                 <img src={item.thumbnail} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-4">
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-4 pointer-events-none">
                   <div className="flex justify-end gap-2">
-                    <button onClick={(e) => deleteHistoryItem(item.id, e)} className="p-2 rounded-full bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white transition-all"><Trash2 size={16} /></button>
-                    <button onClick={() => downloadImage(item.thumbnail, 0, item.prompt, item.modelName)} className="p-2 rounded-full bg-white/20 text-white hover:bg-mystic-accent transition-all"><Download size={16} /></button>
+                    <button onClick={(e) => deleteHistoryItem(item.id, e)} className="p-2 rounded-full bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white transition-all pointer-events-auto"><Trash2 size={16} /></button>
+                    <button onClick={() => downloadImage(item.thumbnail, 0, item.prompt, item.modelName)} className="p-2 rounded-full bg-white/20 text-white hover:bg-mystic-accent transition-all pointer-events-auto"><Download size={16} /></button>
                   </div>
                 </div>
                 <div className="absolute top-2 left-2 px-2 py-1 rounded-md bg-black/40 backdrop-blur-md border border-white/10 text-[10px] font-bold text-gray-300 uppercase">
-                  {item.modelName?.replace('gemini-', '').replace('-image', '') || 'AI'}
+                  {item.modelName ? (item.modelName.includes('flash') ? 'AIR' : 'PRO') : 'AI'}
                 </div>
               </div>
               <div className="p-4 flex-1 flex flex-col gap-2">
@@ -489,11 +557,11 @@ const App: React.FC = () => {
         {/* LEFT PANEL */}
         <div className="w-full lg:w-[380px] xl:w-[420px] flex flex-col border-b lg:border-b-0 lg:border-r border-white/5 bg-black/10 backdrop-blur-sm z-10 h-auto lg:h-full shrink-0">
           <div className="lg:flex-1 lg:overflow-y-auto custom-scrollbar p-6 space-y-6">
-            <div className="glass-panel p-2 rounded-[24px] grid grid-cols-4 gap-1.5 shrink-0">
+            <div className="glass-panel p-2 rounded-[24px] grid grid-cols-3 gap-1.5 shrink-0">
               <ModeButton active={mode === AppMode.CREATIVE_POSE} icon={Camera} label="Pose" onClick={() => setMode(AppMode.CREATIVE_POSE)} />
               <ModeButton active={mode === AppMode.VIRTUAL_TRY_ON} icon={Shirt} label="Try-On" onClick={() => setMode(AppMode.VIRTUAL_TRY_ON)} />
               <ModeButton active={mode === AppMode.CREATE_MODEL} icon={User} label="Model" onClick={() => setMode(AppMode.CREATE_MODEL)} />
-              <ModeButton active={mode === AppMode.COPY_CONCEPT} icon={Copy} label="Concept" onClick={() => setMode(AppMode.COPY_CONCEPT)} />
+              {/* <ModeButton active={mode === AppMode.COPY_CONCEPT} icon={Copy} label="Concept" onClick={() => setMode(AppMode.COPY_CONCEPT)} /> */}
             </div>
 
             <button onClick={handleGenerate} disabled={isGenerateDisabled} className={`w-full py-4 rounded-[20px] font-bold text-base tracking-wide text-white shadow-liquid shrink-0 liquid-btn-style transition-all duration-500 transform ${isGenerateDisabled ? 'opacity-50 grayscale cursor-not-allowed' : 'hover:scale-[1.01] active:scale-[0.99]'}`}>
@@ -601,7 +669,11 @@ const App: React.FC = () => {
                   <ImageViewer originalImage={primaryImage} resultImage={results[selectedResultIndex] || results[0]} />
                   <div className="absolute top-4 right-4 flex flex-col gap-3 z-30">
                     <button onClick={() => downloadImage(results[selectedResultIndex], selectedResultIndex, prompt, selectedModel)} className="glass-button w-12 h-12 rounded-full flex items-center justify-center text-white hover:text-mystic-accent transition-all group shadow-glass" title="Save Image"><Download size={22} className="group-hover:translate-y-0.5 transition-transform" /></button>
-                    {mode === AppMode.CREATIVE_POSE && (<button onClick={handleNewPose} className="glass-button w-12 h-12 rounded-full flex items-center justify-center text-white hover:text-pink-400 transition-all shadow-glass" title="Use as Pose"><Bone size={22} /></button>)}
+                    <button onClick={handleNewPose} className="glass-button w-12 h-12 rounded-full flex items-center justify-center text-white hover:text-pink-400 transition-all shadow-glass" title="Use as Pose"><Bone size={22} /></button>
+                  </div>
+                  {/* Mobile Hint */}
+                  <div className="lg:hidden absolute bottom-4 left-0 right-0 text-center pointer-events-none z-20">
+                    <span className="text-[10px] text-white/50 bg-black/40 px-3 py-1 rounded-full backdrop-blur-sm">Long press image to save to Photos</span>
                   </div>
                 </div>
                 {results.length > 1 && (
@@ -627,7 +699,10 @@ const App: React.FC = () => {
         {/* RIGHT PANEL - SIDEBAR HISTORY */}
         <div className={`fixed inset-0 lg:static lg:inset-auto z-40 bg-black/95 lg:bg-black/10 lg:backdrop-blur-sm lg:border-l border-white/10 flex flex-col w-full lg:w-[280px] xl:w-[320px] transition-transform duration-300 shrink-0 lg:h-[calc(100vh-80px)] lg:overflow-hidden ${showMobileHistory ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'}`}>
           <div className="p-4 lg:p-5 border-b border-white/5 flex justify-between items-center bg-black/20 lg:bg-transparent shrink-0">
-            <h2 className="text-sm font-bold flex items-center gap-2 text-white uppercase tracking-widest"><History size={14} className="text-mystic-accent" />Recent</h2>
+            <button onClick={() => setCurrentView('HISTORY')} className="text-xs font-bold flex items-center gap-2 text-white uppercase tracking-widest cursor-pointer transition-all bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg px-4 py-2 shadow-sm hover:border-mystic-accent/50 hover:shadow-glow group">
+              <History size={14} className="text-mystic-accent group-hover:scale-110 transition-transform" />
+              Recent
+            </button>
             <div className="flex items-center gap-1">
               <button onClick={() => setShowMobileHistory(false)} className="lg:hidden p-1.5 hover:bg-white/10 rounded-md text-gray-400 hover:text-white transition-colors"><XCircle size={18} /></button>
             </div>
@@ -643,12 +718,11 @@ const App: React.FC = () => {
                     <div className="w-full aspect-[3/4] bg-black relative">
                       <img src={item.thumbnail} alt="" className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity duration-500" />
                       <div className="absolute top-2 right-2 p-1 rounded bg-black/50 text-[8px] text-white font-bold pointer-events-none">{item.images.length}</div>
-                      {/* Sidebar Actions Overlay */}
-                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-between p-2">
-                        <div className="flex justify-between w-full">
-                          <button onClick={(e) => deleteHistoryItem(item.id, e)} className="p-1.5 rounded-full bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white transition-all backdrop-blur-sm"><Trash2 size={12} /></button>
-                          <button onClick={(e) => { e.stopPropagation(); downloadImage(item.thumbnail, 0, item.prompt, item.modelName); }} className="p-1.5 rounded-full bg-white/20 text-white hover:bg-mystic-accent transition-all backdrop-blur-sm"><Download size={12} /></button>
-                        </div>
+
+                      {/* Sidebar Actions Overlay - Moved to bottom, removed full dark layer */}
+                      <div className="absolute inset-x-0 bottom-0 p-2 flex justify-between items-end opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 bg-gradient-to-t from-black/90 to-transparent">
+                        <button onClick={(e) => deleteHistoryItem(item.id, e)} className="p-1.5 rounded-full bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white transition-all backdrop-blur-sm pointer-events-auto"><Trash2 size={14} /></button>
+                        <button onClick={(e) => { e.stopPropagation(); downloadImage(item.thumbnail, 0, item.prompt, item.modelName); }} className="p-1.5 rounded-full bg-white/20 text-white hover:bg-mystic-accent transition-all backdrop-blur-sm pointer-events-auto"><Download size={14} /></button>
                       </div>
                     </div>
                     <div className="p-2 flex flex-col items-center justify-center bg-[#13111c]">
@@ -673,12 +747,20 @@ const App: React.FC = () => {
       <div className="fixed top-[-20%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-indigo-900/10 blur-3xl pointer-events-none" />
       <div className="fixed bottom-[-20%] right-[-10%] w-[50vw] h-[50vw] rounded-full bg-fuchsia-900/10 blur-3xl pointer-events-none" />
 
+      {/* Toast Notification */}
+      {toast && (
+        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[100] animate-in slide-in-from-top-4 fade-in duration-300">
+          <div className={`glass-panel px-6 py-3 rounded-full border flex items-center gap-3 shadow-2xl ${toast.type === 'success' ? 'border-green-500/30 bg-green-500/10 text-green-200' : 'border-red-500/30 bg-red-500/10 text-red-200'}`}>
+            {toast.type === 'success' ? <CheckCircle size={18} className="text-green-400" /> : <AlertCircle size={18} className="text-red-400" />}
+            <span className="text-sm font-bold tracking-wide">{toast.message}</span>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <nav className="w-full h-16 lg:h-20 px-6 lg:px-8 flex justify-between items-center shrink-0 bg-black/20 backdrop-blur-xl border-b border-white/5 z-20 sticky top-0 lg:static">
         <div className="relative flex items-center gap-3 cursor-pointer" onClick={() => setCurrentView('STUDIO')}>
-          <div className="w-8 h-8 lg:w-10 lg:h-10 rounded-xl bg-gradient-to-br from-mystic-accent to-fuchsia-600 flex items-center justify-center shadow-glow animate-float">
-            <Wand2 className="text-white w-4 h-4 lg:w-5 lg:h-5" />
-          </div>
+          <AnimatedLogo className="w-10 h-10 lg:w-12 lg:h-12" />
           <div>
             <h1 className="text-lg lg:text-xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white via-indigo-100 to-gray-400 drop-shadow-sm">WindiStudio</h1>
             <p className="text-[8px] lg:text-[9px] text-indigo-300 uppercase tracking-widest font-semibold">Supabase Connected</p>
@@ -718,6 +800,20 @@ const App: React.FC = () => {
       {currentView === 'STUDIO' && renderStudio()}
       {currentView === 'HISTORY' && renderHistoryPage()}
       {currentView === 'PAYMENT' && renderPaymentPage()}
+      {currentView === 'PRIVACY' && <PrivacyPolicy onBack={() => { setCurrentView('STUDIO'); window.history.pushState({}, '', window.location.pathname); }} />}
+
+      {/* Privacy Policy Link (Static Footer) */}
+      {currentView !== 'PRIVACY' && (
+        <div className="w-full py-6 mt-auto flex flex-col items-center gap-1 z-10 relative">
+          <button
+            onClick={() => { setCurrentView('PRIVACY'); window.history.pushState({}, '', '?view=privacy'); }}
+            className="text-[10px] text-gray-500 hover:text-gray-300 transition-colors uppercase tracking-widest font-bold px-2 py-1 rounded"
+          >
+            Chính Sách Bảo Mật
+          </button>
+          <span className="text-[9px] text-gray-700 font-medium tracking-wide">Copyright ©2025</span>
+        </div>
+      )}
 
       {/* LOGIN/ACCOUNT MODAL */}
       {showLoginModal && (
@@ -725,23 +821,47 @@ const App: React.FC = () => {
           <div className="relative w-full max-w-sm glass-panel rounded-3xl overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-300">
             <button onClick={() => setShowLoginModal(false)} className="absolute top-4 right-4 text-gray-400 hover:text-white"><X size={20} /></button>
 
+
+
             <div className="p-8 flex flex-col items-center gap-6">
-              <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-mystic-accent to-indigo-500 p-1 shadow-glow">
-                <div className="w-full h-full rounded-full bg-black/40 flex items-center justify-center overflow-hidden">
-                  {userProfile?.avatar_url ? <img src={userProfile.avatar_url} alt="Avt" /> : <User size={32} className="text-white" />}
-                </div>
-              </div>
-
-              <div className="text-center space-y-1">
-                <h2 className="text-xl font-bold text-white">Account</h2>
-                <p className="text-gray-400 text-xs">Manage your studio identity</p>
-              </div>
-
               {!session ? (
-                <button onClick={handleLogin} className="w-full py-3 rounded-xl bg-white text-black font-bold flex items-center justify-center gap-2 hover:bg-gray-100 transition-colors">
-                  <img src="https://www.svgrepo.com/show/475656/google-color.svg" className="w-5 h-5" alt="Google" />
-                  Login with Google
-                </button>
+                <>
+                  <div className="bg-[#1a1625] border border-white/10 p-5 rounded-[32px] max-w-sm w-full text-center relative overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300">
+                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-mystic-accent to-transparent" />
+                    <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-6 border border-white/10 shadow-glass-inset">
+                      <User size={32} className="text-mystic-accent" />
+                    </div>
+                    <h2 className="text-2xl font-bold text-white mb-2">Welcome Back</h2>
+                    <p className="text-sm text-gray-400 mb-8">Sign in to sync your gallery and credits across devices.</p>
+
+                    <button onClick={handleLogin} className="w-full py-3.5 rounded-xl bg-white text-black font-bold text-sm tracking-wide hover:scale-[1.02] active:scale-[0.98] transition-all shadow-glow flex items-center justify-center gap-3">
+                      <img src="https://www.google.com/favicon.ico" alt="G" className="w-4 h-4" />
+                      Continue with Google
+                    </button>
+
+                    {/* Dev Login Button */}
+                    {import.meta.env.DEV && (
+                      <button onClick={() => {
+                        const mockUser = { id: 'dev-user', email: 'dev@windistudio.com' };
+                        setSession({ user: mockUser });
+                        setUserProfile({
+                          id: 'dev-user',
+                          email: 'dev@windistudio.com',
+                          full_name: 'Dev User',
+                          avatar_url: '',
+                          payment_code: 'DEV123',
+                          credits: 10000
+                        });
+                        setShowLoginModal(false);
+                      }} className="w-full mt-3 py-3.5 rounded-xl bg-gray-800 text-white font-bold text-sm tracking-wide hover:bg-gray-700 transition-all flex items-center justify-center gap-3 border border-white/10">
+                        <code className="text-xs">{'<DEV />'}</code>
+                        Mock Login
+                      </button>
+                    )}
+
+                    <button onClick={() => setShowLoginModal(false)} className="mt-4 text-xs text-gray-500 hover:text-white transition-colors">Cancel</button>
+                  </div>
+                </>
               ) : (
                 <div className="w-full space-y-4">
                   <div className="flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/10">
@@ -752,6 +872,52 @@ const App: React.FC = () => {
                         <span className="text-sm font-medium text-white">{userProfile?.payment_code}</span>
                       </div>
                     </div>
+                  </div>
+
+                  {/* Promo Code Section */}
+                  <div className="bg-white/5 border border-white/10 rounded-xl p-1 flex gap-2">
+                    <input
+                      type="text"
+                      placeholder="Enter Promo Code"
+                      className="flex-1 bg-transparent px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none uppercase"
+                      onKeyDown={async (e) => {
+                        if (e.key === 'Enter') {
+                          const code = e.currentTarget.value.trim().toUpperCase();
+                          if (!code) return;
+                          const btn = e.currentTarget.nextElementSibling as HTMLButtonElement;
+                          btn.click();
+                        }
+                      }}
+                    />
+                    <button
+                      onClick={async (e) => {
+                        const input = e.currentTarget.previousElementSibling as HTMLInputElement;
+                        const code = input.value.trim().toUpperCase();
+                        if (!code || !userProfile) return;
+
+                        const btn = e.currentTarget;
+                        const originalText = btn.innerText;
+                        btn.innerText = '...';
+                        btn.disabled = true;
+
+                        const { redeemPromoCode } = await import('./services/supabaseService');
+                        const result = await redeemPromoCode(code, userProfile.id);
+
+                        if (result.success) {
+                          setToast({ message: result.message, type: 'success' });
+                          setUserProfile(prev => prev ? ({ ...prev, credits: result.new_balance }) : null);
+                          input.value = '';
+                        } else {
+                          setToast({ message: result.message, type: 'error' });
+                        }
+
+                        btn.innerText = originalText;
+                        btn.disabled = false;
+                      }}
+                      className="bg-mystic-accent hover:bg-mystic-accent/80 text-white text-xs font-bold px-4 rounded-lg transition-colors"
+                    >
+                      REDEEM
+                    </button>
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
@@ -773,7 +939,8 @@ const App: React.FC = () => {
             </div>
           </div>
         </div>
-      )}
+      )
+      }
 
       {/* TOP UP MODAL (2-STEP) */}
       {showTopUpModal && (
@@ -785,7 +952,7 @@ const App: React.FC = () => {
               {/* Header */}
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center shadow-lg"><Coins size={20} className="text-black" /></div>
-                <div><h2 className="text-lg font-bold text-white">Top Up Credits</h2><p className="text-[10px] text-gray-400 uppercase tracking-wider font-bold">1 XU = 5000 VND</p></div>
+                <div><h2 className="text-lg font-bold text-white">Top Up Credits</h2><p className="text-[10px] text-gray-400 uppercase tracking-wider font-bold">1 XU = 1000 VND</p></div>
               </div>
 
               {/* STEP 1: INPUT */}
@@ -795,7 +962,7 @@ const App: React.FC = () => {
                     <label className="text-xs font-semibold text-gray-400 ml-1">Amount (VND)</label>
                     <div className="relative">
                       <CreditCard className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" size={16} />
-                      <input type="number" value={topUpAmount} onChange={(e) => setTopUpAmount(e.target.value)} placeholder="min 10,000" className="w-full bg-black/40 border border-white/10 rounded-xl py-3 pl-12 pr-4 text-white focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500/50 transition-all" />
+                      <input type="number" value={topUpAmount} onChange={(e) => setTopUpAmount(e.target.value)} placeholder="min 50,000" className="w-full bg-black/40 border border-white/10 rounded-xl py-3 pl-12 pr-4 text-white focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500/50 transition-all" />
                     </div>
                   </div>
                   <div className="p-4 rounded-xl bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border border-yellow-500/20 flex justify-between items-center">
