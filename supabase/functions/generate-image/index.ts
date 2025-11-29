@@ -14,8 +14,43 @@ CRITICAL STYLE RULES:
 `;
 
 // Helper to process image parts
-const processImagePart = (dataUriOrUrl: string) => {
+
+const processImagePart = async (dataUriOrUrl: string) => {
     if (!dataUriOrUrl) return null;
+
+    // Handle HTTP/HTTPS URLs (e.g., from Supabase Storage)
+    if (dataUriOrUrl.startsWith('http')) {
+        try {
+            console.log(`Fetching image from URL: ${dataUriOrUrl}`);
+            const response = await fetch(dataUriOrUrl);
+            if (!response.ok) {
+                throw new Error(`Failed to fetch image from URL: ${response.statusText}`);
+            }
+            const blob = await response.blob();
+            const arrayBuffer = await blob.arrayBuffer();
+
+            // Safer base64 conversion to avoid "Maximum call stack size exceeded"
+            let binary = '';
+            const bytes = new Uint8Array(arrayBuffer);
+            const len = bytes.byteLength;
+            for (let i = 0; i < len; i++) {
+                binary += String.fromCharCode(bytes[i]);
+            }
+            const base64 = btoa(binary);
+
+            console.log(`Successfully converted image to base64. Size: ${len} bytes`);
+
+            return {
+                inlineData: {
+                    mimeType: blob.type || 'image/png',
+                    data: base64
+                }
+            };
+        } catch (e) {
+            console.error("Failed to fetch/process image from URL:", dataUriOrUrl, e);
+            throw new Error(`Failed to fetch/process image from URL: ${dataUriOrUrl}`);
+        }
+    }
 
     const match = dataUriOrUrl.match(/^data:([a-zA-Z0-9\/+\-]+);base64,(.+)$/);
     if (match && match.length === 3) {
@@ -49,7 +84,6 @@ Deno.serve(async (req) => {
             primaryImage,
             secondaryImage,
             userPrompt,
-            size,
             aspectRatio,
             flexibleMode,
             randomFace,
@@ -78,7 +112,7 @@ Deno.serve(async (req) => {
 
             // --- MODE LOGIC ---
             if (mode === 'CREATIVE_POSE') {
-                if (primaryImage) parts.push(processImagePart(primaryImage));
+                if (primaryImage) parts.push(await processImagePart(primaryImage));
 
                 promptText = `
           I have provided a SOURCE IMAGE (Image 1).
@@ -101,8 +135,8 @@ Deno.serve(async (req) => {
         `;
 
             } else if (mode === 'VIRTUAL_TRY_ON') {
-                if (primaryImage) parts.push(processImagePart(primaryImage));
-                if (secondaryImage) parts.push(processImagePart(secondaryImage));
+                if (primaryImage) parts.push(await processImagePart(primaryImage));
+                if (secondaryImage) parts.push(await processImagePart(secondaryImage));
 
                 promptText = `
           I have provided a TARGET PERSON (Image 1) and an OUTFIT REFERENCE (Image 2).
@@ -121,10 +155,10 @@ Deno.serve(async (req) => {
         `;
 
             } else if (mode === 'CREATE_MODEL') {
-                if (primaryImage) parts.push(processImagePart(primaryImage));
+                if (primaryImage) parts.push(await processImagePart(primaryImage));
 
                 if (generatedIdentityRef && !randomFace) {
-                    parts.push(processImagePart(generatedIdentityRef));
+                    parts.push(await processImagePart(generatedIdentityRef));
                 }
 
                 let faceInstruction = "";
@@ -145,8 +179,8 @@ Deno.serve(async (req) => {
           `;
 
             } else if (mode === 'COPY_CONCEPT') {
-                if (secondaryImage) parts.push(processImagePart(secondaryImage)); // Image 1 (Concept)
-                if (primaryImage) parts.push(processImagePart(primaryImage)); // Image 2 (Face)
+                if (secondaryImage) parts.push(await processImagePart(secondaryImage)); // Image 1 (Concept)
+                if (primaryImage) parts.push(await processImagePart(primaryImage)); // Image 2 (Face)
 
                 promptText = `
         I have provided a FACE IDENTITY SOURCE (Image 2) and a CONCEPT/OUTFIT REFERENCE (Image 1).
@@ -180,11 +214,20 @@ Deno.serve(async (req) => {
                 promptText += `\n\nUSER OVERRIDE INSTRUCTIONS: ${userPrompt}`;
             }
 
+            // Enforce Aspect Ratio in Prompt
+            if (aspectRatio) {
+                promptText += `\n Aspect ratio ${aspectRatio}.`;
+            }
+
+            // Add the text prompt to the parts
             parts.push({ text: promptText });
 
-            const imageConfig: any = {
-                aspectRatio: aspectRatio,
-            };
+            const imageConfig: any = {};
+            if (aspectRatio) {
+                imageConfig.aspectRatio = aspectRatio;
+            }
+
+            console.log(`Generating with config: Model=${modelName || activeModel}, AspectRatio=${aspectRatio}`);
 
             const response = await ai.models.generateContent({
                 model: modelName || activeModel,
