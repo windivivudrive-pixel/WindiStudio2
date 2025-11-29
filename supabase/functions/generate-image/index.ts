@@ -87,7 +87,9 @@ Deno.serve(async (req) => {
             aspectRatio,
             flexibleMode,
             randomFace,
-            numberOfImages = 1
+            numberOfImages = 1, // Legacy support, but we will mostly use 1 per request now
+            variationIndex = 0,
+            totalBatchSize = 1
         } = await req.json();
 
         const apiKey = Deno.env.get('GEMINI_API_KEY');
@@ -98,23 +100,26 @@ Deno.serve(async (req) => {
         const ai = new GoogleGenAI({ apiKey });
         const results: string[] = [];
 
-        let generatedIdentityRef: string | null = null;
+        // We now generate only 1 image per request to support progressive loading on frontend
+        // The frontend will call this function N times.
+
+        const i = variationIndex;
+        const isBatchMode = totalBatchSize > 1;
+
+        const variationInstruction = isBatchMode
+            ? `\nVARIATION INSTRUCTION (Image ${i + 1} of ${totalBatchSize}): Change the camera angle or pose slightly to create a diverse set.`
+            : "";
+
+        const parts: any[] = [];
+        let promptText = "";
+        let generatedIdentityRef: string | null = null; // Note: This won't persist across requests. If needed, frontend must pass it back.
         const activeModel = "gemini-2.0-flash-exp";
 
-        for (let i = 0; i < numberOfImages; i++) {
-            const parts: any[] = [];
-            let promptText = "";
+        // --- MODE LOGIC ---
+        if (mode === 'CREATIVE_POSE') {
+            if (primaryImage) parts.push(await processImagePart(primaryImage));
 
-            const isBatchMode = numberOfImages > 1;
-            const variationInstruction = isBatchMode
-                ? `\nVARIATION INSTRUCTION (Image ${i + 1} of ${numberOfImages}): Change the camera angle or pose slightly to create a diverse set.`
-                : "";
-
-            // --- MODE LOGIC ---
-            if (mode === 'CREATIVE_POSE') {
-                if (primaryImage) parts.push(await processImagePart(primaryImage));
-
-                promptText = `
+            promptText = `
           I have provided a SOURCE IMAGE (Image 1).
 
           ${STYLE_GUIDE}
@@ -134,11 +139,11 @@ Deno.serve(async (req) => {
           ${variationInstruction}
         `;
 
-            } else if (mode === 'VIRTUAL_TRY_ON') {
-                if (primaryImage) parts.push(await processImagePart(primaryImage));
-                if (secondaryImage) parts.push(await processImagePart(secondaryImage));
+        } else if (mode === 'VIRTUAL_TRY_ON') {
+            if (primaryImage) parts.push(await processImagePart(primaryImage));
+            if (secondaryImage) parts.push(await processImagePart(secondaryImage));
 
-                promptText = `
+            promptText = `
           I have provided a TARGET PERSON (Image 1) and an OUTFIT REFERENCE (Image 2).
           
           TASK: Virtual Try-On.
@@ -148,29 +153,29 @@ Deno.serve(async (req) => {
           
           POSE:
           ${flexibleMode || isBatchMode
-                        ? '- You may slightly adjust the subject\'s pose to make the outfit look better and ensure variety.'
-                        : '- You must strictly maintain the original body pose of Image 1.'}
+                    ? '- You may slightly adjust the subject\'s pose to make the outfit look better and ensure variety.'
+                    : '- You must strictly maintain the original body pose of Image 1.'}
 
           ${variationInstruction}
         `;
 
-            } else if (mode === 'CREATE_MODEL') {
-                if (primaryImage) parts.push(await processImagePart(primaryImage));
+        } else if (mode === 'CREATE_MODEL') {
+            if (primaryImage) parts.push(await processImagePart(primaryImage));
 
-                if (generatedIdentityRef && !randomFace) {
-                    parts.push(await processImagePart(generatedIdentityRef));
-                }
+            if (generatedIdentityRef && !randomFace) {
+                parts.push(await processImagePart(generatedIdentityRef));
+            }
 
-                let faceInstruction = "";
-                if (randomFace) {
-                    faceInstruction = "FACE: Generate a UNIQUE, distinct face for this image. Do not repeat previous faces.";
-                } else if (generatedIdentityRef) {
-                    faceInstruction = "FACE: STRICTLY MATCH the facial identity of the Face Reference provided (primaryImage).";
-                } else {
-                    faceInstruction = "FACE: Generate a beautiful, photorealistic Korean young girl model with smooth white skintone, hourglass body(medium breast, small waist).";
-                }
+            let faceInstruction = "";
+            if (randomFace) {
+                faceInstruction = "FACE: Generate a UNIQUE, distinct face for this image. Do not repeat previous faces.";
+            } else if (generatedIdentityRef) {
+                faceInstruction = "FACE: STRICTLY MATCH the facial identity of the Face Reference provided (primaryImage).";
+            } else {
+                faceInstruction = "FACE: Generate a beautiful, photorealistic Korean young girl model with smooth white skintone, hourglass body(medium breast, small waist).";
+            }
 
-                promptText = `
+            promptText = `
              GENERATE a photorealistic Young Korean Girl (Smooth White Skin, Black Hair, medium breast, small waist) with the exact outfit (primaryImage)
              POSE: Create a dynamic, professional fashion pose (Variation #${i + 1}). 
              ${faceInstruction}
@@ -178,11 +183,11 @@ Deno.serve(async (req) => {
             ${variationInstruction}
           `;
 
-            } else if (mode === 'COPY_CONCEPT') {
-                if (secondaryImage) parts.push(await processImagePart(secondaryImage)); // Image 1 (Concept)
-                if (primaryImage) parts.push(await processImagePart(primaryImage)); // Image 2 (Face)
+        } else if (mode === 'COPY_CONCEPT') {
+            if (secondaryImage) parts.push(await processImagePart(secondaryImage)); // Image 1 (Concept)
+            if (primaryImage) parts.push(await processImagePart(primaryImage)); // Image 2 (Face)
 
-                promptText = `
+            promptText = `
         I have provided a FACE IDENTITY SOURCE (Image 2) and a CONCEPT/OUTFIT REFERENCE (Image 1).
 
         TASK: High-Fidelity Identity Portrait using Concept Composition.
@@ -207,53 +212,53 @@ Deno.serve(async (req) => {
            
         ${variationInstruction}
         `;
+        }
+
+        // Append User Prompt
+        if (userPrompt) {
+            promptText += `\n\nUSER OVERRIDE INSTRUCTIONS: ${userPrompt}`;
+        }
+
+        // Enforce Aspect Ratio in Prompt
+        if (aspectRatio) {
+            promptText += `\n Aspect ratio ${aspectRatio}.`;
+        }
+
+        // Add the text prompt to the parts
+        parts.push({ text: promptText });
+
+        const imageConfig: any = {};
+        if (aspectRatio) {
+            imageConfig.aspectRatio = aspectRatio;
+        }
+
+        console.log(`Generating with config: Model=${modelName || activeModel}, AspectRatio=${aspectRatio}`);
+
+        const response = await ai.models.generateContent({
+            model: modelName || activeModel,
+            contents: { parts },
+            config: {
+                imageConfig: imageConfig
             }
+        });
 
-            // Append User Prompt
-            if (userPrompt) {
-                promptText += `\n\nUSER OVERRIDE INSTRUCTIONS: ${userPrompt}`;
-            }
+        if (response.candidates?.[0]?.content?.parts) {
+            for (const part of response.candidates[0].content.parts) {
+                if (part.inlineData && part.inlineData.data) {
+                    const base64Str = part.inlineData.data;
+                    const mimeType = part.inlineData.mimeType || 'image/png';
+                    const fullDataUrl = `data:${mimeType};base64,${base64Str}`;
 
-            // Enforce Aspect Ratio in Prompt
-            if (aspectRatio) {
-                promptText += `\n Aspect ratio ${aspectRatio}.`;
-            }
+                    results.push(fullDataUrl);
 
-            // Add the text prompt to the parts
-            parts.push({ text: promptText });
-
-            const imageConfig: any = {};
-            if (aspectRatio) {
-                imageConfig.aspectRatio = aspectRatio;
-            }
-
-            console.log(`Generating with config: Model=${modelName || activeModel}, AspectRatio=${aspectRatio}`);
-
-            const response = await ai.models.generateContent({
-                model: modelName || activeModel,
-                contents: { parts },
-                config: {
-                    imageConfig: imageConfig
-                }
-            });
-
-            if (response.candidates?.[0]?.content?.parts) {
-                for (const part of response.candidates[0].content.parts) {
-                    if (part.inlineData && part.inlineData.data) {
-                        const base64Str = part.inlineData.data;
-                        const mimeType = part.inlineData.mimeType || 'image/png';
-                        const fullDataUrl = `data:${mimeType};base64,${base64Str}`;
-
-                        results.push(fullDataUrl);
-
-                        if (!generatedIdentityRef && !randomFace && mode === 'CREATE_MODEL') {
-                            generatedIdentityRef = fullDataUrl;
-                        }
-                        break;
+                    if (!generatedIdentityRef && !randomFace && mode === 'CREATE_MODEL') {
+                        generatedIdentityRef = fullDataUrl;
                     }
+                    break;
                 }
             }
         }
+
 
         if (results.length === 0) {
             throw new Error("Failed to generate any images.");
