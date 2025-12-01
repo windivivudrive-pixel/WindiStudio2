@@ -300,6 +300,57 @@ const App: React.FC = () => {
     }
   };
 
+  const handleUpscale = async () => {
+    if (results.length === 0) return;
+
+    const currentImage = results[selectedResultIndex];
+    if (!currentImage) return;
+
+    // Check credits
+    const cost = 10; // Upscale cost
+    if (userProfile && userProfile.credits < cost) {
+      setShowTopUpModal(true);
+      setError(`Insufficient balance for Upscale. Cost: ${cost} xu.`);
+      return;
+    }
+
+    setIsGenerating(true);
+    setLoadingState({ title: "Enhancing...", subtitle: "Upscaling to 4K..." });
+
+    // Keep current results but maybe show a loader overlay? 
+    // Or just append the result? Let's append for now or replace?
+    // User usually wants to see the upscaled version.
+
+    try {
+      const upscaledImages = await generateStudioImage({
+        mode: AppMode.CREATIVE_POSE, // Mode doesn't matter much for upscale, but we need one
+        modelName: 'upscale-4k', // Special model name to trigger backend logic
+
+        primaryImage: currentImage,
+        secondaryImage: null,
+        userPrompt: "Upscale this image to 4K resolution, high details.",
+        aspectRatio: aspectRatio,
+        numberOfImages: 1
+      });
+
+      if (upscaledImages && upscaledImages.length > 0) {
+        setResults(prev => [...prev, ...upscaledImages]);
+        setSelectedResultIndex(results.length); // Select the new image
+
+        // Deduct credits
+        if (userProfile) {
+          const newBalance = userProfile.credits - cost;
+          setUserProfile({ ...userProfile, credits: newBalance });
+          updateUserCredits(userProfile.id, newBalance);
+        }
+      }
+    } catch (err: any) {
+      setError("Upscale failed: " + err.message);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
 
 
   const deleteHistoryItem = async (id: string, e: React.MouseEvent) => {
@@ -629,6 +680,7 @@ const App: React.FC = () => {
                 <div className="flex bg-black/20 rounded-xl p-1 gap-1">
                   <button onClick={() => setSelectedModel('gemini-2.5-flash-image')} className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold transition-all ${selectedModel === 'gemini-2.5-flash-image' ? 'bg-white text-black shadow-sm' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}>Air</button>
                   <button onClick={() => setSelectedModel('gemini-3-pro-image-preview')} className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold transition-all ${selectedModel === 'gemini-3-pro-image-preview' ? 'bg-indigo-600 text-white shadow-glow' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}>Pro</button>
+                  <button onClick={() => setSelectedModel('seededit-3-0-i2i-250628')} className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold transition-all ${selectedModel === 'seededit-3-0-i2i-250628' ? 'bg-purple-600 text-white shadow-glow' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}>Max</button>
                 </div>
               </div>
               <div className="glass-panel p-2.5 rounded-[20px] flex flex-col gap-2">
@@ -714,6 +766,7 @@ const App: React.FC = () => {
                   <div className="absolute top-4 right-4 flex flex-col gap-3 z-30">
                     <button onClick={() => downloadImage(results[selectedResultIndex], selectedResultIndex, prompt, selectedModel)} className="glass-button w-12 h-12 rounded-full flex items-center justify-center text-white hover:text-mystic-accent transition-all group shadow-glass" title="Save Image"><Download size={22} className="group-hover:translate-y-0.5 transition-transform" /></button>
                     <button onClick={handleNewPose} className="glass-button w-12 h-12 rounded-full flex items-center justify-center text-white hover:text-pink-400 transition-all shadow-glass" title="Use as Pose"><Bone size={22} /></button>
+                    <button onClick={handleUpscale} className="glass-button w-12 h-12 rounded-full flex items-center justify-center text-white hover:text-green-400 transition-all shadow-glass" title="Upscale 4K"><ScanFace size={22} /></button>
                   </div>
                   {/* Mobile Hint */}
                   <div className="lg:hidden absolute bottom-4 left-0 right-0 text-center pointer-events-none z-20">

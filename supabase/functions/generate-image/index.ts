@@ -8,9 +8,9 @@ const corsHeaders = {
 // --- CONSTANTS & PROMPTS ---
 const STYLE_GUIDE = `
 CRITICAL STYLE RULES:
-1. PHOTOREALISM ONLY: The output MUST be a high-quality Photograph (8K, Raw Photo, Cinematic Lighting, Depth of Field).
-2. NO ARTISTIC STYLES: Do NOT generate cartoons, anime, illustrations, paintings, or 3D renders.
-3. TEXTURE: Skin texture must be realistic (pores, smooth). Fabrics must have realistic weave/weight.
+1. PHOTOREALISM ONLY: The output MUST be a high-quality Photograph.
+2. Do NOT generate cartoons or 3D renders.
+3. TEXTURE: Skin texture must be realistic (smooth). Fabrics must have realistic weave/weight.
 `;
 
 // Helper to process image parts
@@ -91,6 +91,181 @@ Deno.serve(async (req) => {
             variationIndex = 0,
             totalBatchSize = 1
         } = await req.json();
+
+        // --- BYTEPLUS (SEEDREAM) LOGIC ---
+        // --- BYTEPLUS (SEEDREAM) LOGIC ---
+        // if (modelName.includes("250828")) {
+
+        //     const arkApiKey = Deno.env.get('ARK_API_KEY');
+        //     if (!arkApiKey) throw new Error("ARK_API_KEY is missing.");
+
+        //     // Build correct image array for Seedream
+        //     const imageList: string[] = [];
+        //     const idIndexMap: Record<string, number> = {};
+
+        //     if (primaryImage) {
+        //         console.log(`Primary Image format: ${primaryImage.substring(0, 50)}...`);
+        //         idIndexMap["primary"] = imageList.length;
+        //         imageList.push(primaryImage);
+        //     }
+
+        //     if (secondaryImage) {
+        //         console.log(`Secondary Image format: ${secondaryImage.substring(0, 50)}...`);
+        //         idIndexMap["secondary"] = imageList.length;
+        //         imageList.push(secondaryImage);
+        //     }
+
+        //     console.log("Seedream Image Index Map:", idIndexMap);
+
+        //     // Build prompt
+        //     let finalPrompt = `${STYLE_GUIDE}\n${userPrompt || ""}`;
+
+        //     finalPrompt = finalPrompt
+        //         .replace(/<PRIMARY>/g, `image ${idIndexMap["primary"] + 1}`)
+        //         .replace(/<SECONDARY>/g, `image ${idIndexMap["secondary"] + 1}`);
+
+        //     if (mode === 'VIRTUAL_TRY_ON') {
+        //         finalPrompt = `Replace the clothing and accessories in image 1 with the outfit of image 2 `
+        //     }
+        //     console.log("Seedream Final Prompt:", finalPrompt);
+
+        //     // Call Seedream API
+        //     const response = await fetch(
+        //         "https://ark.ap-southeast.bytepluses.com/api/v3/images/generations",
+        //         {
+        //             method: "POST",
+        //             headers: {
+        //                 "Content-Type": "application/json",
+        //                 "Authorization": `Bearer ${arkApiKey}`,
+        //             },
+        //             body: JSON.stringify({
+        //                 model: "seedream-4-0-250828",
+        //                 prompt: finalPrompt,
+        //                 image: imageList.length > 0 ? imageList : undefined,
+        //                 sequential_image_generation: "auto",
+        //                 sequential_image_generation_options: {
+        //                     max_images: numberOfImages,
+        //                 },
+        //                 // steps: 40,                     // tăng bước → ảnh sắc hơn
+        //                 // guidance_scale: 4,             // tăng độ bám prompt + chi tiết
+        //                 // denoise: 0.25,                 // tái tạo chi tiết mịn hơn
+
+        //                 // // Bộ creative enhance (tương đương nút Nâng cấp sáng tạo)
+        //                 // enhance: {
+        //                 //     detail: "high",            // tăng texture & chi tiết
+        //                 //     sharpness: 0.4             // tăng độ nét giống UI
+        //                 // },
+
+        //                 // // Upscale sáng tạo (dreamina dùng cái này)
+        //                 // upscale: {
+        //                 //     enable: true,
+        //                 //     factor: 4,                 // upscale x2 giống UI
+        //                 //     mode: "creative"           // chính là “Nâng cấp sáng tạo”
+        //                 // },
+
+        //                 // // sampler ổn nhất cho Seedream 4.0
+        //                 // sampler: "dpmpp_2m_karras",
+        //                 steps: 40,
+        //                 guidance_scale: 4.5,
+        //                 denoise: 0.38,
+
+        //                 enhance: {
+        //                     detail: "extreme",
+        //                     sharpness: 0.65
+        //                 },
+
+        //                 upscale: {
+        //                     enable: true,
+        //                     factor: 4,
+        //                     mode: "creative-refine"   // QUAN TRỌNG —— giống 100% UI Dreamina
+        //                 },
+
+        //                 sampler: "dpmpp_2m_karras",
+
+        //                 response_format: "url",
+        //                 size: "4K",
+        //                 stream: false,
+        //                 watermark: false
+        //             }),
+        //         }
+        //     );
+
+        //     if (!response.ok) {
+        //         const err = await response.text();
+        //         throw new Error(`Seedream API Error: ${err}`);
+        //     }
+
+        //     const data = await response.json();
+        //     console.log("Seedream Response:", data);
+
+        //     const outputImages = data.data?.map((img: any) => img.url) || [];
+
+        //     if (!outputImages.length)
+        //         throw new Error("Seedream returned no images.");
+
+        //     return new Response(
+        //         JSON.stringify({ images: outputImages }),
+        //         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        //     );
+        // }
+
+        if (modelName.includes("seededit")) {
+
+            const arkApiKey = Deno.env.get("ARK_API_KEY");
+            if (!arkApiKey) throw new Error("ARK_API_KEY is missing.");
+
+            const imageList: string[] = [];
+
+            if (primaryImage) imageList.push(primaryImage);
+            if (secondaryImage) imageList.push(secondaryImage);
+
+            if (imageList.length === 0)
+                throw new Error("SeedEdit requires at least 1 image.");
+
+            let finalPrompt = `${STYLE_GUIDE}\n${userPrompt || ""}`;
+            finalPrompt = "";
+            console.log("SeedEdit Final Prompt:", finalPrompt);
+
+            const body = {
+                model: "seededit-3-0-i2i-250628",
+                prompt: finalPrompt,
+                image: imageList,
+                response_format: "url",
+                size: "adaptive",
+                guidance_scale: 5.5,
+                watermark: false
+            };
+
+            const response = await fetch(
+                "https://ark.ap-southeast.bytepluses.com/api/v3/images/generations",
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${arkApiKey}`,
+                    },
+                    body: JSON.stringify(body),
+                }
+            );
+
+            if (!response.ok) {
+                const err = await response.text();
+                throw new Error(`SeedEdit API Error: ${err}`);
+            }
+
+            const data = await response.json();
+
+            const outputImages =
+                data.data?.map((img: any) => img.url || img.image_url).filter(Boolean) || [];
+
+            return new Response(
+                JSON.stringify({ images: outputImages }),
+                { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+            );
+        }
+
+
+
 
         const apiKey = Deno.env.get('GEMINI_API_KEY');
         if (!apiKey) {
@@ -259,6 +434,59 @@ Deno.serve(async (req) => {
             }
         }
 
+
+        // --- UPSCALE LOGIC ---
+        if (modelName === 'gemini-3-pro-image-preview') {
+            const activeModel = 'gemini-3-pro-image-preview';
+            console.log("Upscaling image with gemini-3-pro-image-preview (4K)...");
+
+            if (!primaryImage) {
+                throw new Error("Upscale requires an input image.");
+            }
+
+            // Process image (handles URL or Base64)
+            const processedImage = await processImagePart(primaryImage);
+            if (!processedImage) {
+                throw new Error("Failed to process input image for upscale.");
+            }
+
+            // Use Gemini 3 Pro for High-Res Image-to-Image refinement
+            const response = await ai.models.generateContent({
+                model: "gemini-3-pro-image-preview",
+                contents: {
+                    parts: [
+                        processedImage,
+                        { text: "Upscale this image to 4K resolution. Maintain exact identity, pose, and details but significantly improve clarity, sharpness, and texture. Photorealistic output." }
+                    ]
+                },
+                config: {
+                    // @ts-ignore - imageSize might not be in types yet but supported by API
+                    imageConfig: {
+                        imageSize: '4K',
+                        aspectRatio: aspectRatio || '1:1' // Default if missing
+                    }
+                }
+            });
+
+            if (response.candidates?.[0]?.content?.parts) {
+                for (const part of response.candidates[0].content.parts) {
+                    if (part.inlineData && part.inlineData.data) {
+                        const base64Str = part.inlineData.data;
+                        const mimeType = part.inlineData.mimeType || 'image/png';
+                        const fullDataUrl = `data:${mimeType};base64,${base64Str}`;
+                        results.push(fullDataUrl);
+                        break;
+                    }
+                }
+            }
+
+            if (results.length > 0) {
+                return new Response(
+                    JSON.stringify({ images: results }),
+                    { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+                );
+            }
+        }
 
         if (results.length === 0) {
             throw new Error("Failed to generate any images.");
