@@ -41,6 +41,8 @@ export interface UserProfile {
   payment_code: string;
   credits: number;
   referred_by_code?: string;
+  warning_count?: number;
+  banned?: boolean;
 }
 
 // Map to 'transactions' table

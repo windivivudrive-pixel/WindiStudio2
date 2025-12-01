@@ -172,7 +172,7 @@ export const saveGenerationToDb = async (
   userId: string,
   item: HistoryItem,
   cost: number,
-  imageType: 'STANDARD' | 'PREMIUM'
+  imageType: 'STANDARD' | 'PREMIUM' | 'SCALEX2'
 ) => {
   if (userId === 'dev-user') {
     return item; // Mock save, return item as is (images are already base64 or URLs)

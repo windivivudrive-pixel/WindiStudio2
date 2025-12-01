@@ -149,9 +149,18 @@ export const generateStudioImage = async (
         } else {
           throw new Error("No image returned");
         }
-      } catch (err) {
+      } catch (err: any) {
         console.error(`Failed to generate image ${i + 1}:`, err);
-        // We don't rethrow here to allow other images to succeed.
+        // Rethrow safety errors immediately to stop the process and alert the user
+        const errorMsg = err.message || "";
+        if (errorMsg.includes("SAFETY_VIOLATION") ||
+          errorMsg.includes("ACCOUNT_BANNED") ||
+          errorMsg.includes("PROHIBITED") ||
+          errorMsg.includes("blocked") ||
+          errorMsg.includes("content")) {
+          throw err;
+        }
+        // We don't rethrow other errors here to allow other images to succeed.
         // But if ALL fail, the caller might want to know.
         return null;
       }
