@@ -138,6 +138,17 @@ export const generateStudioImage = async (
 
         if (error) {
           console.error(`Error generating image ${i + 1}:`, error);
+          // Check if it's a structured error from our backend
+          if (error.context && error.context.response) {
+            try {
+              const errorBody = await error.context.response.json();
+              if (errorBody && errorBody.message) {
+                throw new Error(errorBody.message);
+              }
+            } catch (e) {
+              // ignore json parse error
+            }
+          }
           throw new Error(error.message || "Failed to generate image");
         }
 

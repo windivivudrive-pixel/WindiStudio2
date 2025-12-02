@@ -377,7 +377,10 @@ Deno.serve(async (req) => {
                 // Check for safety block
                 const reason = candidate.finishReason as any;
                 if (reason === "SAFETY" || reason === "PROHIBITED_CONTENT" || reason === "BLOCK_REASON_SAFETY" || reason === "IMAGE_OTHER") {
-                    throw new Error("SAFETY_VIOLATION: AI refused to generate this image. It may contain prohibited content or safety violations.");
+                    return new Response(
+                        JSON.stringify({ error: "SAFETY_VIOLATION", message: "AI refused to generate this image. It may contain prohibited content or safety violations." }),
+                        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+                    );
                 }
             }
             throw new Error("Failed to generate any images. Check logs for details.");
@@ -423,10 +426,16 @@ Deno.serve(async (req) => {
 
                 if (shouldBan) {
                     console.error(`User ${userId} has been BANNED.`);
-                    throw new Error("ACCOUNT_BANNED: Tài khoản của bạn đã bị khóa vĩnh viễn do vi phạm chính sách an toàn nhiều lần.");
+                    return new Response(
+                        JSON.stringify({ error: "ACCOUNT_BANNED", message: "Tài khoản của bạn đã bị khóa vĩnh viễn do vi phạm chính sách an toàn nhiều lần." }),
+                        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+                    );
                 } else {
                     const remaining = 3 - currentWarnings;
-                    throw new Error(`SAFETY_VIOLATION: Bạn đang sử dụng hình ảnh quá nhạy cảm hoặc bạo lực. Vui lòng chọn ảnh khác. Sau ${remaining} lần vi phạm nữa tài khoản bạn sẽ bị khóa.`);
+                    return new Response(
+                        JSON.stringify({ error: "SAFETY_VIOLATION", message: `Bạn đang sử dụng hình ảnh quá nhạy cảm hoặc bạo lực. Vui lòng chọn ảnh khác. Sau ${remaining} lần vi phạm nữa tài khoản bạn sẽ bị khóa.` }),
+                        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+                    );
                 }
             } catch (dbError: any) {
                 console.error("Failed to update user safety stats:", dbError);

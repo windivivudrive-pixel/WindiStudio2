@@ -43,6 +43,8 @@ export interface UserProfile {
   referred_by_code?: string;
   warning_count?: number;
   banned?: boolean;
+  branding_logo_url?: string;
+  branding_config?: BrandingConfig;
 }
 
 // Map to 'transactions' table
@@ -71,6 +73,21 @@ export interface GenerationConfig {
   conceptReferences?: string[];
   flexibleMode?: boolean;
   randomFace?: boolean;
+}
+
+export interface BrandingConfig {
+  layoutMode?: 'single' | 'loop'; // New: Single or Repeating Pattern
+  x?: number; // 0-100% position
+  y?: number; // 0-100% position
+  gap?: number; // Spacing for loop mode
+  applyToPreview?: boolean; // New: Toggle between "Always Visible" (true) vs "Download Only" (false)
+
+  // Deprecated/Legacy support (optional now)
+  position?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+  margin?: number;
+
+  scale: number; // 0.1 to 0.5 (10% to 50% of image width)
+  opacity: number; // 0.1 to 1.0
 }
 
 export interface GenerationResponse {

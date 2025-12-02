@@ -1,6 +1,6 @@
 
 import { supabase } from './supabaseClient';
-import { HistoryItem, UserProfile, AppMode, Transaction } from '../types';
+import { HistoryItem, UserProfile, AppMode, Transaction, BrandingConfig } from '../types';
 import { base64ToBlob, compressImage } from '../utils/imageUtils';
 import { uploadToR2, deleteFromR2 } from './r2Service';
 
@@ -69,8 +69,45 @@ export const createProfileIfNotExists = async (user: any) => {
     console.error('Error creating profile:', error);
     return null;
   }
+
   return data;
 };
+
+/* --- BRANDING FEATURE --- */
+
+export const uploadImageToStorage = async (base64Data: string, fileName: string): Promise<string | null> => {
+  try {
+    // Convert Base64 to Blob
+    const base64Response = await fetch(base64Data);
+    const blob = await base64Response.blob();
+
+    const bucketName = import.meta.env.VITE_SUPABASE_BUCKET || 'windi-images';
+
+    const { data, error } = await supabase.storage
+      .from(bucketName)
+      .upload(fileName, blob, {
+        contentType: 'image/png',
+        upsert: true
+      });
+
+    if (error) {
+      console.error('Error uploading branding logo:', error);
+      return null;
+    }
+
+    // Get Public URL
+    const { data: { publicUrl } } = supabase.storage
+      .from(bucketName)
+      .getPublicUrl(fileName);
+
+    return publicUrl;
+  } catch (e) {
+    console.error("Upload failed:", e);
+    return null;
+  }
+};
+
+// updateProfileBranding removed in favor of saveBrandingToDb
 
 export const updateUserCredits = async (userId: string, newBalance: number) => {
   if (userId === 'dev-user') return; // Mock update
@@ -148,25 +185,8 @@ export const createTransaction = async (userId: string, amountVnd: number, credi
 
 // --- STORAGE & GENERATIONS ---
 
-export const uploadImageToStorage = async (base64Data: string, fileName: string): Promise<string | null> => {
-  try {
-    // Compress to JPEG (100% quality - no compression)
-    const blob = await compressImage(base64Data, 1.0);
+// uploadImageToStorage moved to top
 
-    // Upload to Cloudflare R2
-    const publicUrl = await uploadToR2(blob, fileName, 'image/jpeg');
-
-    if (!publicUrl) {
-      console.error('Error uploading image to R2');
-      return null;
-    }
-
-    return publicUrl;
-  } catch (err) {
-    console.error('Upload exception:', err);
-    return null;
-  }
-};
 
 export const saveGenerationToDb = async (
   userId: string,
@@ -252,6 +272,30 @@ export const fetchHistoryFromDb = async (userId: string): Promise<HistoryItem[]>
     modelName: row.model_name || 'unknown',
     cost: row.cost_credits
   }));
+};
+/* --- BRANDING FEATURE START --- */
+export const saveBrandingToDb = async (
+  userId: string,
+  brandingLogo: string,
+  brandingConfig: BrandingConfig
+) => {
+
+  const { error } = await supabase
+    .from('branding')
+    .upsert({
+      user_id: userId,
+      branding_logo: brandingLogo,
+      branding_config: brandingConfig
+    }, { onConflict: 'user_id' })
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error saving branding to DB:', error);
+    return null;
+  }
+
+  return { brandingLogo, brandingConfig };
 };
 
 export const deleteHistoryFromDb = async (id: string) => {

@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Sparkles, Shirt, Camera, Wand2, Download, AlertCircle, History, Trash2, ChevronDown, ChevronUp, User, Image as ImageIcon, Bone, Layers, ToggleLeft, ToggleRight, XCircle, Archive, Shuffle, Copy, ScanFace, RefreshCw, LogIn, Coins, X, CreditCard, Wallet, LogOut, Zap, Cloud, ArrowLeft, Calendar, FileText, CheckCircle, XOctagon, QrCode, Smartphone, Check, Maximize2, Plus } from 'lucide-react';
+import { Sparkles, Shirt, Camera, Wand2, Download, AlertCircle, History, Trash2, ChevronDown, ChevronUp, User, Image as ImageIcon, Bone, Layers, ToggleLeft, ToggleRight, XCircle, Archive, Shuffle, Copy, ScanFace, RefreshCw, LogIn, Coins, X, CreditCard, Wallet, LogOut, Zap, Cloud, ArrowLeft, Calendar, FileText, CheckCircle, XOctagon, QrCode, Smartphone, Check, Maximize2, Plus, Stamp } from 'lucide-react';
 import JSZip from 'jszip';
 import { AppMode, AspectRatio, HistoryItem, UserProfile, Transaction } from './types';
 import { ImageUploader } from './components/ImageUploader';
@@ -8,6 +8,8 @@ import { ImageViewer } from './components/ImageViewer';
 import { AnimatedLogo } from './components/AnimatedLogo';
 import { PrivacyPolicy } from './components/PrivacyPolicy';
 import { generateStudioImage, ensureApiKey } from './services/geminiService';
+import { BrandingPage } from './components/BrandingPage';
+import { useBranding } from './utils/useBranding';
 import {
   signInWithGoogle,
   signOut,
@@ -32,7 +34,7 @@ const BANK_CONFIG = {
 
 const App: React.FC = () => {
   // Navigation State
-  const [currentView, setCurrentView] = useState<'STUDIO' | 'HISTORY' | 'PAYMENT' | 'PRIVACY'>('STUDIO');
+  const [currentView, setCurrentView] = useState<'STUDIO' | 'HISTORY' | 'PAYMENT' | 'PRIVACY' | 'BRANDING'>('STUDIO');
 
   // Main State
   const [mode, setMode] = useState<AppMode>(AppMode.CREATIVE_POSE);
@@ -92,11 +94,127 @@ const App: React.FC = () => {
       return () => clearTimeout(timer);
     }
   }, [toast]);
+  const [displayImage, setDisplayImage] = useState<string | null>(null);
 
+  // Branding State (Managed by Custom Hook)
+  const {
+    brandingLogo,
+    setBrandingLogo,
+    brandingConfig,
+    setBrandingConfig,
+    isSavingBranding,
+    handleSaveBranding
+  } = useBranding(userProfile, setUserProfile);
   // Refs
   const outputRef = useRef<HTMLDivElement>(null);
 
+  /* --- BRANDING FEATURE START --- */
+  // Effect to generate watermarked image for DISPLAY (Preview Quality)
+  // This runs automatically so users see the logo and can Long-Press on mobile
+  useEffect(() => {
+    const rawImage = results[selectedResultIndex];
+    if (!rawImage) {
+      setDisplayImage(null);
+      return;
+    }
+
+    // Check config: If user turned OFF 'Apply to Preview', show raw image.
+    // Default applyToPreview to true if undefined
+    const shouldApply = brandingConfig?.applyToPreview !== false;
+
+    // If no branding OR logic says skip, just show raw image
+    if (!brandingLogo || !brandingConfig || !shouldApply) {
+      setDisplayImage(rawImage);
+      return;
+    }
+
+    const composeImage = async () => {
+      try {
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        img.src = rawImage;
+        await img.decode(); // Wait for load
+
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+
+        // Draw Base
+        ctx.drawImage(img, 0, 0);
+
+        // Draw Logo
+        const logo = new Image();
+        logo.crossOrigin = "anonymous";
+        logo.src = brandingLogo;
+        await logo.decode();
+
+        const scale = brandingConfig.scale || 0.2;
+        const logoW = img.width * scale;
+        const logoH = logoW * (logo.height / logo.width);
+        const posXPercent = brandingConfig.x !== undefined ? brandingConfig.x : 90;
+        const posYPercent = brandingConfig.y !== undefined ? brandingConfig.y : 90;
+
+        ctx.globalAlpha = brandingConfig.opacity || 1.0;
+
+        if (brandingConfig.layoutMode === 'loop') {
+          const yPos = (img.height * posYPercent) / 100 - (logoH / 2);
+          const gap = brandingConfig.gap || 10;
+          let currentX = 0;
+          while (currentX < img.width) {
+            ctx.drawImage(logo, currentX, yPos, logoW, logoH);
+            currentX += logoW + gap;
+          }
+        } else {
+          const xPos = (img.width * posXPercent) / 100 - (logoW / 2);
+          const yPos = (img.height * posYPercent) / 100 - (logoH / 2);
+          ctx.drawImage(logo, xPos, yPos, logoW, logoH);
+        }
+
+        ctx.globalAlpha = 1.0;
+
+        // Set as blob url for PREVIEW (0.95 Quality is fine for screen)
+        canvas.toBlob(blob => {
+          if (blob) {
+            const url = URL.createObjectURL(blob);
+            setDisplayImage(url);
+          }
+        }, 'image/jpeg', 1);
+
+      } catch (e) {
+        console.error("Failed to composite branding preview", e);
+        setDisplayImage(rawImage);
+      }
+    };
+
+    composeImage();
+
+    return () => {
+      if (displayImage && displayImage.startsWith('blob:')) {
+        URL.revokeObjectURL(displayImage);
+      }
+    };
+  }, [results, selectedResultIndex, brandingLogo, brandingConfig]);
+  /* --- BRANDING FEATURE END --- */
+  /* --- BRANDING FEATURE START --- */
+  {
+    currentView === 'BRANDING' && (
+      <BrandingPage
+        brandingLogo={brandingLogo}
+        setBrandingLogo={setBrandingLogo}
+        brandingConfig={brandingConfig}
+        setBrandingConfig={setBrandingConfig}
+        isSavingBranding={isSavingBranding}
+        handleSaveBranding={handleSaveBranding}
+        onBack={() => setCurrentView('STUDIO')}
+      />
+    )
+  }
+  /* --- BRANDING FEATURE END --- */
+
   // --- INITIALIZATION ---
+
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -265,6 +383,19 @@ const App: React.FC = () => {
           break;
         }
         if (attempt === maxRetries) { setError(err.message || "Something went wrong."); break; }
+
+        // Only retry on 500 errors or network errors
+        const isRetryable = err.message?.includes("500") ||
+          err.message?.includes("fetch") ||
+          err.message?.includes("network") ||
+          err.message?.includes("timeout") ||
+          err.message?.includes("connection");
+
+        if (!isRetryable) {
+          setError(err.message || "Generation failed.");
+          break;
+        }
+
         attempt++;
         if (attempt === 1) {
           setResults([]);
@@ -433,25 +564,104 @@ const App: React.FC = () => {
 
     const isBase64 = imageUrl.startsWith('data:');
 
+    // --- WATERMARK LOGIC START ---
+    const applyWatermark = async (sourceUrl: string): Promise<Blob | null> => {
+      if (!brandingLogo || !brandingConfig) return null;
+
+      try {
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        img.src = sourceUrl;
+        await img.decode();
+
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return null;
+
+        // Draw Base
+        ctx.drawImage(img, 0, 0);
+
+        // Draw Logo
+        const logo = new Image();
+        logo.crossOrigin = "anonymous";
+        logo.src = brandingLogo;
+        await logo.decode();
+
+        const scale = brandingConfig.scale || 0.2;
+        const logoW = img.width * scale;
+        const logoH = logoW * (logo.height / logo.width);
+        const posXPercent = brandingConfig.x !== undefined ? brandingConfig.x : 90;
+        const posYPercent = brandingConfig.y !== undefined ? brandingConfig.y : 90;
+
+        ctx.globalAlpha = brandingConfig.opacity || 1.0;
+
+        if (brandingConfig.layoutMode === 'loop') {
+          const yPos = (img.height * posYPercent) / 100 - (logoH / 2);
+          const gap = brandingConfig.gap || 10;
+          let currentX = 0;
+          while (currentX < img.width) {
+            ctx.drawImage(logo, currentX, yPos, logoW, logoH);
+            currentX += logoW + gap;
+          }
+        } else {
+          const xPos = (img.width * posXPercent) / 100 - (logoW / 2);
+          const yPos = (img.height * posYPercent) / 100 - (logoH / 2);
+          ctx.drawImage(logo, xPos, yPos, logoW, logoH);
+        }
+
+        ctx.globalAlpha = 1.0;
+
+        return new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.95));
+      } catch (e) {
+        console.error("Failed to apply watermark", e);
+        return null;
+      }
+    };
+    // --- WATERMARK LOGIC END ---
+
     if (isBase64) {
       // Convert Base64 to Blob
-      fetch(imageUrl)
-        .then(res => res.blob())
-        .then(handleBlob);
+      let blob: Blob;
+
+      // Try to apply watermark first
+      const watermarkedBlob = await applyWatermark(imageUrl);
+      if (watermarkedBlob) {
+        blob = watermarkedBlob;
+      } else {
+        // Fallback to original
+        const byteCharacters = atob(imageUrl.split(',')[1]);
+        const byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i++) {
+          byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        blob = new Blob([byteArray], { type: 'image/jpeg' });
+      }
+
+      await handleBlob(blob);
     } else {
-      // Fetch URL (R2)
+      // It's a URL (Supabase or R2)
       try {
-        const resp = await fetch(imageUrl, { mode: 'cors', cache: 'no-cache' });
-        if (!resp.ok) throw new Error(`Fetch failed: ${resp.status}`);
-        const blob = await resp.blob();
-        handleBlob(blob);
-      } catch (e) {
-        console.error("Download failed (CORS?), falling back to direct link", e);
-        // Final fallback: just open the URL
+        // Try to apply watermark first
+        const watermarkedBlob = await applyWatermark(imageUrl);
+        if (watermarkedBlob) {
+          await handleBlob(watermarkedBlob);
+        } else {
+          // Fallback to original fetch
+          const response = await fetch(imageUrl);
+          const blob = await response.blob();
+          await handleBlob(blob);
+        }
+      } catch (error) {
+        console.error("Download failed:", error);
+        // Fallback to direct link if fetch fails (CORS etc)
         triggerDownloadLink(imageUrl);
       }
     }
   };
+
 
   const [currentTransactionId, setCurrentTransactionId] = useState<number | null>(null);
 
@@ -833,7 +1043,7 @@ const App: React.FC = () => {
             {results.length > 0 ? (
               <>
                 <div className="flex-1 w-full h-full relative">
-                  <ImageViewer originalImage={primaryImage} resultImage={results[selectedResultIndex] || results[0]} />
+                  <ImageViewer originalImage={primaryImage} resultImage={displayImage || results[selectedResultIndex] || results[0]} />
                   <div className="absolute top-4 right-4 flex flex-col gap-3 z-30">
                     <button onClick={() => downloadImage(results[selectedResultIndex], selectedResultIndex, prompt, selectedModel)} className="glass-button w-12 h-12 rounded-full flex items-center justify-center text-white hover:text-mystic-accent transition-all group shadow-glass" title="Save Image"><Download size={22} className="group-hover:translate-y-0.5 transition-transform" /></button>
                     <button onClick={handleNewPose} className="glass-button w-12 h-12 rounded-full flex items-center justify-center text-white hover:text-pink-400 transition-all shadow-glass" title="Use as Pose"><Bone size={22} /></button>
@@ -968,6 +1178,17 @@ const App: React.FC = () => {
       {currentView === 'HISTORY' && renderHistoryPage()}
       {currentView === 'PAYMENT' && renderPaymentPage()}
       {currentView === 'PRIVACY' && <PrivacyPolicy onBack={() => { setCurrentView('STUDIO'); window.history.pushState({}, '', window.location.pathname); }} />}
+      {currentView === 'BRANDING' && (
+        <BrandingPage
+          brandingLogo={brandingLogo}
+          setBrandingLogo={setBrandingLogo}
+          brandingConfig={brandingConfig}
+          setBrandingConfig={setBrandingConfig}
+          isSavingBranding={isSavingBranding}
+          handleSaveBranding={handleSaveBranding}
+          onBack={() => setCurrentView('STUDIO')}
+        />
+      )}
 
       {/* Privacy Policy Link (Static Footer) */}
       {currentView !== 'PRIVACY' && (
@@ -1097,6 +1318,13 @@ const App: React.FC = () => {
                       <span className="text-xs font-bold text-gray-300">Transactions</span>
                     </button>
                   </div>
+
+                  {/* --- BRANDING FEATURE START --- */}
+                  <button onClick={() => { setCurrentView('BRANDING'); setShowLoginModal(false); }} className="w-full p-3 rounded-xl bg-gradient-to-r from-pink-500/20 to-purple-500/20 hover:from-pink-500/30 hover:to-purple-500/30 border border-white/10 flex items-center justify-center gap-2 transition-all">
+                    <Stamp size={20} className="text-pink-400" />
+                    <span className="text-xs font-bold text-gray-200">Branding Kit</span>
+                  </button>
+                  {/* --- BRANDING FEATURE END --- */}
 
                   <button onClick={handleLogout} className="w-full py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 font-bold flex items-center justify-center gap-2 hover:bg-red-500/20 transition-colors">
                     <LogOut size={16} /> Logout
