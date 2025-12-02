@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Sparkles, Shirt, Camera, Wand2, Download, AlertCircle, History, Trash2, ChevronDown, ChevronUp, User, Image as ImageIcon, Bone, Layers, ToggleLeft, ToggleRight, XCircle, Archive, Shuffle, Copy, ScanFace, RefreshCw, LogIn, Coins, X, CreditCard, Wallet, LogOut, Zap, Cloud, ArrowLeft, Calendar, FileText, CheckCircle, XOctagon, QrCode, Smartphone, Check, Maximize2 } from 'lucide-react';
+import { Sparkles, Shirt, Camera, Wand2, Download, AlertCircle, History, Trash2, ChevronDown, ChevronUp, User, Image as ImageIcon, Bone, Layers, ToggleLeft, ToggleRight, XCircle, Archive, Shuffle, Copy, ScanFace, RefreshCw, LogIn, Coins, X, CreditCard, Wallet, LogOut, Zap, Cloud, ArrowLeft, Calendar, FileText, CheckCircle, XOctagon, QrCode, Smartphone, Check, Maximize2, Plus } from 'lucide-react';
 import JSZip from 'jszip';
 import { AppMode, AspectRatio, HistoryItem, UserProfile, Transaction } from './types';
 import { ImageUploader } from './components/ImageUploader';
@@ -59,6 +59,15 @@ const App: React.FC = () => {
   const [showMobileHistory, setShowMobileHistory] = useState(false);
   const [isZipping, setIsZipping] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [accessoryImages, setAccessoryImages] = useState<string[]>([]);
+
+  // Auto-switch to Pro model when accessory images are added
+  useEffect(() => {
+    if (accessoryImages.length > 0 && selectedModel !== 'gemini-3-pro-image-preview') {
+      setSelectedModel('gemini-3-pro-image-preview');
+      setToast({ message: "Switched to Pro model for accessory support", type: 'success' });
+    }
+  }, [accessoryImages, selectedModel]);
 
   // User & Billing State
   const [session, setSession] = useState<any>(null);
@@ -181,7 +190,8 @@ const App: React.FC = () => {
       // Pro Model Pricing (Fixed)
       cost = 25;
     }
-    if (prompt && prompt.trim().length > 0) cost += 1;
+    if (prompt) cost += 3;
+    if (accessoryImages.length > 0) cost += (accessoryImages.length * 3);
     return cost;
   };
 
@@ -240,6 +250,7 @@ const App: React.FC = () => {
           flexibleMode,
           randomFace,
           numberOfImages,
+          accessoryImages: accessoryImages,
           onImageGenerated: (url) => { setResults(prev => [...prev, url]); }
         });
         success = true;
@@ -331,8 +342,9 @@ const App: React.FC = () => {
         modelName: 'upscale-4k',
         primaryImage: imageToUpscale,
         secondaryImage: null,
-        userPrompt: '',
+        userPrompt: prompt,
         aspectRatio: aspectRatio,
+        accessoryImages: accessoryImages,
         numberOfImages: 1
       });
 
@@ -708,7 +720,7 @@ const App: React.FC = () => {
               <div className="glass-panel p-2.5 rounded-[20px] flex flex-col gap-2">
                 <div className="flex items-center gap-1.5 text-[9px] font-bold text-gray-500 uppercase ml-1"><Zap size={10} className="text-yellow-400" />Processing Model</div>
                 <div className="flex bg-black/20 rounded-xl p-1 gap-1">
-                  <button onClick={() => setSelectedModel('gemini-2.5-flash-image')} className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold transition-all ${selectedModel === 'gemini-2.5-flash-image' ? 'bg-white text-black shadow-sm' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}>Air</button>
+                  <button onClick={() => { setSelectedModel('gemini-2.5-flash-image'); setAccessoryImages([]); }} className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold transition-all ${selectedModel === 'gemini-2.5-flash-image' ? 'bg-white text-black shadow-sm' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}>Air</button>
                   <button onClick={() => setSelectedModel('gemini-3-pro-image-preview')} className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold transition-all ${selectedModel === 'gemini-3-pro-image-preview' ? 'bg-indigo-600 text-white shadow-glow' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}>Pro</button>
                 </div>
               </div>
@@ -748,6 +760,34 @@ const App: React.FC = () => {
                           {Object.values(AspectRatio).map(ratio => (<option key={ratio} value={ratio} className="bg-mystic-900 text-white">{ratio}</option>))}
                         </select>
                         <ChevronDown size={12} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
+                      </div>
+                    </div>
+
+                    <div className="col-span-2">
+                      <label className="text-[10px] font-semibold text-gray-500 uppercase ml-1 mb-1.5 block">Accessory Images (+3 xu/img)</label>
+                      <div className="grid grid-cols-3 gap-2">
+                        {accessoryImages.map((img, idx) => (
+                          <div key={idx} className="relative aspect-square rounded-lg overflow-hidden border border-white/10 group">
+                            <img src={img} alt={`Accessory ${idx}`} className="w-full h-full object-cover" />
+                            <button onClick={() => setAccessoryImages(prev => prev.filter((_, i) => i !== idx))} className="absolute top-1 right-1 p-1 rounded-full bg-black/50 text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500"><X size={12} /></button>
+                          </div>
+                        ))}
+                        {accessoryImages.length < 3 && (
+                          <label className="aspect-square rounded-lg border border-white/10 border-dashed flex flex-col items-center justify-center cursor-pointer hover:bg-white/5 transition-colors gap-1">
+                            <Plus size={16} className="text-gray-500" />
+                            <span className="text-[9px] text-gray-500">Add</span>
+                            <input type="file" accept="image/*" className="hidden" onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                const reader = new FileReader();
+                                reader.onloadend = () => {
+                                  setAccessoryImages(prev => [...prev, reader.result as string]);
+                                };
+                                reader.readAsDataURL(file);
+                              }
+                            }} />
+                          </label>
+                        )}
                       </div>
                     </div>
 

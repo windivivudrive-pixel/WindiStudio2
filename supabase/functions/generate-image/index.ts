@@ -94,6 +94,7 @@ Deno.serve(async (req) => {
             aspectRatio,
             flexibleMode,
             randomFace,
+            accessoryImages,
             numberOfImages = 1, // Legacy support, but we will mostly use 1 per request now
             variationIndex = 0,
             totalBatchSize = 1
@@ -141,7 +142,7 @@ Deno.serve(async (req) => {
         const parts: any[] = [];
         let promptText = "";
         let generatedIdentityRef: string | null = null; // Note: This won't persist across requests. If needed, frontend must pass it back.
-        const activeModel = "gemini-2.0-flash-exp";
+        const activeModel = "gemini-2.5-flash-image";
 
         // --- UPSCALE LOGIC ---
         if (modelName === 'upscale-4k') {
@@ -302,6 +303,18 @@ Deno.serve(async (req) => {
         `;
         }
 
+        // Process Accessory Images
+        if (accessoryImages && accessoryImages.length > 0) {
+            console.log(`Processing ${accessoryImages.length} accessory images...`);
+            for (let i = 0; i < accessoryImages.length; i++) {
+                const accPart = await processImagePart(accessoryImages[i]);
+                if (accPart) {
+                    parts.push(accPart);
+                    promptText += `\n\nACCESSORY REFERENCE (Image ${parts.length}): Incorporate the accessory shown in this image into the outfit naturally.`;
+                }
+            }
+        }
+
         // Append User Prompt
         if (userPrompt) {
             promptText += `\n\nUSER OVERRIDE INSTRUCTIONS: ${userPrompt}`;
@@ -362,8 +375,9 @@ Deno.serve(async (req) => {
                 console.error("Candidate 0 Safety Ratings:", JSON.stringify(candidate.safetyRatings, null, 2));
 
                 // Check for safety block
-                if (candidate.finishReason === "SAFETY" || candidate.finishReason === "PROHIBITED_CONTENT" || candidate.finishReason === "BLOCK_REASON_SAFETY") {
-                    throw new Error("SAFETY_VIOLATION: Generation blocked by safety settings.");
+                const reason = candidate.finishReason as any;
+                if (reason === "SAFETY" || reason === "PROHIBITED_CONTENT" || reason === "BLOCK_REASON_SAFETY" || reason === "IMAGE_OTHER") {
+                    throw new Error("SAFETY_VIOLATION: AI refused to generate this image. It may contain prohibited content or safety violations.");
                 }
             }
             throw new Error("Failed to generate any images. Check logs for details.");

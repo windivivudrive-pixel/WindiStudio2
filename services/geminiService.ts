@@ -104,6 +104,7 @@ export const generateStudioImage = async (
     conceptReferences?: string[],
     flexibleMode?: boolean,
     randomFace?: boolean,
+    accessoryImages?: string[],
     numberOfImages: number,
     onImageGenerated?: (url: string) => void // Callback for progressive rendering
   }
@@ -128,6 +129,7 @@ export const generateStudioImage = async (
             aspectRatio: config.aspectRatio,
             flexibleMode: config.flexibleMode,
             randomFace: config.randomFace,
+            accessoryImages: config.accessoryImages,
             numberOfImages: 1, // Request 1 image at a time
             variationIndex: i,
             totalBatchSize: config.numberOfImages
