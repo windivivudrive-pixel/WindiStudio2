@@ -1,5 +1,5 @@
 import { GoogleGenAI, HarmCategory, HarmBlockThreshold } from "@google/genai";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { createClient } from '@supabase/supabase-js';
 
 const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
@@ -301,6 +301,35 @@ Deno.serve(async (req) => {
            
         ${variationInstruction}
         `;
+        } else if (mode === 'FUN_FREEDOM') {
+            // Process all images
+            let hasImages = false;
+            if (primaryImage) {
+                parts.push(await processImagePart(primaryImage));
+                hasImages = true;
+            }
+            if (secondaryImage) {
+                parts.push(await processImagePart(secondaryImage));
+                hasImages = true;
+            }
+            // Accessory images are processed below automatically
+
+            const basePrompt = userPrompt || "A creative image based on the provided references.";
+
+            if (hasImages) {
+                promptText = `
+                 I have provided input images as references.
+                 
+                 USER PROMPT: ${basePrompt}
+                 
+                 INSTRUCTION: Generate an image based on the USER PROMPT. You MUST use the provided images as visual references (for style, content, subject, or composition) as appropriate for the request.
+                 `;
+            } else {
+                promptText = basePrompt;
+            }
+
+            // Add variation instruction if batch
+            promptText += variationInstruction;
         }
 
         // Process Accessory Images

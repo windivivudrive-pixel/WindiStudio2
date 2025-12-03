@@ -1,6 +1,6 @@
 
 import { supabase } from './supabaseClient';
-import { HistoryItem, UserProfile, AppMode, Transaction, BrandingConfig } from '../types';
+import { HistoryItem, UserProfile, AppMode, Transaction, BrandingConfig, Category, LibraryImage } from '../types';
 import { base64ToBlob, compressImage } from '../utils/imageUtils';
 import { uploadToR2, deleteFromR2 } from './r2Service';
 
@@ -364,4 +364,96 @@ export const deleteHistoryFromDb = async (id: string) => {
   // 4. Delete from DB
   const { error } = await supabase.from('generations').delete().eq('id', id);
   if (error) console.error("Failed to delete", error);
+};
+
+/* --- LIBRARY & ADMIN FEATURES --- */
+
+export const fetchCategories = async (): Promise<Category[]> => {
+  const { data, error } = await supabase
+    .from('categories')
+    .select('*')
+    .order('created_at', { ascending: true });
+
+  if (error) {
+    console.error('Error fetching categories:', error);
+    return [];
+  }
+  return data || [];
+};
+
+export const createCategory = async (name: string): Promise<Category | null> => {
+  const { data, error } = await supabase
+    .from('categories')
+    .insert({ name })
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error creating category:', error);
+    return null;
+  }
+  return data;
+};
+
+export const fetchLibraryImages = async (categoryId?: number): Promise<LibraryImage[]> => {
+  let query = supabase
+    .from('library_images')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (categoryId) {
+    query = query.eq('category_id', categoryId);
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    console.error('Error fetching library images:', error);
+    return [];
+  }
+  return data || [];
+};
+
+export const addToLibrary = async (imageUrl: string, categoryId: number, prompt?: string, imageType?: string): Promise<LibraryImage | null> => {
+  const { data, error } = await supabase
+    .from('library_images')
+    .insert({
+      image_url: imageUrl,
+      category_id: categoryId,
+      prompt: prompt,
+      image_type: imageType
+    })
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error adding to library:', error);
+    return null;
+  }
+  return data;
+};
+
+export const fetchAllUserGenerations = async (): Promise<HistoryItem[]> => {
+  const { data, error } = await supabase
+    .from('generations')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .limit(100); // Limit to recent 100 for performance
+
+  if (error || !data) {
+    console.error('Error fetching all user generations:', error);
+    return [];
+  }
+
+  return data.map((row: any) => ({
+    id: row.id.toString(),
+    thumbnail: row.image_url,
+    images: [row.image_url],
+    prompt: row.prompt,
+    timestamp: new Date(row.created_at).getTime(),
+    mode: row.mode || AppMode.CREATIVE_POSE,
+    modelName: row.model_name || 'unknown',
+    cost: row.cost_credits,
+    imageType: row.image_type
+  }));
 };

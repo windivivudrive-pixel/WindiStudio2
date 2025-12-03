@@ -4,6 +4,7 @@ export enum AppMode {
   VIRTUAL_TRY_ON = 'VIRTUAL_TRY_ON',
   CREATE_MODEL = 'CREATE_MODEL',
   COPY_CONCEPT = 'COPY_CONCEPT',
+  FUN_FREEDOM = 'FUN_FREEDOM',
 }
 
 export enum AspectRatio {
@@ -30,6 +31,7 @@ export interface HistoryItem {
   mode: AppMode;
   modelName?: string;
   cost?: number;
+  imageType?: 'STANDARD' | 'PREMIUM' | 'SCALEX2';
 }
 
 // Map to 'profiles' table
@@ -93,4 +95,19 @@ export interface BrandingConfig {
 export interface GenerationResponse {
   imageUrls: string[];
   error: string | null;
+}
+
+export interface Category {
+  id: number;
+  name: string;
+  created_at: string;
+}
+
+export interface LibraryImage {
+  id: number;
+  image_url: string;
+  category_id: number;
+  created_at: string;
+  prompt?: string;
+  image_type?: string;
 }
