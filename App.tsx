@@ -217,7 +217,7 @@ const App: React.FC = () => {
         setBrandingConfig={setBrandingConfig}
         isSavingBranding={isSavingBranding}
         handleSaveBranding={handleSaveBranding}
-        onBack={() => setCurrentView('STUDIO')}
+        onBack={() => navigateTo('STUDIO')}
       />
     )
   }
@@ -241,11 +241,114 @@ const App: React.FC = () => {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Check URL for privacy policy
+  // --- NAVIGATION & HISTORY ---
+
+  const navigateTo = (view: typeof currentView, replace = false, tab?: 'studio' | 'fun' | 'library') => {
+    setCurrentView(view);
+
+    let nextTab = tab;
+    if (!nextTab && view === 'STUDIO') {
+      nextTab = studioTab;
+    }
+
+    if (nextTab) setStudioTab(nextTab);
+
+    const url = new URL(window.location.href);
+    url.searchParams.set('view', view.toLowerCase());
+
+    if (nextTab) {
+      url.searchParams.set('tab', nextTab);
+    }
+
+    const state = { view, tab: nextTab };
+
+    if (replace) {
+      window.history.replaceState(state, '', url.toString());
+    } else {
+      window.history.pushState(state, '', url.toString());
+    }
+  };
+
+  // Handle Browser Back/Forward
+  useEffect(() => {
+    const handlePopState = (event: PopStateEvent) => {
+      if (event.state) {
+        if (event.state.view) setCurrentView(event.state.view);
+        if (event.state.tab) setStudioTab(event.state.tab);
+      } else {
+        // Fallback for initial state or external navigation
+        const params = new URLSearchParams(window.location.search);
+        const viewParam = params.get('view');
+        const tabParam = params.get('tab');
+
+        if (viewParam) {
+          const view = viewParam.toUpperCase() as typeof currentView;
+          if (['STUDIO', 'HISTORY', 'PAYMENT', 'PRIVACY', 'BRANDING'].includes(view)) {
+            setCurrentView(view);
+          } else {
+            setCurrentView('STUDIO');
+          }
+        } else {
+          setCurrentView('STUDIO');
+        }
+
+        if (tabParam && ['studio', 'fun', 'library'].includes(tabParam)) {
+          setStudioTab(tabParam as any);
+        }
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  // Handle Top Up Modal Back Button
+  useEffect(() => {
+    const handlePopState = (event: PopStateEvent) => {
+      if (showTopUpModal) {
+        setShowTopUpModal(false);
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [showTopUpModal]);
+
+  // Handle Login Modal Back Button
+  useEffect(() => {
+    const handlePopState = (event: PopStateEvent) => {
+      if (showLoginModal) {
+        setShowLoginModal(false);
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [showLoginModal]);
+
+  // Initial Load URL Check
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    if (params.get('view') === 'privacy') {
-      setCurrentView('PRIVACY');
+    const viewParam = params.get('view');
+    const tabParam = params.get('tab');
+
+    if (viewParam) {
+      const view = viewParam.toUpperCase() as typeof currentView;
+      if (['STUDIO', 'HISTORY', 'PAYMENT', 'PRIVACY', 'BRANDING'].includes(view)) {
+        setCurrentView(view);
+      }
+    }
+
+    if (tabParam && ['studio', 'fun', 'library'].includes(tabParam)) {
+      setStudioTab(tabParam as any);
+    }
+
+    if (!viewParam && !tabParam) {
+      // Set initial state without pushing to history
+      const url = new URL(window.location.href);
+      url.searchParams.set('view', 'studio');
+      url.searchParams.set('tab', 'studio');
+      window.history.replaceState({ view: 'STUDIO', tab: 'studio' }, '', url.toString());
     }
   }, []);
 
@@ -290,7 +393,7 @@ const App: React.FC = () => {
     setUserProfile(null);
     setHistory([]);
     setResults([]);
-    setCurrentView('STUDIO');
+    navigateTo('STUDIO');
     setShowLoginModal(false);
   };
 
@@ -842,7 +945,7 @@ const App: React.FC = () => {
   const renderPaymentPage = () => (
     <div className="w-full h-full p-6 lg:p-10 flex flex-col max-w-5xl mx-auto">
       <div className="flex items-center gap-4 mb-8">
-        <button onClick={() => setCurrentView('STUDIO')} className="glass-button p-2 rounded-full text-white hover:text-mystic-accent"><ArrowLeft size={24} /></button>
+        <button onClick={() => navigateTo('STUDIO')} className="glass-button p-2 rounded-full text-white hover:text-mystic-accent"><ArrowLeft size={24} /></button>
         <h1 className="text-2xl lg:text-3xl font-bold text-white tracking-tight">Payment History</h1>
       </div>
 
@@ -892,7 +995,7 @@ const App: React.FC = () => {
   const renderHistoryPage = () => (
     <div className="w-full h-full p-6 lg:p-10 flex flex-col max-w-7xl mx-auto">
       <div className="flex items-center gap-4 mb-8">
-        <button onClick={() => setCurrentView('STUDIO')} className="glass-button p-2 rounded-full text-white hover:text-mystic-accent"><ArrowLeft size={24} /></button>
+        <button onClick={() => navigateTo('STUDIO')} className="glass-button p-2 rounded-full text-white hover:text-mystic-accent"><ArrowLeft size={24} /></button>
         <h1 className="text-2xl lg:text-3xl font-bold text-white tracking-tight">Image History</h1>
       </div>
 
@@ -956,17 +1059,19 @@ const App: React.FC = () => {
       )) ||
       (studioTab === 'fun' && !primaryImage && !secondaryImage && accessoryImages.length === 0 && !prompt);
 
+    // Handle Tab Side Effects
+    useEffect(() => {
+      if (studioTab === 'fun') {
+        setMode(AppMode.FUN_FREEDOM);
+      } else if (studioTab === 'studio') {
+        setMode(AppMode.CREATIVE_POSE);
+      }
+    }, [studioTab]);
+
 
     return (
       <div className="flex flex-col w-full h-full">
-        <StudioTabs activeTab={studioTab} onTabChange={(tab) => {
-          setStudioTab(tab);
-          if (tab === 'fun') {
-            setMode(AppMode.FUN_FREEDOM);
-          } else if (tab === 'studio') {
-            setMode(AppMode.CREATIVE_POSE);
-          }
-        }} />
+        <StudioTabs activeTab={studioTab} onTabChange={(tab) => navigateTo('STUDIO', false, tab)} />
 
         {studioTab === 'library' ? (
           <div className="flex-1 p-6 lg:p-10 overflow-hidden">
@@ -1240,7 +1345,7 @@ const App: React.FC = () => {
             {/* RIGHT PANEL - SIDEBAR HISTORY */}
             < div className={`fixed inset-0 lg:static lg:inset-auto z-40 bg-black/95 lg:bg-black/10 lg:backdrop-blur-sm lg:border-l border-white/10 flex flex-col w-full lg:w-[280px] xl:w-[320px] transition-transform duration-300 shrink-0 lg:h-[calc(100vh-80px)] lg:overflow-hidden ${showMobileHistory ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'}`}>
               <div className="p-4 lg:p-5 border-b border-white/5 flex justify-between items-center bg-black/20 lg:bg-transparent shrink-0">
-                <button onClick={() => setCurrentView('HISTORY')} className="text-xs font-bold flex items-center gap-2 text-white uppercase tracking-widest cursor-pointer transition-all bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg px-4 py-2 shadow-sm hover:border-mystic-accent/50 hover:shadow-glow group">
+                <button onClick={() => navigateTo('HISTORY')} className="text-xs font-bold flex items-center gap-2 text-white uppercase tracking-widest cursor-pointer transition-all bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg px-4 py-2 shadow-sm hover:border-mystic-accent/50 hover:shadow-glow group">
                   <History size={14} className="text-mystic-accent group-hover:scale-110 transition-transform" />
                   Recent
                 </button>
@@ -1302,7 +1407,7 @@ const App: React.FC = () => {
 
       {/* Header */}
       <nav className="w-full h-16 lg:h-20 px-6 lg:px-8 flex justify-between items-center shrink-0 bg-black/20 backdrop-blur-xl border-b border-white/5 z-20 sticky top-0 lg:static">
-        <div className="relative flex items-center gap-3 cursor-pointer" onClick={() => setCurrentView('STUDIO')}>
+        <div className="relative flex items-center gap-3 cursor-pointer" onClick={() => navigateTo('STUDIO')}>
 
           <div>
             <img src="/textlogo.png" alt="WinDiStudio" className="h-16 object-contain" style={{ marginTop: '12px' }} />
@@ -1313,24 +1418,24 @@ const App: React.FC = () => {
           {session && userProfile ? (
             <div className="flex items-center gap-3 animate-in fade-in slide-in-from-right-4 duration-500">
               {/* Clickable Balance Pill */}
-              <div onClick={() => { setShowTopUpModal(true); setTopUpStep('INPUT'); }} className="glass-panel px-4 py-2 rounded-full flex items-center gap-2.5 border-white/10 hover:bg-white/10 transition-colors cursor-pointer shadow-glass-sm group">
+              <div onClick={() => { setShowTopUpModal(true); setTopUpStep('INPUT'); window.history.pushState({ topUpOpen: true }, ''); }} className="glass-panel px-4 py-2 rounded-full flex items-center gap-2.5 border-white/10 hover:bg-white/10 transition-colors cursor-pointer shadow-glass-sm group">
                 <div className="p-1 rounded-full bg-yellow-500/20 group-hover:scale-110 transition-transform"><Wallet size={14} className="text-yellow-400" /></div>
                 <div className="flex flex-col leading-none"><span className="hidden lg:block text-[8px] text-gray-400 font-bold uppercase tracking-wider">Balance</span><span className="text-sm font-bold text-white group-hover:text-yellow-300 transition-colors">{userProfile.credits} xu</span></div>
               </div>
 
-              <button onClick={() => { setShowTopUpModal(true); setTopUpStep('INPUT'); }} className="group hidden lg:flex items-center gap-2 px-5 py-2 rounded-full bg-gradient-to-r from-yellow-400 to-orange-500 text-black font-bold shadow-[0_0_20px_rgba(234,179,8,0.4)] hover:shadow-[0_0_30px_rgba(234,179,8,0.6)] hover:scale-105 active:scale-95 transition-all duration-300">
+              <button onClick={() => { setShowTopUpModal(true); setTopUpStep('INPUT'); window.history.pushState({ topUpOpen: true }, ''); }} className="group hidden lg:flex items-center gap-2 px-5 py-2 rounded-full bg-gradient-to-r from-yellow-400 to-orange-500 text-black font-bold shadow-[0_0_20px_rgba(234,179,8,0.4)] hover:shadow-[0_0_30px_rgba(234,179,8,0.6)] hover:scale-105 active:scale-95 transition-all duration-300">
                 <Coins size={16} className="fill-black/20 group-hover:rotate-12 transition-transform" /><span className="text-xs uppercase tracking-wide">Nạp Tiền</span>
               </button>
 
               <div className="ml-3 pl-4 border-l border-white/10 flex items-center gap-3">
                 <div className="text-right hidden lg:block"><p className="text-[9px] text-gray-400 font-bold uppercase tracking-wider">Welcome</p><p className="text-sm font-bold text-white leading-none truncate max-w-[100px]">{userProfile.full_name}</p></div>
-                <button onClick={() => setShowLoginModal(true)} className="w-10 h-10 rounded-full bg-gradient-to-br from-mystic-accent to-indigo-600 p-0.5 shadow-glow hover:scale-110 transition-transform cursor-pointer">
+                <button onClick={() => { setShowLoginModal(true); window.history.pushState({ loginOpen: true }, ''); }} className="w-10 h-10 rounded-full bg-gradient-to-br from-mystic-accent to-indigo-600 p-0.5 shadow-glow hover:scale-110 transition-transform cursor-pointer">
                   <div className="w-full h-full rounded-full bg-black flex items-center justify-center overflow-hidden">{userProfile.avatar_url ? <img src={userProfile.avatar_url} alt="Avatar" className="w-full h-full object-cover" /> : <User size={18} className="text-white" />}</div>
                 </button>
               </div>
             </div>
           ) : (
-            <button onClick={() => setShowLoginModal(true)} className="flex glass-button px-5 py-2.5 rounded-full items-center gap-2 text-white text-xs font-bold uppercase tracking-wider hover:text-mystic-accent transition-all hover:shadow-glow"><LogIn size={16} /><span className="hidden lg:inline">Đăng Nhập</span></button>
+            <button onClick={() => { setShowLoginModal(true); window.history.pushState({ loginOpen: true }, ''); }} className="flex glass-button px-5 py-2.5 rounded-full items-center gap-2 text-white text-xs font-bold uppercase tracking-wider hover:text-mystic-accent transition-all hover:shadow-glow"><LogIn size={16} /><span className="hidden lg:inline">Đăng Nhập</span></button>
           )}
           {currentView === 'STUDIO' && (
             <button onClick={() => setShowMobileHistory(!showMobileHistory)} className={`lg:hidden p-2.5 rounded-full glass-button text-gray-300 hover:text-white ${showMobileHistory ? 'glass-button-active' : ''}`}><History size={18} /></button>
@@ -1342,7 +1447,7 @@ const App: React.FC = () => {
       {currentView === 'STUDIO' && renderStudio()}
       {currentView === 'HISTORY' && renderHistoryPage()}
       {currentView === 'PAYMENT' && renderPaymentPage()}
-      {currentView === 'PRIVACY' && <PrivacyPolicy onBack={() => { setCurrentView('STUDIO'); window.history.pushState({}, '', window.location.pathname); }} />}
+      {currentView === 'PRIVACY' && <PrivacyPolicy onBack={() => navigateTo('STUDIO')} />}
       {currentView === 'BRANDING' && (
         <BrandingPage
           brandingLogo={brandingLogo}
@@ -1351,7 +1456,7 @@ const App: React.FC = () => {
           setBrandingConfig={setBrandingConfig}
           isSavingBranding={isSavingBranding}
           handleSaveBranding={handleSaveBranding}
-          onBack={() => setCurrentView('STUDIO')}
+          onBack={() => navigateTo('STUDIO')}
         />
       )}
 
@@ -1359,7 +1464,7 @@ const App: React.FC = () => {
       {currentView !== 'PRIVACY' && (
         <div className="w-full py-6 mt-auto flex flex-col items-center gap-1 z-10 relative">
           <button
-            onClick={() => { setCurrentView('PRIVACY'); window.history.pushState({}, '', '?view=privacy'); }}
+            onClick={() => navigateTo('PRIVACY')}
             className="text-[10px] text-gray-500 hover:text-gray-300 transition-colors uppercase tracking-widest font-bold px-2 py-1 rounded"
           >
             Chính Sách Bảo Mật
@@ -1370,9 +1475,9 @@ const App: React.FC = () => {
 
       {/* LOGIN/ACCOUNT MODAL */}
       {showLoginModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-          <div className="relative w-full max-w-sm glass-panel rounded-3xl overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-300">
-            <button onClick={() => setShowLoginModal(false)} className="absolute top-4 right-4 text-gray-400 hover:text-white"><X size={20} /></button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4" onClick={() => window.history.back()}>
+          <div className="relative w-full max-w-sm glass-panel rounded-3xl overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-300" onClick={e => e.stopPropagation()}>
+            <button onClick={() => window.history.back()} className="absolute top-4 right-4 text-gray-400 hover:text-white"><X size={20} /></button>
 
 
 
@@ -1412,7 +1517,7 @@ const App: React.FC = () => {
                       </button>
                     )}
 
-                    <button onClick={() => setShowLoginModal(false)} className="mt-4 text-xs text-gray-500 hover:text-white transition-colors">Cancel</button>
+                    <button onClick={() => window.history.back()} className="mt-4 text-xs text-gray-500 hover:text-white transition-colors">Cancel</button>
                   </div>
                 </>
               ) : (
@@ -1474,18 +1579,18 @@ const App: React.FC = () => {
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
-                    <button onClick={() => { setCurrentView('HISTORY'); setShowLoginModal(false); }} className="p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 flex flex-col items-center gap-2 transition-all">
+                    <button onClick={() => { navigateTo('HISTORY'); setShowLoginModal(false); }} className="p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 flex flex-col items-center gap-2 transition-all">
                       <ImageIcon size={20} className="text-mystic-accent" />
                       <span className="text-xs font-bold text-gray-300">Image History</span>
                     </button>
-                    <button onClick={() => { setCurrentView('PAYMENT'); setShowLoginModal(false); }} className="p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 flex flex-col items-center gap-2 transition-all">
+                    <button onClick={() => { navigateTo('PAYMENT'); setShowLoginModal(false); }} className="p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 flex flex-col items-center gap-2 transition-all">
                       <Wallet size={20} className="text-yellow-400" />
                       <span className="text-xs font-bold text-gray-300">Transactions</span>
                     </button>
                   </div>
 
                   {/* --- BRANDING FEATURE START --- */}
-                  <button onClick={() => { setCurrentView('BRANDING'); setShowLoginModal(false); }} className="w-full p-3 rounded-xl bg-gradient-to-r from-pink-500/20 to-purple-500/20 hover:from-pink-500/30 hover:to-purple-500/30 border border-white/10 flex items-center justify-center gap-2 transition-all">
+                  <button onClick={() => { navigateTo('BRANDING'); setShowLoginModal(false); }} className="w-full p-3 rounded-xl bg-gradient-to-r from-pink-500/20 to-purple-500/20 hover:from-pink-500/30 hover:to-purple-500/30 border border-white/10 flex items-center justify-center gap-2 transition-all">
                     <Stamp size={20} className="text-pink-400" />
                     <span className="text-xs font-bold text-gray-200">Branding Kit</span>
                   </button>
@@ -1530,9 +1635,9 @@ const App: React.FC = () => {
 
       {/* TOP UP MODAL (2-STEP) */}
       {showTopUpModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-          <div className="relative w-full max-w-sm glass-panel rounded-3xl overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-300">
-            <button onClick={() => setShowTopUpModal(false)} className="absolute top-4 right-4 text-gray-400 hover:text-white"><X size={20} /></button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4" onClick={() => window.history.back()}>
+          <div className="relative w-full max-w-sm glass-panel rounded-3xl overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-300" onClick={e => e.stopPropagation()}>
+            <button onClick={() => window.history.back()} className="absolute top-4 right-4 text-gray-400 hover:text-white"><X size={20} /></button>
 
             <div className="p-8 space-y-6">
               {/* Header */}

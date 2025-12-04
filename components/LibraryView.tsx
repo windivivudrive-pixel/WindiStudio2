@@ -63,7 +63,7 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onSelectImage, onClose
         }
 
         const newImages = await fetchLibraryImages({
-            onlyFavorites: true, // User wants to see favorites in both modes (My Favorites vs All Favorites)
+            onlyFavorites: viewMode === 'LIBRARY',
             categoryId: selectedCategory || undefined,
             userId: viewMode === 'ALL_USERS' && selectedUser ? selectedUser : undefined,
             imageType: viewMode === 'ALL_USERS' && selectedImageType ? selectedImageType : undefined,
@@ -146,6 +146,18 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onSelectImage, onClose
     const [selectedImageForModal, setSelectedImageForModal] = useState<HistoryItem | null>(null);
 
     // ... existing code ...
+
+    // Handle Modal Back Button
+    useEffect(() => {
+        const handlePopState = (event: PopStateEvent) => {
+            if (selectedImageForModal) {
+                setSelectedImageForModal(null);
+            }
+        };
+
+        window.addEventListener('popstate', handlePopState);
+        return () => window.removeEventListener('popstate', handlePopState);
+    }, [selectedImageForModal]);
 
     const handleCopyPrompt = (text: string) => {
         navigator.clipboard.writeText(text);
@@ -270,7 +282,10 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onSelectImage, onClose
                         <div
                             key={`${item.id}-${index}`}
                             ref={index === images.length - 1 ? lastImageElementRef : null}
-                            onClick={() => setSelectedImageForModal(item)}
+                            onClick={() => {
+                                setSelectedImageForModal(item);
+                                window.history.pushState({ modalOpen: true }, '');
+                            }}
                             className="group relative aspect-[2/3] bg-[#1a1a1a] rounded-xl overflow-hidden border border-white/5 hover:border-mystic-accent/50 transition-all shadow-lg hover:shadow-glow-sm cursor-pointer"
                         >
                             <img
@@ -382,9 +397,9 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onSelectImage, onClose
 
             {/* Fullscreen Image Modal */}
             {selectedImageForModal && (
-                <div className="fixed inset-0 z-[70] bg-black/95 backdrop-blur-xl flex items-center justify-center animate-in fade-in duration-200" onClick={() => setSelectedImageForModal(null)}>
+                <div className="fixed inset-0 z-[70] bg-black/95 backdrop-blur-xl flex items-center justify-center animate-in fade-in duration-200" onClick={() => window.history.back()}>
                     <button
-                        onClick={() => setSelectedImageForModal(null)}
+                        onClick={() => window.history.back()}
                         className="absolute top-6 right-6 p-2 rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors z-50"
                     >
                         <X size={24} />
@@ -442,7 +457,7 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onSelectImage, onClose
                                     <button
                                         onClick={() => {
                                             onSelectImage(selectedImageForModal.thumbnail);
-                                            setSelectedImageForModal(null);
+                                            window.history.back();
                                         }}
                                         className="w-full py-3 rounded-xl bg-white text-black font-bold text-sm hover:bg-gray-200 transition-all shadow-glow flex items-center justify-center gap-2"
                                     >
