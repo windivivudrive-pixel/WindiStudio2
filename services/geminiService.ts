@@ -105,7 +105,9 @@ export const generateStudioImage = async (
     flexibleMode?: boolean,
     randomFace?: boolean,
     accessoryImages?: string[],
+    backgroundImage?: string | null,
     numberOfImages: number,
+    targetResolution?: '2K' | '4K', // Optional resolution for upscale
     onImageGenerated?: (url: string) => void // Callback for progressive rendering
   }
 ): Promise<string[]> => {
@@ -130,9 +132,11 @@ export const generateStudioImage = async (
             flexibleMode: config.flexibleMode,
             randomFace: config.randomFace,
             accessoryImages: config.accessoryImages,
+            backgroundImage: config.backgroundImage,
             numberOfImages: 1, // Request 1 image at a time
             variationIndex: i,
-            totalBatchSize: config.numberOfImages
+            totalBatchSize: config.numberOfImages,
+            targetResolution: config.targetResolution
           }
         });
 

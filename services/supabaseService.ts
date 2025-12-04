@@ -192,7 +192,7 @@ export const saveGenerationToDb = async (
   userId: string,
   item: HistoryItem,
   cost: number,
-  imageType: 'STANDARD' | 'PREMIUM' | 'SCALEX2'
+  imageType: 'STANDARD' | 'PREMIUM' | 'SCALEX2' | 'SCALE2' | 'SCALE4'
 ) => {
   if (userId === 'dev-user') {
     return item; // Mock save, return item as is (images are already base64 or URLs)
@@ -201,11 +201,19 @@ export const saveGenerationToDb = async (
   const uploadedUrls: string[] = [];
 
   // 1. Upload Images
+  // 1. Upload Images
   for (let i = 0; i < item.images.length; i++) {
     const base64 = item.images[i];
-    const fileName = `${userId}/${item.timestamp}_${i}.jpg`;
-    const publicUrl = await uploadImageToStorage(base64, fileName);
-    if (publicUrl) uploadedUrls.push(publicUrl);
+    const fileName = `${userId}/${item.timestamp}_${i}.png`; // Use .png for R2
+
+    try {
+      const res = await fetch(base64);
+      const blob = await res.blob();
+      const publicUrl = await uploadToR2(blob, fileName, 'image/png');
+      if (publicUrl) uploadedUrls.push(publicUrl);
+    } catch (e) {
+      console.error("Failed to upload generation to R2", e);
+    }
   }
 
   if (uploadedUrls.length === 0) {
@@ -395,42 +403,91 @@ export const createCategory = async (name: string): Promise<Category | null> => 
   return data;
 };
 
-export const fetchLibraryImages = async (categoryId?: number): Promise<LibraryImage[]> => {
-  let query = supabase
-    .from('library_images')
-    .select('*')
-    .order('created_at', { ascending: false });
 
-  if (categoryId) {
-    query = query.eq('category_id', categoryId);
+
+export const toggleGenerationFavorite = async (id: string, isFavorite: boolean, categoryId?: number) => {
+  const updateData: any = { is_favorite: isFavorite };
+  if (categoryId !== undefined) {
+    updateData.category_id = categoryId;
   }
 
-  const { data, error } = await query;
+  const { error } = await supabase
+    .from('generations')
+    .update(updateData)
+    .eq('id', id);
 
   if (error) {
-    console.error('Error fetching library images:', error);
+    console.error('Error toggling favorite:', error);
+    return false;
+  }
+  return true;
+};
+
+// Replaces old fetchLibraryImages
+export interface LibraryFilterOptions {
+  onlyFavorites?: boolean;
+  categoryId?: number;
+  userId?: string;
+  imageType?: string;
+  daysAgo?: number;
+  page?: number;
+  limit?: number;
+}
+
+export const fetchProfiles = async (): Promise<{ id: string; email: string }[]> => {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('id, email')
+    .order('email');
+
+  if (error) {
+    console.error('Error fetching profiles:', error);
     return [];
   }
   return data || [];
 };
 
-export const addToLibrary = async (imageUrl: string, categoryId: number, prompt?: string, imageType?: string): Promise<LibraryImage | null> => {
-  const { data, error } = await supabase
-    .from('library_images')
-    .insert({
-      image_url: imageUrl,
-      category_id: categoryId,
-      prompt: prompt,
-      image_type: imageType
-    })
-    .select()
-    .single();
+// Replaces old fetchLibraryImages
+export const fetchLibraryImages = async (options: LibraryFilterOptions = {}): Promise<HistoryItem[]> => {
+  const { onlyFavorites = true, categoryId, userId, imageType, daysAgo, page = 0, limit = 60 } = options;
 
-  if (error) {
-    console.error('Error adding to library:', error);
-    return null;
+  // We use the Edge Function 'get-gallery' for ALL global queries to bypass RLS.
+  // This includes:
+  // 1. "Discover" Mode (onlyFavorites = true) -> Publicly visible curated images
+  // 2. "All Users" Mode (onlyFavorites = false) -> Admin only raw feed
+
+  // Note: "My Library" (User's own images) could technically use this too if we filter by userId,
+  // but direct DB query is also fine for own data. 
+  // However, to keep it consistent and simple, we can use the Edge Function for everything 
+  // OR use it just for the global views.
+
+  // Let's use it for the global views (when we are NOT filtering by a specific userId that matches the auth user).
+  // Since we don't have the auth user ID easily available here without an async call, 
+  // we will assume that if this function is called for "Library/Discover" or "All Users", we want global data.
+
+  try {
+    const { data, error } = await supabase.functions.invoke('get-gallery', {
+      body: {
+        page,
+        limit,
+        categoryId,
+        userId,
+        imageType,
+        daysAgo,
+        onlyFavorites // Pass this through. true = Discover, false = All Users
+      }
+    });
+
+    if (error) {
+      console.error('Error fetching gallery:', error);
+      return [];
+    }
+
+    return data.images || [];
+  } catch (e) {
+    console.error("Failed to invoke get-gallery:", e);
+    return [];
   }
-  return data;
 };
 
 export const fetchAllUserGenerations = async (): Promise<HistoryItem[]> => {

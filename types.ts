@@ -31,7 +31,10 @@ export interface HistoryItem {
   mode: AppMode;
   modelName?: string;
   cost?: number;
-  imageType?: 'STANDARD' | 'PREMIUM' | 'SCALEX2';
+  imageType?: 'STANDARD' | 'PREMIUM' | 'SCALEX2' | 'SCALE2' | 'SCALE4';
+  isFavorite?: boolean;
+  categoryId?: number;
+  userEmail?: string;
 }
 
 // Map to 'profiles' table
@@ -47,6 +50,7 @@ export interface UserProfile {
   banned?: boolean;
   branding_logo_url?: string;
   branding_config?: BrandingConfig;
+  role?: 'user' | 'admin';
 }
 
 // Map to 'transactions' table
@@ -110,4 +114,5 @@ export interface LibraryImage {
   created_at: string;
   prompt?: string;
   image_type?: string;
+  user_id?: string;
 }

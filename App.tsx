@@ -11,8 +11,6 @@ import { generateStudioImage, ensureApiKey } from './services/geminiService';
 import { BrandingPage } from './components/BrandingPage';
 import { StudioTabs } from './components/StudioTabs';
 import { LibraryView } from './components/LibraryView';
-import { addToLibrary, fetchCategories } from './services/supabaseService';
-import { Category } from './types';
 import { useBranding } from './utils/useBranding';
 import {
   signInWithGoogle,
@@ -46,6 +44,7 @@ const App: React.FC = () => {
   const [modelName, setModelName] = useState<string>('gemini-2.5-flash-image');
   const [primaryImage, setPrimaryImage] = useState<string | null>(null);
   const [secondaryImage, setSecondaryImage] = useState<string | null>(null);
+  const [backgroundImage, setBackgroundImage] = useState<string | null>(null);
   const [prompt, setPrompt] = useState('');
   const [aspectRatio, setAspectRatio] = useState<AspectRatio>(AspectRatio.PORTRAIT);
   const [numberOfImages, setNumberOfImages] = useState(1);
@@ -114,27 +113,10 @@ const App: React.FC = () => {
   // Refs
   const outputRef = useRef<HTMLDivElement>(null);
 
-  const isAdmin = userProfile?.email === 'quochungdn151@gmail.com';
-  const [adminCategories, setAdminCategories] = useState<Category[]>([]);
-  const [showAdminSaveModal, setShowAdminSaveModal] = useState(false);
-
-  useEffect(() => {
-    if (isAdmin && showAdminSaveModal) {
-      fetchCategories().then(setAdminCategories);
-    }
-  }, [isAdmin, showAdminSaveModal]);
-
-  const handleAdminSaveToLibrary = async (categoryId: number) => {
-    const img = results[selectedResultIndex];
-    if (!img) return;
-    // Infer image type based on cost or model
-    const currentCost = getCostPerImage();
-    const type = currentCost > 5 ? 'PREMIUM' : 'STANDARD';
-
-    await addToLibrary(img, categoryId, prompt, type);
-    setShowAdminSaveModal(false);
-    setToast({ message: "Saved to Library!", type: 'success' });
-  };
+  const isAdmin = userProfile?.role === 'admin' || userProfile?.email === 'quochungdn151@gmail.com';
+  console.log("App.tsx - UserProfile:", userProfile);
+  console.log("App.tsx - isAdmin:", isAdmin);
+  const [showUpscaleModal, setShowUpscaleModal] = useState(false);
 
   /* --- BRANDING FEATURE START --- */
   // Effect to generate watermarked image for DISPLAY (Preview Quality)
@@ -402,6 +384,7 @@ const App: React.FC = () => {
           randomFace,
           numberOfImages,
           accessoryImages: accessoryImages,
+          backgroundImage: backgroundImage,
           onImageGenerated: (url) => { setResults(prev => [...prev, url]); }
         });
         success = true;
@@ -489,15 +472,34 @@ const App: React.FC = () => {
     }
   };
 
-  const handleUpscale = async () => {
+  const handleUpscale = () => {
     if (results.length === 0) return;
+    setShowUpscaleModal(true);
+  };
+
+  const confirmUpscale = async (resolution: '2K' | '4K') => {
+    setShowUpscaleModal(false);
+    if (results.length === 0) return;
+
+    const cost = resolution === '4K' ? 50 : 20;
+
+    if (!session || !userProfile) {
+      setShowLoginModal(true);
+      return;
+    }
+
+    if (userProfile.credits < cost) {
+      setShowTopUpModal(true);
+      setError(`Insufficient balance. Cost: ${cost} xu, Available: ${userProfile.credits} xu.`);
+      return;
+    }
 
     if (window.innerWidth < 1024) {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     const imageToUpscale = results[selectedResultIndex] || results[0];
-    setLoadingState({ title: 'Upscaling...', subtitle: 'Enhancing to 4K resolution' });
+    setLoadingState({ title: 'Upscaling...', subtitle: `Enhancing to ${resolution} resolution (-${cost} xu)` });
     setIsGenerating(true);
 
     try {
@@ -509,12 +511,18 @@ const App: React.FC = () => {
         userPrompt: prompt,
         aspectRatio: aspectRatio,
         accessoryImages: accessoryImages,
-        numberOfImages: 1
+        numberOfImages: 1,
+        targetResolution: resolution
       });
 
       if (upscaledImages && upscaledImages.length > 0) {
         setResults(prev => [...prev, ...upscaledImages]);
         setSelectedResultIndex(results.length);
+
+        // Deduct credits
+        const newBalance = userProfile.credits - cost;
+        setUserProfile({ ...userProfile, credits: newBalance });
+        await updateUserCredits(userProfile.id, newBalance);
 
         // Save to DB & R2
         if (userProfile) {
@@ -522,17 +530,18 @@ const App: React.FC = () => {
             id: Date.now().toString(),
             thumbnail: upscaledImages[0],
             images: upscaledImages,
-            prompt: "Upscaled 4K Image",
+            prompt: `Upscaled ${resolution} Image`,
             timestamp: Date.now(),
             mode: mode,
             modelName: 'upscale-4k',
-            cost: 0 // Free or set specific cost
+            cost: cost
           };
 
           setHistory(prev => [newItem, ...prev]);
 
           // Background save
-          saveGenerationToDb(userProfile.id, newItem, 0, 'SCALEX2').then(savedItem => {
+          const imageType = resolution === '4K' ? 'SCALE4' : 'SCALE2';
+          saveGenerationToDb(userProfile.id, newItem, cost, imageType).then(savedItem => {
             if (savedItem) {
               setHistory(prev => prev.map(h => h.id === newItem.id ? savedItem : h));
             }
@@ -962,13 +971,14 @@ const App: React.FC = () => {
         {studioTab === 'library' ? (
           <div className="flex-1 p-6 lg:p-10 overflow-hidden">
             <LibraryView
-              isAdmin={isAdmin}
               onSelectImage={(url) => {
                 setPrimaryImage(url);
                 setMode(AppMode.CREATIVE_POSE);
                 setStudioTab('studio');
                 setToast({ message: "Image selected as Pose", type: 'success' });
               }}
+              onClose={() => setStudioTab('studio')}
+              isAdmin={isAdmin}
             />
           </div>
         ) : (
@@ -1143,6 +1153,17 @@ const App: React.FC = () => {
                         </div>
 
                       </div>
+                      <div className="space-y-1.5 pt-2">
+                        <label className="text-[10px] font-semibold text-gray-500 uppercase ml-1 block">Background Image (Optional)</label>
+                        <div className="h-5">
+                          <ImageUploader
+                            label="Background"
+                            subLabel="Environment Reference"
+                            image={backgroundImage}
+                            onImageChange={setBackgroundImage}
+                          />
+                        </div>
+                      </div>
                       <div className="space-y-2 pt-1">
                         {(mode !== AppMode.CREATIVE_POSE && mode !== AppMode.CREATE_MODEL) && (
                           <button onClick={() => setFlexibleMode(!flexibleMode)} className={`w-full flex items-center justify-between p-2.5 rounded-lg border transition-all ${flexibleMode ? 'bg-mystic-accent/10 border-mystic-accent text-white' : 'bg-transparent border-white/5 text-gray-400 hover:bg-white/5'}`}>
@@ -1150,7 +1171,7 @@ const App: React.FC = () => {
                             {flexibleMode ? <ToggleRight className="text-mystic-accent" size={20} /> : <ToggleLeft size={20} />}
                           </button>
                         )}
-                        {mode === AppMode.CREATE_MODEL && (
+                        {(mode === AppMode.CREATE_MODEL) && (
                           <button onClick={() => setRandomFace(!randomFace)} className={`w-full flex items-center justify-between p-2.5 rounded-lg border transition-all ${randomFace ? 'bg-pink-500/10 border-pink-500 text-white' : 'bg-transparent border-white/5 text-gray-400 hover:bg-white/5'}`}>
                             <div className="flex items-center gap-2"><ScanFace size={14} /><span className="text-xs font-medium">Randomize Model</span></div>
                             {randomFace ? <ToggleRight className="text-pink-500" size={20} /> : <ToggleLeft size={20} />}
@@ -1189,9 +1210,7 @@ const App: React.FC = () => {
                         <button onClick={() => downloadImage(results[selectedResultIndex], selectedResultIndex, prompt, selectedModel)} className="glass-button w-12 h-12 rounded-full flex items-center justify-center text-white hover:text-mystic-accent transition-all group shadow-glass" title="Save Image"><Download size={22} className="group-hover:translate-y-0.5 transition-transform" /></button>
                         <button onClick={handleNewPose} className="glass-button w-12 h-12 rounded-full flex items-center justify-center text-white hover:text-pink-400 transition-all shadow-glass" title="Use as Pose"><Bone size={22} /></button>
                         <button onClick={handleUpscale} className="glass-button w-12 h-12 rounded-full flex items-center justify-center text-white hover:text-purple-400 transition-all shadow-glass" title="Upscale 4K"><Maximize2 size={22} /></button>
-                        {isAdmin && (
-                          <button onClick={() => setShowAdminSaveModal(true)} className="glass-button w-12 h-12 rounded-full flex items-center justify-center text-white hover:text-pink-500 transition-all shadow-glass" title="Admin: Add to Library"><Heart size={22} /></button>
-                        )}
+
                       </div>
                       {/* Mobile Hint */}
                       <div className="lg:hidden absolute bottom-4 left-0 right-0 text-center pointer-events-none z-20">
@@ -1579,24 +1598,46 @@ const App: React.FC = () => {
           </div>
         </div>
       )}
-      {/* ADMIN SAVE MODAL */}
-      {showAdminSaveModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-          <div className="bg-[#1a1a1a] border border-white/10 rounded-2xl p-6 w-full max-w-sm shadow-2xl animate-in zoom-in duration-200">
-            <h3 className="text-lg font-bold text-white mb-4">Add to Library</h3>
-            <p className="text-sm text-gray-400 mb-4">Select a category:</p>
-            <div className="grid grid-cols-2 gap-2 mb-6">
-              {adminCategories.map(cat => (
-                <button
-                  key={cat.id}
-                  onClick={() => handleAdminSaveToLibrary(cat.id)}
-                  className="p-3 rounded-lg bg-white/5 hover:bg-mystic-accent hover:text-white text-gray-300 text-xs font-bold transition-colors border border-white/5"
-                >
-                  {cat.name}
-                </button>
-              ))}
+
+      {/* Upscale Modal */}
+      {showUpscaleModal && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-[#1a1a1a] border border-white/10 rounded-2xl p-6 max-w-md w-full relative">
+            <button
+              onClick={() => setShowUpscaleModal(false)}
+              className="absolute top-4 right-4 text-white/50 hover:text-white"
+            >
+              <X size={24} />
+            </button>
+
+            <h3 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
+              <Sparkles className="text-purple-400" /> Upscale Image
+            </h3>
+            <p className="text-white/60 mb-6">Choose your target resolution. Higher resolution requires more credits.</p>
+
+            <div className="grid grid-cols-2 gap-4">
+              <button
+                onClick={() => confirmUpscale('2K')}
+                className="flex flex-col items-center justify-center p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-purple-500/50 transition-all group"
+              >
+                <div className="text-2xl font-bold text-white mb-1">2K</div>
+                <div className="text-sm text-white/50 group-hover:text-white/80">Standard</div>
+                <div className="mt-3 px-3 py-1 rounded-full bg-purple-500/20 text-purple-300 text-xs font-medium">
+                  20 xu
+                </div>
+              </button>
+
+              <button
+                onClick={() => confirmUpscale('4K')}
+                className="flex flex-col items-center justify-center p-4 rounded-xl bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/30 hover:border-purple-500 transition-all group"
+              >
+                <div className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400 mb-1">4K</div>
+                <div className="text-sm text-white/50 group-hover:text-white/80">Ultra HD</div>
+                <div className="mt-3 px-3 py-1 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-medium shadow-lg shadow-purple-500/20">
+                  50 xu
+                </div>
+              </button>
             </div>
-            <button onClick={() => setShowAdminSaveModal(false)} className="w-full py-3 rounded-xl bg-white/10 text-white font-bold text-sm hover:bg-white/20">Cancel</button>
           </div>
         </div>
       )}

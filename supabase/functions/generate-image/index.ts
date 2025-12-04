@@ -95,9 +95,11 @@ Deno.serve(async (req) => {
             flexibleMode,
             randomFace,
             accessoryImages,
+            backgroundImage,
             numberOfImages = 1, // Legacy support, but we will mostly use 1 per request now
             variationIndex = 0,
-            totalBatchSize = 1
+            totalBatchSize = 1,
+            targetResolution = '2K' // Default to 2K
         } = await req.json();
 
         const apiKey = Deno.env.get('GEMINI_API_KEY');
@@ -146,7 +148,7 @@ Deno.serve(async (req) => {
 
         // --- UPSCALE LOGIC ---
         if (modelName === 'upscale-4k') {
-            console.log("Upscaling image with gemini-3-pro-image-preview (4K)...");
+            console.log("Upscaling image with pro (4K)...");
 
             if (!primaryImage) {
                 throw new Error("Upscale requires an input image.");
@@ -170,7 +172,7 @@ Deno.serve(async (req) => {
                 config: {
                     // @ts-ignore
                     imageConfig: {
-                        imageSize: '2K',
+                        imageSize: targetResolution || '2K',
                         aspectRatio: aspectRatio || '1:1'
                     },
                     safetySettings: [
@@ -208,19 +210,21 @@ Deno.serve(async (req) => {
         if (mode === 'CREATIVE_POSE') {
             if (primaryImage) parts.push(await processImagePart(primaryImage));
 
+            let subjectInstruction = "";
+            {
+                subjectInstruction = `
+                 - STRICTLY PRESERVE the Subject's Face, Hair, Skin Tone, and Outfit from Image 1.
+                 - This is a RE-POSING task. Do not change the person's identity or clothes.
+                 - POSE:
+                 - Create a NEW, creative, natural, and professional fashion pose (Variation #${i + 1}).
+                 `;
+            }
+
             promptText = `
-          I have provided a SOURCE IMAGE (Image 1).
 
           ${STYLE_GUIDE}
 
-          SUBJECT LOGIC (CRITICAL):
-          - Analyze Image 1.
-          - STRICTLY PRESERVE the Subject's Face, Hair, Skin Tone, and Outfit from Image 1.
-          - This is a RE-POSING task. Do not change the person's identity or clothes.
-          
-          POSE:
-          - Create a NEW, creative, natural, and professional fashion pose (Variation #${i + 1}).
-          - Do not simply copy the original pose. Make it dynamic.
+          ${subjectInstruction}
 
           BACKGROUND:
           - PRESERVE the vibe/environment of Image 1 unless instructed otherwise.
@@ -329,7 +333,19 @@ Deno.serve(async (req) => {
             }
 
             // Add variation instruction if batch
+
+
             promptText += variationInstruction;
+        }
+
+        // Process Background Image
+        if (backgroundImage) {
+            console.log("Processing background image...");
+            const bgPart = await processImagePart(backgroundImage);
+            if (bgPart) {
+                parts.push(bgPart);
+                promptText += `\n\nBACKGROUND REFERENCE (Image ${parts.length}): Use this image as the background environment. Match the lighting, mood, and setting of this image. bỏ các yếu tố con người trong hình này`;
+            }
         }
 
         // Process Accessory Images
