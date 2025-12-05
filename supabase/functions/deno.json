@@ -3,9 +3,11 @@
         "lib": [
             "deno.ns",
             "deno.unstable"
-        ]
+        ],
+        "experimentalDecorators": true
     },
     "imports": {
-        "@google/genai": "npm:@google/genai@^1.0.0"
+        "@google/genai": "npm:@google/genai@^1.0.0",
+        "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@2"
     }
 }

@@ -1,6 +1,6 @@
 
 import { supabase } from './supabaseClient';
-import { HistoryItem, UserProfile, AppMode, Transaction } from '../types';
+import { HistoryItem, UserProfile, AppMode, Transaction, BrandingConfig, Category, LibraryImage } from '../types';
 import { base64ToBlob, compressImage } from '../utils/imageUtils';
 import { uploadToR2, deleteFromR2 } from './r2Service';
 
@@ -69,8 +69,45 @@ export const createProfileIfNotExists = async (user: any) => {
     console.error('Error creating profile:', error);
     return null;
   }
+
   return data;
 };
+
+/* --- BRANDING FEATURE --- */
+
+export const uploadImageToStorage = async (base64Data: string, fileName: string): Promise<string | null> => {
+  try {
+    // Convert Base64 to Blob
+    const base64Response = await fetch(base64Data);
+    const blob = await base64Response.blob();
+
+    const bucketName = import.meta.env.VITE_SUPABASE_BUCKET || 'windi-images';
+
+    const { data, error } = await supabase.storage
+      .from(bucketName)
+      .upload(fileName, blob, {
+        contentType: 'image/png',
+        upsert: true
+      });
+
+    if (error) {
+      console.error('Error uploading branding logo:', error);
+      return null;
+    }
+
+    // Get Public URL
+    const { data: { publicUrl } } = supabase.storage
+      .from(bucketName)
+      .getPublicUrl(fileName);
+
+    return publicUrl;
+  } catch (e) {
+    console.error("Upload failed:", e);
+    return null;
+  }
+};
+
+// updateProfileBranding removed in favor of saveBrandingToDb
 
 export const updateUserCredits = async (userId: string, newBalance: number) => {
   if (userId === 'dev-user') return; // Mock update
@@ -148,31 +185,14 @@ export const createTransaction = async (userId: string, amountVnd: number, credi
 
 // --- STORAGE & GENERATIONS ---
 
-export const uploadImageToStorage = async (base64Data: string, fileName: string): Promise<string | null> => {
-  try {
-    // Compress to JPEG (100% quality - no compression)
-    const blob = await compressImage(base64Data, 1.0);
+// uploadImageToStorage moved to top
 
-    // Upload to Cloudflare R2
-    const publicUrl = await uploadToR2(blob, fileName, 'image/jpeg');
-
-    if (!publicUrl) {
-      console.error('Error uploading image to R2');
-      return null;
-    }
-
-    return publicUrl;
-  } catch (err) {
-    console.error('Upload exception:', err);
-    return null;
-  }
-};
 
 export const saveGenerationToDb = async (
   userId: string,
   item: HistoryItem,
   cost: number,
-  imageType: 'STANDARD' | 'PREMIUM' | 'SCALEX2'
+  imageType: 'STANDARD' | 'PREMIUM' | 'SCALEX2' | 'SCALE2' | 'SCALE4'
 ) => {
   if (userId === 'dev-user') {
     return item; // Mock save, return item as is (images are already base64 or URLs)
@@ -181,11 +201,19 @@ export const saveGenerationToDb = async (
   const uploadedUrls: string[] = [];
 
   // 1. Upload Images
+  // 1. Upload Images
   for (let i = 0; i < item.images.length; i++) {
     const base64 = item.images[i];
-    const fileName = `${userId}/${item.timestamp}_${i}.jpg`;
-    const publicUrl = await uploadImageToStorage(base64, fileName);
-    if (publicUrl) uploadedUrls.push(publicUrl);
+    const fileName = `${userId}/${item.timestamp}_${i}.png`; // Use .png for R2
+
+    try {
+      const res = await fetch(base64);
+      const blob = await res.blob();
+      const publicUrl = await uploadToR2(blob, fileName, 'image/png');
+      if (publicUrl) uploadedUrls.push(publicUrl);
+    } catch (e) {
+      console.error("Failed to upload generation to R2", e);
+    }
   }
 
   if (uploadedUrls.length === 0) {
@@ -252,6 +280,30 @@ export const fetchHistoryFromDb = async (userId: string): Promise<HistoryItem[]>
     modelName: row.model_name || 'unknown',
     cost: row.cost_credits
   }));
+};
+/* --- BRANDING FEATURE START --- */
+export const saveBrandingToDb = async (
+  userId: string,
+  brandingLogo: string,
+  brandingConfig: BrandingConfig
+) => {
+
+  const { error } = await supabase
+    .from('branding')
+    .upsert({
+      user_id: userId,
+      branding_logo: brandingLogo,
+      branding_config: brandingConfig
+    }, { onConflict: 'user_id' })
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error saving branding to DB:', error);
+    return null;
+  }
+
+  return { brandingLogo, brandingConfig };
 };
 
 export const deleteHistoryFromDb = async (id: string) => {
@@ -320,4 +372,185 @@ export const deleteHistoryFromDb = async (id: string) => {
   // 4. Delete from DB
   const { error } = await supabase.from('generations').delete().eq('id', id);
   if (error) console.error("Failed to delete", error);
+};
+
+export const deleteGenerationsBulk = async (ids: string[]) => {
+  // We process these sequentially to ensure R2 cleanup happens for each.
+  // A more optimized approach would be to fetch all URLs first, then delete all from R2, then delete all from DB.
+  // But reusing the existing logic is safer for now.
+
+  let successCount = 0;
+  let failCount = 0;
+
+  for (const id of ids) {
+    try {
+      await deleteHistoryFromDb(id);
+      successCount++;
+    } catch (e) {
+      console.error(`Failed to delete item ${id}`, e);
+      failCount++;
+    }
+  }
+
+  return { successCount, failCount };
+};
+
+/* --- LIBRARY & ADMIN FEATURES --- */
+
+export const fetchCategories = async (): Promise<Category[]> => {
+  const { data, error } = await supabase
+    .from('categories')
+    .select('*')
+    .order('created_at', { ascending: true });
+
+  if (error) {
+    console.error('Error fetching categories:', error);
+    return [];
+  }
+  return data || [];
+};
+
+export const createCategory = async (name: string): Promise<Category | null> => {
+  const { data, error } = await supabase
+    .from('categories')
+    .insert({ name })
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error creating category:', error);
+    return null;
+  }
+  return data;
+};
+
+
+
+export const toggleGenerationFavorite = async (id: string, isFavorite: boolean, categoryId?: number) => {
+  const updateData: any = { is_favorite: isFavorite };
+  if (categoryId !== undefined) {
+    updateData.category_id = categoryId;
+  }
+
+  const { error } = await supabase
+    .from('generations')
+    .update(updateData)
+    .eq('id', id);
+
+  if (error) {
+    console.error('Error toggling favorite:', error);
+    return false;
+  }
+  return true;
+};
+
+// Replaces old fetchLibraryImages
+export interface LibraryFilterOptions {
+  onlyFavorites?: boolean;
+  categoryId?: number;
+  userId?: string;
+  imageType?: string;
+  daysAgo?: number;
+  page?: number;
+  limit?: number;
+}
+
+export const fetchProfiles = async (): Promise<{ id: string; email: string }[]> => {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('id, email')
+    .order('email');
+
+  if (error) {
+    console.error('Error fetching profiles:', error);
+    return [];
+  }
+  return data || [];
+};
+
+// Replaces old fetchLibraryImages
+export const fetchLibraryImages = async (options: LibraryFilterOptions = {}): Promise<HistoryItem[]> => {
+  const { onlyFavorites = true, categoryId, userId, imageType, daysAgo, page = 0, limit = 60 } = options;
+
+  // We use the Edge Function 'get-gallery' for ALL global queries to bypass RLS.
+  // This includes:
+  // 1. "Discover" Mode (onlyFavorites = true) -> Publicly visible curated images
+  // 2. "All Users" Mode (onlyFavorites = false) -> Admin only raw feed
+
+  // Note: "My Library" (User's own images) could technically use this too if we filter by userId,
+  // but direct DB query is also fine for own data. 
+  // However, to keep it consistent and simple, we can use the Edge Function for everything 
+  // OR use it just for the global views.
+
+  // Let's use it for the global views (when we are NOT filtering by a specific userId that matches the auth user).
+  // Since we don't have the auth user ID easily available here without an async call, 
+  // we will assume that if this function is called for "Library/Discover" or "All Users", we want global data.
+
+  try {
+    const { data, error } = await supabase.functions.invoke('get-gallery', {
+      body: {
+        page,
+        limit,
+        categoryId,
+        userId,
+        imageType,
+        daysAgo,
+        onlyFavorites // Pass this through. true = Discover, false = All Users
+      }
+    });
+
+    if (error) {
+      console.error('Error fetching gallery:', error);
+      return [];
+    }
+
+    return data.images || [];
+  } catch (e) {
+    console.error("Failed to invoke get-gallery:", e);
+    return [];
+  }
+};
+
+export const fetchImageById = async (id: string): Promise<HistoryItem | null> => {
+  try {
+    const { data, error } = await supabase.functions.invoke('get-gallery', {
+      body: { id }
+    });
+
+    if (error) {
+      console.error('Error fetching image by ID:', error);
+      return null;
+    }
+
+    const images = data.images || [];
+    return images.length > 0 ? images[0] : null;
+  } catch (e) {
+    console.error("Failed to fetch image by ID:", e);
+    return null;
+  }
+};
+
+export const fetchAllUserGenerations = async (): Promise<HistoryItem[]> => {
+  const { data, error } = await supabase
+    .from('generations')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .limit(100); // Limit to recent 100 for performance
+
+  if (error || !data) {
+    console.error('Error fetching all user generations:', error);
+    return [];
+  }
+
+  return data.map((row: any) => ({
+    id: row.id.toString(),
+    thumbnail: row.image_url,
+    images: [row.image_url],
+    prompt: row.prompt,
+    timestamp: new Date(row.created_at).getTime(),
+    mode: row.mode || AppMode.CREATIVE_POSE,
+    modelName: row.model_name || 'unknown',
+    cost: row.cost_credits,
+    imageType: row.image_type
+  }));
 };

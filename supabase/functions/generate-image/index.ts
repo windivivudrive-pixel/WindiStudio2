@@ -1,5 +1,5 @@
 import { GoogleGenAI, HarmCategory, HarmBlockThreshold } from "@google/genai";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { createClient } from '@supabase/supabase-js';
 
 const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
@@ -94,9 +94,12 @@ Deno.serve(async (req) => {
             aspectRatio,
             flexibleMode,
             randomFace,
+            accessoryImages,
+            backgroundImage,
             numberOfImages = 1, // Legacy support, but we will mostly use 1 per request now
             variationIndex = 0,
-            totalBatchSize = 1
+            totalBatchSize = 1,
+            targetResolution = '2K' // Default to 2K
         } = await req.json();
 
         const apiKey = Deno.env.get('GEMINI_API_KEY');
@@ -141,11 +144,11 @@ Deno.serve(async (req) => {
         const parts: any[] = [];
         let promptText = "";
         let generatedIdentityRef: string | null = null; // Note: This won't persist across requests. If needed, frontend must pass it back.
-        const activeModel = "gemini-2.0-flash-exp";
+        const activeModel = "gemini-2.5-flash-image";
 
         // --- UPSCALE LOGIC ---
         if (modelName === 'upscale-4k') {
-            console.log("Upscaling image with gemini-3-pro-image-preview (4K)...");
+            console.log("Upscaling image with pro (4K)...");
 
             if (!primaryImage) {
                 throw new Error("Upscale requires an input image.");
@@ -169,7 +172,7 @@ Deno.serve(async (req) => {
                 config: {
                     // @ts-ignore
                     imageConfig: {
-                        imageSize: '2K',
+                        imageSize: targetResolution || '2K',
                         aspectRatio: aspectRatio || '1:1'
                     },
                     safetySettings: [
@@ -207,19 +210,21 @@ Deno.serve(async (req) => {
         if (mode === 'CREATIVE_POSE') {
             if (primaryImage) parts.push(await processImagePart(primaryImage));
 
+            let subjectInstruction = "";
+            {
+                subjectInstruction = `
+                 - STRICTLY PRESERVE the Subject's Face, Hair, Skin Tone, and Outfit from Image 1.
+                 - This is a RE-POSING task. Do not change the person's identity or clothes.
+                 - POSE:
+                 - Create a NEW, creative, natural, and professional fashion pose (Variation #${i + 1}).
+                 `;
+            }
+
             promptText = `
-          I have provided a SOURCE IMAGE (Image 1).
 
           ${STYLE_GUIDE}
 
-          SUBJECT LOGIC (CRITICAL):
-          - Analyze Image 1.
-          - STRICTLY PRESERVE the Subject's Face, Hair, Skin Tone, and Outfit from Image 1.
-          - This is a RE-POSING task. Do not change the person's identity or clothes.
-          
-          POSE:
-          - Create a NEW, creative, natural, and professional fashion pose (Variation #${i + 1}).
-          - Do not simply copy the original pose. Make it dynamic.
+          ${subjectInstruction}
 
           BACKGROUND:
           - PRESERVE the vibe/environment of Image 1 unless instructed otherwise.
@@ -300,6 +305,59 @@ Deno.serve(async (req) => {
            
         ${variationInstruction}
         `;
+        } else if (mode === 'FUN_FREEDOM') {
+            // Process all images
+            let hasImages = false;
+            if (primaryImage) {
+                parts.push(await processImagePart(primaryImage));
+                hasImages = true;
+            }
+            if (secondaryImage) {
+                parts.push(await processImagePart(secondaryImage));
+                hasImages = true;
+            }
+            // Accessory images are processed below automatically
+
+            const basePrompt = userPrompt || "A creative image based on the provided references.";
+
+            if (hasImages) {
+                promptText = `
+                 I have provided input images as references.
+                 
+                 USER PROMPT: ${basePrompt}
+                 
+                 INSTRUCTION: Generate an image based on the USER PROMPT. You MUST use the provided images as visual references (for style, content, subject, or composition) as appropriate for the request.
+                 `;
+            } else {
+                promptText = basePrompt;
+            }
+
+            // Add variation instruction if batch
+
+
+            promptText += variationInstruction;
+        }
+
+        // Process Background Image
+        if (backgroundImage) {
+            console.log("Processing background image...");
+            const bgPart = await processImagePart(backgroundImage);
+            if (bgPart) {
+                parts.push(bgPart);
+                promptText += `\n\nBACKGROUND REFERENCE (Image ${parts.length}): Use this image as the background environment. Match the lighting, mood, and setting of this image. bỏ các yếu tố con người trong hình này`;
+            }
+        }
+
+        // Process Accessory Images
+        if (accessoryImages && accessoryImages.length > 0) {
+            console.log(`Processing ${accessoryImages.length} accessory images...`);
+            for (let i = 0; i < accessoryImages.length; i++) {
+                const accPart = await processImagePart(accessoryImages[i]);
+                if (accPart) {
+                    parts.push(accPart);
+                    promptText += `\n\nACCESSORY REFERENCE (Image ${parts.length}): Incorporate the accessory shown in this image into the outfit naturally.`;
+                }
+            }
         }
 
         // Append User Prompt
@@ -362,8 +420,12 @@ Deno.serve(async (req) => {
                 console.error("Candidate 0 Safety Ratings:", JSON.stringify(candidate.safetyRatings, null, 2));
 
                 // Check for safety block
-                if (candidate.finishReason === "SAFETY" || candidate.finishReason === "PROHIBITED_CONTENT" || candidate.finishReason === "BLOCK_REASON_SAFETY") {
-                    throw new Error("SAFETY_VIOLATION: Generation blocked by safety settings.");
+                const reason = candidate.finishReason as any;
+                if (reason === "SAFETY" || reason === "PROHIBITED_CONTENT" || reason === "BLOCK_REASON_SAFETY" || reason === "IMAGE_OTHER") {
+                    return new Response(
+                        JSON.stringify({ error: "SAFETY_VIOLATION", message: "AI refused to generate this image. It may contain prohibited content or safety violations." }),
+                        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+                    );
                 }
             }
             throw new Error("Failed to generate any images. Check logs for details.");
@@ -409,10 +471,16 @@ Deno.serve(async (req) => {
 
                 if (shouldBan) {
                     console.error(`User ${userId} has been BANNED.`);
-                    throw new Error("ACCOUNT_BANNED: Tài khoản của bạn đã bị khóa vĩnh viễn do vi phạm chính sách an toàn nhiều lần.");
+                    return new Response(
+                        JSON.stringify({ error: "ACCOUNT_BANNED", message: "Tài khoản của bạn đã bị khóa vĩnh viễn do vi phạm chính sách an toàn nhiều lần." }),
+                        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+                    );
                 } else {
                     const remaining = 3 - currentWarnings;
-                    throw new Error(`SAFETY_VIOLATION: Bạn đang sử dụng hình ảnh quá nhạy cảm hoặc bạo lực. Vui lòng chọn ảnh khác. Sau ${remaining} lần vi phạm nữa tài khoản bạn sẽ bị khóa.`);
+                    return new Response(
+                        JSON.stringify({ error: "SAFETY_VIOLATION", message: `Bạn đang sử dụng hình ảnh quá nhạy cảm hoặc bạo lực. Vui lòng chọn ảnh khác. Sau ${remaining} lần vi phạm nữa tài khoản bạn sẽ bị khóa.` }),
+                        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+                    );
                 }
             } catch (dbError: any) {
                 console.error("Failed to update user safety stats:", dbError);

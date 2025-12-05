@@ -104,7 +104,10 @@ export const generateStudioImage = async (
     conceptReferences?: string[],
     flexibleMode?: boolean,
     randomFace?: boolean,
+    accessoryImages?: string[],
+    backgroundImage?: string | null,
     numberOfImages: number,
+    targetResolution?: '2K' | '4K', // Optional resolution for upscale
     onImageGenerated?: (url: string) => void // Callback for progressive rendering
   }
 ): Promise<string[]> => {
@@ -128,14 +131,28 @@ export const generateStudioImage = async (
             aspectRatio: config.aspectRatio,
             flexibleMode: config.flexibleMode,
             randomFace: config.randomFace,
+            accessoryImages: config.accessoryImages,
+            backgroundImage: config.backgroundImage,
             numberOfImages: 1, // Request 1 image at a time
             variationIndex: i,
-            totalBatchSize: config.numberOfImages
+            totalBatchSize: config.numberOfImages,
+            targetResolution: config.targetResolution
           }
         });
 
         if (error) {
           console.error(`Error generating image ${i + 1}:`, error);
+          // Check if it's a structured error from our backend
+          if (error.context && error.context.response) {
+            try {
+              const errorBody = await error.context.response.json();
+              if (errorBody && errorBody.message) {
+                throw new Error(errorBody.message);
+              }
+            } catch (e) {
+              // ignore json parse error
+            }
+          }
           throw new Error(error.message || "Failed to generate image");
         }
 

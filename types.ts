@@ -4,6 +4,7 @@ export enum AppMode {
   VIRTUAL_TRY_ON = 'VIRTUAL_TRY_ON',
   CREATE_MODEL = 'CREATE_MODEL',
   COPY_CONCEPT = 'COPY_CONCEPT',
+  FUN_FREEDOM = 'FUN_FREEDOM',
 }
 
 export enum AspectRatio {
@@ -30,6 +31,10 @@ export interface HistoryItem {
   mode: AppMode;
   modelName?: string;
   cost?: number;
+  imageType?: 'STANDARD' | 'PREMIUM' | 'SCALEX2' | 'SCALE2' | 'SCALE4';
+  isFavorite?: boolean;
+  categoryId?: number;
+  userEmail?: string;
 }
 
 // Map to 'profiles' table
@@ -43,6 +48,9 @@ export interface UserProfile {
   referred_by_code?: string;
   warning_count?: number;
   banned?: boolean;
+  branding_logo_url?: string;
+  branding_config?: BrandingConfig;
+  role?: 'user' | 'admin';
 }
 
 // Map to 'transactions' table
@@ -73,7 +81,38 @@ export interface GenerationConfig {
   randomFace?: boolean;
 }
 
+export interface BrandingConfig {
+  layoutMode?: 'single' | 'loop'; // New: Single or Repeating Pattern
+  x?: number; // 0-100% position
+  y?: number; // 0-100% position
+  gap?: number; // Spacing for loop mode
+  applyToPreview?: boolean; // New: Toggle between "Always Visible" (true) vs "Download Only" (false)
+
+  // Deprecated/Legacy support (optional now)
+  position?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+  margin?: number;
+
+  scale: number; // 0.1 to 0.5 (10% to 50% of image width)
+  opacity: number; // 0.1 to 1.0
+}
+
 export interface GenerationResponse {
   imageUrls: string[];
   error: string | null;
+}
+
+export interface Category {
+  id: number;
+  name: string;
+  created_at: string;
+}
+
+export interface LibraryImage {
+  id: number;
+  image_url: string;
+  category_id: number;
+  created_at: string;
+  prompt?: string;
+  image_type?: string;
+  user_id?: string;
 }
