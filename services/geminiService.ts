@@ -109,34 +109,71 @@ export const generateStudioImage = async (
   }
 ): Promise<string[]> => {
 
-  // Call Supabase Edge Function
-  const { data, error } = await supabase.functions.invoke('generate-image', {
-    body: {
-      mode: config.mode,
-      modelName: config.modelName,
-      primaryImage: config.primaryImage,
-      secondaryImage: config.secondaryImage,
-      userPrompt: config.userPrompt,
-      aspectRatio: config.aspectRatio,
-      flexibleMode: config.flexibleMode,
-      randomFace: config.randomFace,
-      numberOfImages: config.numberOfImages
-    }
-  });
+  // We now split the batch into individual requests to support progressive rendering
+  // and error isolation (so one failure doesn't fail the whole batch).
 
-  if (error) {
-    console.error("Supabase Function Error:", error);
-    throw new Error(error.message || "Failed to generate image via Supabase Edge Function");
+  const promises = [];
+  const results: string[] = [];
+
+  for (let i = 0; i < config.numberOfImages; i++) {
+    const requestPromise = (async () => {
+      try {
+        const { data, error } = await supabase.functions.invoke('generate-image', {
+          body: {
+            mode: config.mode,
+            modelName: config.modelName,
+            primaryImage: config.primaryImage,
+            secondaryImage: config.secondaryImage,
+            userPrompt: config.userPrompt,
+            aspectRatio: config.aspectRatio,
+            flexibleMode: config.flexibleMode,
+            randomFace: config.randomFace,
+            numberOfImages: 1, // Request 1 image at a time
+            variationIndex: i,
+            totalBatchSize: config.numberOfImages
+          }
+        });
+
+        if (error) {
+          console.error(`Error generating image ${i + 1}:`, error);
+          throw new Error(error.message || "Failed to generate image");
+        }
+
+        if (data && data.images && data.images.length > 0) {
+          const imageUrl = data.images[0];
+          results.push(imageUrl);
+          if (config.onImageGenerated) {
+            config.onImageGenerated(imageUrl);
+          }
+          return imageUrl;
+        } else {
+          throw new Error("No image returned");
+        }
+      } catch (err: any) {
+        console.error(`Failed to generate image ${i + 1}:`, err);
+        // Rethrow safety errors immediately to stop the process and alert the user
+        const errorMsg = err.message || "";
+        if (errorMsg.includes("SAFETY_VIOLATION") ||
+          errorMsg.includes("ACCOUNT_BANNED") ||
+          errorMsg.includes("PROHIBITED") ||
+          errorMsg.includes("blocked") ||
+          errorMsg.includes("content")) {
+          throw err;
+        }
+        // We don't rethrow other errors here to allow other images to succeed.
+        // But if ALL fail, the caller might want to know.
+        return null;
+      }
+    })();
+    promises.push(requestPromise);
   }
 
-  if (!data || !data.images) {
-    throw new Error("No images returned from server");
+  // Wait for all to finish (settled)
+  await Promise.all(promises);
+
+  if (results.length === 0) {
+    throw new Error("Failed to generate any images. Please try again.");
   }
 
-  // Handle progressive rendering callback if provided
-  if (config.onImageGenerated && data.images) {
-    data.images.forEach((img: string) => config.onImageGenerated!(img));
-  }
-
-  return data.images;
+  return results;
 };

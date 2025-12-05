@@ -1,4 +1,5 @@
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, HarmCategory, HarmBlockThreshold } from "@google/genai";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
@@ -77,6 +78,12 @@ Deno.serve(async (req) => {
         return new Response('ok', { headers: corsHeaders });
     }
 
+    // --- AUTH & SAFETY CHECK ---
+    const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    let userId: string | null = null;
+
     try {
         const {
             mode,
@@ -87,7 +94,9 @@ Deno.serve(async (req) => {
             aspectRatio,
             flexibleMode,
             randomFace,
-            numberOfImages = 1
+            numberOfImages = 1, // Legacy support, but we will mostly use 1 per request now
+            variationIndex = 0,
+            totalBatchSize = 1
         } = await req.json();
 
         const apiKey = Deno.env.get('GEMINI_API_KEY');
@@ -95,26 +104,110 @@ Deno.serve(async (req) => {
             throw new Error("GEMINI_API_KEY is not set in environment variables.");
         }
 
+        const authHeader = req.headers.get('Authorization');
+
+        if (authHeader) {
+            const token = authHeader.replace('Bearer ', '');
+            const { data: { user }, error: userError } = await supabase.auth.getUser(token);
+            if (user) {
+                userId = user.id;
+
+                // Check if user is banned
+                const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('banned, warning_count')
+                    .eq('id', userId)
+                    .single();
+
+                if (profile?.banned) {
+                    throw new Error("ACCOUNT_BANNED: Your account has been suspended due to repeated safety violations.");
+                }
+            }
+        }
+
         const ai = new GoogleGenAI({ apiKey });
         const results: string[] = [];
 
-        let generatedIdentityRef: string | null = null;
+        // We now generate only 1 image per request to support progressive loading on frontend
+        // The frontend will call this function N times.
+
+        const i = variationIndex;
+        const isBatchMode = totalBatchSize > 1;
+
+        const variationInstruction = isBatchMode
+            ? `\nVARIATION INSTRUCTION (Image ${i + 1} of ${totalBatchSize}): Change the camera angle or pose slightly to create a diverse set.`
+            : "";
+
+        const parts: any[] = [];
+        let promptText = "";
+        let generatedIdentityRef: string | null = null; // Note: This won't persist across requests. If needed, frontend must pass it back.
         const activeModel = "gemini-2.0-flash-exp";
 
-        for (let i = 0; i < numberOfImages; i++) {
-            const parts: any[] = [];
-            let promptText = "";
+        // --- UPSCALE LOGIC ---
+        if (modelName === 'upscale-4k') {
+            console.log("Upscaling image with gemini-3-pro-image-preview (4K)...");
 
-            const isBatchMode = numberOfImages > 1;
-            const variationInstruction = isBatchMode
-                ? `\nVARIATION INSTRUCTION (Image ${i + 1} of ${numberOfImages}): Change the camera angle or pose slightly to create a diverse set.`
-                : "";
+            if (!primaryImage) {
+                throw new Error("Upscale requires an input image.");
+            }
 
-            // --- MODE LOGIC ---
-            if (mode === 'CREATIVE_POSE') {
-                if (primaryImage) parts.push(await processImagePart(primaryImage));
+            // Process image (handles URL or Base64)
+            const processedImage = await processImagePart(primaryImage);
+            if (!processedImage) {
+                throw new Error("Failed to process input image for upscale.");
+            }
 
-                promptText = `
+            // Use Gemini 3 Pro for High-Res Image-to-Image refinement
+            const response = await ai.models.generateContent({
+                model: 'gemini-3-pro-image-preview',
+                contents: {
+                    parts: [
+                        processedImage,
+                        { text: "Upscale this image to 4K resolution. Maintain exact identity, pose, and details but significantly improve clarity, sharpness, and texture. Photorealistic output." }
+                    ]
+                },
+                config: {
+                    // @ts-ignore
+                    imageConfig: {
+                        imageSize: '2K',
+                        aspectRatio: aspectRatio || '1:1'
+                    },
+                    safetySettings: [
+                        { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
+                        { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_NONE },
+                        { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_NONE },
+                        { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_NONE },
+                    ]
+                }
+            });
+
+            if (response.candidates?.[0]?.content?.parts) {
+                for (const part of response.candidates[0].content.parts) {
+                    if (part.inlineData && part.inlineData.data) {
+                        const base64Str = part.inlineData.data;
+                        const mimeType = part.inlineData.mimeType || 'image/png';
+                        const fullDataUrl = `data:${mimeType};base64,${base64Str}`;
+                        results.push(fullDataUrl);
+                        break;
+                    }
+                }
+            }
+
+            if (results.length > 0) {
+                return new Response(
+                    JSON.stringify({ images: results }),
+                    { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+                );
+            } else {
+                throw new Error("Upscaling returned no image data.");
+            }
+        }
+
+        // --- MODE LOGIC ---
+        if (mode === 'CREATIVE_POSE') {
+            if (primaryImage) parts.push(await processImagePart(primaryImage));
+
+            promptText = `
           I have provided a SOURCE IMAGE (Image 1).
 
           ${STYLE_GUIDE}
@@ -134,11 +227,11 @@ Deno.serve(async (req) => {
           ${variationInstruction}
         `;
 
-            } else if (mode === 'VIRTUAL_TRY_ON') {
-                if (primaryImage) parts.push(await processImagePart(primaryImage));
-                if (secondaryImage) parts.push(await processImagePart(secondaryImage));
+        } else if (mode === 'VIRTUAL_TRY_ON') {
+            if (primaryImage) parts.push(await processImagePart(primaryImage));
+            if (secondaryImage) parts.push(await processImagePart(secondaryImage));
 
-                promptText = `
+            promptText = `
           I have provided a TARGET PERSON (Image 1) and an OUTFIT REFERENCE (Image 2).
           
           TASK: Virtual Try-On.
@@ -148,29 +241,29 @@ Deno.serve(async (req) => {
           
           POSE:
           ${flexibleMode || isBatchMode
-                        ? '- You may slightly adjust the subject\'s pose to make the outfit look better and ensure variety.'
-                        : '- You must strictly maintain the original body pose of Image 1.'}
+                    ? '- You may slightly adjust the subject\'s pose to make the outfit look better and ensure variety.'
+                    : '- You must strictly maintain the original body pose of Image 1.'}
 
           ${variationInstruction}
         `;
 
-            } else if (mode === 'CREATE_MODEL') {
-                if (primaryImage) parts.push(await processImagePart(primaryImage));
+        } else if (mode === 'CREATE_MODEL') {
+            if (primaryImage) parts.push(await processImagePart(primaryImage));
 
-                if (generatedIdentityRef && !randomFace) {
-                    parts.push(await processImagePart(generatedIdentityRef));
-                }
+            if (generatedIdentityRef && !randomFace) {
+                parts.push(await processImagePart(generatedIdentityRef));
+            }
 
-                let faceInstruction = "";
-                if (randomFace) {
-                    faceInstruction = "FACE: Generate a UNIQUE, distinct face for this image. Do not repeat previous faces.";
-                } else if (generatedIdentityRef) {
-                    faceInstruction = "FACE: STRICTLY MATCH the facial identity of the Face Reference provided (primaryImage).";
-                } else {
-                    faceInstruction = "FACE: Generate a beautiful, photorealistic Korean young girl model with smooth white skintone, hourglass body(medium breast, small waist).";
-                }
+            let faceInstruction = "";
+            if (randomFace) {
+                faceInstruction = "FACE: Generate a UNIQUE, distinct face for this image. Do not repeat previous faces.";
+            } else if (generatedIdentityRef) {
+                faceInstruction = "FACE: STRICTLY MATCH the facial identity of the Face Reference provided (primaryImage).";
+            } else {
+                faceInstruction = "FACE: Generate a beautiful, photorealistic Korean young girl model with smooth white skintone, hourglass body(medium breast, small waist).";
+            }
 
-                promptText = `
+            promptText = `
              GENERATE a photorealistic Young Korean Girl (Smooth White Skin, Black Hair, medium breast, small waist) with the exact outfit (primaryImage)
              POSE: Create a dynamic, professional fashion pose (Variation #${i + 1}). 
              ${faceInstruction}
@@ -178,11 +271,11 @@ Deno.serve(async (req) => {
             ${variationInstruction}
           `;
 
-            } else if (mode === 'COPY_CONCEPT') {
-                if (secondaryImage) parts.push(await processImagePart(secondaryImage)); // Image 1 (Concept)
-                if (primaryImage) parts.push(await processImagePart(primaryImage)); // Image 2 (Face)
+        } else if (mode === 'COPY_CONCEPT') {
+            if (secondaryImage) parts.push(await processImagePart(secondaryImage)); // Image 1 (Concept)
+            if (primaryImage) parts.push(await processImagePart(primaryImage)); // Image 2 (Face)
 
-                promptText = `
+            promptText = `
         I have provided a FACE IDENTITY SOURCE (Image 2) and a CONCEPT/OUTFIT REFERENCE (Image 1).
 
         TASK: High-Fidelity Identity Portrait using Concept Composition.
@@ -207,56 +300,73 @@ Deno.serve(async (req) => {
            
         ${variationInstruction}
         `;
+        }
+
+        // Append User Prompt
+        if (userPrompt) {
+            promptText += `\n\nUSER OVERRIDE INSTRUCTIONS: ${userPrompt}`;
+        }
+
+        // Enforce Aspect Ratio in Prompt
+        if (aspectRatio) {
+            promptText += `\n Aspect ratio ${aspectRatio}.`;
+        }
+
+        // Add the text prompt to the parts
+        parts.push({ text: promptText });
+
+        const imageConfig: any = {};
+        if (aspectRatio) {
+            imageConfig.aspectRatio = aspectRatio;
+        }
+
+        console.log(`Generating with config: Model=${modelName || activeModel}, AspectRatio=${aspectRatio}`);
+
+        const response = await ai.models.generateContent({
+            model: modelName || activeModel,
+            contents: { parts },
+            config: {
+                imageConfig: imageConfig,
+                safetySettings: [
+                    { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
+                    { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_NONE },
+                    { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_NONE },
+                    { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_NONE },
+                ]
             }
+        });
 
-            // Append User Prompt
-            if (userPrompt) {
-                promptText += `\n\nUSER OVERRIDE INSTRUCTIONS: ${userPrompt}`;
-            }
+        if (response.candidates?.[0]?.content?.parts) {
+            for (const part of response.candidates[0].content.parts) {
+                if (part.inlineData && part.inlineData.data) {
+                    const base64Str = part.inlineData.data;
+                    const mimeType = part.inlineData.mimeType || 'image/png';
+                    const fullDataUrl = `data:${mimeType};base64,${base64Str}`;
 
-            // Enforce Aspect Ratio in Prompt
-            if (aspectRatio) {
-                promptText += `\n Aspect ratio ${aspectRatio}.`;
-            }
+                    results.push(fullDataUrl);
 
-            // Add the text prompt to the parts
-            parts.push({ text: promptText });
-
-            const imageConfig: any = {};
-            if (aspectRatio) {
-                imageConfig.aspectRatio = aspectRatio;
-            }
-
-            console.log(`Generating with config: Model=${modelName || activeModel}, AspectRatio=${aspectRatio}`);
-
-            const response = await ai.models.generateContent({
-                model: modelName || activeModel,
-                contents: { parts },
-                config: {
-                    imageConfig: imageConfig
-                }
-            });
-
-            if (response.candidates?.[0]?.content?.parts) {
-                for (const part of response.candidates[0].content.parts) {
-                    if (part.inlineData && part.inlineData.data) {
-                        const base64Str = part.inlineData.data;
-                        const mimeType = part.inlineData.mimeType || 'image/png';
-                        const fullDataUrl = `data:${mimeType};base64,${base64Str}`;
-
-                        results.push(fullDataUrl);
-
-                        if (!generatedIdentityRef && !randomFace && mode === 'CREATE_MODEL') {
-                            generatedIdentityRef = fullDataUrl;
-                        }
-                        break;
+                    if (!generatedIdentityRef && !randomFace && mode === 'CREATE_MODEL') {
+                        generatedIdentityRef = fullDataUrl;
                     }
+                    break;
                 }
             }
         }
 
+
         if (results.length === 0) {
-            throw new Error("Failed to generate any images.");
+            console.error("Gemini Response (Full):", JSON.stringify(response, null, 2));
+            if (response.candidates && response.candidates.length > 0) {
+                const candidate = response.candidates[0];
+                console.error("Candidate 0 Finish Reason:", candidate.finishReason);
+                console.error("Candidate 0 Safety Ratings:", JSON.stringify(candidate.safetyRatings, null, 2));
+
+                // Check for safety block
+                if (candidate.finishReason === "SAFETY" || candidate.finishReason === "PROHIBITED_CONTENT" || candidate.finishReason === "BLOCK_REASON_SAFETY") {
+                    throw new Error("SAFETY_VIOLATION: Generation blocked by safety settings.");
+                }
+            }
+            throw new Error("Failed to generate any images. Check logs for details.");
         }
 
         return new Response(
@@ -264,8 +374,55 @@ Deno.serve(async (req) => {
             { headers: { ...corsHeaders, "Content-Type": "application/json" } },
         );
 
-    } catch (error) {
+    } catch (error: any) {
         console.error("Edge Function Error:", error);
+
+        // --- SAFETY VIOLATION HANDLING ---
+        // Check for safety-related errors (from library or our own checks)
+        const isSafetyError =
+            error.message?.includes("SAFETY") ||
+            error.message?.includes("PROHIBITED_CONTENT") ||
+            error.message?.includes("blocked") ||
+            (error.response?.promptFeedback?.blockReason);
+
+        if (isSafetyError && userId) {
+            console.warn(`Safety violation detected for user ${userId}. Incrementing warning count.`);
+
+            try {
+                // Fetch current profile to get latest count
+                const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('warning_count')
+                    .eq('id', userId)
+                    .single();
+
+                const currentWarnings = (profile?.warning_count || 0) + 1;
+                const shouldBan = currentWarnings > 3;
+
+                await supabase
+                    .from('profiles')
+                    .update({
+                        warning_count: currentWarnings,
+                        banned: shouldBan
+                    })
+                    .eq('id', userId);
+
+                if (shouldBan) {
+                    console.error(`User ${userId} has been BANNED.`);
+                    throw new Error("ACCOUNT_BANNED: Tài khoản của bạn đã bị khóa vĩnh viễn do vi phạm chính sách an toàn nhiều lần.");
+                } else {
+                    const remaining = 3 - currentWarnings;
+                    throw new Error(`SAFETY_VIOLATION: Bạn đang sử dụng hình ảnh quá nhạy cảm hoặc bạo lực. Vui lòng chọn ảnh khác. Sau ${remaining} lần vi phạm nữa tài khoản bạn sẽ bị khóa.`);
+                }
+            } catch (dbError: any) {
+                console.error("Failed to update user safety stats:", dbError);
+                // If it was our custom error, rethrow it
+                if (dbError.message && (dbError.message.includes("SAFETY_VIOLATION") || dbError.message.includes("ACCOUNT_BANNED"))) {
+                    throw dbError;
+                }
+            }
+        }
+
         return new Response(
             JSON.stringify({ error: error.message }),
             { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
