@@ -374,6 +374,27 @@ export const deleteHistoryFromDb = async (id: string) => {
   if (error) console.error("Failed to delete", error);
 };
 
+export const deleteGenerationsBulk = async (ids: string[]) => {
+  // We process these sequentially to ensure R2 cleanup happens for each.
+  // A more optimized approach would be to fetch all URLs first, then delete all from R2, then delete all from DB.
+  // But reusing the existing logic is safer for now.
+
+  let successCount = 0;
+  let failCount = 0;
+
+  for (const id of ids) {
+    try {
+      await deleteHistoryFromDb(id);
+      successCount++;
+    } catch (e) {
+      console.error(`Failed to delete item ${id}`, e);
+      failCount++;
+    }
+  }
+
+  return { successCount, failCount };
+};
+
 /* --- LIBRARY & ADMIN FEATURES --- */
 
 export const fetchCategories = async (): Promise<Category[]> => {
