@@ -13,6 +13,7 @@ interface LibraryViewProps {
 export const LibraryView: React.FC<LibraryViewProps> = ({ onSelectImage, onClose, isAdmin = false }) => {
     console.log("LibraryView - isAdmin:", isAdmin);
     const [images, setImages] = useState<HistoryItem[]>([]);
+    const [trendingImages, setTrendingImages] = useState<HistoryItem[]>([]); // New state for Trending
     const [categories, setCategories] = useState<Category[]>([]);
     const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
     const [isLoading, setIsLoading] = useState(false);
@@ -48,6 +49,34 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onSelectImage, onClose
         setImages([]);
         loadData(0, true);
     }, [viewMode, selectedCategory, selectedUser, selectedImageType, selectedDays]);
+
+    // Fetch Trending Images on Mount
+    // Fetch Trending Images on Mount
+    useEffect(() => {
+        const loadTrending = async () => {
+            // 1. Fetch categories to find "Trending" ID
+            const cats = await fetchCategories();
+            // Update categories state if not already loaded (optimization)
+            if (categories.length === 0) setCategories(cats);
+
+            const trendingCat = cats.find(c => c.name.toLowerCase() === 'trending');
+
+            if (trendingCat) {
+                // 2. Fetch images for "Trending" category
+                const trending = await fetchLibraryImages({
+                    onlyFavorites: true,
+                    categoryId: trendingCat.id, // Use Category ID
+                    limit: 30,
+                    page: 0
+                });
+                setTrendingImages(trending);
+            } else {
+                console.warn("Trending category not found");
+                setTrendingImages([]);
+            }
+        };
+        loadTrending();
+    }, []);
 
 
 
@@ -621,41 +650,74 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onSelectImage, onClose
             )}
 
             {/* Category Bar */}
-            <div className="h-14 border-b border-white/5 flex items-center px-6 gap-2 overflow-x-auto custom-scrollbar bg-black/30 shrink-0">
-                <button
-                    onClick={() => setSelectedCategory(null)}
-                    className={`px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all border ${selectedCategory === null ? 'bg-white text-black border-white' : 'bg-transparent text-gray-400 border-white/10 hover:border-white/30 hover:text-white'}`}
-                >
-                    All Categories
-                </button>
-                {categories.map(cat => (
-                    <button
-                        key={cat.id}
-                        onClick={() => setSelectedCategory(cat.id)}
-                        className={`px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all border ${selectedCategory === cat.id ? 'bg-white text-black border-white' : 'bg-transparent text-gray-400 border-white/10 hover:border-white/30 hover:text-white'}`}
-                    >
-                        {cat.name}
-                    </button>
-                ))}
 
-                {isAdmin && (
-                    <button
-                        onClick={() => setShowAddCategory(true)}
-                        className="w-8 h-8 rounded-full border border-dashed border-white/20 flex items-center justify-center text-white/40 hover:text-white hover:border-white/50 transition-all ml-2"
-                        title="Add Category"
-                    >
-                        <Plus size={14} />
-                    </button>
-                )}
-            </div>
 
             {/* Grid */}
             <div className="flex-1 overflow-y-auto p-6 custom-scrollbar bg-[#0a0a0a]">
+
+
+                {/* TRENDING SECTION (Horizontal Scroll) */}
+                {viewMode === 'LIBRARY' && !selectedCategory && (
+                    <div className="mb-8">
+                        <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                            <span className="text-yellow-400">🔥</span> Trending Now
+                        </h2>
+                        <div className="flex gap-4 overflow-x-auto pb-4 custom-scrollbar snap-x">
+                            {trendingImages.map((item) => (
+                                <div key={`trending-${item.id}`} className="snap-center shrink-0 w-[160px] md:w-[200px] aspect-[3/4] rounded-xl overflow-hidden relative group cursor-pointer border border-white/10" onClick={() => setSelectedImageForModal(item)}>
+                                    <img src={item.thumbnail} alt={item.prompt} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-3">
+                                        <p className="text-[10px] text-gray-300 line-clamp-2">{item.prompt}</p>
+                                    </div>
+                                </div>
+                            ))}
+                            {trendingImages.length === 0 && (
+                                <div className="w-full py-8 text-center text-gray-500 text-sm">Loading trending...</div>
+                            )}
+                        </div>
+                    </div>
+                )}
+
+                {/* Category Bar */}
+                <div className="h-14 border-b border-white/5 flex items-center px-6 gap-2 overflow-x-auto custom-scrollbar bg-black/30 shrink-0 mb-6 rounded-xl">
+                    <button
+                        onClick={() => setSelectedCategory(null)}
+                        className={`px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all border ${selectedCategory === null ? 'bg-white text-black border-white' : 'bg-transparent text-gray-400 border-white/10 hover:border-white/30 hover:text-white'}`}
+                    >
+                        All Categories
+                    </button>
+                    {categories.map(cat => (
+                        <button
+                            key={cat.id}
+                            onClick={() => setSelectedCategory(cat.id)}
+                            className={`px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all border ${selectedCategory === cat.id ? 'bg-white text-black border-white' : 'bg-transparent text-gray-400 border-white/10 hover:border-white/30 hover:text-white'}`}
+                        >
+                            {cat.name}
+                        </button>
+                    ))}
+
+                    {isAdmin && (
+                        <button
+                            onClick={() => setShowAddCategory(true)}
+                            className="w-8 h-8 rounded-full border border-dashed border-white/20 flex items-center justify-center text-white/40 hover:text-white hover:border-white/50 transition-all ml-2"
+                            title="Add Category"
+                        >
+                            <Plus size={14} />
+                        </button>
+                    )}
+                </div>
+
+                {/* MAIN GRID HEADER */}
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+                    {/* ... (Header content if any, currently empty in previous view but structure implies it) ... */}
+                </div>
+
+                {/* MAIN GRID */}
                 <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-                    {images.map((item, index) => (
+                    {images.filter(item => !trendingImages.some(t => t.id === item.id)).map((item, index, arr) => (
                         <div
                             key={`${item.id}-${index}`}
-                            ref={index === images.length - 1 ? lastImageElementRef : null}
+                            ref={index === arr.length - 1 ? lastImageElementRef : null}
                             onClick={() => {
                                 if (isSelectionMode) {
                                     toggleSelection(item.id);
@@ -673,7 +735,7 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onSelectImage, onClose
                                 loading="lazy"
                             />
 
-                            {/* Heart Button - Always visible if favorite, or on hover */}
+                            {/* Heart Button */}
                             {isAdmin && (
                                 <div className={`absolute top-2 right-2 z-10 transition-all duration-200 ${item.isFavorite ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
                                     <button
@@ -691,12 +753,12 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onSelectImage, onClose
                                 </div>
                             )}
 
-                            {/* Bottom Overlay - Only show basic info, click opens modal */}
+                            {/* Bottom Overlay */}
                             <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col justify-end p-3 pt-12">
                                 <p className="text-[10px] text-gray-300 line-clamp-2 font-medium leading-relaxed">{item.prompt}</p>
                             </div>
 
-                            {/* Type Badge (Mini) */}
+                            {/* Type Badge */}
                             {item.imageType && (
                                 <div className={`absolute top-2 left-2 px-2 py-1 rounded-md backdrop-blur-md border text-[10px] font-bold uppercase shadow-lg ${item.imageType === 'SCALE2' ? 'bg-black/60 text-purple-400 border-purple-500/50' :
                                     (item.imageType === 'SCALE4' || item.imageType === 'SCALEX2') ? 'bg-black/60 text-pink-500 border-pink-500/50' :
@@ -709,7 +771,7 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onSelectImage, onClose
                                 </div>
                             )}
 
-                            {/* Selection Checkbox Overlay */}
+                            {/* Selection Checkbox */}
                             {isSelectionMode && (
                                 <div className="absolute inset-0 bg-black/20 z-20 flex items-start justify-end p-2">
                                     <div className={`p-1 rounded-full ${selectedItems.has(item.id) ? 'bg-red-500 text-white' : 'bg-black/50 text-gray-400'}`}>
@@ -733,225 +795,190 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onSelectImage, onClose
                         <p className="text-sm">No images found matching your filters.</p>
                     </div>
                 )}
+
             </div>
+            {/* End Content */}
 
             {/* Bulk Delete Floating Bar */}
-            {isSelectionMode && selectedItems.size > 0 && (
-                <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-bottom-4 fade-in">
-                    <button
-                        onClick={handleBulkDelete}
-                        className="flex items-center gap-2 px-6 py-3 rounded-full bg-red-600 hover:bg-red-700 text-white font-bold shadow-2xl hover:scale-105 transition-all"
-                    >
-                        <Trash2 size={18} />
-                        <span>Delete {selectedItems.size} Images</span>
-                    </button>
-                </div>
-            )}
+            {
+                isSelectionMode && selectedItems.size > 0 && (
+                    <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-bottom-4 fade-in">
+                        <button
+                            onClick={handleBulkDelete}
+                            className="flex items-center gap-2 px-6 py-3 rounded-full bg-red-600 hover:bg-red-700 text-white font-bold shadow-2xl hover:scale-105 transition-all"
+                        >
+                            <Trash2 size={18} />
+                            <span>Delete {selectedItems.size} Images</span>
+                        </button>
+                    </div>
+                )
+            }
 
             {/* Add Category Modal */}
-            {showAddCategory && (
-                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-                    <div className="bg-[#1a1a1a] border border-white/10 rounded-2xl p-6 w-full max-w-sm shadow-2xl animate-in zoom-in duration-200">
-                        <h3 className="text-lg font-bold text-white mb-4">New Category</h3>
-                        <input
-                            type="text"
-                            value={newCategoryName}
-                            onChange={(e) => setNewCategoryName(e.target.value)}
-                            placeholder="Category Name"
-                            className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-mystic-accent mb-4"
-                            autoFocus
-                        />
-                        <div className="flex gap-2">
-                            <button onClick={() => setShowAddCategory(false)} className="flex-1 py-2.5 rounded-xl bg-white/5 text-gray-400 font-bold text-xs hover:bg-white/10 hover:text-white transition-colors">Cancel</button>
-                            <button onClick={handleCreateCategory} className="flex-1 py-2.5 rounded-xl bg-white text-black font-bold text-xs hover:bg-gray-200 transition-colors">Create</button>
+            {
+                showAddCategory && (
+                    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+                        <div className="bg-[#1a1a1a] border border-white/10 rounded-2xl p-6 w-full max-w-sm shadow-2xl animate-in zoom-in duration-200">
+                            <h3 className="text-lg font-bold text-white mb-4">New Category</h3>
+                            <input
+                                type="text"
+                                value={newCategoryName}
+                                onChange={(e) => setNewCategoryName(e.target.value)}
+                                placeholder="Category Name"
+                                className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-mystic-accent mb-4"
+                                autoFocus
+                            />
+                            <div className="flex gap-2">
+                                <button onClick={() => setShowAddCategory(false)} className="flex-1 py-2.5 rounded-xl bg-white/5 text-gray-400 font-bold text-xs hover:bg-white/10 hover:text-white transition-colors">Cancel</button>
+                                <button onClick={handleCreateCategory} className="flex-1 py-2.5 rounded-xl bg-white text-black font-bold text-xs hover:bg-gray-200 transition-colors">Create</button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
+                )
+            }
 
             {/* Select Category Modal (Add to Library) */}
-            {showCategorySelect && (
-                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-                    <div className="bg-[#1a1a1a] border border-white/10 rounded-2xl p-6 w-full max-w-sm shadow-2xl animate-in zoom-in duration-200">
-                        <h3 className="text-lg font-bold text-white mb-4">Add to Library</h3>
-                        <p className="text-xs text-gray-400 mb-4">Select a category for this image:</p>
+            {
+                showCategorySelect && (
+                    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+                        <div className="bg-[#1a1a1a] border border-white/10 rounded-2xl p-6 w-full max-w-sm shadow-2xl animate-in zoom-in duration-200">
+                            <h3 className="text-lg font-bold text-white mb-4">Add to Library</h3>
+                            <p className="text-xs text-gray-400 mb-4">Select a category for this image:</p>
 
-                        <div className="grid grid-cols-2 gap-2 mb-6 max-h-60 overflow-y-auto custom-scrollbar">
-                            <button
-                                onClick={() => confirmAddToLibrary(undefined)}
-                                className="p-3 rounded-lg bg-white/5 hover:bg-white hover:text-black text-gray-300 text-xs font-bold transition-colors border border-white/5 text-left truncate"
-                            >
-                                Uncategorized
-                            </button>
-                            {categories.map(cat => (
+                            <div className="grid grid-cols-2 gap-2 mb-6 max-h-60 overflow-y-auto custom-scrollbar">
                                 <button
-                                    key={cat.id}
-                                    onClick={() => confirmAddToLibrary(cat.id)}
+                                    onClick={() => confirmAddToLibrary(undefined)}
                                     className="p-3 rounded-lg bg-white/5 hover:bg-white hover:text-black text-gray-300 text-xs font-bold transition-colors border border-white/5 text-left truncate"
                                 >
-                                    {cat.name}
+                                    Uncategorized
                                 </button>
-                            ))}
+                                {categories.map(cat => (
+                                    <button
+                                        key={cat.id}
+                                        onClick={() => confirmAddToLibrary(cat.id)}
+                                        className="p-3 rounded-lg bg-white/5 hover:bg-white hover:text-black text-gray-300 text-xs font-bold transition-colors border border-white/5 text-left truncate"
+                                    >
+                                        {cat.name}
+                                    </button>
+                                ))}
+                            </div>
+                            <button onClick={() => setShowCategorySelect(false)} className="w-full py-3 rounded-xl bg-white/5 text-gray-400 font-bold text-xs hover:bg-white/10 hover:text-white">Cancel</button>
                         </div>
-                        <button onClick={() => setShowCategorySelect(false)} className="w-full py-3 rounded-xl bg-white/5 text-gray-400 font-bold text-xs hover:bg-white/10 hover:text-white">Cancel</button>
                     </div>
-                </div>
-            )}
+                )
+            }
 
             {/* Fullscreen Image Modal */}
-            {selectedImageForModal && (
-                <div className="fixed inset-0 z-[70] bg-black/95 backdrop-blur-xl flex items-center justify-center animate-in fade-in duration-200" onClick={() => window.history.back()}>
-                    <button
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            window.history.back();
-                        }}
-                        className={`absolute top-6 right-6 p-2 rounded-full bg-white/10 text-white hover:bg-white/20 transition-all z-50 ${!showControls ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
-                    >
-                        <X size={24} />
-                    </button>
-
-                    <div
-                        className={`w-full h-full flex flex-col md:flex-row max-w-7xl mx-auto p-4 md:p-8 gap-6 transition-all duration-300 ${!showControls || zoomLevel > 1 ? 'max-w-full p-0 md:p-0' : ''}`}
-                        onClick={e => e.stopPropagation()}
-                        style={{ touchAction: 'none' }}
-                    >
-                        {/* Image Container */}
-                        <div
-                            className={`flex-1 relative flex items-center justify-center bg-black/20 rounded-2xl overflow-hidden border border-white/5 select-none transition-all duration-300 ${!showControls || zoomLevel > 1 ? 'rounded-none border-0 bg-black' : ''}`}
-                            onMouseDown={handleMouseDown}
-                            onMouseMove={handleMouseMove}
-                            onMouseUp={handleMouseUp}
-                            onMouseLeave={handleMouseLeave}
+            {
+                selectedImageForModal && (
+                    <div className="fixed inset-0 z-[70] bg-black/95 backdrop-blur-xl flex items-center justify-center animate-in fade-in duration-200" onClick={() => window.history.back()}>
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                window.history.back();
+                            }}
+                            className={`absolute top-6 right-6 p-2 rounded-full bg-white/10 text-white hover:bg-white/20 transition-all z-50 ${!showControls ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
                         >
-                            <img
-                                ref={imgRef}
-                                src={selectedImageForModal.thumbnail}
-                                alt="Fullscreen"
-                                className={`max-w-full max-h-full object-contain shadow-2xl transition-transform duration-200 ${zoomLevel > 1 ? 'cursor-grab' : 'cursor-zoom-in'}`}
-                                // Style transform is now handled by direct DOM manipulation for performance
-                                onDoubleClick={handleDoubleTap}
-                                draggable={false}
-                            />
+                            <X size={24} />
+                        </button>
 
-                            {/* Navigation Arrows (Desktop) */}
-                            <button
-                                onClick={handlePrevImage}
-                                className={`absolute left-4 p-2 rounded-full bg-black/50 text-white/70 hover:text-white hover:bg-black/70 transition-all hidden md:flex ${!showControls ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
+                        <div
+                            className={`w-full h-full flex flex-col md:flex-row max-w-7xl mx-auto p-4 md:p-8 gap-6 transition-all duration-300 ${!showControls || zoomLevel > 1 ? 'max-w-full p-0 md:p-0' : ''}`}
+                            onClick={e => e.stopPropagation()}
+                            style={{ touchAction: 'none' }}
+                        >
+                            {/* Image Container */}
+                            <div
+                                className={`flex-1 relative flex items-center justify-center bg-black/20 rounded-2xl overflow-hidden border border-white/5 select-none transition-all duration-300 ${!showControls || zoomLevel > 1 ? 'rounded-none border-0 bg-black' : ''}`}
+                                onMouseDown={handleMouseDown}
+                                onMouseMove={handleMouseMove}
+                                onMouseUp={handleMouseUp}
+                                onMouseLeave={handleMouseLeave}
                             >
-                                <ChevronLeft size={32} />
-                            </button>
-                            <button
-                                onClick={handleNextImage}
-                                className={`absolute right-4 p-2 rounded-full bg-black/50 text-white/70 hover:text-white hover:bg-black/70 transition-all hidden md:flex ${!showControls ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
-                            >
-                                <ChevronRight size={32} />
-                            </button>
+                                <img
+                                    ref={imgRef}
+                                    src={selectedImageForModal.thumbnail}
+                                    alt="Fullscreen"
+                                    className={`max-w-full max-h-full object-contain shadow-2xl transition-transform duration-200 ${zoomLevel > 1 ? 'cursor-grab' : 'cursor-zoom-in'}`}
+                                    // Style transform is now handled by direct DOM manipulation for performance
+                                    onDoubleClick={handleDoubleTap}
+                                    draggable={false}
+                                />
 
-                            {/* Desktop Zoom Controls */}
-                            <div className={`absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2 p-1.5 rounded-full bg-black/50 backdrop-blur-md border border-white/10 transition-all hidden md:flex ${!showControls ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+                                {/* Navigation Arrows (Desktop) */}
                                 <button
-                                    onClick={handleZoomOut}
-                                    disabled={zoomLevel <= 1}
-                                    className={`p-2 rounded-full transition-colors ${zoomLevel <= 1 ? 'text-white/20 cursor-not-allowed' : 'text-white hover:bg-white/20'}`}
+                                    onClick={handlePrevImage}
+                                    className={`absolute left-4 p-2 rounded-full bg-black/50 text-white/70 hover:text-white hover:bg-black/70 transition-all hidden md:flex ${!showControls ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
                                 >
-                                    <Minus size={20} />
+                                    <ChevronLeft size={32} />
                                 </button>
-                                <span className="text-xs font-bold text-white w-8 text-center">{Math.round(zoomLevel * 100)}%</span>
                                 <button
-                                    onClick={handleZoomIn}
-                                    disabled={zoomLevel >= 4}
-                                    className={`p-2 rounded-full transition-colors ${zoomLevel >= 4 ? 'text-white/20 cursor-not-allowed' : 'text-white hover:bg-white/20'}`}
+                                    onClick={handleNextImage}
+                                    className={`absolute right-4 p-2 rounded-full bg-black/50 text-white/70 hover:text-white hover:bg-black/70 transition-all hidden md:flex ${!showControls ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
                                 >
-                                    <Plus size={20} />
+                                    <ChevronRight size={32} />
                                 </button>
-                            </div>
 
-                            {/* Mobile Info Button (Fallback for Swipe) */}
-                            <button
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    setShowDetails(prev => !prev);
-                                }}
-                                className={`md:hidden absolute bottom-6 right-6 p-3 rounded-full bg-black/50 backdrop-blur-md border border-white/10 text-white shadow-lg z-[65] transition-all ${!showControls || showDetails ? 'opacity-0 pointer-events-none scale-90' : 'opacity-100 scale-100'}`}
-                            >
-                                <Info size={24} />
-                            </button>
-
-                            {/* Type Badge */}
-                            <div className={`absolute top-4 left-4 px-3 py-1.5 rounded-lg backdrop-blur-md border text-xs font-bold uppercase shadow-lg pointer-events-none ${selectedImageForModal.imageType === 'SCALE2' ? 'bg-black/60 text-purple-400 border-purple-500/50' :
-                                (selectedImageForModal.imageType === 'SCALE4' || selectedImageForModal.imageType === 'SCALEX2') ? 'bg-black/60 text-pink-500 border-pink-500/50' :
-                                    'bg-black/60 text-white border-white/10'
-                                }`}>
-                                {selectedImageForModal.imageType === 'STANDARD' ? 'FLASH' :
-                                    selectedImageForModal.imageType === 'PREMIUM' ? 'PRO' :
-                                        selectedImageForModal.imageType === 'SCALE2' ? '2K' :
-                                            (selectedImageForModal.imageType === 'SCALE4' || selectedImageForModal.imageType === 'SCALEX2') ? '4K' : 'AI'}
-                            </div>
-                        </div>
-
-                        {/* Details Panel - Mobile Bottom Sheet & Desktop Side Panel */}
-                        {/* Mobile: Fixed Bottom Sheet */}
-                        <div className={`md:hidden fixed inset-x-0 bottom-0 z-[60] bg-[#1a1a1a] rounded-t-3xl p-6 flex flex-col gap-4 transition-transform duration-300 ease-out shadow-[0_-10px_40px_rgba(0,0,0,0.8)] border-t border-white/10 ${showDetails ? 'translate-y-0' : 'translate-y-full'}`}>
-                            {/* Drag Handle */}
-                            <div className="w-12 h-1 bg-white/20 rounded-full mx-auto mb-2" />
-
-                            <div className="flex flex-col gap-4 max-h-[60vh] overflow-y-auto custom-scrollbar">
-                                <div>
-                                    <h3 className="text-sm font-bold text-white uppercase tracking-wider mb-2 flex items-center justify-between">
-                                        Prompt
-                                        <button
-                                            onClick={() => handleCopyPrompt(selectedImageForModal.prompt)}
-                                            className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
-                                        >
-                                            <Copy size={14} />
-                                        </button>
-                                    </h3>
-                                    <div className="p-3 rounded-xl bg-black/40 border border-white/5">
-                                        <p className="text-xs text-gray-300 leading-relaxed whitespace-pre-wrap">
-                                            {selectedImageForModal.prompt}
-                                        </p>
-                                    </div>
+                                {/* Desktop Zoom Controls */}
+                                <div className={`absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2 p-1.5 rounded-full bg-black/50 backdrop-blur-md border border-white/10 transition-all hidden md:flex ${!showControls ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+                                    <button
+                                        onClick={handleZoomOut}
+                                        disabled={zoomLevel <= 1}
+                                        className={`p-2 rounded-full transition-colors ${zoomLevel <= 1 ? 'text-white/20 cursor-not-allowed' : 'text-white hover:bg-white/20'}`}
+                                    >
+                                        <Minus size={20} />
+                                    </button>
+                                    <span className="text-xs font-bold text-white w-8 text-center">{Math.round(zoomLevel * 100)}%</span>
+                                    <button
+                                        onClick={handleZoomIn}
+                                        disabled={zoomLevel >= 4}
+                                        className={`p-2 rounded-full transition-colors ${zoomLevel >= 4 ? 'text-white/20 cursor-not-allowed' : 'text-white hover:bg-white/20'}`}
+                                    >
+                                        <Plus size={20} />
+                                    </button>
                                 </div>
 
-                                {viewMode === 'ALL_USERS' && selectedImageForModal.userEmail && (
-                                    <div className="flex items-center gap-2 p-3 rounded-xl bg-white/5">
-                                        <User size={14} className="text-gray-400" />
-                                        <div className="flex flex-col">
-                                            <span className="text-[10px] text-gray-500 uppercase font-bold">Creator</span>
-                                            <span className="text-xs text-white truncate max-w-[200px]">{selectedImageForModal.userEmail}</span>
-                                        </div>
-                                    </div>
-                                )}
-
+                                {/* Mobile Info Button (Fallback for Swipe) */}
                                 <button
-                                    onClick={() => {
-                                        onSelectImage(selectedImageForModal.thumbnail);
-                                        window.history.back();
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setShowDetails(prev => !prev);
                                     }}
-                                    className="w-full py-3 rounded-xl bg-white text-black font-bold text-sm hover:bg-gray-200 transition-all shadow-glow flex items-center justify-center gap-2 mt-2"
+                                    className={`md:hidden absolute bottom-6 right-6 p-3 rounded-full bg-black/50 backdrop-blur-md border border-white/10 text-white shadow-lg z-[65] transition-all ${!showControls || showDetails ? 'opacity-0 pointer-events-none scale-90' : 'opacity-100 scale-100'}`}
                                 >
-                                    Use Image
+                                    <Info size={24} />
                                 </button>
-                            </div>
-                        </div>
 
-                        {/* Desktop: Side Panel (Existing) */}
-                        {showControls && zoomLevel === 1 && (
-                            <div className="hidden md:flex w-full md:w-80 lg:w-96 flex-col gap-4 shrink-0 animate-in slide-in-from-right-4 fade-in duration-300">
-                                <div className="glass-panel p-5 rounded-2xl flex flex-col gap-4 border border-white/10 bg-[#1a1a1a]">
+                                {/* Type Badge */}
+                                <div className={`absolute top-4 left-4 px-3 py-1.5 rounded-lg backdrop-blur-md border text-xs font-bold uppercase shadow-lg pointer-events-none ${selectedImageForModal.imageType === 'SCALE2' ? 'bg-black/60 text-purple-400 border-purple-500/50' :
+                                    (selectedImageForModal.imageType === 'SCALE4' || selectedImageForModal.imageType === 'SCALEX2') ? 'bg-black/60 text-pink-500 border-pink-500/50' :
+                                        'bg-black/60 text-white border-white/10'
+                                    }`}>
+                                    {selectedImageForModal.imageType === 'STANDARD' ? 'FLASH' :
+                                        selectedImageForModal.imageType === 'PREMIUM' ? 'PRO' :
+                                            selectedImageForModal.imageType === 'SCALE2' ? '2K' :
+                                                (selectedImageForModal.imageType === 'SCALE4' || selectedImageForModal.imageType === 'SCALEX2') ? '4K' : 'AI'}
+                                </div>
+                            </div>
+
+                            {/* Details Panel - Mobile Bottom Sheet & Desktop Side Panel */}
+                            {/* Mobile: Fixed Bottom Sheet */}
+                            <div className={`md:hidden fixed inset-x-0 bottom-0 z-[60] bg-[#1a1a1a] rounded-t-3xl p-6 flex flex-col gap-4 transition-transform duration-300 ease-out shadow-[0_-10px_40px_rgba(0,0,0,0.8)] border-t border-white/10 ${showDetails ? 'translate-y-0' : 'translate-y-full'}`}>
+                                {/* Drag Handle */}
+                                <div className="w-12 h-1 bg-white/20 rounded-full mx-auto mb-2" />
+
+                                <div className="flex flex-col gap-4 max-h-[60vh] overflow-y-auto custom-scrollbar">
                                     <div>
                                         <h3 className="text-sm font-bold text-white uppercase tracking-wider mb-2 flex items-center justify-between">
                                             Prompt
                                             <button
                                                 onClick={() => handleCopyPrompt(selectedImageForModal.prompt)}
                                                 className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
-                                                title="Copy Prompt"
                                             >
                                                 <Copy size={14} />
                                             </button>
                                         </h3>
-                                        <div className="p-3 rounded-xl bg-black/40 border border-white/5 max-h-60 overflow-y-auto custom-scrollbar">
+                                        <div className="p-3 rounded-xl bg-black/40 border border-white/5">
                                             <p className="text-xs text-gray-300 leading-relaxed whitespace-pre-wrap">
                                                 {selectedImageForModal.prompt}
                                             </p>
@@ -968,23 +995,68 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onSelectImage, onClose
                                         </div>
                                     )}
 
-                                    <div className="mt-auto pt-2">
-                                        <button
-                                            onClick={() => {
-                                                onSelectImage(selectedImageForModal.thumbnail);
-                                                window.history.back();
-                                            }}
-                                            className="w-full py-3 rounded-xl bg-white text-black font-bold text-sm hover:bg-gray-200 transition-all shadow-glow flex items-center justify-center gap-2"
-                                        >
-                                            Use Image
-                                        </button>
-                                    </div>
+                                    <button
+                                        onClick={() => {
+                                            onSelectImage(selectedImageForModal.thumbnail);
+                                            window.history.back();
+                                        }}
+                                        className="w-full py-3 rounded-xl bg-white text-black font-bold text-sm hover:bg-gray-200 transition-all shadow-glow flex items-center justify-center gap-2 mt-2"
+                                    >
+                                        Use Image
+                                    </button>
                                 </div>
                             </div>
-                        )}
+
+                            {/* Desktop: Side Panel (Existing) */}
+                            {showControls && zoomLevel === 1 && (
+                                <div className="hidden md:flex w-full md:w-80 lg:w-96 flex-col gap-4 shrink-0 animate-in slide-in-from-right-4 fade-in duration-300">
+                                    <div className="glass-panel p-5 rounded-2xl flex flex-col gap-4 border border-white/10 bg-[#1a1a1a]">
+                                        <div>
+                                            <h3 className="text-sm font-bold text-white uppercase tracking-wider mb-2 flex items-center justify-between">
+                                                Prompt
+                                                <button
+                                                    onClick={() => handleCopyPrompt(selectedImageForModal.prompt)}
+                                                    className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
+                                                    title="Copy Prompt"
+                                                >
+                                                    <Copy size={14} />
+                                                </button>
+                                            </h3>
+                                            <div className="p-3 rounded-xl bg-black/40 border border-white/5 max-h-60 overflow-y-auto custom-scrollbar">
+                                                <p className="text-xs text-gray-300 leading-relaxed whitespace-pre-wrap">
+                                                    {selectedImageForModal.prompt}
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        {viewMode === 'ALL_USERS' && selectedImageForModal.userEmail && (
+                                            <div className="flex items-center gap-2 p-3 rounded-xl bg-white/5">
+                                                <User size={14} className="text-gray-400" />
+                                                <div className="flex flex-col">
+                                                    <span className="text-[10px] text-gray-500 uppercase font-bold">Creator</span>
+                                                    <span className="text-xs text-white truncate max-w-[200px]">{selectedImageForModal.userEmail}</span>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        <div className="mt-auto pt-2">
+                                            <button
+                                                onClick={() => {
+                                                    onSelectImage(selectedImageForModal.thumbnail);
+                                                    window.history.back();
+                                                }}
+                                                className="w-full py-3 rounded-xl bg-white text-black font-bold text-sm hover:bg-gray-200 transition-all shadow-glow flex items-center justify-center gap-2"
+                                            >
+                                                Use Image
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
                     </div>
-                </div>
-            )}
-        </div>
+                )
+            }
+        </div >
     );
 };
