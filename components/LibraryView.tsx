@@ -871,11 +871,21 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onSelectImage, onClose
             {/* Fullscreen Image Modal */}
             {
                 selectedImageForModal && (
-                    <div className="fixed inset-0 z-[70] bg-black/95 backdrop-blur-xl flex items-center justify-center animate-in fade-in duration-200" onClick={() => window.history.back()}>
+                    <div className="fixed inset-0 z-[70] bg-black/95 backdrop-blur-xl flex items-center justify-center animate-in fade-in duration-200" onClick={() => {
+                        if (window.history.state?.modalOpen) {
+                            window.history.back();
+                        } else {
+                            setSelectedImageForModal(null);
+                        }
+                    }}>
                         <button
                             onClick={(e) => {
                                 e.stopPropagation();
-                                window.history.back();
+                                if (window.history.state?.modalOpen) {
+                                    window.history.back();
+                                } else {
+                                    setSelectedImageForModal(null);
+                                }
                             }}
                             className={`absolute top-6 right-6 p-2 rounded-full bg-white/10 text-white hover:bg-white/20 transition-all z-50 ${!showControls ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
                         >

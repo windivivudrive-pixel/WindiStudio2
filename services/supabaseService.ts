@@ -56,7 +56,7 @@ export const createProfileIfNotExists = async (user: any) => {
     full_name: user.user_metadata.full_name || user.email?.split('@')[0],
     avatar_url: user.user_metadata.avatar_url,
     payment_code: generatePaymentCode(),
-    credits: 300, // Default 30 Wpoint
+    credits: 50, // Default 50 Wpoint
   };
 
   const { data, error } = await supabase
