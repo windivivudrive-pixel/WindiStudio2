@@ -511,6 +511,25 @@ export const fetchLibraryImages = async (options: LibraryFilterOptions = {}): Pr
   }
 };
 
+export const fetchImageById = async (id: string): Promise<HistoryItem | null> => {
+  try {
+    const { data, error } = await supabase.functions.invoke('get-gallery', {
+      body: { id }
+    });
+
+    if (error) {
+      console.error('Error fetching image by ID:', error);
+      return null;
+    }
+
+    const images = data.images || [];
+    return images.length > 0 ? images[0] : null;
+  } catch (e) {
+    console.error("Failed to fetch image by ID:", e);
+    return null;
+  }
+};
+
 export const fetchAllUserGenerations = async (): Promise<HistoryItem[]> => {
   const { data, error } = await supabase
     .from('generations')

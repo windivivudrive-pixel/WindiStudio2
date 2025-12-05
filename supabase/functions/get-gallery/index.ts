@@ -26,35 +26,43 @@ Deno.serve(async (req) => {
             userId,
             imageType,
             daysAgo,
-            onlyFavorites
+            onlyFavorites,
+            id // Add ID support
         } = await req.json();
 
         let query = supabase
             .from('generations')
-            .select('*, profiles(email)')
-            .order('created_at', { ascending: false })
-            .range(page * limit, (page + 1) * limit - 1);
+            .select('*, profiles(email)');
 
-        // Apply filters
-        if (onlyFavorites) {
-            query = query.eq('is_favorite', true);
-        }
-        if (categoryId) {
-            query = query.eq('category_id', categoryId);
-        }
+        // If ID is provided, fetch specific item
+        if (id) {
+            query = query.eq('id', id);
+        } else {
+            // Apply filters
+            if (onlyFavorites) {
+                query = query.eq('is_favorite', true);
+            }
+            if (categoryId) {
+                query = query.eq('category_id', categoryId);
+            }
 
-        if (userId) {
-            query = query.eq('user_id', userId);
-        }
+            if (userId) {
+                query = query.eq('user_id', userId);
+            }
 
-        if (imageType) {
-            query = query.eq('image_type', imageType);
-        }
+            if (imageType) {
+                query = query.eq('image_type', imageType);
+            }
 
-        if (daysAgo) {
-            const date = new Date();
-            date.setDate(date.getDate() - daysAgo);
-            query = query.gte('created_at', date.toISOString());
+            if (daysAgo) {
+                const date = new Date();
+                date.setDate(date.getDate() - daysAgo);
+                query = query.gte('created_at', date.toISOString());
+            }
+
+            // Apply Order and Pagination LAST
+            query = query.order('created_at', { ascending: false })
+                .range(page * limit, (page + 1) * limit - 1);
         }
 
         const { data, error } = await query;

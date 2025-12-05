@@ -44,7 +44,7 @@ const App: React.FC = () => {
   const [modelName, setModelName] = useState<string>('gemini-2.5-flash-image');
   const [primaryImage, setPrimaryImage] = useState<string | null>(null);
   const [secondaryImage, setSecondaryImage] = useState<string | null>(null);
-  const [backgroundImage, setBackgroundImage] = useState<string | null>(null);
+
   const [prompt, setPrompt] = useState('');
   const [aspectRatio, setAspectRatio] = useState<AspectRatio>(AspectRatio.PORTRAIT);
   const [numberOfImages, setNumberOfImages] = useState(1);
@@ -269,14 +269,29 @@ const App: React.FC = () => {
     }
   };
 
-  // Handle Browser Back/Forward
+  // Handle Browser Back/Forward & Modals
   useEffect(() => {
     const handlePopState = (event: PopStateEvent) => {
-      if (event.state) {
-        if (event.state.view) setCurrentView(event.state.view);
+      console.log("PopState:", event.state, window.location.href);
+
+      // Handle Modals first (if open, close them and maybe stop?)
+      // Note: Native back button will change URL regardless. 
+      // We just need to sync state.
+
+      if (showTopUpModal) {
+        setShowTopUpModal(false);
+        // If we want to prevent navigation when closing modal, we'd need to push state when opening it.
+        // Assuming we just want to sync view now.
+      }
+      if (showLoginModal) {
+        setShowLoginModal(false);
+      }
+
+      if (event.state && event.state.view) {
+        setCurrentView(event.state.view);
         if (event.state.tab) setStudioTab(event.state.tab);
       } else {
-        // Fallback for initial state or external navigation
+        // Fallback for initial state or external navigation OR if state exists but lacks view info
         const params = new URLSearchParams(window.location.search);
         const viewParam = params.get('view');
         const tabParam = params.get('tab');
@@ -300,31 +315,7 @@ const App: React.FC = () => {
 
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
-  }, []);
-
-  // Handle Top Up Modal Back Button
-  useEffect(() => {
-    const handlePopState = (event: PopStateEvent) => {
-      if (showTopUpModal) {
-        setShowTopUpModal(false);
-      }
-    };
-
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, [showTopUpModal]);
-
-  // Handle Login Modal Back Button
-  useEffect(() => {
-    const handlePopState = (event: PopStateEvent) => {
-      if (showLoginModal) {
-        setShowLoginModal(false);
-      }
-    };
-
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, [showLoginModal]);
+  }, [showTopUpModal, showLoginModal]);
 
   // Initial Load URL Check
   useEffect(() => {
@@ -487,7 +478,7 @@ const App: React.FC = () => {
           randomFace,
           numberOfImages,
           accessoryImages: accessoryImages,
-          backgroundImage: backgroundImage,
+          backgroundImage: null,
           onImageGenerated: (url) => { setResults(prev => [...prev, url]); }
         });
         success = true;
@@ -549,7 +540,7 @@ const App: React.FC = () => {
 
       await updateUserCredits(userProfile.id, newBalance);
 
-      const imageType = getCostPerImage() > 5 ? 'PREMIUM' : 'STANDARD';
+      const imageType = (mode === AppMode.FUN_FREEDOM) ? 'STANDARD' : (getCostPerImage() > 5 ? 'PREMIUM' : 'STANDARD');
       saveGenerationToDb(userProfile.id, newItem, cost, imageType).then(savedItem => {
         if (savedItem) {
           setHistory(prev => prev.map(h => h.id === newItem.id ? savedItem : h));
@@ -1059,14 +1050,8 @@ const App: React.FC = () => {
       )) ||
       (studioTab === 'fun' && !primaryImage && !secondaryImage && accessoryImages.length === 0 && !prompt);
 
-    // Handle Tab Side Effects
-    useEffect(() => {
-      if (studioTab === 'fun') {
-        setMode(AppMode.FUN_FREEDOM);
-      } else if (studioTab === 'studio') {
-        setMode(AppMode.CREATIVE_POSE);
-      }
-    }, [studioTab]);
+    // Handle Tab Side Effects (Moved to top level)
+
 
 
     return (
@@ -1258,17 +1243,7 @@ const App: React.FC = () => {
                         </div>
 
                       </div>
-                      <div className="space-y-1.5 pt-2">
-                        <label className="text-[10px] font-semibold text-gray-500 uppercase ml-1 block">Background Image (Optional)</label>
-                        <div className="h-5">
-                          <ImageUploader
-                            label="Background"
-                            subLabel="Environment Reference"
-                            image={backgroundImage}
-                            onImageChange={setBackgroundImage}
-                          />
-                        </div>
-                      </div>
+
                       <div className="space-y-2 pt-1">
                         {(mode !== AppMode.CREATIVE_POSE && mode !== AppMode.CREATE_MODEL) && (
                           <button onClick={() => setFlexibleMode(!flexibleMode)} className={`w-full flex items-center justify-between p-2.5 rounded-lg border transition-all ${flexibleMode ? 'bg-mystic-accent/10 border-mystic-accent text-white' : 'bg-transparent border-white/5 text-gray-400 hover:bg-white/5'}`}>
@@ -1423,9 +1398,7 @@ const App: React.FC = () => {
                 <div className="flex flex-col leading-none"><span className="hidden lg:block text-[8px] text-gray-400 font-bold uppercase tracking-wider">Balance</span><span className="text-sm font-bold text-white group-hover:text-yellow-300 transition-colors">{userProfile.credits} xu</span></div>
               </div>
 
-              <button onClick={() => { setShowTopUpModal(true); setTopUpStep('INPUT'); window.history.pushState({ topUpOpen: true }, ''); }} className="group hidden lg:flex items-center gap-2 px-5 py-2 rounded-full bg-gradient-to-r from-yellow-400 to-orange-500 text-black font-bold shadow-[0_0_20px_rgba(234,179,8,0.4)] hover:shadow-[0_0_30px_rgba(234,179,8,0.6)] hover:scale-105 active:scale-95 transition-all duration-300">
-                <Coins size={16} className="fill-black/20 group-hover:rotate-12 transition-transform" /><span className="text-xs uppercase tracking-wide">Nạp Tiền</span>
-              </button>
+
 
               <div className="ml-3 pl-4 border-l border-white/10 flex items-center gap-3">
                 <div className="text-right hidden lg:block"><p className="text-[9px] text-gray-400 font-bold uppercase tracking-wider">Welcome</p><p className="text-sm font-bold text-white leading-none truncate max-w-[100px]">{userProfile.full_name}</p></div>

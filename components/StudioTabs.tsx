@@ -17,10 +17,10 @@ export const StudioTabs: React.FC<StudioTabsProps> = ({ activeTab, onTabChange }
   };
 
   return (
-    <div className="relative flex w-[90%] max-w-[450px] mx-auto mb-3 md:mb-6 p-1.5 bg-[#0f0c1d]/80 backdrop-blur-md rounded-full border border-white/10 shadow-glass-sm">
+    <div className="relative flex w-[90%] max-w-[450px] mx-auto mt-4 md:mt-6 mb-3 md:mb-6 p-1.5 bg-[#0f0c1d]/80 backdrop-blur-md rounded-full border border-white/10 shadow-glass-sm">
       {/* Sliding Gradient Background */}
       <div
-        className="absolute top-1.5 bottom-1.5 w-[calc(33.33%-6px)] rounded-full bg-gradient-to-r from-fuchsia-600 to-indigo-600 shadow-glow transition-all duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)] z-0"
+        className="absolute top-1.5 bottom-1.5 w-[calc(33.33%-6px)] rounded-full bg-gradient-to-r from-fuchsia-600 to-indigo-600 shadow-glow transition-all duration-700 ease-[cubic-bezier(0.34,1.1,0.54,1)] z-0"
         style={{
           left: getPosition(),
           transform: 'translateX(0)'

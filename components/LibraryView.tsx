@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { HistoryItem, Category } from '../types';
-import { fetchLibraryImages, toggleGenerationFavorite, fetchCategories, createCategory, fetchProfiles, deleteGenerationsBulk } from '../services/supabaseService';
+import { fetchLibraryImages, toggleGenerationFavorite, fetchCategories, createCategory, fetchProfiles, deleteGenerationsBulk, fetchImageById } from '../services/supabaseService';
 import { Heart, Plus, X, FolderPlus, Filter, Calendar, User, Layers, Copy, ChevronLeft, ChevronRight, Trash2, CheckSquare, Square, Minus, ZoomIn, ZoomOut, Info } from 'lucide-react';
 
 interface LibraryViewProps {
@@ -48,6 +48,8 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onSelectImage, onClose
         setImages([]);
         loadData(0, true);
     }, [viewMode, selectedCategory, selectedUser, selectedImageType, selectedDays]);
+
+
 
     const loadData = async (pageToLoad: number, isReset: boolean = false) => {
         if (!hasMore && !isReset) return;
@@ -176,6 +178,40 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onSelectImage, onClose
     };
 
     const [selectedImageForModal, setSelectedImageForModal] = useState<HistoryItem | null>(null);
+
+    // Deep Linking: Check URL for image ID on mount
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const imageId = params.get('image');
+
+        if (imageId) {
+            const findAndSetImage = async () => {
+                // First check if already in loaded images (unlikely on fresh load but possible)
+                const existing = images.find(img => img.id === imageId);
+                if (existing) {
+                    setSelectedImageForModal(existing);
+                } else {
+                    // Fetch specifically
+                    const image = await fetchImageById(imageId);
+                    if (image) {
+                        setSelectedImageForModal(image);
+                    }
+                }
+            };
+            findAndSetImage();
+        }
+    }, []); // Run once on mount
+
+    // Update URL when modal opens/closes
+    useEffect(() => {
+        const url = new URL(window.location.href);
+        if (selectedImageForModal) {
+            url.searchParams.set('image', selectedImageForModal.id);
+        } else {
+            url.searchParams.delete('image');
+        }
+        window.history.replaceState(window.history.state, '', url.toString());
+    }, [selectedImageForModal]);
 
     // ... existing code ...
 
