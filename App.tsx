@@ -1075,12 +1075,12 @@ const App: React.FC = () => {
           <div className="flex-1 flex flex-col lg:flex-row relative overflow-hidden">
             {/* LEFT PANEL */}
             <div className="w-full lg:w-[380px] xl:w-[420px] flex flex-col border-b lg:border-b-0 lg:border-r border-white/5 bg-black/10 backdrop-blur-sm z-10 h-auto lg:h-full shrink-0">
-              <div className="p-5 lg:p-6 flex-1 overflow-y-auto custom-scrollbar">
+              <div className="p-4 lg:p-5 flex-1 overflow-y-auto custom-scrollbar">
 
                 {/* Mode Selection - Only show in Studio tab */}
                 {studioTab === 'studio' && (
-                  <div className="mb-8">
-                    <div className="glass-panel p-2 rounded-[24px] grid grid-cols-3 gap-1.5 shrink-0">
+                  <div className="mb-6">
+                    <div className="glass-panel p-1.5 rounded-[24px] grid grid-cols-3 gap-1.5 shrink-0">
                       <ModeButton active={mode === AppMode.CREATIVE_POSE} icon={Camera} label="Pose" onClick={() => setMode(AppMode.CREATIVE_POSE)} />
                       <ModeButton active={mode === AppMode.VIRTUAL_TRY_ON} icon={Shirt} label="Try-On" onClick={() => setMode(AppMode.VIRTUAL_TRY_ON)} />
                       <ModeButton active={mode === AppMode.CREATE_MODEL} icon={User} label="Model" onClick={() => setMode(AppMode.CREATE_MODEL)} />
@@ -1090,14 +1090,14 @@ const App: React.FC = () => {
 
                 {/* FUN MODE: Freedom Input */}
                 {studioTab === 'fun' && (
-                  <div className="mb-8">
-                    <div className="p-4 rounded-xl bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/20 mb-4">
+                  <div className="mb-6">
+                    <div className="p-3 rounded-xl bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/20 mb-3">
                       <h3 className="text-sm font-bold text-white mb-1 flex items-center gap-2"><Sparkles size={14} className="text-pink-400" /> Freedom Mode</h3>
                       <p className="text-xs text-gray-400">Upload multiple reference images and describe exactly what you want. No templates, pure creativity.</p>
                     </div>
 
-                    <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 block">Reference Images</label>
-                    <div className="grid grid-cols-2 gap-2 mb-4">
+                    <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 block">Reference Images</label>
+                    <div className="grid grid-cols-2 gap-2 mb-3">
                       {/* Reuse Accessory Images for multiple uploads in Fun mode for simplicity, or we can use primary/secondary + accessory */}
                       <ImageUploader
                         label="Image 1"
@@ -1159,7 +1159,7 @@ const App: React.FC = () => {
 
                 {/* Inputs based on Mode (Studio Only) */}
                 {studioTab === 'studio' && (
-                  <div className="grid grid-cols-2 gap-4 mb-6">
+                  <div className="grid grid-cols-2 gap-3 mb-4">
                     <div className={!showSecondary ? "col-span-2 w-1/2 mx-auto" : "col-span-1"}>
                       <ImageUploader label={primaryLabel} subLabel={primarySubLabel} image={primaryImage} onImageChange={setPrimaryImage} />
                     </div>
@@ -1168,21 +1168,21 @@ const App: React.FC = () => {
                 )}
 
                 {/* Common controls for both Studio and Fun tabs */}
-                <button onClick={handleGenerate} disabled={isGenerateDisabled} className={`w-full py-4 rounded-[20px] font-bold text-base tracking-wide text-white shadow-liquid shrink-0 liquid-btn-style transition-all duration-500 transform ${isGenerateDisabled ? 'opacity-50 grayscale cursor-not-allowed' : 'hover:scale-[1.01] active:scale-[0.99]'}`}>
+                <button onClick={handleGenerate} disabled={isGenerateDisabled} className={`w-full py-3 rounded-[20px] font-bold text-base tracking-wide text-white shadow-liquid shrink-0 liquid-btn-style transition-all duration-500 transform ${isGenerateDisabled ? 'opacity-50 grayscale cursor-not-allowed' : 'hover:scale-[1.01] active:scale-[0.99]'}`}>
                   <span className="relative z-10 flex items-center justify-center gap-2 drop-shadow-md">
                     {isGenerating ? <><RefreshCw className="animate-spin" size={18} />{loadingState.title === "Upscaling..." ? "Upscaling..." : loadingState.title === "Dreaming..." ? "Synthesizing..." : "Retrying..."}</> : <><Sparkles size={18} className="fill-white" />GENERATE {getTotalCost() > 0 && (<div className="flex items-center gap-1 bg-black/20 rounded-full px-2 py-0.5 ml-1"><span className="text-sm font-extrabold text-yellow-300">{getTotalCost()}</span><Coins size={14} className="text-yellow-400 fill-yellow-400" /></div>)}</>}
                   </span>
                 </button>
 
-                <div className="grid grid-cols-2 gap-3 mt-6">
-                  <div className="glass-panel p-2.5 rounded-[20px] flex flex-col gap-2">
+                <div className="grid grid-cols-2 gap-2 mt-4">
+                  <div className="glass-panel p-2 rounded-[20px] flex flex-col gap-2">
                     <div className="flex items-center gap-1.5 text-[9px] font-bold text-gray-500 uppercase ml-1"><Zap size={10} className="text-yellow-400" />Processing Model</div>
                     <div className="flex bg-black/20 rounded-xl p-1 gap-1">
                       <button onClick={() => { setSelectedModel('gemini-2.5-flash-image'); setAccessoryImages([]); }} className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold transition-all ${selectedModel === 'gemini-2.5-flash-image' ? 'bg-white text-black shadow-sm' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}>Air</button>
                       <button onClick={() => setSelectedModel('gemini-3-pro-image-preview')} className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold transition-all ${selectedModel === 'gemini-3-pro-image-preview' ? 'bg-indigo-600 text-white shadow-glow' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}>Pro</button>
                     </div>
                   </div>
-                  <div className="glass-panel p-2.5 rounded-[20px] flex flex-col gap-2">
+                  <div className="glass-panel p-2 rounded-[20px] flex flex-col gap-2">
                     <div className="flex items-center gap-1.5 text-[9px] font-bold text-gray-500 uppercase ml-1"><Layers size={10} className="text-mystic-accent" />Batch Size</div>
                     <div className="flex gap-1">
                       {[1, 2, 3, 4].map((num) => (
@@ -1192,7 +1192,7 @@ const App: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="glass-panel p-5 rounded-[24px] space-y-5 mt-6">
+                <div className="glass-panel p-4 rounded-[24px] space-y-4 mt-4">
                   <div className="flex justify-between items-center cursor-pointer" onClick={() => setShowAdvanced(!showAdvanced)}>
                     <span className="text-xs font-bold text-gray-300 uppercase tracking-wider flex items-center gap-2"><Layers size={14} className="text-mystic-accent" /> Configuration</span>
                     <button className="p-1.5 rounded-full hover:bg-white/5 transition-colors">{showAdvanced ? <ChevronUp size={14} /> : <ChevronDown size={14} />}</button>
