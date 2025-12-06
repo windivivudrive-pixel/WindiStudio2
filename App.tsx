@@ -1055,7 +1055,7 @@ const App: React.FC = () => {
 
 
     return (
-      <div className="flex flex-col w-full h-full">
+      <div className="flex-1 flex flex-col w-full min-h-0">
         <StudioTabs activeTab={studioTab} onTabChange={(tab) => navigateTo('STUDIO', false, tab)} />
 
         {studioTab === 'library' ? (
@@ -1266,7 +1266,7 @@ const App: React.FC = () => {
             </div>
 
             {/* MIDDLE PANEL - OUTPUT */}
-            <div ref={outputRef} className="w-full lg:flex-1 h-[70vh] lg:h-auto bg-black/50 relative flex flex-col p-4 lg:p-6 lg:overflow-hidden shrink-0 transition-all">
+            <div ref={outputRef} className="w-full lg:w-auto lg:flex-1 h-[70vh] lg:h-full bg-black/50 relative flex flex-col p-4 lg:p-6 lg:overflow-hidden shrink-0 lg:shrink lg:min-w-0 transition-all">
               <GlassCard className="flex-1 w-full h-full relative group overflow-hidden flex flex-col rounded-[24px] lg:rounded-[32px] border-white/10 shadow-2xl">
                 {isGenerating && (
                   <div className="absolute inset-0 flex flex-col items-center justify-center gap-6 z-50 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
@@ -1318,7 +1318,7 @@ const App: React.FC = () => {
             </div >
 
             {/* RIGHT PANEL - SIDEBAR HISTORY */}
-            < div className={`fixed inset-0 lg:static lg:inset-auto z-40 bg-black/95 lg:bg-black/10 lg:backdrop-blur-sm lg:border-l border-white/10 flex flex-col w-full lg:w-[280px] xl:w-[320px] transition-transform duration-300 shrink-0 lg:h-[calc(100vh-80px)] lg:overflow-hidden ${showMobileHistory ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'}`}>
+            < div className={`fixed inset-0 lg:static lg:inset-auto z-40 bg-black/95 lg:bg-black/10 lg:backdrop-blur-sm lg:border-l border-white/10 flex flex-col w-full lg:w-[280px] xl:w-[320px] transition-transform duration-300 shrink-0 lg:h-full lg:overflow-hidden ${showMobileHistory ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'}`}>
               <div className="p-4 lg:p-5 border-b border-white/5 flex justify-between items-center bg-black/20 lg:bg-transparent shrink-0">
                 <button onClick={() => navigateTo('HISTORY')} className="text-xs font-bold flex items-center gap-2 text-white uppercase tracking-widest cursor-pointer transition-all bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg px-4 py-2 shadow-sm hover:border-mystic-accent/50 hover:shadow-glow group">
                   <History size={14} className="text-mystic-accent group-hover:scale-110 transition-transform" />
@@ -1365,7 +1365,7 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="w-full min-h-screen bg-black flex flex-col font-sans selection:bg-mystic-accent selection:text-white overflow-y-auto lg:overflow-hidden">
+    <div className="w-full h-screen bg-black flex flex-col font-sans selection:bg-mystic-accent selection:text-white overflow-y-auto lg:overflow-hidden">
 
       <div className="fixed top-[-20%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-indigo-900/10 blur-3xl pointer-events-none" />
       <div className="fixed bottom-[-20%] right-[-10%] w-[50vw] h-[50vw] rounded-full bg-fuchsia-900/10 blur-3xl pointer-events-none" />
