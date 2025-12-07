@@ -1,5 +1,5 @@
-
 import React, { useState, useEffect, useRef } from 'react';
+import Pricing from './components/Pricing';
 import { Sparkles, Shirt, Camera, Wand2, Download, AlertCircle, History, Trash2, ChevronDown, ChevronUp, User, Image as ImageIcon, Bone, Layers, ToggleLeft, ToggleRight, XCircle, Archive, Shuffle, Copy, ScanFace, RefreshCw, LogIn, Coins, X, CreditCard, Wallet, LogOut, Zap, Cloud, ArrowLeft, Calendar, FileText, CheckCircle, XOctagon, QrCode, Smartphone, Check, Maximize2, Plus, Stamp, Heart } from 'lucide-react';
 import JSZip from 'jszip';
 import { AppMode, AspectRatio, HistoryItem, UserProfile, Transaction } from './types';
@@ -9,6 +9,7 @@ import { AnimatedLogo } from './components/AnimatedLogo';
 import { PrivacyPolicy } from './components/PrivacyPolicy';
 import { generateStudioImage, ensureApiKey } from './services/geminiService';
 import { BrandingPage } from './components/BrandingPage';
+
 import { StudioTabs } from './components/StudioTabs';
 import { LibraryView } from './components/LibraryView';
 import { useBranding } from './utils/useBranding';
@@ -87,6 +88,7 @@ const App: React.FC = () => {
   const [topUpAmount, setTopUpAmount] = useState('');
   const [calculatedCoins, setCalculatedCoins] = useState(0);
   const [qrUrl, setQrUrl] = useState('');
+  const [showPricingModal, setShowPricingModal] = useState(false);
 
   // Toast Notification State
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
@@ -207,21 +209,7 @@ const App: React.FC = () => {
     };
   }, [results, selectedResultIndex, brandingLogo, brandingConfig]);
   /* --- BRANDING FEATURE END --- */
-  /* --- BRANDING FEATURE START --- */
-  {
-    currentView === 'BRANDING' && (
-      <BrandingPage
-        brandingLogo={brandingLogo}
-        setBrandingLogo={setBrandingLogo}
-        brandingConfig={brandingConfig}
-        setBrandingConfig={setBrandingConfig}
-        isSavingBranding={isSavingBranding}
-        handleSaveBranding={handleSaveBranding}
-        onBack={() => navigateTo('STUDIO')}
-      />
-    )
-  }
-  /* --- BRANDING FEATURE END --- */
+
 
   // --- INITIALIZATION ---
 
@@ -286,6 +274,9 @@ const App: React.FC = () => {
       if (showLoginModal) {
         setShowLoginModal(false);
       }
+      if (showPricingModal) {
+        setShowPricingModal(false);
+      }
 
       if (event.state && event.state.view) {
         setCurrentView(event.state.view);
@@ -315,7 +306,7 @@ const App: React.FC = () => {
 
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
-  }, [showTopUpModal, showLoginModal]);
+  }, [showTopUpModal, showLoginModal, showPricingModal]);
 
   // Initial Load URL Check
   useEffect(() => {
@@ -431,7 +422,7 @@ const App: React.FC = () => {
 
     const cost = getTotalCost();
     if (userProfile.credits < cost) {
-      setShowTopUpModal(true);
+      setShowPricingModal(true);
       setError(`Insufficient balance. Cost: ${cost} xu, Available: ${userProfile.credits} xu.`);
       return;
     }
@@ -583,7 +574,7 @@ const App: React.FC = () => {
     }
 
     if (userProfile.credits < cost) {
-      setShowTopUpModal(true);
+      setShowPricingModal(true);
       setError(`Insufficient balance. Cost: ${cost} xu, Available: ${userProfile.credits} xu.`);
       return;
     }
@@ -818,8 +809,49 @@ const App: React.FC = () => {
         (payload) => {
           console.log('Transaction updated:', payload);
           if (payload.new.status === 'SUCCESS') {
-            setToast({ message: `Payment successful! +${payload.new.credits_added} xu`, type: 'success' });
+            const amount = payload.new.amount_vnd;
+            let bonusMultiplier = 1;
+            if (amount >= 3000000) bonusMultiplier = 2;
+            else if (amount >= 1000000) bonusMultiplier = 1.5;
+            else if (amount >= 500000) bonusMultiplier = 1.2;
+
+            let bonusMessage = '';
+
+            // If there is a bonus, create a separate transaction for it
+            if (bonusMultiplier > 1) {
+              const baseCoins = Math.floor(amount / 1000);
+              // Robust calculation to avoid floating point errors (e.g. 50 * 0.2 = 9.999 -> 9)
+              const totalCoins = Math.floor(baseCoins * bonusMultiplier);
+              const bonusCoins = totalCoins - baseCoins;
+              const bonusPercent = Math.round((bonusMultiplier - 1) * 100);
+
+              // 1. Create bonus transaction record
+              createTransaction(
+                userProfile.id,
+                0, // No cost
+                bonusCoins,
+                `Bonus Reward (+${bonusPercent}%)`,
+                'SUCCESS'
+              ).then(() => {
+                console.log(`Created bonus transaction: +${bonusCoins} coins`);
+              });
+
+              // 2. Update User Credits in DB (Add bonus)
+              // We must fetch the latest profile first to get the balance updated by the webhook
+              getProfile(userProfile.id).then(async (latestProfile) => {
+                if (latestProfile) {
+                  const newBalance = latestProfile.credits + bonusCoins;
+                  await updateUserCredits(userProfile.id, newBalance);
+                  setUserProfile({ ...latestProfile, credits: newBalance });
+                }
+              });
+
+              bonusMessage = ` (+${bonusCoins} bonus)`;
+            }
+
+            setToast({ message: `Payment successful! +${payload.new.credits_added} xu${bonusMessage}`, type: 'success' });
             setShowTopUpModal(false);
+            setShowPricingModal(false);
             setTopUpStep('INPUT');
             setTopUpAmount('');
             setCurrentTransactionId(null);
@@ -1393,7 +1425,7 @@ const App: React.FC = () => {
           {session && userProfile ? (
             <div className="flex items-center gap-3 animate-in fade-in slide-in-from-right-4 duration-500">
               {/* Clickable Balance Pill */}
-              <div onClick={() => { setShowTopUpModal(true); setTopUpStep('INPUT'); window.history.pushState({ topUpOpen: true }, ''); }} className="glass-panel px-4 py-2 rounded-full flex items-center gap-2.5 border-white/10 hover:bg-white/10 transition-colors cursor-pointer shadow-glass-sm group">
+              <div onClick={() => setShowPricingModal(true)} className="glass-panel px-4 py-2 rounded-full flex items-center gap-2.5 border-white/10 hover:bg-white/10 transition-colors cursor-pointer shadow-glass-sm group">
                 <div className="p-1 rounded-full bg-yellow-500/20 group-hover:scale-110 transition-transform"><Wallet size={14} className="text-yellow-400" /></div>
                 <div className="flex flex-col leading-none"><span className="hidden lg:block text-[8px] text-gray-400 font-bold uppercase tracking-wider">Balance</span><span className="text-sm font-bold text-white group-hover:text-yellow-300 transition-colors">{userProfile.credits} xu</span></div>
               </div>
@@ -1421,6 +1453,26 @@ const App: React.FC = () => {
       {currentView === 'HISTORY' && renderHistoryPage()}
       {currentView === 'PAYMENT' && renderPaymentPage()}
       {currentView === 'PRIVACY' && <PrivacyPolicy onBack={() => navigateTo('STUDIO')} />}
+      {/* PRICING MODAL */}
+      {showPricingModal && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="relative w-full max-w-6xl max-h-[90vh] overflow-y-auto rounded-3xl bg-[#0f0c1d] border border-white/10 shadow-2xl custom-scrollbar">
+            <button
+              onClick={() => setShowPricingModal(false)}
+              className="absolute top-6 right-6 z-20 p-2 rounded-full bg-black/50 text-white/50 hover:text-white hover:bg-white/20 transition-all"
+            >
+              <X size={24} />
+            </button>
+            <Pricing
+              userProfile={userProfile}
+              bankConfig={BANK_CONFIG}
+              onTransactionCreated={(id) => setCurrentTransactionId(id)}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* 6. BRANDING VIEW */}
       {currentView === 'BRANDING' && (
         <BrandingPage
           brandingLogo={brandingLogo}

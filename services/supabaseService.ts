@@ -161,8 +161,14 @@ export const fetchTransactions = async (userId: string): Promise<Transaction[]> 
   return data || [];
 };
 
-export const createTransaction = async (userId: string, amountVnd: number, credits: number, content: string, status: 'PENDING' | 'SUCCESS' = 'SUCCESS') => {
+export const createTransaction = async (userId: string, amountVnd: number, credits: number, content: string, status: 'PENDING' | 'SUCCESS' = 'SUCCESS', bonusPercentage: number = 0) => {
   if (userId === 'dev-user') return { id: 99999 }; // Mock transaction creation
+
+  let finalContent = content;
+  if (bonusPercentage > 0) {
+    finalContent += ` (Bonus +${bonusPercentage}%)`;
+  }
+
   const { data, error } = await supabase
     .from('transactions')
     .insert({
@@ -170,7 +176,7 @@ export const createTransaction = async (userId: string, amountVnd: number, credi
       amount_vnd: amountVnd,
       credits_added: credits,
       type: 'DEPOSIT',
-      content: content,
+      content: finalContent,
       status: status
     })
     .select()
