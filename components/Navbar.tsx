@@ -3,9 +3,8 @@ import { Menu, X, ArrowRight } from 'lucide-react';
 import Button from './ui/Button';
 
 const navLinks = [
-  { name: 'Quy trình', href: '#process' },
-  { name: 'So sánh', href: '#comparison' },
-  { name: 'Bảng giá', href: '#pricing' },
+
+
 ];
 
 interface NavbarProps {
@@ -30,10 +29,11 @@ const Navbar: React.FC<NavbarProps> = ({ onEnterStudio }) => {
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 border-b border-white/0 ${isScrolled ? 'glass-panel border-white/5 py-4' : 'bg-transparent py-6'
         }`}
     >
+
       <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
         {/* Logo */}
         <div className="flex items-center gap-2 group cursor-pointer" onClick={onEnterStudio}>
-          <img src="/textlogo.png" alt="WinDiStudio" className="h-10 object-contain" />
+          <img src="/textlogo.png" alt="WinDiStudio" className="h-16 object-contain" />
         </div>
 
         {/* Desktop Links */}

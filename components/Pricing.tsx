@@ -14,6 +14,7 @@ interface PricingProps {
         TEMPLATE: string;
     };
     onTransactionCreated?: (id: number) => void;
+    hidePurchaseOptions?: boolean;
 }
 
 const DEFAULT_BANK_CONFIG = {
@@ -23,7 +24,7 @@ const DEFAULT_BANK_CONFIG = {
     TEMPLATE: 'compact'
 };
 
-const Pricing: React.FC<PricingProps> = ({ userProfile = null, bankConfig = DEFAULT_BANK_CONFIG, onTransactionCreated }) => {
+const Pricing: React.FC<PricingProps> = ({ userProfile = null, bankConfig = DEFAULT_BANK_CONFIG, onTransactionCreated, hidePurchaseOptions = false }) => {
     const [customInput, setCustomInput] = useState('');
     const [showModal, setShowModal] = useState(false);
     const [selectedAmount, setSelectedAmount] = useState(0);
@@ -95,6 +96,8 @@ const Pricing: React.FC<PricingProps> = ({ userProfile = null, bankConfig = DEFA
 
                 </div>
 
+
+
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch mb-12">
                     {/* Card 1: Starter */}
                     <div className="glass-panel p-8 rounded-3xl border border-white/5 relative group hover:border-white/20 transition-all duration-300 flex flex-col">
@@ -113,13 +116,15 @@ const Pricing: React.FC<PricingProps> = ({ userProfile = null, bankConfig = DEFA
                             </li>
 
                         </ul>
-                        <Button
-                            variant="liquid"
-                            className="w-full mt-auto group-hover:bg-green-500/10 group-hover:border-green-500/30 group-hover:shadow-[inset_0_1px_0_0_rgba(74,222,128,0.2)]"
-                            onClick={() => handleTopUpClick(500000)}
-                        >
-                            Nạp 500k
-                        </Button>
+                        {!hidePurchaseOptions && (
+                            <Button
+                                variant="liquid"
+                                className="w-full mt-auto group-hover:bg-green-500/10 group-hover:border-green-500/30 group-hover:shadow-[inset_0_1px_0_0_rgba(74,222,128,0.2)]"
+                                onClick={() => handleTopUpClick(500000)}
+                            >
+                                Nạp 500k
+                            </Button>
+                        )}
                     </div>
 
                     {/* Card 2: Professional (Highlight) */}
@@ -154,13 +159,15 @@ const Pricing: React.FC<PricingProps> = ({ userProfile = null, bankConfig = DEFA
                                 <span>Tặng Tính Năng Thêm Watermark Tự Động</span>
                             </li>
                         </ul>
-                        <Button
-                            variant="liquid"
-                            className="w-full mt-auto font-bold text-purple-100 border-purple-500/30 bg-purple-500/10 hover:bg-purple-500/20 shadow-[inset_0_1px_0_0_rgba(168,85,247,0.4),0_10px_20px_-10px_rgba(168,85,247,0.3)]"
-                            onClick={() => handleTopUpClick(1000000)}
-                        >
-                            Nạp 1 Triệu
-                        </Button>
+                        {!hidePurchaseOptions && (
+                            <Button
+                                variant="liquid"
+                                className="w-full mt-auto font-bold text-purple-100 border-purple-500/30 bg-purple-500/10 hover:bg-purple-500/20 shadow-[inset_0_1px_0_0_rgba(168,85,247,0.4),0_10px_20px_-10px_rgba(168,85,247,0.3)]"
+                                onClick={() => handleTopUpClick(1000000)}
+                            >
+                                Nạp 1 Triệu
+                            </Button>
+                        )}
                     </div>
 
                     {/* Card 3: Agency (VIP) */}
@@ -193,118 +200,125 @@ const Pricing: React.FC<PricingProps> = ({ userProfile = null, bankConfig = DEFA
                                 <span>Ưu Tiên sử dụng các Model AI mới nhất</span>
                             </li>
                         </ul>
-                        <Button
-                            variant="liquid"
-                            className="w-full mt-auto font-bold text-yellow-200 border-yellow-500/30 bg-yellow-500/10 hover:bg-yellow-500/20 shadow-[inset_0_1px_0_0_rgba(234,179,8,0.4),0_10px_20px_-10px_rgba(234,179,8,0.3)]"
-                            onClick={() => handleTopUpClick(3000000)}
-                        >
-                            Nạp 3 Triệu
-                        </Button>
+                        {!hidePurchaseOptions && (
+                            <Button
+                                variant="liquid"
+                                className="w-full mt-auto font-bold text-yellow-200 border-yellow-500/30 bg-yellow-500/10 hover:bg-yellow-500/20 shadow-[inset_0_1px_0_0_rgba(234,179,8,0.4),0_10px_20px_-10px_rgba(234,179,8,0.3)]"
+                                onClick={() => handleTopUpClick(3000000)}
+                            >
+                                Nạp 3 Triệu
+                            </Button>
+                        )}
                     </div>
                 </div>
 
                 {/* Custom Input Section */}
-                <div className="max-w-xl mx-auto">
-                    <div className="glass-panel p-6 md:p-8 rounded-2xl border border-white/10 flex flex-col md:flex-row items-center gap-6">
-                        <div className="flex-1 w-full">
-                            <label className="block text-sm text-gray-400 mb-2 font-medium">Nhập số tiền muốn nạp</label>
-                            <div className="relative">
-                                <input
-                                    type="text"
-                                    value={customInput}
-                                    onChange={handleInputChange}
-                                    placeholder="Tối thiểu 50.000"
-                                    className="w-full bg-neutral-900/50 border border-white/20 rounded-xl px-4 py-3 pl-4 pr-12 text-white font-medium focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all placeholder-gray-600"
-                                />
-                                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 font-bold">đ</span>
+                {!hidePurchaseOptions && (
+                    <div className="max-w-xl mx-auto">
+                        <div className="glass-panel p-6 md:p-8 rounded-2xl border border-white/10 flex flex-col md:flex-row items-center gap-6">
+                            <div className="flex-1 w-full">
+                                <label className="block text-sm text-gray-400 mb-2 font-medium">Nhập số tiền muốn nạp</label>
+                                <div className="relative">
+                                    <input
+                                        type="text"
+                                        value={customInput}
+                                        onChange={handleInputChange}
+                                        placeholder="Tối thiểu 50.000"
+                                        className="w-full bg-neutral-900/50 border border-white/20 rounded-xl px-4 py-3 pl-4 pr-12 text-white font-medium focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all placeholder-gray-600"
+                                    />
+                                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 font-bold">đ</span>
+                                </div>
+                            </div>
+                            <div className="w-full md:w-auto">
+                                <label className="block text-sm text-transparent mb-2 hidden md:block select-none">Action</label>
+                                <Button
+                                    variant="primary"
+                                    className="w-full md:w-auto px-8 py-3.5"
+                                    onClick={() => {
+                                        const amount = parseInt(customInput.replace(/\./g, ''));
+                                        if (amount >= 50000) {
+                                            handleTopUpClick(amount);
+                                        } else {
+                                            alert('Vui lòng nhập tối thiểu 50.000đ');
+                                        }
+                                    }}
+                                >
+                                    Nạp ngay
+                                </Button>
                             </div>
                         </div>
-                        <div className="w-full md:w-auto">
-                            <label className="block text-sm text-transparent mb-2 hidden md:block select-none">Action</label>
-                            <Button
-                                variant="primary"
-                                className="w-full md:w-auto px-8 py-3.5"
-                                onClick={() => {
-                                    const amount = parseInt(customInput.replace(/\./g, ''));
-                                    if (amount >= 50000) {
-                                        handleTopUpClick(amount);
-                                    } else {
-                                        alert('Vui lòng nhập tối thiểu 50.000đ');
-                                    }
-                                }}
-                            >
-                                Nạp ngay
-                            </Button>
-                        </div>
+                        <p className="text-center text-xs text-gray-500 mt-3">*Hệ thống tự động tính toán Bonus dựa trên số tiền nạp.</p>
                     </div>
-                    <p className="text-center text-xs text-gray-500 mt-3">*Hệ thống tự động tính toán Bonus dựa trên số tiền nạp.</p>
-                </div>
+                )}
             </div>
 
+
             {/* QR Code Modal */}
-            {showModal && (
-                <div
-                    className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200"
-                    onClick={() => setShowModal(false)}
-                >
+            {
+                showModal && (
                     <div
-                        className="bg-[#111] border border-white/10 rounded-3xl max-w-sm w-full p-6 relative shadow-2xl animate-in zoom-in-95 duration-200"
-                        onClick={(e) => e.stopPropagation()}
+                        className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200"
+                        onClick={() => setShowModal(false)}
                     >
-                        <button
-                            onClick={() => setShowModal(false)}
-                            className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors"
+                        <div
+                            className="bg-[#111] border border-white/10 rounded-3xl max-w-sm w-full p-6 relative shadow-2xl animate-in zoom-in-95 duration-200"
+                            onClick={(e) => e.stopPropagation()}
                         >
-                            <X size={20} />
-                        </button>
+                            <button
+                                onClick={() => setShowModal(false)}
+                                className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors"
+                            >
+                                <X size={20} />
+                            </button>
 
-                        <div className="text-center mb-6">
-                            <h3 className="text-xl font-bold text-white mb-1">Thanh toán qua QR</h3>
-                            <p className="text-sm text-gray-400">Sử dụng App ngân hàng để quét mã</p>
-                        </div>
-
-                        <div className="bg-white p-4 rounded-2xl mb-6 shadow-inner mx-auto w-fit">
-                            {/* Placeholder for VietQR API */}
-                            <img
-                                src={`https://img.vietqr.io/image/${bankConfig.BANK_ID}-${bankConfig.ACCOUNT_NO}-${bankConfig.TEMPLATE}.png?amount=${selectedAmount}&addInfo=WINDI ${userProfile?.payment_code}&accountName=${encodeURIComponent(bankConfig.ACCOUNT_NAME)}`}
-                                alt="VietQR Payment"
-                                className="w-48 h-48 md:w-56 md:h-56 object-contain"
-                            />
-                        </div>
-
-                        <div className="space-y-3 bg-white/5 rounded-xl p-4 text-sm">
-                            <div className="flex justify-between items-center pb-2 border-b border-white/5">
-                                <span className="text-gray-400">Số tiền:</span>
-                                <span className="font-bold text-white text-lg">{selectedAmount.toLocaleString('vi-VN')}đ</span>
+                            <div className="text-center mb-6">
+                                <h3 className="text-xl font-bold text-white mb-1">Thanh toán qua QR</h3>
+                                <p className="text-sm text-gray-400">Sử dụng App ngân hàng để quét mã</p>
                             </div>
-                            <div className="flex justify-between items-center">
-                                <span className="text-gray-400">Ngân hàng:</span>
-                                <span className="text-white font-medium">{bankConfig.BANK_ID}</span>
+
+                            <div className="bg-white p-4 rounded-2xl mb-6 shadow-inner mx-auto w-fit">
+                                {/* Placeholder for VietQR API */}
+                                <img
+                                    src={`https://img.vietqr.io/image/${bankConfig.BANK_ID}-${bankConfig.ACCOUNT_NO}-${bankConfig.TEMPLATE}.png?amount=${selectedAmount}&addInfo=WINDI ${userProfile?.payment_code}&accountName=${encodeURIComponent(bankConfig.ACCOUNT_NAME)}`}
+                                    alt="VietQR Payment"
+                                    className="w-48 h-48 md:w-56 md:h-56 object-contain"
+                                />
                             </div>
-                            <div className="flex justify-between items-center group cursor-pointer" onClick={() => copyToClipboard(bankConfig.ACCOUNT_NO)}>
-                                <span className="text-gray-400">Số tài khoản:</span>
-                                <div className="flex items-center gap-1.5">
-                                    <span className="text-white font-medium">{bankConfig.ACCOUNT_NO}</span>
-                                    <Copy size={12} className="text-gray-500 group-hover:text-white" />
+
+                            <div className="space-y-3 bg-white/5 rounded-xl p-4 text-sm">
+                                <div className="flex justify-between items-center pb-2 border-b border-white/5">
+                                    <span className="text-gray-400">Số tiền:</span>
+                                    <span className="font-bold text-white text-lg">{selectedAmount.toLocaleString('vi-VN')}đ</span>
+                                </div>
+                                <div className="flex justify-between items-center">
+                                    <span className="text-gray-400">Ngân hàng:</span>
+                                    <span className="text-white font-medium">{bankConfig.BANK_ID}</span>
+                                </div>
+                                <div className="flex justify-between items-center group cursor-pointer" onClick={() => copyToClipboard(bankConfig.ACCOUNT_NO)}>
+                                    <span className="text-gray-400">Số tài khoản:</span>
+                                    <div className="flex items-center gap-1.5">
+                                        <span className="text-white font-medium">{bankConfig.ACCOUNT_NO}</span>
+                                        <Copy size={12} className="text-gray-500 group-hover:text-white" />
+                                    </div>
+                                </div>
+                                <div className="flex justify-between items-center group cursor-pointer" onClick={() => copyToClipboard(`WINDI ${userProfile?.payment_code}`)}>
+                                    <span className="text-gray-400">Nội dung:</span>
+                                    <div className="flex items-center gap-1.5">
+                                        <span className="text-yellow-400 font-medium">WINDI {userProfile?.payment_code}</span>
+                                        <Copy size={12} className="text-gray-500 group-hover:text-yellow-400" />
+                                    </div>
+
                                 </div>
                             </div>
-                            <div className="flex justify-between items-center group cursor-pointer" onClick={() => copyToClipboard(`WINDI ${userProfile?.payment_code}`)}>
-                                <span className="text-gray-400">Nội dung:</span>
-                                <div className="flex items-center gap-1.5">
-                                    <span className="text-yellow-400 font-medium">WINDI {userProfile?.payment_code}</span>
-                                    <Copy size={12} className="text-gray-500 group-hover:text-yellow-400" />
-                                </div>
 
-                            </div>
+                            <p className="text-[10px] text-gray-500 text-center mt-4">
+                                Vui lòng nhập chính xác nội dung chuyển khoản để hệ thống tự động cộng Credit.
+                            </p>
                         </div>
-
-                        <p className="text-[10px] text-gray-500 text-center mt-4">
-                            Vui lòng nhập chính xác nội dung chuyển khoản để hệ thống tự động cộng Credit.
-                        </p>
                     </div>
-                </div>
-            )}
-        </section>
+                )
+            }
+        </section >
     );
 };
 export default Pricing;

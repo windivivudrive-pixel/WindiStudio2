@@ -24,7 +24,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnterStudio }) => {
           <Hero onEnterStudio={onEnterStudio} />
           <Process />
           <Comparison />
-          <Pricing />
+          <Pricing hidePurchaseOptions={true} />
         </main>
         <Footer />
       </div>
