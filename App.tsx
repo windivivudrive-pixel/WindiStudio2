@@ -618,6 +618,25 @@ const App: React.FC = () => {
     }
   };
 
+  // Reset all studio settings to default
+  const handleResetStudio = () => {
+    setMode(AppMode.CREATIVE_POSE);
+    setPrimaryImage(null);
+    setSecondaryImage(null);
+    setPrompt('');
+    setAspectRatio('3:4' as AspectRatio);
+    setFlexibleMode(false);
+    setRandomFace(false);
+    setNumberOfImages(1);
+    setSelectedModel('gemini-2.5-flash-image');
+    setAccessoryImages([]);
+    setResults([]);
+    setSelectedResultIndex(0);
+    setDisplayImage(null);
+    setError(null);
+    setStudioTab('studio');
+  };
+
   const handleUpscale = () => {
     if (results.length === 0) return;
     setShowUpscaleModal(true);
@@ -1445,7 +1464,7 @@ const App: React.FC = () => {
 
       {/* Header */}
       <nav className="w-full h-16 lg:h-20 px-6 lg:px-8 flex justify-between items-center shrink-0 bg-black/20 backdrop-blur-xl border-b border-white/5 z-20 sticky top-0 lg:static">
-        <div className="relative flex items-center gap-3 cursor-pointer" onClick={() => navigateTo('STUDIO')}>
+        <div className="relative flex items-center gap-3 cursor-pointer" onClick={handleResetStudio}>
 
           <div>
             <img src="/textlogo.png" alt="WinDiStudio" className="h-16 object-contain" style={{ marginTop: '12px' }} />
@@ -1594,7 +1613,7 @@ const App: React.FC = () => {
                   </div>
 
                   {/* Promo Code Section */}
-                  <div className="bg-white/5 border border-white/10 rounded-xl p-1 flex gap-2">
+                  <div className="bg-white/5 border border-white/10 rounded-xl p-1 flex items-center gap-2">
                     <input
                       type="text"
                       placeholder="Enter Promo Code"
@@ -1633,7 +1652,7 @@ const App: React.FC = () => {
                         btn.innerText = originalText;
                         btn.disabled = false;
                       }}
-                      className="bg-mystic-accent hover:bg-mystic-accent/80 text-white text-xs font-bold px-4 rounded-lg transition-colors"
+                      className="bg-mystic-accent hover:bg-mystic-accent/80 text-white text-xs font-bold px-4 py-2 rounded-lg transition-colors"
                     >
                       REDEEM
                     </button>
