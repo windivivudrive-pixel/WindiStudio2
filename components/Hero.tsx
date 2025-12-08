@@ -180,7 +180,7 @@ const Hero: React.FC<HeroProps> = ({ onEnterStudio }) => {
 
             <h1 className="text-5xl md:text-6xl lg:text-7xl leading-[1.1] tracking-tight">
               <span className="font-miller text-white">Tạo Ảnh Lookbook</span> <br />
-              <span className="font-motion text-gradient-gold text-8xl md:text-8xl lg:text-9xl pr-4 tracking-wide">chuẩn Studio</span> <br />
+              <span className="font-motion text-gradient-gold text-8xl md:text-8xl lg:text-9xl pr-4 tracking-wide -mt-5 inline-block">chuẩn Studio</span> <br />
               <span className="font-miller text-white">bằng AI</span>
             </h1>
 
