@@ -78,6 +78,16 @@ const App: React.FC = () => {
     }
   }, [accessoryImages, selectedModel]);
 
+  // Auto-switch model based on mode: Pose → Air, Try-on/Model → Pro
+  useEffect(() => {
+    if (mode === AppMode.CREATIVE_POSE && selectedModel !== 'gemini-2.5-flash-image') {
+      setSelectedModel('gemini-2.5-flash-image');
+      setAccessoryImages([]);
+    } else if ((mode === AppMode.VIRTUAL_TRY_ON || mode === AppMode.CREATE_MODEL) && selectedModel !== 'gemini-3-pro-image-preview') {
+      setSelectedModel('gemini-3-pro-image-preview');
+    }
+  }, [mode]);
+
   // User & Billing State
   const [session, setSession] = useState<any>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
@@ -103,6 +113,7 @@ const App: React.FC = () => {
     }
   }, [toast]);
   const [displayImage, setDisplayImage] = useState<string | null>(null);
+  const [viewingHistoryDuringGeneration, setViewingHistoryDuringGeneration] = useState(false);
 
   // Branding State (Managed by Custom Hook)
   const {
@@ -584,6 +595,12 @@ const App: React.FC = () => {
       }).catch(() => setIsSyncing(false));
     }
 
+    // Reset viewing history state and show new results when generation completes
+    if (viewingHistoryDuringGeneration && generatedBatch.length > 0) {
+      setResults(generatedBatch);
+      setSelectedResultIndex(0);
+    }
+    setViewingHistoryDuringGeneration(false);
     setIsGenerating(false);
   };
 
@@ -1219,11 +1236,11 @@ const App: React.FC = () => {
                     <div className="flex items-center gap-1.5 text-[9px] font-bold text-gray-500 uppercase ml-1"><Zap size={10} className="text-purple-400" />Processing Model</div>
                     <div className="flex bg-black/20 rounded-xl p-1 gap-1">
                       <button onClick={() => { setSelectedModel('gemini-2.5-flash-image'); setAccessoryImages([]); }} className={`relative flex-1 py-1.5 rounded-lg text-[10px] font-bold transition-all ${selectedModel === 'gemini-2.5-flash-image' ? 'bg-white text-black shadow-sm' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}>
-                        {mode === AppMode.CREATIVE_POSE && <Star size={10} className="absolute -top-1 -left-1 text-yellow-400 fill-yellow-400 rotate-[45deg]" />}
+                        {mode === AppMode.CREATIVE_POSE && <Star size={14} className="absolute -top-1.5 -left-1.5 text-yellow-400 fill-yellow-400 rotate-[45deg]" />}
                         Air
                       </button>
                       <button onClick={() => setSelectedModel('gemini-3-pro-image-preview')} className={`relative flex-1 py-1.5 rounded-lg text-[10px] font-bold transition-all ${selectedModel === 'gemini-3-pro-image-preview' ? 'bg-indigo-600 text-white shadow-glow' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}>
-                        {(mode === AppMode.VIRTUAL_TRY_ON || mode === AppMode.CREATE_MODEL) && <Star size={10} className="absolute -top-1 -right-1 text-yellow-400 fill-yellow-400 rotate-[-45deg]" />}
+                        {(mode === AppMode.VIRTUAL_TRY_ON || mode === AppMode.CREATE_MODEL) && <Star size={14} className="absolute -top-1.5 -right-1.5 text-yellow-400 fill-yellow-400 rotate-[-45deg]" />}
                         Pro
                       </button>
                     </div>
@@ -1291,7 +1308,7 @@ const App: React.FC = () => {
                       </div>
 
                       <div className="space-y-2 pt-1">
-                        {(mode !== AppMode.CREATIVE_POSE && mode !== AppMode.CREATE_MODEL) && (
+                        {(mode !== AppMode.CREATIVE_POSE && mode !== AppMode.CREATE_MODEL && mode !== AppMode.VIRTUAL_TRY_ON) && (
                           <button onClick={() => setFlexibleMode(!flexibleMode)} className={`w-full flex items-center justify-between p-2.5 rounded-lg border transition-all ${flexibleMode ? 'bg-mystic-accent/10 border-mystic-accent text-white' : 'bg-transparent border-white/5 text-gray-400 hover:bg-white/5'}`}>
                             <div className="flex items-center gap-2"><Shuffle size={14} /><span className="text-xs font-medium">Creative Freedom</span></div>
                             {flexibleMode ? <ToggleRight className="text-mystic-accent" size={20} /> : <ToggleLeft size={20} />}
@@ -1314,7 +1331,7 @@ const App: React.FC = () => {
             {/* MIDDLE PANEL - OUTPUT */}
             <div ref={outputRef} className="w-full lg:w-auto lg:flex-1 h-[70vh] lg:h-full bg-black/50 relative flex flex-col p-4 lg:p-6 lg:overflow-hidden shrink-0 lg:shrink lg:min-w-0 transition-all">
               <GlassCard className="flex-1 w-full h-full relative group overflow-hidden flex flex-col rounded-[24px] lg:rounded-[32px] border-white/10 shadow-2xl">
-                {isGenerating && (
+                {isGenerating && !viewingHistoryDuringGeneration && (
                   <div className="absolute inset-0 flex flex-col items-center justify-center gap-6 z-50 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
                     <div className="relative w-24 h-24">
                       <div className="absolute inset-0 border-4 border-mystic-accent/30 rounded-full animate-ping" />
@@ -1381,7 +1398,7 @@ const App: React.FC = () => {
                     <div className="col-span-2 h-40 flex flex-col items-center justify-center text-gray-600 gap-2"><History size={24} className="opacity-20" /><p className="text-xs">No artifacts yet.</p></div>
                   ) : (
                     history.slice(0, 10).map((item) => ( // Only show recent 10 in sidebar
-                      <div key={item.id} className="group relative flex flex-col bg-[#0f0c1d] border border-white/10 rounded-xl overflow-hidden hover:border-mystic-accent/50 transition-all cursor-pointer shadow-lg shrink-0" onClick={() => { setResults(item.images); setSelectedResultIndex(0); setMode(item.mode); setShowMobileHistory(false); if (window.innerWidth < 1024) setTimeout(() => outputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100); }}>
+                      <div key={item.id} className="group relative flex flex-col bg-[#0f0c1d] border border-white/10 rounded-xl overflow-hidden hover:border-mystic-accent/50 transition-all cursor-pointer shadow-lg shrink-0" onClick={() => { setResults(item.images); setSelectedResultIndex(0); setMode(item.mode); setShowMobileHistory(false); if (isGenerating) setViewingHistoryDuringGeneration(true); if (window.innerWidth < 1024) setTimeout(() => outputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100); }}>
                         <div className="w-full aspect-[3/4] bg-black relative">
                           <img src={item.thumbnail} alt="" className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity duration-500" />
                           <div className="absolute top-2 right-2 p-1 rounded bg-black/50 text-[8px] text-white font-bold pointer-events-none">{item.images.length}</div>
@@ -1471,17 +1488,22 @@ const App: React.FC = () => {
       {showPricingModal && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
           <div className="relative w-full max-w-6xl max-h-[90vh] overflow-y-auto rounded-3xl bg-[#0f0c1d] border border-white/10 shadow-2xl custom-scrollbar">
-            <button
-              onClick={() => setShowPricingModal(false)}
-              className="absolute top-6 right-6 z-20 p-2 rounded-full bg-black/50 text-white/50 hover:text-white hover:bg-white/20 transition-all"
-            >
-              <X size={24} />
-            </button>
-            <Pricing
-              userProfile={userProfile}
-              bankConfig={BANK_CONFIG}
-              onTransactionCreated={(id) => setCurrentTransactionId(id)}
-            />
+            {/* Sticky close button that follows scroll */}
+            <div className="sticky top-0 z-20 flex justify-end p-4 bg-gradient-to-b from-[#0f0c1d] via-[#0f0c1d]/90 to-transparent pointer-events-none">
+              <button
+                onClick={() => setShowPricingModal(false)}
+                className="p-2 rounded-full bg-black/50 text-white/50 hover:text-white hover:bg-white/20 transition-all pointer-events-auto"
+              >
+                <X size={24} />
+              </button>
+            </div>
+            <div className="-mt-16">
+              <Pricing
+                userProfile={userProfile}
+                bankConfig={BANK_CONFIG}
+                onTransactionCreated={(id) => setCurrentTransactionId(id)}
+              />
+            </div>
           </div>
         </div>
       )}
