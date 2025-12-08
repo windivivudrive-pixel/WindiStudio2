@@ -1078,44 +1078,46 @@ const App: React.FC = () => {
 
   // 2. IMAGE HISTORY VIEW
   const renderHistoryPage = () => (
-    <div className="w-full h-full p-6 lg:p-10 flex flex-col max-w-7xl mx-auto">
-      <div className="flex items-center gap-4 mb-8">
-        <button onClick={() => navigateTo('STUDIO')} className="glass-button p-2 rounded-full text-white hover:text-mystic-accent"><ArrowLeft size={24} /></button>
-        <h1 className="text-2xl lg:text-3xl font-bold text-white tracking-tight">Image History</h1>
-      </div>
+    <div className="fixed inset-0 z-50 bg-black overflow-y-auto custom-scrollbar">
+      <div className="w-full p-6 lg:p-10 flex flex-col max-w-7xl mx-auto">
+        <div className="flex items-center gap-4 mb-8">
+          <button onClick={() => navigateTo('STUDIO')} className="glass-button p-2 rounded-full text-white hover:text-mystic-accent"><ArrowLeft size={24} /></button>
+          <h1 className="text-2xl lg:text-3xl font-bold text-white tracking-tight">Image History</h1>
+        </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-10">
-        {history.length === 0 ? (
-          <div className="col-span-full py-20 text-center text-gray-500">No images generated yet.</div>
-        ) : (
-          history.map((item) => (
-            <div key={item.id} className="glass-panel rounded-[24px] overflow-hidden group flex flex-col">
-              <div className="relative aspect-[3/4] bg-black overflow-hidden">
-                <img src={item.thumbnail} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-4 pointer-events-none">
-                  <div className="flex justify-end gap-2">
-                    <button onClick={(e) => deleteHistoryItem(item.id, e)} className="p-2 rounded-full bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white transition-all pointer-events-auto"><Trash2 size={16} /></button>
-                    <button onClick={() => downloadImage(item.thumbnail, 0, item.prompt, item.modelName)} className="p-2 rounded-full bg-white/20 text-white hover:bg-mystic-accent transition-all pointer-events-auto"><Download size={16} /></button>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-10">
+          {history.length === 0 ? (
+            <div className="col-span-full py-20 text-center text-gray-500">No images generated yet.</div>
+          ) : (
+            history.map((item) => (
+              <div key={item.id} className="glass-panel rounded-[24px] overflow-hidden group flex flex-col">
+                <div className="relative aspect-[3/4] bg-black overflow-hidden">
+                  <img src={item.thumbnail} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-4 pointer-events-none">
+                    <div className="flex justify-end gap-2">
+                      <button onClick={(e) => deleteHistoryItem(item.id, e)} className="p-2 rounded-full bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white transition-all pointer-events-auto"><Trash2 size={16} /></button>
+                      <button onClick={() => downloadImage(item.thumbnail, 0, item.prompt, item.modelName)} className="p-2 rounded-full bg-white/20 text-white hover:bg-mystic-accent transition-all pointer-events-auto"><Download size={16} /></button>
+                    </div>
+                  </div>
+                  <div className="absolute top-2 left-2 px-2 py-1 rounded-md bg-black/40 backdrop-blur-md border border-white/10 text-[10px] font-bold text-gray-300 uppercase">
+                    {item.modelName ? (item.modelName.includes('flash') ? 'AIR' : 'PRO') : 'AI'}
                   </div>
                 </div>
-                <div className="absolute top-2 left-2 px-2 py-1 rounded-md bg-black/40 backdrop-blur-md border border-white/10 text-[10px] font-bold text-gray-300 uppercase">
-                  {item.modelName ? (item.modelName.includes('flash') ? 'AIR' : 'PRO') : 'AI'}
+                <div className="p-4 flex-1 flex flex-col gap-2">
+                  <div className="flex items-center justify-between text-[10px] text-gray-500 uppercase font-bold tracking-wider">
+                    <span>{new Date(item.timestamp).toLocaleDateString()}</span>
+                    <span>{item.mode.replace('_', ' ')}</span>
+                  </div>
+                  <div className="flex-1 p-3 rounded-xl bg-black/20 border border-white/5">
+                    <p className="text-xs text-gray-300 line-clamp-4 italic">
+                      "{item.prompt}"
+                    </p>
+                  </div>
                 </div>
               </div>
-              <div className="p-4 flex-1 flex flex-col gap-2">
-                <div className="flex items-center justify-between text-[10px] text-gray-500 uppercase font-bold tracking-wider">
-                  <span>{new Date(item.timestamp).toLocaleDateString()}</span>
-                  <span>{item.mode.replace('_', ' ')}</span>
-                </div>
-                <div className="flex-1 p-3 rounded-xl bg-black/20 border border-white/5">
-                  <p className="text-xs text-gray-300 line-clamp-4 italic">
-                    "{item.prompt}"
-                  </p>
-                </div>
-              </div>
-            </div>
-          ))
-        )}
+            ))
+          )}
+        </div>
       </div>
     </div>
   );
