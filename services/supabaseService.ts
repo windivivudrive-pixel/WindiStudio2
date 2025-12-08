@@ -10,7 +10,7 @@ export const signInWithGoogle = async () => {
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: window.location.origin // Redirect to root (SPA handles it)
+      redirectTo: window.location.origin + '/?view=studio&tab=studio' // Redirect to studio after login
     }
   });
   return { data, error };
@@ -119,8 +119,8 @@ export const updateUserCredits = async (userId: string, newBalance: number) => {
   if (error) console.error("Failed to update credits", error);
 };
 
-export const redeemPromoCode = async (code: string, userId: string) => {
-  console.log(`Attempting to redeem code: ${code} for user: ${userId}`);
+export const redeemPromoCode = async (code: string, userId: string, deviceId?: string) => {
+  console.log(`Attempting to redeem code: ${code} for user: ${userId} with device: ${deviceId}`);
 
   if (userId === 'dev-user') {
     // Mock redemption for dev user
@@ -130,7 +130,8 @@ export const redeemPromoCode = async (code: string, userId: string) => {
 
   const { data, error } = await supabase.rpc('redeem_promo_code', {
     code_input: code,
-    user_id_input: userId
+    user_id_input: userId,
+    device_id_input: deviceId || null
   });
 
   console.log("RPC Response - Data:", data);

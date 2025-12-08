@@ -229,12 +229,30 @@ const App: React.FC = () => {
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
-      if (session?.user) initializeUser(session.user);
+      if (session?.user) {
+        initializeUser(session.user);
+        // After login, navigate to studio if coming from OAuth redirect
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('view') === 'studio' || window.location.hash.includes('access_token')) {
+          setCurrentView('STUDIO');
+          // Clean up URL hash from OAuth
+          if (window.location.hash.includes('access_token')) {
+            window.history.replaceState({}, '', window.location.pathname + '?view=studio&tab=studio');
+          }
+        }
+      }
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
-      if (session?.user) initializeUser(session.user);
+      if (session?.user) {
+        initializeUser(session.user);
+        // After login via OAuth, redirect to studio
+        if (_event === 'SIGNED_IN' && window.location.hash.includes('access_token')) {
+          setCurrentView('STUDIO');
+          window.history.replaceState({}, '', window.location.pathname + '?view=studio&tab=studio');
+        }
+      }
       else setUserProfile(null);
     });
 
@@ -1638,15 +1656,26 @@ const App: React.FC = () => {
                         btn.innerText = '...';
                         btn.disabled = true;
 
-                        const { redeemPromoCode } = await import('./services/supabaseService');
-                        const result = await redeemPromoCode(code, userProfile.id);
+                        try {
+                          // Get device fingerprint
+                          const FingerprintJS = await import('@fingerprintjs/fingerprintjs');
+                          const fp = await FingerprintJS.load();
+                          const fpResult = await fp.get();
+                          const deviceId = fpResult.visitorId;
 
-                        if (result.success) {
-                          setToast({ message: result.message, type: 'success' });
-                          setUserProfile(prev => prev ? ({ ...prev, credits: result.new_balance }) : null);
-                          input.value = '';
-                        } else {
-                          setToast({ message: result.message, type: 'error' });
+                          const { redeemPromoCode } = await import('./services/supabaseService');
+                          const result = await redeemPromoCode(code, userProfile.id, deviceId);
+
+                          if (result.success) {
+                            setToast({ message: result.message, type: 'success' });
+                            setUserProfile(prev => prev ? ({ ...prev, credits: result.new_balance }) : null);
+                            input.value = '';
+                          } else {
+                            setToast({ message: result.message, type: 'error' });
+                          }
+                        } catch (err) {
+                          console.error('Redeem error:', err);
+                          setToast({ message: 'Có lỗi xảy ra, vui lòng thử lại', type: 'error' });
                         }
 
                         btn.innerText = originalText;
