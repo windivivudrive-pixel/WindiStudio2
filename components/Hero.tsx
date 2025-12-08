@@ -175,13 +175,13 @@ const Hero: React.FC<HeroProps> = ({ onEnterStudio }) => {
           <div className="space-y-8 z-10 relative">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 backdrop-blur-md animate-fade-in-up">
               <span className="flex h-2 w-2 rounded-full bg-green-500 animate-pulse"></span>
-              <span className="text-xs font-medium text-gray-300 tracking-wide uppercase">Phiên bản 2.5 Pro đã ra mắt</span>
+              <span className="text-xs font-medium text-gray-300 tracking-wide uppercase">Early Access</span>
             </div>
 
-            <h1 className="text-5xl md:text-6xl lg:text-7xl font-display font-semibold leading-[1.1] tracking-tight">
-              Tạo ảnh Lookbook <br />
-              <span className="text-gradient-gold italic">chuẩn Studio</span> <br />
-              bằng AI.
+            <h1 className="text-5xl md:text-6xl lg:text-7xl leading-[1.1] tracking-tight">
+              <span className="font-miller text-white">Tạo Ảnh Lookbook</span> <br />
+              <span className="font-motion text-gradient-gold text-8xl md:text-8xl lg:text-9xl pr-4 tracking-wide -mt-5 inline-block">chuẩn Studio</span> <br />
+              <span className="font-miller text-white">bằng AI</span>
             </h1>
 
             <p className="text-lg text-gray-400 font-light max-w-xl leading-relaxed">
@@ -204,10 +204,10 @@ const Hero: React.FC<HeroProps> = ({ onEnterStudio }) => {
               */}
             </div>
 
-            <div className="pt-8 flex items-center gap-6 text-sm text-gray-500">
+            <div className="pt-2 flex items-center gap-6 text-sm text-gray-500">
               <div className="flex items-center gap-2">
                 <Zap className="w-4 h-4 text-purple-400" />
-                <span>Xử lý trong 30s</span>
+                <span>Xử lý trong 20s</span>
               </div>
               <div className="flex items-center gap-2">
                 <Star className="w-4 h-4 text-yellow-500" />
