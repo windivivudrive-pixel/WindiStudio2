@@ -8,16 +8,19 @@ const Main: React.FC = () => {
         const params = new URLSearchParams(window.location.search);
         const viewParam = params.get('view');
         const hasAccessToken = window.location.hash.includes('access_token');
+        const validViews = ['studio', 'privacy', 'history', 'payment', 'branding'];
 
-        // If coming from OAuth redirect or explicitly requesting studio, show it
-        return viewParam === 'studio' || hasAccessToken;
+        // If coming from OAuth redirect or explicitly requesting any valid view, show App
+        return (viewParam && validViews.includes(viewParam.toLowerCase())) || hasAccessToken;
     });
 
     useEffect(() => {
         // Also listen for popstate changes
         const handlePopState = () => {
             const params = new URLSearchParams(window.location.search);
-            if (params.get('view') === 'studio') {
+            const viewParam = params.get('view');
+            const validViews = ['studio', 'privacy', 'history', 'payment', 'branding'];
+            if (viewParam && validViews.includes(viewParam.toLowerCase())) {
                 setShowStudio(true);
             }
         };
