@@ -178,13 +178,13 @@ const Hero: React.FC<HeroProps> = ({ onEnterStudio }) => {
               <span className="text-xs font-medium text-gray-300 tracking-wide uppercase">Early Access</span>
             </div>
 
-            <h1 className="text-5xl md:text-6xl lg:text-7xl leading-[1.1] tracking-tight">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl leading-[1.1] tracking-tight">
               <span className="font-miller text-white">Tạo Ảnh Lookbook</span> <br />
-              <span className="font-motion text-gradient-gold text-8xl md:text-8xl lg:text-9xl pr-4 tracking-wide -mt-5 inline-block">chuẩn Studio</span> <br />
+              <span className="font-motion text-gradient-gold text-6xl sm:text-7xl md:text-8xl lg:text-9xl pr-4 tracking-wide -mt-3 sm:-mt-5 inline-block">chuẩn Studio</span> <br />
               <span className="font-miller text-white">bằng AI</span>
             </h1>
 
-            <p className="text-lg text-gray-400 font-light max-w-xl leading-relaxed">
+            <p className="text-sm sm:text-base md:text-lg text-gray-400 font-light max-w-xl leading-relaxed">
               Tiết kiệm <span className="text-white font-medium">90% chi phí</span> thuê mẫu và nhiếp ảnh gia.
               Chỉ cần ảnh quần áo (flat-lay hoặc manequin), có ngay ảnh mẫu mặc cực thật trong 30 giây.
             </p>

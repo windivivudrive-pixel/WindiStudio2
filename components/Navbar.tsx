@@ -51,18 +51,10 @@ const Navbar: React.FC<NavbarProps> = ({ onEnterStudio }) => {
 
         {/* CTA */}
         <button
-          className="inline-flex items-center justify-center h-11 px-6 rounded-full font-bold text-white bg-purple-800/60 border border-purple-500/50 hover:border-purple-400 hover:shadow-[0_0_40px_rgba(168,85,247,0.8)] active:scale-95 transition-all duration-300 shadow-[inset_0_1px_0_0_rgba(168,85,247,0.4),0_10px_20px_-10px_rgba(168,85,247,0.3)]"
+          className="inline-flex items-center justify-center h-11 px-6 rounded-full font-bold text-white bg-purple-800/60 border border-purple-500/50 hover:border-purple-400 hover:shadow-[0_0_40px_rgba(168,85,247,0.8)] active:scale-95 transition-all duration-300 shadow-[inset_0_1px_0_0_rgba(168,85,247,0.4),0_10px_20px_-10px_rgba(168,85,247,0.3)] whitespace-nowrap"
           onClick={onEnterStudio}
         >
           Bắt Đầu Ngay
-        </button>
-
-        {/* Mobile Toggle */}
-        <button
-          className="md:hidden text-white"
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-        >
-          {mobileMenuOpen ? <X /> : <Menu />}
         </button>
       </div>
 
