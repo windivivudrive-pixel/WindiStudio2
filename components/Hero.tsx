@@ -186,7 +186,7 @@ const Hero: React.FC<HeroProps> = ({ onEnterStudio }) => {
 
             <p className="text-sm sm:text-base md:text-lg text-gray-400 font-light max-w-xl leading-relaxed">
               Tiết kiệm <span className="text-white font-medium">90% chi phí</span> thuê mẫu và nhiếp ảnh gia.
-              Chỉ cần ảnh quần áo (flat-lay hoặc manequin), có ngay ảnh mẫu mặc cực thật trong 30 giây.
+              Chỉ cần ảnh quần áo (flat-lay hoặc manequin), có ngay bộ ảnh chất lượng chưa tới 50K.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 pt-4">
