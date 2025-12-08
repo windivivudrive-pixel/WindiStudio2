@@ -1166,7 +1166,7 @@ const App: React.FC = () => {
             />
           </div>
         ) : (
-          <div className="flex-1 flex flex-col lg:flex-row relative overflow-hidden">
+          <div className="flex-1 flex flex-col lg:flex-row relative overflow-auto lg:overflow-hidden">
             {/* LEFT PANEL */}
             <div className="w-full lg:w-[380px] xl:w-[420px] flex flex-col border-b lg:border-b-0 lg:border-r border-white/5 bg-black/10 backdrop-blur-sm z-10 h-auto lg:h-full shrink-0">
               <div className="p-4 lg:p-5 flex-1 overflow-y-auto custom-scrollbar">
@@ -1631,11 +1631,11 @@ const App: React.FC = () => {
                   </div>
 
                   {/* Promo Code Section */}
-                  <div className="bg-white/5 border border-white/10 rounded-xl p-1 flex items-center gap-2">
+                  <div className="bg-white/5 border border-white/10 rounded-xl p-2 flex items-center gap-2">
                     <input
                       type="text"
                       placeholder="Enter Promo Code"
-                      className="flex-1 bg-transparent px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none uppercase"
+                      className="min-w-0 flex-1 bg-transparent px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none uppercase"
                       onKeyDown={async (e) => {
                         if (e.key === 'Enter') {
                           const code = e.currentTarget.value.trim().toUpperCase();
@@ -1681,7 +1681,7 @@ const App: React.FC = () => {
                         btn.innerText = originalText;
                         btn.disabled = false;
                       }}
-                      className="bg-mystic-accent hover:bg-mystic-accent/80 text-white text-xs font-bold px-4 py-2 rounded-lg transition-colors"
+                      className="shrink-0 bg-mystic-accent hover:bg-mystic-accent/80 text-white text-xs font-bold px-4 py-2 rounded-lg transition-colors"
                     >
                       REDEEM
                     </button>
