@@ -289,6 +289,36 @@ export const fetchHistoryFromDb = async (userId: string): Promise<HistoryItem[]>
   }));
 };
 /* --- BRANDING FEATURE START --- */
+export const checkUserHasBranding = async (userId: string): Promise<boolean> => {
+  const { data, error } = await supabase
+    .from('branding')
+    .select('user_id')
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  if (error) {
+    console.error('Error checking branding:', error);
+    return false;
+  }
+
+  return !!data;
+};
+
+export const fetchUserBranding = async (userId: string): Promise<{ branding_logo: string; branding_config: BrandingConfig } | null> => {
+  const { data, error } = await supabase
+    .from('branding')
+    .select('branding_logo, branding_config')
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  if (error) {
+    console.error('Error fetching branding:', error);
+    return null;
+  }
+
+  return data;
+};
+
 export const saveBrandingToDb = async (
   userId: string,
   brandingLogo: string,

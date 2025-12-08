@@ -59,7 +59,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ label, subLabel = 
       >
         {image ? (
           <>
-            <img src={image} alt="Preview" className="w-full h-full object-cover" />
+            <img src={image} alt="Preview" className="w-full h-full object-contain bg-black/20" />
 
             {/* Glossy Overlay */}
             <div className="absolute inset-0 bg-gradient-to-tr from-black/20 to-white/10 pointer-events-none" />
