@@ -6,6 +6,7 @@ const corsHeaders = {
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// @ts-ignore
 Deno.serve(async (req) => {
     // Handle CORS preflight request
     if (req.method === 'OPTIONS') {
@@ -13,7 +14,9 @@ Deno.serve(async (req) => {
     }
 
     try {
+        // @ts-ignore
         const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
+        // @ts-ignore
         const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
 
         // Create client with Service Role Key to bypass RLS

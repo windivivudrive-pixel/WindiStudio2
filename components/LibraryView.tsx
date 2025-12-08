@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { HistoryItem, Category } from '../types';
+import { HistoryItem, Category, AppMode } from '../types';
 import { fetchLibraryImages, toggleGenerationFavorite, fetchCategories, createCategory, fetchProfiles, deleteGenerationsBulk, fetchImageById } from '../services/supabaseService';
 import { Heart, Plus, X, FolderPlus, Filter, Calendar, User, Layers, Copy, ChevronLeft, ChevronRight, Trash2, CheckSquare, Square, Minus, ZoomIn, ZoomOut, Info } from 'lucide-react';
 
@@ -56,8 +56,26 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onSelectImage, onClose
         const loadTrending = async () => {
             // 1. Fetch categories to find "Trending" ID
             const cats = await fetchCategories();
+
+            // Handle duplicate names by appending ID
+            const nameCounts = new Map<string, number>();
+            cats.forEach(c => {
+                const name = c.name.trim().toLowerCase();
+                nameCounts.set(name, (nameCounts.get(name) || 0) + 1);
+            });
+
+            const processedCats = cats.map(c => {
+                const name = c.name.trim().toLowerCase();
+                if ((nameCounts.get(name) || 0) > 1) {
+                    return { ...c, name: `${c.name} (${c.id})` };
+                }
+                return c;
+            });
+
+            console.log("LibraryView - Processed Categories:", processedCats);
+
             // Update categories state if not already loaded (optimization)
-            if (categories.length === 0) setCategories(cats);
+            if (categories.length === 0) setCategories(processedCats);
 
             const trendingCat = cats.find(c => c.name.toLowerCase() === 'trending');
 
@@ -94,10 +112,24 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onSelectImage, onClose
         // Fetch categories only once
         if (categories.length === 0) {
             const cats = await fetchCategories();
-            setCategories(cats);
+            // Handle duplicate names by appending ID
+            const nameCounts = new Map<string, number>();
+            cats.forEach(c => {
+                const name = c.name.trim().toLowerCase();
+                nameCounts.set(name, (nameCounts.get(name) || 0) + 1);
+            });
+
+            const processedCats = cats.map(c => {
+                const name = c.name.trim().toLowerCase();
+                if ((nameCounts.get(name) || 0) > 1) {
+                    return { ...c, name: `${c.name} (${c.id})` };
+                }
+                return c;
+            });
+            setCategories(processedCats);
         }
 
-        const newImages = await fetchLibraryImages({
+        const fetchOptions = {
             onlyFavorites: viewMode === 'LIBRARY',
             categoryId: selectedCategory || undefined,
             userId: viewMode === 'ALL_USERS' && selectedUser ? selectedUser : undefined,
@@ -105,13 +137,21 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onSelectImage, onClose
             daysAgo: viewMode === 'ALL_USERS' ? selectedDays : undefined,
             page: pageToLoad,
             limit: 60
-        });
+        };
+
+        const newImages = await fetchLibraryImages(fetchOptions);
 
         if (newImages.length < 60) {
             setHasMore(false);
         }
 
-        setImages(prev => isReset ? newImages : [...prev, ...newImages]);
+        setImages(prev => {
+            if (isReset) return newImages;
+            // Deduplicate: Filter out images that are already in the list
+            const existingIds = new Set(prev.map(p => p.id));
+            const uniqueNewImages = newImages.filter(img => !existingIds.has(img.id));
+            return [...prev, ...uniqueNewImages];
+        });
         setIsLoading(false);
     };
 
@@ -204,6 +244,21 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onSelectImage, onClose
         setPage(0);
         setImages([]);
         loadData(0, true);
+    };
+
+    const handleQuickDelete = async (item: HistoryItem) => {
+        if (!confirm('Are you sure you want to delete this image?')) return;
+
+        // Optimistic update
+        setImages(prev => prev.filter(img => img.id !== item.id));
+
+        const { successCount } = await deleteGenerationsBulk([item.id]);
+
+        if (successCount === 0) {
+            alert("Failed to delete image.");
+            // Revert optimistic update (reload data or just warn)
+            // For simplicity, we just warn. Ideally we should revert state.
+        }
     };
 
     const [selectedImageForModal, setSelectedImageForModal] = useState<HistoryItem | null>(null);
@@ -579,13 +634,27 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onSelectImage, onClose
                             )}
                             <div className="flex bg-white/5 rounded-lg p-1 border border-white/5">
                                 <button
-                                    onClick={() => setViewMode('LIBRARY')}
+                                    onClick={() => {
+                                        setViewMode('LIBRARY');
+                                        // Reset filters
+                                        setSelectedCategory(null);
+                                        setSelectedUser('');
+                                        setSelectedImageType('');
+                                        setSelectedDays(undefined);
+                                    }}
                                     className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${viewMode === 'LIBRARY' ? 'bg-white text-black shadow-sm' : 'text-gray-400 hover:text-white'}`}
                                 >
                                     Discover
                                 </button>
                                 <button
-                                    onClick={() => setViewMode('ALL_USERS')}
+                                    onClick={() => {
+                                        setViewMode('ALL_USERS');
+                                        // Reset filters
+                                        setSelectedCategory(null);
+                                        setSelectedUser('');
+                                        setSelectedImageType('');
+                                        setSelectedDays(undefined);
+                                    }}
                                     className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${viewMode === 'ALL_USERS' ? 'bg-white text-black shadow-sm' : 'text-gray-400 hover:text-white'}`}
                                 >
                                     All Users
@@ -714,7 +783,13 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onSelectImage, onClose
 
                 {/* MAIN GRID */}
                 <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-                    {images.filter(item => !trendingImages.some(t => t.id === item.id)).map((item, index, arr) => (
+                    {images.filter(item => {
+                        // Only filter out trending images if we are in LIBRARY mode AND no category is selected (Trending section is visible)
+                        if (viewMode === 'LIBRARY' && !selectedCategory) {
+                            return !trendingImages.some(t => t.id === item.id);
+                        }
+                        return true;
+                    }).map((item, index, arr) => (
                         <div
                             key={`${item.id}-${index}`}
                             ref={index === arr.length - 1 ? lastImageElementRef : null}
@@ -737,20 +812,38 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onSelectImage, onClose
 
                             {/* Heart Button */}
                             {isAdmin && (
-                                <div className={`absolute top-2 right-2 z-10 transition-all duration-200 ${item.isFavorite ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
-                                    <button
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            handleHeartClick(item);
-                                        }}
-                                        className={`p-2 rounded-full backdrop-blur-md transition-all ${item.isFavorite
-                                            ? 'bg-red-500 text-white shadow-lg scale-110'
-                                            : 'bg-black/40 text-white/60 hover:bg-white hover:text-black'
-                                            }`}
-                                    >
-                                        <Heart size={16} className={item.isFavorite ? "fill-current" : ""} />
-                                    </button>
-                                </div>
+                                <>
+                                    {/* Quick Delete Button (Only in All Users view) */}
+                                    {viewMode === 'ALL_USERS' && (
+                                        <div className={`absolute top-2 right-10 z-10 transition-all duration-200 opacity-0 group-hover:opacity-100`}>
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleQuickDelete(item);
+                                                }}
+                                                className="p-2 rounded-full backdrop-blur-md bg-black/40 text-white/60 hover:bg-red-600 hover:text-white transition-all"
+                                                title="Delete Image"
+                                            >
+                                                <X size={16} />
+                                            </button>
+                                        </div>
+                                    )}
+
+                                    <div className={`absolute top-2 right-2 z-10 transition-all duration-200 ${item.isFavorite ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleHeartClick(item);
+                                            }}
+                                            className={`p-2 rounded-full backdrop-blur-md transition-all ${item.isFavorite
+                                                ? 'bg-red-500 text-white shadow-lg scale-110'
+                                                : 'bg-black/40 text-white/60 hover:bg-white hover:text-black'
+                                                }`}
+                                        >
+                                            <Heart size={16} className={item.isFavorite ? "fill-current" : ""} />
+                                        </button>
+                                    </div>
+                                </>
                             )}
 
                             {/* Bottom Overlay */}
@@ -764,10 +857,14 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onSelectImage, onClose
                                     (item.imageType === 'SCALE4' || item.imageType === 'SCALEX2') ? 'bg-black/60 text-pink-500 border-pink-500/50' :
                                         'bg-black/60 text-white border-white/10'
                                     }`}>
-                                    {item.imageType === 'STANDARD' ? 'FLASH' :
-                                        item.imageType === 'PREMIUM' ? 'PRO' :
-                                            item.imageType === 'SCALE2' ? '2K' :
-                                                (item.imageType === 'SCALE4' || item.imageType === 'SCALEX2') ? '4K' : ''}
+                                    {(() => {
+                                        const type = item.imageType?.toUpperCase();
+                                        if (type === 'STANDARD') return 'AIR';
+                                        if (type === 'PREMIUM') return 'PRO';
+                                        if (type === 'SCALE2' || type === 'SCALEX2') return '2K';
+                                        if (type === 'SCALE4') return '4K';
+                                        return '';
+                                    })()}
                                 </div>
                             )}
 
@@ -802,7 +899,7 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onSelectImage, onClose
             {/* Bulk Delete Floating Bar */}
             {
                 isSelectionMode && selectedItems.size > 0 && (
-                    <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-bottom-4 fade-in">
+                    <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[100] animate-in slide-in-from-bottom-4 fade-in">
                         <button
                             onClick={handleBulkDelete}
                             className="flex items-center gap-2 px-6 py-3 rounded-full bg-red-600 hover:bg-red-700 text-white font-bold shadow-2xl hover:scale-105 transition-all"
@@ -964,10 +1061,14 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onSelectImage, onClose
                                     (selectedImageForModal.imageType === 'SCALE4' || selectedImageForModal.imageType === 'SCALEX2') ? 'bg-black/60 text-pink-500 border-pink-500/50' :
                                         'bg-black/60 text-white border-white/10'
                                     }`}>
-                                    {selectedImageForModal.imageType === 'STANDARD' ? 'FLASH' :
-                                        selectedImageForModal.imageType === 'PREMIUM' ? 'PRO' :
-                                            selectedImageForModal.imageType === 'SCALE2' ? '2K' :
-                                                (selectedImageForModal.imageType === 'SCALE4' || selectedImageForModal.imageType === 'SCALEX2') ? '4K' : 'AI'}
+                                    {(() => {
+                                        const type = selectedImageForModal.imageType?.toUpperCase();
+                                        if (type === 'STANDARD') return 'AIR';
+                                        if (type === 'PREMIUM') return 'PRO';
+                                        if (type === 'SCALE2' || type === 'SCALEX2') return '2K';
+                                        if (type === 'SCALE4') return '4K';
+                                        return 'AI';
+                                    })()}
                                 </div>
                             </div>
 

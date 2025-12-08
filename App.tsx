@@ -1,6 +1,6 @@
-
 import React, { useState, useEffect, useRef } from 'react';
-import { Sparkles, Shirt, Camera, Wand2, Download, AlertCircle, History, Trash2, ChevronDown, ChevronUp, User, Image as ImageIcon, Bone, Layers, ToggleLeft, ToggleRight, XCircle, Archive, Shuffle, Copy, ScanFace, RefreshCw, LogIn, Coins, X, CreditCard, Wallet, LogOut, Zap, Cloud, ArrowLeft, Calendar, FileText, CheckCircle, XOctagon, QrCode, Smartphone, Check, Maximize2, Plus, Stamp, Heart } from 'lucide-react';
+import Pricing from './components/Pricing';
+import { Sparkles, Shirt, Camera, Wand2, Download, AlertCircle, History, Trash2, ChevronDown, ChevronUp, User, Image as ImageIcon, Bone, Layers, ToggleLeft, ToggleRight, XCircle, Archive, Shuffle, Copy, ScanFace, RefreshCw, LogIn, Coins, X, CreditCard, Wallet, LogOut, Zap, Cloud, ArrowLeft, Calendar, FileText, CheckCircle, XOctagon, QrCode, Smartphone, Check, Maximize2, Plus, Stamp, Heart, Star } from 'lucide-react';
 import JSZip from 'jszip';
 import { AppMode, AspectRatio, HistoryItem, UserProfile, Transaction } from './types';
 import { ImageUploader } from './components/ImageUploader';
@@ -9,6 +9,7 @@ import { AnimatedLogo } from './components/AnimatedLogo';
 import { PrivacyPolicy } from './components/PrivacyPolicy';
 import { generateStudioImage, ensureApiKey } from './services/geminiService';
 import { BrandingPage } from './components/BrandingPage';
+
 import { StudioTabs } from './components/StudioTabs';
 import { LibraryView } from './components/LibraryView';
 import { useBranding } from './utils/useBranding';
@@ -61,6 +62,7 @@ const App: React.FC = () => {
   const [results, setResults] = useState<string[]>([]);
   const [selectedResultIndex, setSelectedResultIndex] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [errorModal, setErrorModal] = useState<{ message: string; code?: string } | null>(null);
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [showMobileHistory, setShowMobileHistory] = useState(false);
@@ -76,6 +78,16 @@ const App: React.FC = () => {
     }
   }, [accessoryImages, selectedModel]);
 
+  // Auto-switch model based on mode: Pose → Air, Try-on/Model → Pro
+  useEffect(() => {
+    if (mode === AppMode.CREATIVE_POSE && selectedModel !== 'gemini-2.5-flash-image') {
+      setSelectedModel('gemini-2.5-flash-image');
+      setAccessoryImages([]);
+    } else if ((mode === AppMode.VIRTUAL_TRY_ON || mode === AppMode.CREATE_MODEL) && selectedModel !== 'gemini-3-pro-image-preview') {
+      setSelectedModel('gemini-3-pro-image-preview');
+    }
+  }, [mode]);
+
   // User & Billing State
   const [session, setSession] = useState<any>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
@@ -87,6 +99,7 @@ const App: React.FC = () => {
   const [topUpAmount, setTopUpAmount] = useState('');
   const [calculatedCoins, setCalculatedCoins] = useState(0);
   const [qrUrl, setQrUrl] = useState('');
+  const [showPricingModal, setShowPricingModal] = useState(false);
 
   // Toast Notification State
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
@@ -100,6 +113,7 @@ const App: React.FC = () => {
     }
   }, [toast]);
   const [displayImage, setDisplayImage] = useState<string | null>(null);
+  const [viewingHistoryDuringGeneration, setViewingHistoryDuringGeneration] = useState(false);
 
   // Branding State (Managed by Custom Hook)
   const {
@@ -207,21 +221,7 @@ const App: React.FC = () => {
     };
   }, [results, selectedResultIndex, brandingLogo, brandingConfig]);
   /* --- BRANDING FEATURE END --- */
-  /* --- BRANDING FEATURE START --- */
-  {
-    currentView === 'BRANDING' && (
-      <BrandingPage
-        brandingLogo={brandingLogo}
-        setBrandingLogo={setBrandingLogo}
-        brandingConfig={brandingConfig}
-        setBrandingConfig={setBrandingConfig}
-        isSavingBranding={isSavingBranding}
-        handleSaveBranding={handleSaveBranding}
-        onBack={() => navigateTo('STUDIO')}
-      />
-    )
-  }
-  /* --- BRANDING FEATURE END --- */
+
 
   // --- INITIALIZATION ---
 
@@ -229,12 +229,30 @@ const App: React.FC = () => {
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
-      if (session?.user) initializeUser(session.user);
+      if (session?.user) {
+        initializeUser(session.user);
+        // After login, navigate to studio if coming from OAuth redirect
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('view') === 'studio' || window.location.hash.includes('access_token')) {
+          setCurrentView('STUDIO');
+          // Clean up URL hash from OAuth
+          if (window.location.hash.includes('access_token')) {
+            window.history.replaceState({}, '', window.location.pathname + '?view=studio&tab=studio');
+          }
+        }
+      }
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
-      if (session?.user) initializeUser(session.user);
+      if (session?.user) {
+        initializeUser(session.user);
+        // After login via OAuth, redirect to studio
+        if (_event === 'SIGNED_IN' && window.location.hash.includes('access_token')) {
+          setCurrentView('STUDIO');
+          window.history.replaceState({}, '', window.location.pathname + '?view=studio&tab=studio');
+        }
+      }
       else setUserProfile(null);
     });
 
@@ -286,6 +304,9 @@ const App: React.FC = () => {
       if (showLoginModal) {
         setShowLoginModal(false);
       }
+      if (showPricingModal) {
+        setShowPricingModal(false);
+      }
 
       if (event.state && event.state.view) {
         setCurrentView(event.state.view);
@@ -315,7 +336,7 @@ const App: React.FC = () => {
 
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
-  }, [showTopUpModal, showLoginModal]);
+  }, [showTopUpModal, showLoginModal, showPricingModal]);
 
   // Initial Load URL Check
   useEffect(() => {
@@ -421,6 +442,36 @@ const App: React.FC = () => {
     return getCostPerImage() * numberOfImages;
   };
 
+  // Helper function to show error modal with appropriate message
+  const showErrorModal = (errorMessage: string) => {
+    // Extract error code if present (e.g., "500", "503", "404")
+    const codeMatch = errorMessage.match(/\b(4\d{2}|5\d{2})\b/);
+    const errorCode = codeMatch ? codeMatch[1] : undefined;
+
+    // Check for image safety/content related errors
+    if (errorMessage.includes("IMAGE_OTHER") ||
+      errorMessage.includes("IMAGE_SAFETY") ||
+      errorMessage.includes("IMAGE_CONTENT_BLOCKED") ||
+      errorMessage.includes("SAFETY_VIOLATION") ||
+      errorMessage.includes("PROHIBITED") ||
+      errorMessage.includes("blocked") ||
+      errorMessage.toLowerCase().includes("safety") ||
+      errorMessage.toLowerCase().includes("refused") ||
+      errorMessage.toLowerCase().includes("content")) {
+      setErrorModal({
+        message: "Hình Ảnh Quá Nhạy Cảm hoặc Không Phù Hợp, vui lòng thử lại ảnh khác hoặc thêm mô tả chi tiết.",
+        code: "CONTENT"
+      });
+    } else if (errorMessage.includes("500") || errorMessage.toLowerCase().includes("fetch") || errorMessage.toLowerCase().includes("network") || errorMessage.toLowerCase().includes("timeout")) {
+      setErrorModal({ message: "Kết nối yếu, vui lòng thử lại", code: "500" });
+    } else {
+      setErrorModal({
+        message: "Hệ Thống Bị Gián Đoạn, Xin Vui Lòng Thử Lại Sau",
+        code: errorCode
+      });
+    }
+  };
+
   const handleGenerate = async () => {
     setError(null);
 
@@ -431,7 +482,7 @@ const App: React.FC = () => {
 
     const cost = getTotalCost();
     if (userProfile.credits < cost) {
-      setShowTopUpModal(true);
+      setShowPricingModal(true);
       setError(`Insufficient balance. Cost: ${cost} xu, Available: ${userProfile.credits} xu.`);
       return;
     }
@@ -484,15 +535,25 @@ const App: React.FC = () => {
         success = true;
       } catch (err: any) {
         const errorMsg = err.message || "";
-        if (errorMsg.includes("SAFETY_VIOLATION") ||
-          errorMsg.includes("ACCOUNT_BANNED") ||
-          errorMsg.includes("PROHIBITED") ||
-          errorMsg.includes("blocked") ||
-          errorMsg.includes("content")) {
+        // Only use safetyWarning modal for account bans (which have serious implications)
+        if (errorMsg.includes("ACCOUNT_BANNED")) {
           setSafetyWarning(errorMsg);
           break;
         }
-        if (attempt === maxRetries) { setError(err.message || "Something went wrong."); break; }
+        // Use showErrorModal for content/safety related errors with user-friendly message
+        if (errorMsg.includes("SAFETY_VIOLATION") ||
+          errorMsg.includes("IMAGE_CONTENT_BLOCKED") ||
+          errorMsg.includes("CONTENT_BLOCKED") ||
+          errorMsg.includes("IMAGE_OTHER") ||
+          errorMsg.includes("IMAGE_SAFETY") ||
+          errorMsg.includes("PROHIBITED") ||
+          errorMsg.includes("blocked") ||
+          errorMsg.includes("content") ||
+          errorMsg.includes("refused")) {
+          showErrorModal(errorMsg);
+          break;
+        }
+        if (attempt === maxRetries) { showErrorModal(err.message || "Something went wrong."); break; }
 
         // Only retry on 500 errors or network errors
         const isRetryable = err.message?.includes("500") ||
@@ -502,7 +563,7 @@ const App: React.FC = () => {
           err.message?.includes("connection");
 
         if (!isRetryable) {
-          setError(err.message || "Generation failed.");
+          showErrorModal(err.message || "Generation failed.");
           break;
         }
 
@@ -522,6 +583,9 @@ const App: React.FC = () => {
     }
 
     if (success && generatedBatch.length > 0) {
+      // Calculate actual cost based on successfully generated images, not requested amount
+      const actualCost = getCostPerImage() * generatedBatch.length;
+
       const newItem: HistoryItem = {
         id: Date.now().toString(),
         thumbnail: generatedBatch[0],
@@ -530,11 +594,11 @@ const App: React.FC = () => {
         timestamp: Date.now(),
         mode,
         modelName: selectedModel,
-        cost: cost
+        cost: actualCost
       };
 
       setHistory(prev => [newItem, ...prev]);
-      const newBalance = userProfile.credits - cost;
+      const newBalance = userProfile.credits - actualCost;
       setUserProfile({ ...userProfile, credits: newBalance });
       setIsSyncing(true);
 
@@ -549,6 +613,12 @@ const App: React.FC = () => {
       }).catch(() => setIsSyncing(false));
     }
 
+    // Reset viewing history state and show new results when generation completes
+    if (viewingHistoryDuringGeneration && generatedBatch.length > 0) {
+      setResults(generatedBatch);
+      setSelectedResultIndex(0);
+    }
+    setViewingHistoryDuringGeneration(false);
     setIsGenerating(false);
   };
 
@@ -564,6 +634,25 @@ const App: React.FC = () => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
     }
+  };
+
+  // Reset all studio settings to default
+  const handleResetStudio = () => {
+    setMode(AppMode.CREATIVE_POSE);
+    setPrimaryImage(null);
+    setSecondaryImage(null);
+    setPrompt('');
+    setAspectRatio('3:4' as AspectRatio);
+    setFlexibleMode(false);
+    setRandomFace(false);
+    setNumberOfImages(1);
+    setSelectedModel('gemini-2.5-flash-image');
+    setAccessoryImages([]);
+    setResults([]);
+    setSelectedResultIndex(0);
+    setDisplayImage(null);
+    setError(null);
+    setStudioTab('studio');
   };
 
   const handleUpscale = () => {
@@ -583,7 +672,7 @@ const App: React.FC = () => {
     }
 
     if (userProfile.credits < cost) {
-      setShowTopUpModal(true);
+      setShowPricingModal(true);
       setError(`Insufficient balance. Cost: ${cost} xu, Available: ${userProfile.credits} xu.`);
       return;
     }
@@ -818,13 +907,18 @@ const App: React.FC = () => {
         (payload) => {
           console.log('Transaction updated:', payload);
           if (payload.new.status === 'SUCCESS') {
-            setToast({ message: `Payment successful! +${payload.new.credits_added} xu`, type: 'success' });
+            // Backend webhook now handles all bonus calculation and credit updates
+            // Just show success message with the credits_added from the payload
+            const creditsAdded = payload.new.credits_added;
+
+            setToast({ message: `Payment successful! +${creditsAdded} xu`, type: 'success' });
             setShowTopUpModal(false);
+            setShowPricingModal(false);
             setTopUpStep('INPUT');
             setTopUpAmount('');
             setCurrentTransactionId(null);
 
-            // Refresh profile
+            // Refresh profile to get updated balance
             if (userProfile) {
               getProfile(userProfile.id).then(p => {
                 if (p) setUserProfile(p);
@@ -1055,7 +1149,7 @@ const App: React.FC = () => {
 
 
     return (
-      <div className="flex flex-col w-full h-full">
+      <div className="flex-1 flex flex-col w-full min-h-0">
         <StudioTabs activeTab={studioTab} onTabChange={(tab) => navigateTo('STUDIO', false, tab)} />
 
         {studioTab === 'library' ? (
@@ -1075,12 +1169,12 @@ const App: React.FC = () => {
           <div className="flex-1 flex flex-col lg:flex-row relative overflow-hidden">
             {/* LEFT PANEL */}
             <div className="w-full lg:w-[380px] xl:w-[420px] flex flex-col border-b lg:border-b-0 lg:border-r border-white/5 bg-black/10 backdrop-blur-sm z-10 h-auto lg:h-full shrink-0">
-              <div className="p-5 lg:p-6 flex-1 overflow-y-auto custom-scrollbar">
+              <div className="p-4 lg:p-5 flex-1 overflow-y-auto custom-scrollbar">
 
                 {/* Mode Selection - Only show in Studio tab */}
                 {studioTab === 'studio' && (
-                  <div className="mb-8">
-                    <div className="glass-panel p-2 rounded-[24px] grid grid-cols-3 gap-1.5 shrink-0">
+                  <div className="mb-6">
+                    <div className="glass-panel p-1.5 rounded-[24px] grid grid-cols-3 gap-1.5 shrink-0">
                       <ModeButton active={mode === AppMode.CREATIVE_POSE} icon={Camera} label="Pose" onClick={() => setMode(AppMode.CREATIVE_POSE)} />
                       <ModeButton active={mode === AppMode.VIRTUAL_TRY_ON} icon={Shirt} label="Try-On" onClick={() => setMode(AppMode.VIRTUAL_TRY_ON)} />
                       <ModeButton active={mode === AppMode.CREATE_MODEL} icon={User} label="Model" onClick={() => setMode(AppMode.CREATE_MODEL)} />
@@ -1090,14 +1184,14 @@ const App: React.FC = () => {
 
                 {/* FUN MODE: Freedom Input */}
                 {studioTab === 'fun' && (
-                  <div className="mb-8">
-                    <div className="p-4 rounded-xl bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/20 mb-4">
+                  <div className="mb-6">
+                    <div className="p-3 rounded-xl bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/20 mb-3">
                       <h3 className="text-sm font-bold text-white mb-1 flex items-center gap-2"><Sparkles size={14} className="text-pink-400" /> Freedom Mode</h3>
                       <p className="text-xs text-gray-400">Upload multiple reference images and describe exactly what you want. No templates, pure creativity.</p>
                     </div>
 
-                    <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 block">Reference Images</label>
-                    <div className="grid grid-cols-2 gap-2 mb-4">
+                    <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 block">Reference Images</label>
+                    <div className="grid grid-cols-2 gap-2 mb-3">
                       {/* Reuse Accessory Images for multiple uploads in Fun mode for simplicity, or we can use primary/secondary + accessory */}
                       <ImageUploader
                         label="Image 1"
@@ -1159,7 +1253,7 @@ const App: React.FC = () => {
 
                 {/* Inputs based on Mode (Studio Only) */}
                 {studioTab === 'studio' && (
-                  <div className="grid grid-cols-2 gap-4 mb-6">
+                  <div className="grid grid-cols-2 gap-3 mb-4">
                     <div className={!showSecondary ? "col-span-2 w-1/2 mx-auto" : "col-span-1"}>
                       <ImageUploader label={primaryLabel} subLabel={primarySubLabel} image={primaryImage} onImageChange={setPrimaryImage} />
                     </div>
@@ -1168,21 +1262,27 @@ const App: React.FC = () => {
                 )}
 
                 {/* Common controls for both Studio and Fun tabs */}
-                <button onClick={handleGenerate} disabled={isGenerateDisabled} className={`w-full py-4 rounded-[20px] font-bold text-base tracking-wide text-white shadow-liquid shrink-0 liquid-btn-style transition-all duration-500 transform ${isGenerateDisabled ? 'opacity-50 grayscale cursor-not-allowed' : 'hover:scale-[1.01] active:scale-[0.99]'}`}>
+                <button onClick={handleGenerate} disabled={isGenerateDisabled} className={`w-full py-3 rounded-[20px] font-bold text-base tracking-wide text-white shadow-liquid shrink-0 liquid-btn-style transition-all duration-500 transform ${isGenerateDisabled ? 'opacity-50 grayscale cursor-not-allowed' : 'hover:scale-[1.01] active:scale-[0.99]'}`}>
                   <span className="relative z-10 flex items-center justify-center gap-2 drop-shadow-md">
                     {isGenerating ? <><RefreshCw className="animate-spin" size={18} />{loadingState.title === "Upscaling..." ? "Upscaling..." : loadingState.title === "Dreaming..." ? "Synthesizing..." : "Retrying..."}</> : <><Sparkles size={18} className="fill-white" />GENERATE {getTotalCost() > 0 && (<div className="flex items-center gap-1 bg-black/20 rounded-full px-2 py-0.5 ml-1"><span className="text-sm font-extrabold text-yellow-300">{getTotalCost()}</span><Coins size={14} className="text-yellow-400 fill-yellow-400" /></div>)}</>}
                   </span>
                 </button>
 
-                <div className="grid grid-cols-2 gap-3 mt-6">
-                  <div className="glass-panel p-2.5 rounded-[20px] flex flex-col gap-2">
-                    <div className="flex items-center gap-1.5 text-[9px] font-bold text-gray-500 uppercase ml-1"><Zap size={10} className="text-yellow-400" />Processing Model</div>
+                <div className="grid grid-cols-2 gap-2 mt-4">
+                  <div className="glass-panel p-2 rounded-[20px] flex flex-col gap-2">
+                    <div className="flex items-center gap-1.5 text-[9px] font-bold text-gray-500 uppercase ml-1"><Zap size={10} className="text-purple-400" />Processing Model</div>
                     <div className="flex bg-black/20 rounded-xl p-1 gap-1">
-                      <button onClick={() => { setSelectedModel('gemini-2.5-flash-image'); setAccessoryImages([]); }} className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold transition-all ${selectedModel === 'gemini-2.5-flash-image' ? 'bg-white text-black shadow-sm' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}>Air</button>
-                      <button onClick={() => setSelectedModel('gemini-3-pro-image-preview')} className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold transition-all ${selectedModel === 'gemini-3-pro-image-preview' ? 'bg-indigo-600 text-white shadow-glow' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}>Pro</button>
+                      <button onClick={() => { setSelectedModel('gemini-2.5-flash-image'); setAccessoryImages([]); }} className={`relative flex-1 py-1.5 rounded-lg text-[10px] font-bold transition-all ${selectedModel === 'gemini-2.5-flash-image' ? 'bg-white text-black shadow-sm' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}>
+                        {mode === AppMode.CREATIVE_POSE && <Star size={14} className="absolute -top-1.5 -left-1.5 text-yellow-400 fill-yellow-400 rotate-[45deg]" />}
+                        Air
+                      </button>
+                      <button onClick={() => setSelectedModel('gemini-3-pro-image-preview')} className={`relative flex-1 py-1.5 rounded-lg text-[10px] font-bold transition-all ${selectedModel === 'gemini-3-pro-image-preview' ? 'bg-indigo-600 text-white shadow-glow' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}>
+                        {(mode === AppMode.VIRTUAL_TRY_ON || mode === AppMode.CREATE_MODEL) && <Star size={14} className="absolute -top-1.5 -right-1.5 text-yellow-400 fill-yellow-400 rotate-[-45deg]" />}
+                        Pro
+                      </button>
                     </div>
                   </div>
-                  <div className="glass-panel p-2.5 rounded-[20px] flex flex-col gap-2">
+                  <div className="glass-panel p-2 rounded-[20px] flex flex-col gap-2">
                     <div className="flex items-center gap-1.5 text-[9px] font-bold text-gray-500 uppercase ml-1"><Layers size={10} className="text-mystic-accent" />Batch Size</div>
                     <div className="flex gap-1">
                       {[1, 2, 3, 4].map((num) => (
@@ -1192,7 +1292,7 @@ const App: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="glass-panel p-5 rounded-[24px] space-y-5 mt-6">
+                <div className="glass-panel p-4 rounded-[24px] space-y-4 mt-4">
                   <div className="flex justify-between items-center cursor-pointer" onClick={() => setShowAdvanced(!showAdvanced)}>
                     <span className="text-xs font-bold text-gray-300 uppercase tracking-wider flex items-center gap-2"><Layers size={14} className="text-mystic-accent" /> Configuration</span>
                     <button className="p-1.5 rounded-full hover:bg-white/5 transition-colors">{showAdvanced ? <ChevronUp size={14} /> : <ChevronDown size={14} />}</button>
@@ -1245,7 +1345,7 @@ const App: React.FC = () => {
                       </div>
 
                       <div className="space-y-2 pt-1">
-                        {(mode !== AppMode.CREATIVE_POSE && mode !== AppMode.CREATE_MODEL) && (
+                        {(mode !== AppMode.CREATIVE_POSE && mode !== AppMode.CREATE_MODEL && mode !== AppMode.VIRTUAL_TRY_ON) && (
                           <button onClick={() => setFlexibleMode(!flexibleMode)} className={`w-full flex items-center justify-between p-2.5 rounded-lg border transition-all ${flexibleMode ? 'bg-mystic-accent/10 border-mystic-accent text-white' : 'bg-transparent border-white/5 text-gray-400 hover:bg-white/5'}`}>
                             <div className="flex items-center gap-2"><Shuffle size={14} /><span className="text-xs font-medium">Creative Freedom</span></div>
                             {flexibleMode ? <ToggleRight className="text-mystic-accent" size={20} /> : <ToggleLeft size={20} />}
@@ -1266,9 +1366,9 @@ const App: React.FC = () => {
             </div>
 
             {/* MIDDLE PANEL - OUTPUT */}
-            <div ref={outputRef} className="w-full lg:flex-1 h-[70vh] lg:h-auto bg-black/50 relative flex flex-col p-4 lg:p-6 lg:overflow-hidden shrink-0 transition-all">
+            <div ref={outputRef} className="w-full lg:w-auto lg:flex-1 h-[70vh] lg:h-full bg-black/50 relative flex flex-col p-4 lg:p-6 lg:overflow-hidden shrink-0 lg:shrink lg:min-w-0 transition-all">
               <GlassCard className="flex-1 w-full h-full relative group overflow-hidden flex flex-col rounded-[24px] lg:rounded-[32px] border-white/10 shadow-2xl">
-                {isGenerating && (
+                {isGenerating && !viewingHistoryDuringGeneration && (
                   <div className="absolute inset-0 flex flex-col items-center justify-center gap-6 z-50 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
                     <div className="relative w-24 h-24">
                       <div className="absolute inset-0 border-4 border-mystic-accent/30 rounded-full animate-ping" />
@@ -1318,7 +1418,7 @@ const App: React.FC = () => {
             </div >
 
             {/* RIGHT PANEL - SIDEBAR HISTORY */}
-            < div className={`fixed inset-0 lg:static lg:inset-auto z-40 bg-black/95 lg:bg-black/10 lg:backdrop-blur-sm lg:border-l border-white/10 flex flex-col w-full lg:w-[280px] xl:w-[320px] transition-transform duration-300 shrink-0 lg:h-[calc(100vh-80px)] lg:overflow-hidden ${showMobileHistory ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'}`}>
+            < div className={`fixed inset-0 lg:static lg:inset-auto z-40 bg-black/95 lg:bg-black/10 lg:backdrop-blur-sm lg:border-l border-white/10 flex flex-col w-full lg:w-[280px] xl:w-[320px] transition-transform duration-300 shrink-0 lg:h-full lg:overflow-hidden ${showMobileHistory ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'}`}>
               <div className="p-4 lg:p-5 border-b border-white/5 flex justify-between items-center bg-black/20 lg:bg-transparent shrink-0">
                 <button onClick={() => navigateTo('HISTORY')} className="text-xs font-bold flex items-center gap-2 text-white uppercase tracking-widest cursor-pointer transition-all bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg px-4 py-2 shadow-sm hover:border-mystic-accent/50 hover:shadow-glow group">
                   <History size={14} className="text-mystic-accent group-hover:scale-110 transition-transform" />
@@ -1335,7 +1435,7 @@ const App: React.FC = () => {
                     <div className="col-span-2 h-40 flex flex-col items-center justify-center text-gray-600 gap-2"><History size={24} className="opacity-20" /><p className="text-xs">No artifacts yet.</p></div>
                   ) : (
                     history.slice(0, 10).map((item) => ( // Only show recent 10 in sidebar
-                      <div key={item.id} className="group relative flex flex-col bg-[#0f0c1d] border border-white/10 rounded-xl overflow-hidden hover:border-mystic-accent/50 transition-all cursor-pointer shadow-lg shrink-0" onClick={() => { setResults(item.images); setSelectedResultIndex(0); setMode(item.mode); setShowMobileHistory(false); if (window.innerWidth < 1024) setTimeout(() => outputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100); }}>
+                      <div key={item.id} className="group relative flex flex-col bg-[#0f0c1d] border border-white/10 rounded-xl overflow-hidden hover:border-mystic-accent/50 transition-all cursor-pointer shadow-lg shrink-0" onClick={() => { setResults(item.images); setSelectedResultIndex(0); setMode(item.mode); setShowMobileHistory(false); if (isGenerating) setViewingHistoryDuringGeneration(true); if (window.innerWidth < 1024) setTimeout(() => outputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100); }}>
                         <div className="w-full aspect-[3/4] bg-black relative">
                           <img src={item.thumbnail} alt="" className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity duration-500" />
                           <div className="absolute top-2 right-2 p-1 rounded bg-black/50 text-[8px] text-white font-bold pointer-events-none">{item.images.length}</div>
@@ -1365,7 +1465,7 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="w-full min-h-screen bg-black flex flex-col font-sans selection:bg-mystic-accent selection:text-white overflow-y-auto lg:overflow-hidden">
+    <div className="w-full h-screen bg-black flex flex-col font-sans selection:bg-mystic-accent selection:text-white overflow-y-auto lg:overflow-hidden">
 
       <div className="fixed top-[-20%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-indigo-900/10 blur-3xl pointer-events-none" />
       <div className="fixed bottom-[-20%] right-[-10%] w-[50vw] h-[50vw] rounded-full bg-fuchsia-900/10 blur-3xl pointer-events-none" />
@@ -1382,7 +1482,7 @@ const App: React.FC = () => {
 
       {/* Header */}
       <nav className="w-full h-16 lg:h-20 px-6 lg:px-8 flex justify-between items-center shrink-0 bg-black/20 backdrop-blur-xl border-b border-white/5 z-20 sticky top-0 lg:static">
-        <div className="relative flex items-center gap-3 cursor-pointer" onClick={() => navigateTo('STUDIO')}>
+        <div className="relative flex items-center gap-3 cursor-pointer" onClick={handleResetStudio}>
 
           <div>
             <img src="/textlogo.png" alt="WinDiStudio" className="h-16 object-contain" style={{ marginTop: '12px' }} />
@@ -1393,7 +1493,7 @@ const App: React.FC = () => {
           {session && userProfile ? (
             <div className="flex items-center gap-3 animate-in fade-in slide-in-from-right-4 duration-500">
               {/* Clickable Balance Pill */}
-              <div onClick={() => { setShowTopUpModal(true); setTopUpStep('INPUT'); window.history.pushState({ topUpOpen: true }, ''); }} className="glass-panel px-4 py-2 rounded-full flex items-center gap-2.5 border-white/10 hover:bg-white/10 transition-colors cursor-pointer shadow-glass-sm group">
+              <div onClick={() => setShowPricingModal(true)} className="glass-panel px-4 py-2 rounded-full flex items-center gap-2.5 border-white/10 hover:bg-white/10 transition-colors cursor-pointer shadow-glass-sm group">
                 <div className="p-1 rounded-full bg-yellow-500/20 group-hover:scale-110 transition-transform"><Wallet size={14} className="text-yellow-400" /></div>
                 <div className="flex flex-col leading-none"><span className="hidden lg:block text-[8px] text-gray-400 font-bold uppercase tracking-wider">Balance</span><span className="text-sm font-bold text-white group-hover:text-yellow-300 transition-colors">{userProfile.credits} xu</span></div>
               </div>
@@ -1421,6 +1521,31 @@ const App: React.FC = () => {
       {currentView === 'HISTORY' && renderHistoryPage()}
       {currentView === 'PAYMENT' && renderPaymentPage()}
       {currentView === 'PRIVACY' && <PrivacyPolicy onBack={() => navigateTo('STUDIO')} />}
+      {/* PRICING MODAL */}
+      {showPricingModal && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="relative w-full max-w-6xl max-h-[90vh] overflow-y-auto rounded-3xl bg-[#0f0c1d] border border-white/10 shadow-2xl custom-scrollbar">
+            {/* Sticky close button that follows scroll */}
+            <div className="sticky top-0 z-20 flex justify-end p-4 bg-gradient-to-b from-[#0f0c1d] via-[#0f0c1d]/90 to-transparent pointer-events-none">
+              <button
+                onClick={() => setShowPricingModal(false)}
+                className="p-2 rounded-full bg-black/50 text-white/50 hover:text-white hover:bg-white/20 transition-all pointer-events-auto"
+              >
+                <X size={24} />
+              </button>
+            </div>
+            <div className="-mt-16">
+              <Pricing
+                userProfile={userProfile}
+                bankConfig={BANK_CONFIG}
+                onTransactionCreated={(id) => setCurrentTransactionId(id)}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 6. BRANDING VIEW */}
       {currentView === 'BRANDING' && (
         <BrandingPage
           brandingLogo={brandingLogo}
@@ -1506,7 +1631,7 @@ const App: React.FC = () => {
                   </div>
 
                   {/* Promo Code Section */}
-                  <div className="bg-white/5 border border-white/10 rounded-xl p-1 flex gap-2">
+                  <div className="bg-white/5 border border-white/10 rounded-xl p-1 flex items-center gap-2">
                     <input
                       type="text"
                       placeholder="Enter Promo Code"
@@ -1531,21 +1656,32 @@ const App: React.FC = () => {
                         btn.innerText = '...';
                         btn.disabled = true;
 
-                        const { redeemPromoCode } = await import('./services/supabaseService');
-                        const result = await redeemPromoCode(code, userProfile.id);
+                        try {
+                          // Get device fingerprint
+                          const FingerprintJS = await import('@fingerprintjs/fingerprintjs');
+                          const fp = await FingerprintJS.load();
+                          const fpResult = await fp.get();
+                          const deviceId = fpResult.visitorId;
 
-                        if (result.success) {
-                          setToast({ message: result.message, type: 'success' });
-                          setUserProfile(prev => prev ? ({ ...prev, credits: result.new_balance }) : null);
-                          input.value = '';
-                        } else {
-                          setToast({ message: result.message, type: 'error' });
+                          const { redeemPromoCode } = await import('./services/supabaseService');
+                          const result = await redeemPromoCode(code, userProfile.id, deviceId);
+
+                          if (result.success) {
+                            setToast({ message: result.message, type: 'success' });
+                            setUserProfile(prev => prev ? ({ ...prev, credits: result.new_balance }) : null);
+                            input.value = '';
+                          } else {
+                            setToast({ message: result.message, type: 'error' });
+                          }
+                        } catch (err) {
+                          console.error('Redeem error:', err);
+                          setToast({ message: 'Có lỗi xảy ra, vui lòng thử lại', type: 'error' });
                         }
 
                         btn.innerText = originalText;
                         btn.disabled = false;
                       }}
-                      className="bg-mystic-accent hover:bg-mystic-accent/80 text-white text-xs font-bold px-4 rounded-lg transition-colors"
+                      className="bg-mystic-accent hover:bg-mystic-accent/80 text-white text-xs font-bold px-4 py-2 rounded-lg transition-colors"
                     >
                       REDEEM
                     </button>
@@ -1601,6 +1737,36 @@ const App: React.FC = () => {
               className="w-full py-4 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold transition-all"
             >
               I Understand
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ERROR MODAL */}
+      {errorModal && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-sm p-6">
+          <div className="w-full max-w-xs bg-[#1a1a1a] border border-purple-500/50 rounded-2xl p-6 flex flex-col items-center text-center space-y-4 shadow-[0_0_30px_rgba(168,85,247,0.3)] animate-in zoom-in duration-200">
+            <div className="w-12 h-12 rounded-full bg-purple-500/20 flex items-center justify-center">
+              <AlertCircle size={24} className="text-purple-400" />
+            </div>
+
+            <div>
+              <h3 className="text-lg font-bold text-white mb-1">
+                {errorModal.code === "CONTENT" ? "Nội Dung Không Phù Hợp" : errorModal.code === "500" ? "Lỗi Kết Nối" : "Lỗi Hệ Thống"}
+              </h3>
+              <p className="text-sm text-gray-400">
+                {errorModal.message}
+                {errorModal.code && errorModal.code !== "500" && errorModal.code !== "CONTENT" && (
+                  <span className="block mt-1 text-xs text-purple-400">(Error: {errorModal.code})</span>
+                )}
+              </p>
+            </div>
+
+            <button
+              onClick={() => setErrorModal(null)}
+              className="w-full py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-sm font-bold transition-all"
+            >
+              OK
             </button>
           </div>
         </div>
