@@ -40,27 +40,18 @@ const Pricing: React.FC<PricingProps> = ({ userProfile = null, bankConfig = DEFA
     const handleTopUpClick = async (amount: number) => {
         setSelectedAmount(amount);
 
-        // Create PENDING transaction immediately
+        // Create PENDING transaction with base coins only
+        // Backend webhook will calculate and apply the correct bonus
         if (userProfile) {
-            let bonusMultiplier = 1;
-            if (amount >= 3000000) {
-                bonusMultiplier = 2; // +100%
-            } else if (amount >= 1000000) {
-                bonusMultiplier = 1.5; // +50%
-            } else if (amount >= 50000) {
-                bonusMultiplier = 1.2; // +20%
-            }
-
             const baseCoins = Math.floor(amount / 1000);
-            const calculatedCoins = Math.floor(baseCoins * bonusMultiplier);
 
             const tx = await createTransaction(
                 userProfile.id,
                 amount,
-                calculatedCoins,
+                baseCoins, // Base coins only, backend will add bonus
                 `Payment: WINDI ${userProfile.payment_code}`,
                 'PENDING',
-                (bonusMultiplier - 1) * 100 // Pass bonus percentage (e.g., 0.2 * 100 = 20)
+                0 // No bonus percentage needed, backend handles it
             );
 
             if (tx && onTransactionCreated) {
@@ -231,9 +222,8 @@ const Pricing: React.FC<PricingProps> = ({ userProfile = null, bankConfig = DEFA
                             </div>
                             <div className="w-full md:w-auto">
                                 <label className="block text-sm text-transparent mb-2 hidden md:block select-none">Action</label>
-                                <Button
-                                    variant="primary"
-                                    className="w-full md:w-auto px-8 py-3.5"
+                                <button
+                                    className="w-full md:w-auto inline-flex items-center justify-center h-11 px-6 rounded-full font-bold text-white bg-purple-800/60 border border-purple-500/50 hover:border-purple-400 hover:shadow-[0_0_40px_rgba(168,85,247,0.8)] active:scale-95 transition-all duration-300 shadow-[inset_0_1px_0_0_rgba(168,85,247,0.4),0_10px_20px_-10px_rgba(168,85,247,0.3)]"
                                     onClick={() => {
                                         const amount = parseInt(customInput.replace(/\./g, ''));
                                         if (amount >= 50000) {
@@ -244,7 +234,7 @@ const Pricing: React.FC<PricingProps> = ({ userProfile = null, bankConfig = DEFA
                                     }}
                                 >
                                     Nạp ngay
-                                </Button>
+                                </button>
                             </div>
                         </div>
                         <p className="text-center text-xs text-gray-500 mt-3">*Hệ thống tự động tính toán Bonus dựa trên số tiền nạp.</p>

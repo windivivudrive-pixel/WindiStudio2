@@ -421,10 +421,15 @@ Deno.serve(async (req) => {
 
                 // Check for safety block
                 const reason = candidate.finishReason as any;
-                if (reason === "SAFETY" || reason === "PROHIBITED_CONTENT" || reason === "BLOCK_REASON_SAFETY" || reason === "IMAGE_OTHER") {
+                if (reason === "SAFETY" || reason === "PROHIBITED_CONTENT" || reason === "BLOCK_REASON_SAFETY" || reason === "IMAGE_OTHER" || reason === "IMAGE_SAFETY") {
+                    // Return 200 with error object so frontend can properly parse it
                     return new Response(
-                        JSON.stringify({ error: "SAFETY_VIOLATION", message: "AI refused to generate this image. It may contain prohibited content or safety violations." }),
-                        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+                        JSON.stringify({
+                            images: [],
+                            error: "CONTENT_BLOCKED",
+                            message: `IMAGE_CONTENT_BLOCKED: Reason: ${reason}`
+                        }),
+                        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
                     );
                 }
             }

@@ -29,6 +29,18 @@ const showcases = [
   },
   {
     id: 3,
+    name: "High Fashion",
+    // Dual Input: Jeans + Top
+    inputs: [
+      // Denim Jeans
+      "https://zpjphixcttehkkgxlmsn.supabase.co/storage/v1/object/public/windi-bucket/Screenshot%202025-12-08%20at%208.55.57%20AM.png" // White Tee
+    ],
+    output: "https://zpjphixcttehkkgxlmsn.supabase.co/storage/v1/object/public/windi-bucket/Screenshot%202025-12-08%20at%209.45.56%20AM3.png", // Model Denim
+    color: "from-blue-800 to-cyan-700",
+    prompt: "Low angle shot, low key light, hard light, Ảnh Chân Dung nửa người"
+  },
+  {
+    id: 4,
     name: "Trang Sức",
     inputs: ["https://zpjphixcttehkkgxlmsn.supabase.co/storage/v1/object/public/windi-bucket/Screenshot%202025-11-23%20at%2010.22.18%20PM.png",
       "https://zpjphixcttehkkgxlmsn.supabase.co/storage/v1/object/public/windi-bucket/gvdrw89488.5a0-gcdrwa89489.5a0-gbdrwa89490.5a0-gndrwa89491.5a0-bo-trang-suc-kim-cuong-pnj-vang-trang-14k.png"], // Dress
@@ -36,18 +48,19 @@ const showcases = [
     color: "from-purple-500 to-pink-500",
     prompt: "ảnh cận mặt một cô gái trẻ trang điểm sắt nét, với phong cách như một quý cô sang trọng kiêu kỳ"
   },
-  {
-    id: 4,
-    name: "High Fashion",
-    // Dual Input: Jeans + Top
-    inputs: [
-      "https://zpjphixcttehkkgxlmsn.supabase.co/storage/v1/object/public/windi-bucket/Screenshot%202025-12-06%20at%2010.29.27%20PM.png", // Denim Jeans
-      "https://zpjphixcttehkkgxlmsn.supabase.co/storage/v1/object/public/windi-bucket/Screenshot%202025-12-06%20at%2010.37.35%20PM.png" // White Tee
-    ],
-    output: "https://img.windistudio.app/4f018bf9-b2c6-4075-8a21-9018efcb003f/1765035671361_0.png", // Model Denim
-    color: "from-blue-800 to-cyan-700",
-    prompt: "Đửng trong một sảnh nhà hàng sang trọng, tay cầm một ly rượu vang trắng"
-  },
+
+  // {
+  //   id: 4,
+  //   name: "High Fashion",
+  //   // Dual Input: Jeans + Top
+  //   inputs: [
+  //     "https://zpjphixcttehkkgxlmsn.supabase.co/storage/v1/object/public/windi-bucket/Screenshot%202025-12-06%20at%2010.29.27%20PM.png", // Denim Jeans
+  //     "https://zpjphixcttehkkgxlmsn.supabase.co/storage/v1/object/public/windi-bucket/Screenshot%202025-12-06%20at%2010.37.35%20PM.png" // White Tee
+  //   ],
+  //   output: "https://img.windistudio.app/4f018bf9-b2c6-4075-8a21-9018efcb003f/1765035671361_0.png", // Model Denim
+  //   color: "from-blue-800 to-cyan-700",
+  //   prompt: "Đửng trong một sảnh nhà hàng sang trọng, tay cầm một ly rượu vang trắng"
+  // },
   {
     id: 5,
     name: "Đa dạng Style",
@@ -178,16 +191,17 @@ const Hero: React.FC<HeroProps> = ({ onEnterStudio }) => {
 
             <div className="flex flex-col sm:flex-row gap-4 pt-4">
 
-              <Button
-                variant="liquid"
-                className="h-14 px-8 mt-auto font-bold text-white border-purple-500/50 bg-purple-900/40 hover:bg-purple-600/80 hover:border-purple-400 hover:shadow-[0_0_35px_rgba(168,85,247,0.6)] transition-all duration-300 shadow-[inset_0_1px_0_0_rgba(168,85,247,0.4),0_10px_20px_-10px_rgba(168,85,247,0.2)]"
+              <button
+                className="inline-flex items-center justify-center h-11 px-6 rounded-full font-bold text-white bg-purple-800/60 border border-purple-500/50 hover:border-purple-400 hover:shadow-[0_0_40px_rgba(168,85,247,0.8)] active:scale-95 transition-all duration-300 shadow-[inset_0_1px_0_0_rgba(168,85,247,0.4),0_10px_20px_-10px_rgba(168,85,247,0.3)]"
                 onClick={onEnterStudio}
               >
                 Dùng Thử Miễn Phí
-              </Button>
+              </button>
+              {/* Hidden until video demo is ready
               <Button variant="glass" className="h-14 px-8 text-base group" onClick={onEnterStudio}>
                 <Play className="w-4 h-4 mr-2 fill-white group-hover:scale-110 transition-transform" /> Xem Demo
               </Button>
+              */}
             </div>
 
             <div className="pt-8 flex items-center gap-6 text-sm text-gray-500">

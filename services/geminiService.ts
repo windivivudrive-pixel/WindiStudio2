@@ -145,15 +145,32 @@ export const generateStudioImage = async (
           // Check if it's a structured error from our backend
           if (error.context && error.context.response) {
             try {
-              const errorBody = await error.context.response.json();
+              // Clone response before reading to avoid "body already consumed" error
+              const responseClone = error.context.response.clone();
+              const errorBody = await responseClone.json();
+              console.log("Error body from edge function:", errorBody);
               if (errorBody && errorBody.message) {
                 throw new Error(errorBody.message);
               }
-            } catch (e) {
-              // ignore json parse error
+              if (errorBody && errorBody.error) {
+                throw new Error(errorBody.error);
+              }
+            } catch (e: any) {
+              // If it's our custom error, rethrow
+              if (e.message && (e.message.includes("IMAGE_") || e.message.includes("SAFETY") || e.message.includes("BLOCKED"))) {
+                throw e;
+              }
+              // Otherwise ignore json parse error
+              console.log("Could not parse error response:", e);
             }
           }
           throw new Error(error.message || "Failed to generate image");
+        }
+
+        // Check if data contains an error (edge function returned 200 but with error in body)
+        if (data && data.error) {
+          console.log("Error in response data:", data);
+          throw new Error(data.message || data.error);
         }
 
         if (data && data.images && data.images.length > 0) {
@@ -171,6 +188,10 @@ export const generateStudioImage = async (
         // Rethrow safety errors immediately to stop the process and alert the user
         const errorMsg = err.message || "";
         if (errorMsg.includes("SAFETY_VIOLATION") ||
+          errorMsg.includes("IMAGE_CONTENT_BLOCKED") ||
+          errorMsg.includes("CONTENT_BLOCKED") ||
+          errorMsg.includes("IMAGE_OTHER") ||
+          errorMsg.includes("IMAGE_SAFETY") ||
           errorMsg.includes("ACCOUNT_BANNED") ||
           errorMsg.includes("PROHIBITED") ||
           errorMsg.includes("blocked") ||

@@ -97,18 +97,32 @@ Deno.serve(async (req) => {
             );
         }
 
-        // 3. Calculate Credits (1000 VND = 1 Xu)
-        const creditsToAdd = Math.floor(transferAmount / 1000);
+        // --- BONUS LOGIC ---
+        const getBonusMultiplier = (amount: number): number => {
+            if (amount >= 3000000) return 2;     // +100%
+            if (amount >= 1000000) return 1.5;   // +50%
+            if (amount >= 500000) return 1.2;    // +20%
+            return 1; // No bonus
+        };
 
-        if (creditsToAdd <= 0) {
+        // 3. Calculate Credits with Bonus
+        const baseCoins = Math.floor(transferAmount / 1000);
+        const bonusMultiplier = getBonusMultiplier(transferAmount);
+        const totalCoins = Math.floor(baseCoins * bonusMultiplier);
+        const bonusCoins = totalCoins - baseCoins;
+        const bonusPercent = Math.round((bonusMultiplier - 1) * 100);
+
+        console.log(`Base: ${baseCoins}, Bonus: ${bonusCoins} (+${bonusPercent}%), Total: ${totalCoins}`);
+
+        if (totalCoins <= 0) {
             return new Response(
                 JSON.stringify({ message: "Amount too small to convert." }),
                 { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
             );
         }
 
-        // 4. Update User Credits
-        const newBalance = (userProfile.credits || 0) + creditsToAdd;
+        // 4. Update User Credits (with bonus included)
+        const newBalance = (userProfile.credits || 0) + totalCoins;
 
         const { error: updateError } = await supabaseClient
             .from('profiles')
@@ -132,6 +146,7 @@ Deno.serve(async (req) => {
             .single();
 
         let txError;
+        const transactionContent = content + (bonusCoins > 0 ? ` (Bonus +${bonusPercent}%)` : '');
 
         if (pendingTx) {
             console.log("Found pending transaction, updating:", pendingTx.id);
@@ -139,9 +154,9 @@ Deno.serve(async (req) => {
                 .from('transactions')
                 .update({
                     status: 'SUCCESS',
-                    content: content,
+                    content: transactionContent,
                     gateway_id: String(body.id),
-                    credits_added: creditsToAdd // Ensure credits are recorded
+                    credits_added: totalCoins // Now includes bonus
                 })
                 .eq('id', pendingTx.id);
             txError = error;
@@ -152,9 +167,9 @@ Deno.serve(async (req) => {
                 .insert({
                     user_id: userProfile.id,
                     amount_vnd: transferAmount,
-                    credits_added: creditsToAdd,
+                    credits_added: totalCoins, // Now includes bonus
                     type: 'DEPOSIT',
-                    content: content,
+                    content: transactionContent,
                     status: 'SUCCESS',
                     gateway_id: String(body.id),
                     created_at: new Date().toISOString()
@@ -166,10 +181,10 @@ Deno.serve(async (req) => {
             console.error("Failed to record transaction:", txError);
         }
 
-        console.log(`Successfully added ${creditsToAdd} credits to user ${userProfile.email}`);
+        console.log(`Successfully added ${totalCoins} credits (base: ${baseCoins}, bonus: ${bonusCoins}) to user ${userProfile.email}`);
 
         return new Response(
-            JSON.stringify({ success: true, message: `Added ${creditsToAdd} credits.` }),
+            JSON.stringify({ success: true, message: `Added ${totalCoins} credits (including ${bonusCoins} bonus).` }),
             { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
 

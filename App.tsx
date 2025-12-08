@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Pricing from './components/Pricing';
-import { Sparkles, Shirt, Camera, Wand2, Download, AlertCircle, History, Trash2, ChevronDown, ChevronUp, User, Image as ImageIcon, Bone, Layers, ToggleLeft, ToggleRight, XCircle, Archive, Shuffle, Copy, ScanFace, RefreshCw, LogIn, Coins, X, CreditCard, Wallet, LogOut, Zap, Cloud, ArrowLeft, Calendar, FileText, CheckCircle, XOctagon, QrCode, Smartphone, Check, Maximize2, Plus, Stamp, Heart } from 'lucide-react';
+import { Sparkles, Shirt, Camera, Wand2, Download, AlertCircle, History, Trash2, ChevronDown, ChevronUp, User, Image as ImageIcon, Bone, Layers, ToggleLeft, ToggleRight, XCircle, Archive, Shuffle, Copy, ScanFace, RefreshCw, LogIn, Coins, X, CreditCard, Wallet, LogOut, Zap, Cloud, ArrowLeft, Calendar, FileText, CheckCircle, XOctagon, QrCode, Smartphone, Check, Maximize2, Plus, Stamp, Heart, Star } from 'lucide-react';
 import JSZip from 'jszip';
 import { AppMode, AspectRatio, HistoryItem, UserProfile, Transaction } from './types';
 import { ImageUploader } from './components/ImageUploader';
@@ -62,6 +62,7 @@ const App: React.FC = () => {
   const [results, setResults] = useState<string[]>([]);
   const [selectedResultIndex, setSelectedResultIndex] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [errorModal, setErrorModal] = useState<{ message: string; code?: string } | null>(null);
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [showMobileHistory, setShowMobileHistory] = useState(false);
@@ -412,6 +413,36 @@ const App: React.FC = () => {
     return getCostPerImage() * numberOfImages;
   };
 
+  // Helper function to show error modal with appropriate message
+  const showErrorModal = (errorMessage: string) => {
+    // Extract error code if present (e.g., "500", "503", "404")
+    const codeMatch = errorMessage.match(/\b(4\d{2}|5\d{2})\b/);
+    const errorCode = codeMatch ? codeMatch[1] : undefined;
+
+    // Check for image safety/content related errors
+    if (errorMessage.includes("IMAGE_OTHER") ||
+      errorMessage.includes("IMAGE_SAFETY") ||
+      errorMessage.includes("IMAGE_CONTENT_BLOCKED") ||
+      errorMessage.includes("SAFETY_VIOLATION") ||
+      errorMessage.includes("PROHIBITED") ||
+      errorMessage.includes("blocked") ||
+      errorMessage.toLowerCase().includes("safety") ||
+      errorMessage.toLowerCase().includes("refused") ||
+      errorMessage.toLowerCase().includes("content")) {
+      setErrorModal({
+        message: "Hình Ảnh Quá Nhạy Cảm hoặc Không Phù Hợp, vui lòng thử lại ảnh khác hoặc thêm mô tả chi tiết.",
+        code: "CONTENT"
+      });
+    } else if (errorMessage.includes("500") || errorMessage.toLowerCase().includes("fetch") || errorMessage.toLowerCase().includes("network") || errorMessage.toLowerCase().includes("timeout")) {
+      setErrorModal({ message: "Kết nối yếu, vui lòng thử lại", code: "500" });
+    } else {
+      setErrorModal({
+        message: "Hệ Thống Bị Gián Đoạn, Xin Vui Lòng Thử Lại Sau",
+        code: errorCode
+      });
+    }
+  };
+
   const handleGenerate = async () => {
     setError(null);
 
@@ -475,15 +506,25 @@ const App: React.FC = () => {
         success = true;
       } catch (err: any) {
         const errorMsg = err.message || "";
-        if (errorMsg.includes("SAFETY_VIOLATION") ||
-          errorMsg.includes("ACCOUNT_BANNED") ||
-          errorMsg.includes("PROHIBITED") ||
-          errorMsg.includes("blocked") ||
-          errorMsg.includes("content")) {
+        // Only use safetyWarning modal for account bans (which have serious implications)
+        if (errorMsg.includes("ACCOUNT_BANNED")) {
           setSafetyWarning(errorMsg);
           break;
         }
-        if (attempt === maxRetries) { setError(err.message || "Something went wrong."); break; }
+        // Use showErrorModal for content/safety related errors with user-friendly message
+        if (errorMsg.includes("SAFETY_VIOLATION") ||
+          errorMsg.includes("IMAGE_CONTENT_BLOCKED") ||
+          errorMsg.includes("CONTENT_BLOCKED") ||
+          errorMsg.includes("IMAGE_OTHER") ||
+          errorMsg.includes("IMAGE_SAFETY") ||
+          errorMsg.includes("PROHIBITED") ||
+          errorMsg.includes("blocked") ||
+          errorMsg.includes("content") ||
+          errorMsg.includes("refused")) {
+          showErrorModal(errorMsg);
+          break;
+        }
+        if (attempt === maxRetries) { showErrorModal(err.message || "Something went wrong."); break; }
 
         // Only retry on 500 errors or network errors
         const isRetryable = err.message?.includes("500") ||
@@ -493,7 +534,7 @@ const App: React.FC = () => {
           err.message?.includes("connection");
 
         if (!isRetryable) {
-          setError(err.message || "Generation failed.");
+          showErrorModal(err.message || "Generation failed.");
           break;
         }
 
@@ -513,6 +554,9 @@ const App: React.FC = () => {
     }
 
     if (success && generatedBatch.length > 0) {
+      // Calculate actual cost based on successfully generated images, not requested amount
+      const actualCost = getCostPerImage() * generatedBatch.length;
+
       const newItem: HistoryItem = {
         id: Date.now().toString(),
         thumbnail: generatedBatch[0],
@@ -521,11 +565,11 @@ const App: React.FC = () => {
         timestamp: Date.now(),
         mode,
         modelName: selectedModel,
-        cost: cost
+        cost: actualCost
       };
 
       setHistory(prev => [newItem, ...prev]);
-      const newBalance = userProfile.credits - cost;
+      const newBalance = userProfile.credits - actualCost;
       setUserProfile({ ...userProfile, credits: newBalance });
       setIsSyncing(true);
 
@@ -809,54 +853,18 @@ const App: React.FC = () => {
         (payload) => {
           console.log('Transaction updated:', payload);
           if (payload.new.status === 'SUCCESS') {
-            const amount = payload.new.amount_vnd;
-            let bonusMultiplier = 1;
-            if (amount >= 3000000) bonusMultiplier = 2;
-            else if (amount >= 1000000) bonusMultiplier = 1.5;
-            else if (amount >= 500000) bonusMultiplier = 1.2;
+            // Backend webhook now handles all bonus calculation and credit updates
+            // Just show success message with the credits_added from the payload
+            const creditsAdded = payload.new.credits_added;
 
-            let bonusMessage = '';
-
-            // If there is a bonus, create a separate transaction for it
-            if (bonusMultiplier > 1) {
-              const baseCoins = Math.floor(amount / 1000);
-              // Robust calculation to avoid floating point errors (e.g. 50 * 0.2 = 9.999 -> 9)
-              const totalCoins = Math.floor(baseCoins * bonusMultiplier);
-              const bonusCoins = totalCoins - baseCoins;
-              const bonusPercent = Math.round((bonusMultiplier - 1) * 100);
-
-              // 1. Create bonus transaction record
-              createTransaction(
-                userProfile.id,
-                0, // No cost
-                bonusCoins,
-                `Bonus Reward (+${bonusPercent}%)`,
-                'SUCCESS'
-              ).then(() => {
-                console.log(`Created bonus transaction: +${bonusCoins} coins`);
-              });
-
-              // 2. Update User Credits in DB (Add bonus)
-              // We must fetch the latest profile first to get the balance updated by the webhook
-              getProfile(userProfile.id).then(async (latestProfile) => {
-                if (latestProfile) {
-                  const newBalance = latestProfile.credits + bonusCoins;
-                  await updateUserCredits(userProfile.id, newBalance);
-                  setUserProfile({ ...latestProfile, credits: newBalance });
-                }
-              });
-
-              bonusMessage = ` (+${bonusCoins} bonus)`;
-            }
-
-            setToast({ message: `Payment successful! +${payload.new.credits_added} xu${bonusMessage}`, type: 'success' });
+            setToast({ message: `Payment successful! +${creditsAdded} xu`, type: 'success' });
             setShowTopUpModal(false);
             setShowPricingModal(false);
             setTopUpStep('INPUT');
             setTopUpAmount('');
             setCurrentTransactionId(null);
 
-            // Refresh profile
+            // Refresh profile to get updated balance
             if (userProfile) {
               getProfile(userProfile.id).then(p => {
                 if (p) setUserProfile(p);
@@ -1208,10 +1216,16 @@ const App: React.FC = () => {
 
                 <div className="grid grid-cols-2 gap-2 mt-4">
                   <div className="glass-panel p-2 rounded-[20px] flex flex-col gap-2">
-                    <div className="flex items-center gap-1.5 text-[9px] font-bold text-gray-500 uppercase ml-1"><Zap size={10} className="text-yellow-400" />Processing Model</div>
+                    <div className="flex items-center gap-1.5 text-[9px] font-bold text-gray-500 uppercase ml-1"><Zap size={10} className="text-purple-400" />Processing Model</div>
                     <div className="flex bg-black/20 rounded-xl p-1 gap-1">
-                      <button onClick={() => { setSelectedModel('gemini-2.5-flash-image'); setAccessoryImages([]); }} className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold transition-all ${selectedModel === 'gemini-2.5-flash-image' ? 'bg-white text-black shadow-sm' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}>Air</button>
-                      <button onClick={() => setSelectedModel('gemini-3-pro-image-preview')} className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold transition-all ${selectedModel === 'gemini-3-pro-image-preview' ? 'bg-indigo-600 text-white shadow-glow' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}>Pro</button>
+                      <button onClick={() => { setSelectedModel('gemini-2.5-flash-image'); setAccessoryImages([]); }} className={`relative flex-1 py-1.5 rounded-lg text-[10px] font-bold transition-all ${selectedModel === 'gemini-2.5-flash-image' ? 'bg-white text-black shadow-sm' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}>
+                        {mode === AppMode.CREATIVE_POSE && <Star size={10} className="absolute -top-1 -left-1 text-yellow-400 fill-yellow-400 rotate-[45deg]" />}
+                        Air
+                      </button>
+                      <button onClick={() => setSelectedModel('gemini-3-pro-image-preview')} className={`relative flex-1 py-1.5 rounded-lg text-[10px] font-bold transition-all ${selectedModel === 'gemini-3-pro-image-preview' ? 'bg-indigo-600 text-white shadow-glow' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}>
+                        {(mode === AppMode.VIRTUAL_TRY_ON || mode === AppMode.CREATE_MODEL) && <Star size={10} className="absolute -top-1 -right-1 text-yellow-400 fill-yellow-400 rotate-[-45deg]" />}
+                        Pro
+                      </button>
                     </div>
                   </div>
                   <div className="glass-panel p-2 rounded-[20px] flex flex-col gap-2">
@@ -1653,6 +1667,36 @@ const App: React.FC = () => {
               className="w-full py-4 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold transition-all"
             >
               I Understand
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ERROR MODAL */}
+      {errorModal && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-sm p-6">
+          <div className="w-full max-w-xs bg-[#1a1a1a] border border-purple-500/50 rounded-2xl p-6 flex flex-col items-center text-center space-y-4 shadow-[0_0_30px_rgba(168,85,247,0.3)] animate-in zoom-in duration-200">
+            <div className="w-12 h-12 rounded-full bg-purple-500/20 flex items-center justify-center">
+              <AlertCircle size={24} className="text-purple-400" />
+            </div>
+
+            <div>
+              <h3 className="text-lg font-bold text-white mb-1">
+                {errorModal.code === "CONTENT" ? "Nội Dung Không Phù Hợp" : errorModal.code === "500" ? "Lỗi Kết Nối" : "Lỗi Hệ Thống"}
+              </h3>
+              <p className="text-sm text-gray-400">
+                {errorModal.message}
+                {errorModal.code && errorModal.code !== "500" && errorModal.code !== "CONTENT" && (
+                  <span className="block mt-1 text-xs text-purple-400">(Error: {errorModal.code})</span>
+                )}
+              </p>
+            </div>
+
+            <button
+              onClick={() => setErrorModal(null)}
+              className="w-full py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-sm font-bold transition-all"
+            >
+              OK
             </button>
           </div>
         </div>
