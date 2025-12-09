@@ -31,7 +31,7 @@ const Process: React.FC = () => {
       id: 2,
       icon: <User className="w-6 h-6 text-white" />,
       title: "Tạo mẫu cùng outfit của bạn",
-      description: "Người mẫu chuyên nghiệp bằng AI, đa dạng sắc tộc, vóc dáng và có thể thay đổi background tùy ý.",
+      description: "Người mẫu chuyên nghiệp bằng AI, đa dạng sắc tộc và có thể thay đổi background phù hợp với outfit của bạn.",
       images: stepImages.step2
     },
     {
