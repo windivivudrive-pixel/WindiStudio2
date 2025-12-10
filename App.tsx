@@ -1662,14 +1662,25 @@ const App: React.FC = () => {
                         btn.disabled = true;
 
                         try {
-                          // Get device fingerprint
+                          // Layer 1: Get device fingerprint
                           const FingerprintJS = await import('@fingerprintjs/fingerprintjs');
                           const fp = await FingerprintJS.load();
                           const fpResult = await fp.get();
                           const deviceId = fpResult.visitorId;
 
+                          // Layer 2: Get or create localStorage persistent token
+                          const LOCAL_TOKEN_KEY = 'windi_device_token';
+                          let localToken = localStorage.getItem(LOCAL_TOKEN_KEY);
+                          if (!localToken) {
+                            // Generate a unique token: timestamp + random string
+                            localToken = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}${Math.random().toString(36).substring(2, 15)}`;
+                            localStorage.setItem(LOCAL_TOKEN_KEY, localToken);
+                          }
+
+                          // Layer 3: IP address will be extracted on backend
+
                           const { redeemPromoCode } = await import('./services/supabaseService');
-                          const result = await redeemPromoCode(code, userProfile.id, deviceId);
+                          const result = await redeemPromoCode(code, userProfile.id, deviceId, localToken);
 
                           if (result.success) {
                             setToast({ message: result.message, type: 'success' });
