@@ -126,6 +126,7 @@ const App: React.FC = () => {
   } = useBranding(userProfile, setUserProfile);
   // Refs
   const outputRef = useRef<HTMLDivElement>(null);
+  const leftPanelRef = useRef<HTMLDivElement>(null);
 
   const isAdmin = userProfile?.role === 'admin' || userProfile?.email === 'quochungdn151@gmail.com';
   console.log("App.tsx - UserProfile:", userProfile);
@@ -630,11 +631,11 @@ const App: React.FC = () => {
       setSecondaryImage(null);
       setNumberOfImages(1);
 
-      // Scroll to top on mobile after state updates
+      // Scroll to left panel (top) on mobile - same approach as generate scroll
       if (window.innerWidth < 1024) {
         setTimeout(() => {
-          window.scrollTo({ top: 0, behavior: 'smooth' });
-        }, 100);
+          leftPanelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 150);
       }
     }
   };
@@ -1155,7 +1156,8 @@ const App: React.FC = () => {
 
     return (
       <div className="flex-1 flex flex-col w-full min-h-0">
-        <StudioTabs activeTab={studioTab} onTabChange={(tab) => navigateTo('STUDIO', false, tab)} />
+        {/* TABS HIDDEN FOR NOW - Uncomment to re-enable */}
+        {/* <StudioTabs activeTab={studioTab} onTabChange={(tab) => navigateTo('STUDIO', false, tab)} /> */}
 
         {studioTab === 'library' ? (
           <div className="flex-1 p-6 lg:p-10 overflow-hidden">
@@ -1173,7 +1175,7 @@ const App: React.FC = () => {
         ) : (
           <div className="flex-1 flex flex-col lg:flex-row relative overflow-auto lg:overflow-hidden">
             {/* LEFT PANEL */}
-            <div className="w-full lg:w-[380px] xl:w-[420px] flex flex-col border-b lg:border-b-0 lg:border-r border-white/5 bg-black/10 backdrop-blur-sm z-10 h-auto lg:h-full shrink-0">
+            <div ref={leftPanelRef} className="w-full lg:w-[380px] xl:w-[420px] flex flex-col border-b lg:border-b-0 lg:border-r border-white/5 bg-black/10 backdrop-blur-sm z-10 h-auto lg:h-full shrink-0">
               <div className="p-4 lg:p-5 flex-1 overflow-y-auto custom-scrollbar">
 
                 {/* Mode Selection - Only show in Studio tab */}
