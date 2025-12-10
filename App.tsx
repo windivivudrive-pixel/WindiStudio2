@@ -126,6 +126,7 @@ const App: React.FC = () => {
   } = useBranding(userProfile, setUserProfile);
   // Refs
   const outputRef = useRef<HTMLDivElement>(null);
+  const leftPanelRef = useRef<HTMLDivElement>(null);
 
   const isAdmin = userProfile?.role === 'admin' || userProfile?.email === 'quochungdn151@gmail.com';
   console.log("App.tsx - UserProfile:", userProfile);
@@ -630,8 +631,11 @@ const App: React.FC = () => {
       setSecondaryImage(null);
       setNumberOfImages(1);
 
+      // Scroll to left panel (top) on mobile - same approach as generate scroll
       if (window.innerWidth < 1024) {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        setTimeout(() => {
+          leftPanelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 150);
       }
     }
   };
@@ -1152,7 +1156,8 @@ const App: React.FC = () => {
 
     return (
       <div className="flex-1 flex flex-col w-full min-h-0">
-        <StudioTabs activeTab={studioTab} onTabChange={(tab) => navigateTo('STUDIO', false, tab)} />
+        {/* TABS HIDDEN FOR NOW - Uncomment to re-enable */}
+        {/* <StudioTabs activeTab={studioTab} onTabChange={(tab) => navigateTo('STUDIO', false, tab)} /> */}
 
         {studioTab === 'library' ? (
           <div className="flex-1 p-6 lg:p-10 overflow-hidden">
@@ -1170,7 +1175,7 @@ const App: React.FC = () => {
         ) : (
           <div className="flex-1 flex flex-col lg:flex-row relative overflow-auto lg:overflow-hidden">
             {/* LEFT PANEL */}
-            <div className="w-full lg:w-[380px] xl:w-[420px] flex flex-col border-b lg:border-b-0 lg:border-r border-white/5 bg-black/10 backdrop-blur-sm z-10 h-auto lg:h-full shrink-0">
+            <div ref={leftPanelRef} className="w-full lg:w-[380px] xl:w-[420px] flex flex-col border-b lg:border-b-0 lg:border-r border-white/5 bg-black/10 backdrop-blur-sm z-10 h-auto lg:h-full shrink-0">
               <div className="p-4 lg:p-5 flex-1 overflow-y-auto custom-scrollbar">
 
                 {/* Mode Selection - Only show in Studio tab */}
@@ -1659,14 +1664,25 @@ const App: React.FC = () => {
                         btn.disabled = true;
 
                         try {
-                          // Get device fingerprint
+                          // Layer 1: Get device fingerprint
                           const FingerprintJS = await import('@fingerprintjs/fingerprintjs');
                           const fp = await FingerprintJS.load();
                           const fpResult = await fp.get();
                           const deviceId = fpResult.visitorId;
 
+                          // Layer 2: Get or create localStorage persistent token
+                          const LOCAL_TOKEN_KEY = 'windi_device_token';
+                          let localToken = localStorage.getItem(LOCAL_TOKEN_KEY);
+                          if (!localToken) {
+                            // Generate a unique token: timestamp + random string
+                            localToken = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}${Math.random().toString(36).substring(2, 15)}`;
+                            localStorage.setItem(LOCAL_TOKEN_KEY, localToken);
+                          }
+
+                          // Layer 3: IP address will be extracted on backend
+
                           const { redeemPromoCode } = await import('./services/supabaseService');
-                          const result = await redeemPromoCode(code, userProfile.id, deviceId);
+                          const result = await redeemPromoCode(code, userProfile.id, deviceId, localToken);
 
                           if (result.success) {
                             setToast({ message: result.message, type: 'success' });

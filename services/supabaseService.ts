@@ -119,8 +119,9 @@ export const updateUserCredits = async (userId: string, newBalance: number) => {
   if (error) console.error("Failed to update credits", error);
 };
 
-export const redeemPromoCode = async (code: string, userId: string, deviceId?: string) => {
-  console.log(`Attempting to redeem code: ${code} for user: ${userId} with device: ${deviceId}`);
+export const redeemPromoCode = async (code: string, userId: string, deviceId?: string, localToken?: string) => {
+  console.log(`Attempting to redeem code: ${code} for user: ${userId}`);
+  console.log(`Device ID: ${deviceId?.substring(0, 8)}..., Local Token: ${localToken?.substring(0, 8)}...`);
 
   if (userId === 'dev-user') {
     // Mock redemption for dev user
@@ -128,21 +129,30 @@ export const redeemPromoCode = async (code: string, userId: string, deviceId?: s
     return { success: false, message: 'Invalid Mock Code' };
   }
 
-  const { data, error } = await supabase.rpc('redeem_promo_code', {
-    code_input: code,
-    user_id_input: userId,
-    device_id_input: deviceId || null
-  });
+  try {
+    // Call the new Edge Function that handles IP extraction
+    const { data, error } = await supabase.functions.invoke('redeem-code', {
+      body: {
+        code,
+        userId,
+        deviceId: deviceId || null,
+        localToken: localToken || null
+      }
+    });
 
-  console.log("RPC Response - Data:", data);
-  console.log("RPC Response - Error:", error);
+    console.log("Redeem Response - Data:", data);
+    console.log("Redeem Response - Error:", error);
 
-  if (error) {
-    console.error("Promo code error details:", error);
-    return { success: false, message: `System Error: ${error.message}` };
+    if (error) {
+      console.error("Promo code error details:", error);
+      return { success: false, message: `System Error: ${error.message}` };
+    }
+
+    return data; // Returns JSON object from Edge Function
+  } catch (err) {
+    console.error("Redeem error:", err);
+    return { success: false, message: 'Có lỗi xảy ra, vui lòng thử lại' };
   }
-
-  return data; // Returns JSON object from SQL function
 };
 
 // --- TRANSACTIONS ---
