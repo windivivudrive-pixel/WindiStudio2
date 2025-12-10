@@ -3,7 +3,8 @@ import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import Process from './components/Process';
 import Comparison from './components/Comparison';
-import Pricing from './components/Pricing';
+// import Pricing from './components/Pricing'; // HIDDEN - Re-enable later
+import HolidayCampaign from './components/HolidayCampaign';
 import Footer from './components/Footer';
 
 interface LandingPageProps {
@@ -24,7 +25,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnterStudio }) => {
           <Hero onEnterStudio={onEnterStudio} />
           <Process />
           <Comparison />
-          <Pricing hidePurchaseOptions={true} />
+          {/* <Pricing hidePurchaseOptions={true} /> */}
+          <HolidayCampaign />
         </main>
         <Footer />
       </div>
