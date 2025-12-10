@@ -14,6 +14,11 @@ CRITICAL STYLE RULES:
 3. TEXTURE: Skin texture must be realistic (pores, smooth). Fabrics must have realistic weave/weight.
 `;
 
+const BG_KEEPING = `
+ BACKGROUND:
+    - PRESERVE the vibe/environment of Image 1 unless instructed otherwise.
+`;
+
 // Helper to process image parts
 
 const processImagePart = async (dataUriOrUrl: string) => {
@@ -226,8 +231,7 @@ Deno.serve(async (req) => {
 
           ${subjectInstruction}
 
-          BACKGROUND:
-          - PRESERVE the vibe/environment of Image 1 unless instructed otherwise.
+         ${BG_KEEPING}
           
           ${variationInstruction}
         `;
@@ -344,7 +348,7 @@ Deno.serve(async (req) => {
             const bgPart = await processImagePart(backgroundImage);
             if (bgPart) {
                 parts.push(bgPart);
-                promptText += `\n\nBACKGROUND REFERENCE (Image ${parts.length}): Use this image as the background environment. Match the lighting, mood, and setting of this image. bỏ các yếu tố con người trong hình này`;
+                promptText += `\n\nBACKGROUND REFERENCE (Image ${parts.length}): PRESERVE the vibe/environment unless instructed otherwise.`;
             }
         }
 
@@ -358,6 +362,12 @@ Deno.serve(async (req) => {
                     promptText += `\n\nACCESSORY REFERENCE (Image ${parts.length}): Incorporate the accessory shown in this image into the outfit naturally.`;
                 }
             }
+            promptText += `\n\nBACKGROUND REFERENCE (Image ${parts.length}): PRESERVE the vibe/environment unless instructed otherwise.`;
+
+        }
+
+        else {
+            promptText += `${BG_KEEPING}`;
         }
 
         // Append User Prompt

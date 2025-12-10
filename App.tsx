@@ -630,8 +630,11 @@ const App: React.FC = () => {
       setSecondaryImage(null);
       setNumberOfImages(1);
 
+      // Scroll to top on mobile after state updates
       if (window.innerWidth < 1024) {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        setTimeout(() => {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }, 100);
       }
     }
   };
