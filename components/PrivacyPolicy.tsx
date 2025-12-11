@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowLeft, Shield, Lock, Eye, FileText, Globe, CreditCard, Server, UserCheck } from 'lucide-react';
+import { ArrowLeft, Shield, Lock, Eye, FileText, Globe, CreditCard, Server, UserCheck, Scale } from 'lucide-react';
 
 interface PrivacyPolicyProps {
     onBack: () => void;
@@ -7,7 +7,7 @@ interface PrivacyPolicyProps {
 
 export const PrivacyPolicy: React.FC<PrivacyPolicyProps> = ({ onBack }) => {
     return (
-        <div className="w-full min-h-screen bg-black text-gray-300 p-6 lg:p-10 flex flex-col items-center">
+        <div className="w-full min-h-screen bg-black text-gray-300 p-6 lg:p-10 flex flex-col items-center overflow-y-auto">
             <div className="max-w-4xl w-full">
                 <div className="flex items-center gap-4 mb-8">
                     <button
@@ -126,21 +126,51 @@ export const PrivacyPolicy: React.FC<PrivacyPolicyProps> = ({ onBack }) => {
                     </section>
 
                     <section className="space-y-4">
-                        <h2 className="text-xl font-bold text-white">6. Quyền Riêng Tư Của Trẻ Em</h2>
+                        <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                            <Scale size={20} className="text-green-400" />
+                            6. Quyền Sở Hữu & Thương Mại
+                        </h2>
+                        <div className="pl-4 space-y-4 border-l-2 border-green-500/30 ml-2">
+                            <div>
+                                <h3 className="font-bold text-white">Quyền sử dụng</h3>
+                                <p className="text-gray-400">
+                                    Windi Studio cấp cho Người dùng quyền <strong className="text-white">vĩnh viễn, không độc quyền, miễn phí bản quyền (royalty-free)</strong> để sử dụng, sao chép, chỉnh sửa và công khai các Hình ảnh được tạo ra từ Dịch vụ cho bất kỳ mục đích thương mại nào (bao gồm nhưng không giới hạn ở: quảng cáo, bao bì sản phẩm, website bán hàng, sàn thương mại điện tử).
+                                </p>
+                            </div>
+                            <div>
+                                <h3 className="font-bold text-white">Sản phẩm đầu vào</h3>
+                                <p className="text-gray-400">
+                                    Bạn giữ toàn bộ quyền sở hữu trí tuệ đối với hình ảnh sản phẩm gốc (ảnh quần áo/phụ kiện) mà bạn tải lên hệ thống.
+                                </p>
+                            </div>
+                            <div>
+                                <h3 className="font-bold text-white">Quyền hình ảnh người mẫu</h3>
+                                <p className="text-gray-400">
+                                    Các người mẫu xuất hiện trong ảnh là sản phẩm của trí tuệ nhân tạo (AI), không phải người thật. Do đó, bạn được <strong className="text-white">miễn trừ hoàn toàn</strong> các rủi ro pháp lý liên quan đến quyền nhân thân, quyền hình ảnh hoặc tranh chấp hợp đồng người mẫu. Bạn có thể yên tâm sử dụng hình ảnh vô thời hạn.
+                                </p>
+                            </div>
+                        </div>
+                        <div className="bg-green-500/10 border border-green-500/20 p-3 rounded-lg text-green-200 text-xs mt-2">
+                            <strong>✓ Tóm tắt:</strong> Bạn sở hữu hoàn toàn ảnh sản phẩm gốc. Ảnh AI được tạo ra có thể sử dụng thương mại không giới hạn mà không lo vấn đề bản quyền người mẫu.
+                        </div>
+                    </section>
+
+                    <section className="space-y-4">
+                        <h2 className="text-xl font-bold text-white">7. Quyền Riêng Tư Của Trẻ Em</h2>
                         <p>
                             Dịch vụ của chúng tôi không dành cho người dưới 13 tuổi (hoặc độ tuổi tối thiểu khác theo quy định pháp luật địa phương). Chúng tôi không cố ý thu thập thông tin cá nhân từ trẻ em. Nếu bạn tin rằng chúng tôi đã vô tình thu thập thông tin từ trẻ em, vui lòng liên hệ với chúng tôi ngay lập tức để chúng tôi có thể xóa thông tin đó.
                         </p>
                     </section>
 
                     <section className="space-y-4">
-                        <h2 className="text-xl font-bold text-white">7. Liên Kết Đến Các Trang Web Khác</h2>
+                        <h2 className="text-xl font-bold text-white">8. Liên Kết Đến Các Trang Web Khác</h2>
                         <p>
                             Dịch vụ của chúng tôi có thể chứa các liên kết đến các trang web hoặc dịch vụ của bên thứ ba không thuộc quyền kiểm soát của chúng tôi. Chính sách bảo mật này không áp dụng cho các trang web hoặc dịch vụ đó. Chúng tôi khuyến khích bạn xem xét chính sách bảo mật của bất kỳ trang web bên thứ ba nào mà bạn truy cập.
                         </p>
                     </section>
 
                     <section className="space-y-4">
-                        <h2 className="text-xl font-bold text-white">8. Thay Đổi Chính Sách Bảo Mật</h2>
+                        <h2 className="text-xl font-bold text-white">9. Thay Đổi Chính Sách Bảo Mật</h2>
                         <p>
                             Chúng tôi có thể cập nhật Chính sách bảo mật này theo thời gian để phản ánh các thay đổi trong hoạt động của chúng tôi hoặc các yêu cầu pháp lý. Chúng tôi sẽ thông báo cho bạn về bất kỳ thay đổi quan trọng nào bằng cách đăng chính sách mới trên trang này và cập nhật "Ngày hiệu lực" ở trên cùng. Bạn nên xem lại Chính sách bảo mật này định kỳ để nắm được thông tin mới nhất. Việc bạn tiếp tục sử dụng Dịch vụ sau khi các thay đổi có hiệu lực sẽ cấu thành sự đồng ý của bạn đối với các thay đổi đó.
                         </p>
@@ -149,7 +179,7 @@ export const PrivacyPolicy: React.FC<PrivacyPolicyProps> = ({ onBack }) => {
                     <section className="space-y-4">
                         <h2 className="text-xl font-bold text-white flex items-center gap-2">
                             <FileText size={20} className="text-indigo-400" />
-                            9. Liên Hệ Với Chúng Tôi
+                            10. Liên Hệ Với Chúng Tôi
                         </h2>
                         <p>
                             Nếu bạn có bất kỳ câu hỏi hoặc thắc mắc nào về Chính sách bảo mật này hoặc cách chúng tôi xử lý thông tin của bạn, vui lòng liên hệ với chúng tôi qua email tại:
