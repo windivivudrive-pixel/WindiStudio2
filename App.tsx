@@ -772,66 +772,82 @@ const App: React.FC = () => {
   const downloadImage = async (imageUrl: string, index = 0, promptText = "", modelNameStr = "") => {
     if (!imageUrl) return;
 
-    // Helper to trigger download via link (Desktop or Fallback)
-    const triggerDownloadLink = (url: string) => {
-      const link = document.createElement('a');
-      link.href = url;
+    const getFileName = () => {
       const sanitizedPrompt = promptText ? promptText.trim().replace(/[^a-zA-Z0-9\s-_]/g, '').replace(/\s+/g, '_').substring(0, 40) : "";
       const modelToUse = modelNameStr || selectedModel;
       const modelTag = modelToUse.includes('flash') ? 'flash' : 'pro';
-      link.download = `windistudio_${modelTag}_${sanitizedPrompt || 'art'}_${Date.now()}_${index}.jpg`;
-      link.target = "_blank";
+      return `windistudio_${modelTag}_${sanitizedPrompt || 'art'}_${Date.now()}_${index}.jpg`;
+    };
+
+    const triggerBlobDownload = (blob: Blob) => {
+      const blobUrl = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = getFileName();
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-    };
-
-    // Helper to handle Blob (Share or Download)
-    const handleBlob = async (blob: Blob) => {
-      // Web Share API removed as per user request to force direct download
-
-
-      // Fallback: Create Blob URL and download
-      const blobUrl = URL.createObjectURL(blob);
-      triggerDownloadLink(blobUrl);
       setTimeout(() => URL.revokeObjectURL(blobUrl), 100);
     };
 
-    const isBase64 = imageUrl.startsWith('data:');
+    const fetchViaProxy = async (url: string): Promise<Blob> => {
+      const { data, error } = await supabase.functions.invoke('proxy-image', {
+        body: { imageUrl: url }
+      });
+      if (error || !data) throw new Error("Proxy fetch failed");
+      const base64 = data.image;
+      const byteCharacters = atob(base64.split(',')[1] || base64);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      return new Blob([new Uint8Array(byteNumbers)], { type: 'image/jpeg' });
+    };
 
-    // --- WATERMARK LOGIC START ---
+    const imageUrlToBlob = (url: string): Promise<Blob> => {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          canvas.width = img.naturalWidth;
+          canvas.height = img.naturalHeight;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) { reject(new Error("No canvas context")); return; }
+          ctx.drawImage(img, 0, 0);
+          canvas.toBlob((blob) => {
+            if (blob) resolve(blob);
+            else reject(new Error("toBlob failed"));
+          }, 'image/jpeg', 0.95);
+        };
+        img.onerror = () => reject(new Error("Image load failed"));
+        img.src = url;
+      });
+    };
+
     const applyWatermark = async (sourceUrl: string): Promise<Blob | null> => {
       if (!brandingLogo || !brandingConfig) return null;
-
       try {
         const img = new Image();
         img.crossOrigin = "anonymous";
         img.src = sourceUrl;
         await img.decode();
-
         const canvas = document.createElement('canvas');
         canvas.width = img.width;
         canvas.height = img.height;
         const ctx = canvas.getContext('2d');
         if (!ctx) return null;
-
-        // Draw Base
         ctx.drawImage(img, 0, 0);
-
-        // Draw Logo
         const logo = new Image();
         logo.crossOrigin = "anonymous";
         logo.src = brandingLogo;
         await logo.decode();
-
         const scale = brandingConfig.scale || 0.2;
         const logoW = img.width * scale;
         const logoH = logoW * (logo.height / logo.width);
         const posXPercent = brandingConfig.x !== undefined ? brandingConfig.x : 90;
         const posYPercent = brandingConfig.y !== undefined ? brandingConfig.y : 90;
-
         ctx.globalAlpha = brandingConfig.opacity || 1.0;
-
         if (brandingConfig.layoutMode === 'loop') {
           const yPos = (img.height * posYPercent) / 100 - (logoH / 2);
           const gap = brandingConfig.gap || 10;
@@ -845,55 +861,50 @@ const App: React.FC = () => {
           const yPos = (img.height * posYPercent) / 100 - (logoH / 2);
           ctx.drawImage(logo, xPos, yPos, logoW, logoH);
         }
-
         ctx.globalAlpha = 1.0;
-
         return new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.95));
-      } catch (e) {
-        console.error("Failed to apply watermark", e);
+      } catch {
+        // CORS failure expected for external URLs, will fallback to proxy
         return null;
       }
     };
-    // --- WATERMARK LOGIC END ---
 
-    if (isBase64) {
-      // Convert Base64 to Blob
-      let blob: Blob;
+    const isBase64 = imageUrl.startsWith('data:');
 
-      // Try to apply watermark first
-      const watermarkedBlob = await applyWatermark(imageUrl);
-      if (watermarkedBlob) {
-        blob = watermarkedBlob;
-      } else {
-        // Fallback to original
-        const byteCharacters = atob(imageUrl.split(',')[1]);
-        const byteNumbers = new Array(byteCharacters.length);
-        for (let i = 0; i < byteCharacters.length; i++) {
-          byteNumbers[i] = byteCharacters.charCodeAt(i);
-        }
-        const byteArray = new Uint8Array(byteNumbers);
-        blob = new Blob([byteArray], { type: 'image/jpeg' });
-      }
-
-      await handleBlob(blob);
-    } else {
-      // It's a URL (Supabase or R2)
-      try {
-        // Try to apply watermark first
+    try {
+      if (isBase64) {
+        let blob: Blob;
         const watermarkedBlob = await applyWatermark(imageUrl);
         if (watermarkedBlob) {
-          await handleBlob(watermarkedBlob);
+          blob = watermarkedBlob;
         } else {
-          // Fallback to original fetch
-          const response = await fetch(imageUrl);
-          const blob = await response.blob();
-          await handleBlob(blob);
+          const byteCharacters = atob(imageUrl.split(',')[1]);
+          const byteNumbers = new Array(byteCharacters.length);
+          for (let i = 0; i < byteCharacters.length; i++) {
+            byteNumbers[i] = byteCharacters.charCodeAt(i);
+          }
+          blob = new Blob([new Uint8Array(byteNumbers)], { type: 'image/jpeg' });
         }
-      } catch (error) {
-        console.error("Download failed:", error);
-        // Fallback to direct link if fetch fails (CORS etc)
-        triggerDownloadLink(imageUrl);
+        triggerBlobDownload(blob);
+      } else {
+        // Try watermark first, then canvas, then proxy
+        const watermarkedBlob = await applyWatermark(imageUrl);
+        if (watermarkedBlob) {
+          triggerBlobDownload(watermarkedBlob);
+        } else {
+          try {
+            const blob = await imageUrlToBlob(imageUrl);
+            triggerBlobDownload(blob);
+          } catch {
+            // Canvas failed (CORS), try proxy
+            const blob = await fetchViaProxy(imageUrl);
+            triggerBlobDownload(blob);
+          }
+        }
       }
+    } catch (error) {
+      console.error("Download failed:", error);
+      window.open(imageUrl, '_blank');
     }
   };
 
