@@ -1290,7 +1290,7 @@ const App: React.FC = () => {
                     </div>
                   </div>
                   <div className="glass-panel p-2 rounded-[20px] flex flex-col gap-2">
-                    <div className="flex items-center gap-1.5 text-[9px] font-bold text-gray-500 uppercase ml-1"><Layers size={10} className="text-mystic-accent" />Batch Size</div>
+                    <div className="flex items-center gap-1.5 text-[9px] font-bold text-gray-500 uppercase ml-1"><Layers size={10} className="text-mystic-accent" />Số lượng ảnh</div>
                     <div className="flex gap-1">
                       {[1, 2, 3, 4].map((num) => (
                         <button key={num} onClick={() => setNumberOfImages(num)} className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold transition-all border ${numberOfImages === num ? 'bg-mystic-accent border-mystic-accent text-white shadow-glow' : 'bg-black/20 border-transparent text-gray-500 hover:text-white hover:bg-white/5'}`}>{num}</button>
@@ -1307,12 +1307,12 @@ const App: React.FC = () => {
                   {showAdvanced && (
                     <div className="space-y-5 pt-2 animate-in slide-in-from-top-2">
                       <div className="space-y-1.5">
-                        <label className="text-[10px] font-semibold text-gray-500 uppercase ml-1">AI Guidance</label>
+                        <label className="text-[10px] font-semibold text-gray-500 uppercase ml-1">Mô tả chi tiết</label>
                         <textarea value={prompt} onChange={(e) => setPrompt(e.target.value)} placeholder="e.g., Cyberpunk background..." className="w-full bg-black/20 border border-white/10 rounded-xl p-3 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-mystic-accent focus:bg-black/40 transition-all resize-none shadow-inner h-20" />
                       </div>
                       <div className="grid grid-cols-2 gap-3">
                         <div>
-                          <label className="text-[10px] font-semibold text-gray-500 uppercase ml-1 mb-1.5 block">Aspect Ratio</label>
+                          <label className="text-[10px] font-semibold text-gray-500 uppercase ml-1 mb-1.5 block">Tỉ lệ</label>
                           <div className="relative">
                             <select value={aspectRatio} onChange={(e) => setAspectRatio(e.target.value as AspectRatio)} className="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-xs text-white appearance-none focus:border-mystic-accent outline-none">
                               {Object.values(AspectRatio).map(ratio => (<option key={ratio} value={ratio} className="bg-mystic-900 text-white">{ratio}</option>))}
@@ -1322,7 +1322,7 @@ const App: React.FC = () => {
                         </div>
 
                         <div className="col-span-2">
-                          <label className="text-[10px] font-semibold text-gray-500 uppercase ml-1 mb-1.5 block">Accessory Images (+3 xu/img)</label>
+                          <label className="text-[10px] font-semibold text-gray-500 uppercase ml-1 mb-1.5 block">Ảnh Phụ Kiện, Background (+3 xu/ảnh)</label>
                           <div className="grid grid-cols-3 gap-2">
                             {accessoryImages.map((img, idx) => (
                               <div key={idx} className="relative aspect-square rounded-lg overflow-hidden border border-white/10 group">
@@ -1331,7 +1331,32 @@ const App: React.FC = () => {
                               </div>
                             ))}
                             {accessoryImages.length < 3 && (
-                              <label className="aspect-square rounded-lg border border-white/10 border-dashed flex flex-col items-center justify-center cursor-pointer hover:bg-white/5 transition-colors gap-1">
+                              <label
+                                className="aspect-square rounded-lg border border-white/10 border-dashed flex flex-col items-center justify-center cursor-pointer hover:bg-white/5 transition-colors gap-1"
+                                onDragOver={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  e.currentTarget.classList.add('bg-white/10', 'border-mystic-accent');
+                                }}
+                                onDragLeave={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  e.currentTarget.classList.remove('bg-white/10', 'border-mystic-accent');
+                                }}
+                                onDrop={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  e.currentTarget.classList.remove('bg-white/10', 'border-mystic-accent');
+                                  const file = e.dataTransfer.files?.[0];
+                                  if (file && file.type.startsWith('image/')) {
+                                    const reader = new FileReader();
+                                    reader.onloadend = () => {
+                                      setAccessoryImages(prev => [...prev, reader.result as string]);
+                                    };
+                                    reader.readAsDataURL(file);
+                                  }
+                                }}
+                              >
                                 <Plus size={16} className="text-gray-500" />
                                 <span className="text-[9px] text-gray-500">Add</span>
                                 <input type="file" accept="image/*" className="hidden" onChange={(e) => {
