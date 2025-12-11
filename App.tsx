@@ -1492,7 +1492,7 @@ const App: React.FC = () => {
                     <div className="space-y-5 pt-2 animate-in slide-in-from-top-2">
                       <div className="space-y-1.5">
                         <label className="text-[10px] font-semibold text-gray-500 uppercase ml-1">Mô tả chi tiết</label>
-                        <textarea value={prompt} onChange={(e) => setPrompt(e.target.value)} placeholder="e.g., Cyberpunk background..." className="w-full bg-black/20 border border-white/10 rounded-xl p-3 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-mystic-accent focus:bg-black/40 transition-all resize-none shadow-inner h-20" />
+                        <textarea value={prompt} onChange={(e) => setPrompt(e.target.value)} placeholder="Ảnh chân dung, background decor giáng sinh,.." className="w-full bg-black/20 border border-white/10 rounded-xl p-3 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-mystic-accent focus:bg-black/40 transition-all resize-none shadow-inner h-20" />
                       </div>
                       <div className="grid grid-cols-2 gap-3">
                         <div>

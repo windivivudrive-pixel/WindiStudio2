@@ -27,7 +27,7 @@ const Comparison: React.FC = () => {
                            </div>
                            <div>
                               <h4 className="text-white font-medium text-lg">Chi phí cực thấp</h4>
-                              <p className="text-sm text-gray-400 mt-1">Chỉ từ 3.000đ cho một bức ảnh chất lượng. Rẻ hơn 50 lần so với thuê mẫu.</p>
+                              <p className="text-sm text-gray-400 mt-1">Chỉ từ 5.000đ cho một bức ảnh chất lượng. Rẻ hơn 50 lần so với thuê mẫu.</p>
                            </div>
                         </div>
                         <div className="flex items-start gap-4">
@@ -74,7 +74,7 @@ const Comparison: React.FC = () => {
                         </div>
                         <div className="grid grid-cols-2 py-5 px-6 hover:bg-white/5 transition-colors">
                            <div className="text-gray-400 flex items-center gap-3"><X className="w-4 h-4 text-red-500/50 shrink-0" /> 3-5 ngày trả ảnh</div>
-                           <div className="text-white font-medium flex items-center gap-3 justify-end"><Check className="w-4 h-4 text-green-400 shrink-0" /> 20 giây/ảnh</div>
+                           <div className="text-white font-medium flex items-center gap-3 justify-end"><Check className="w-4 h-4 text-green-400 shrink-0" /> 30 giây/ảnh</div>
                         </div>
                         <div className="grid grid-cols-2 py-5 px-6 hover:bg-white/5 transition-colors">
                            <div className="text-gray-400 flex items-center gap-3"><X className="w-4 h-4 text-red-500/50 shrink-0" /> Setup phức tạp</div>

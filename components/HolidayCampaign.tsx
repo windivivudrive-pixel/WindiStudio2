@@ -7,7 +7,7 @@ import RegistrationModal from './RegistrationModal';
 const HolidayCampaign: React.FC = () => {
     // Progress bar logic for FOMO (142/200)
     const totalSlots = 50;
-    const claimedSlots = 8;
+    const claimedSlots = 4;
     const percentage = (claimedSlots / totalSlots) * 100;
 
     // Modal state
@@ -49,8 +49,8 @@ const HolidayCampaign: React.FC = () => {
                         <button
                             onClick={() => setModalType('shop')}
                             className={`relative px-6 py-3 rounded-xl text-sm font-bold tracking-wide transition-all duration-300 ${modalType === 'shop'
-                                    ? 'bg-gradient-to-r from-red-500 to-orange-500 text-white shadow-lg shadow-red-500/25'
-                                    : 'text-gray-400 hover:text-white hover:bg-white/5'
+                                ? 'bg-gradient-to-r from-red-500 to-orange-500 text-white shadow-lg shadow-red-500/25'
+                                : 'text-gray-400 hover:text-white hover:bg-white/5'
                                 }`}
                         >
                             <span className="flex items-center gap-2">
@@ -67,8 +67,8 @@ const HolidayCampaign: React.FC = () => {
                         <button
                             onClick={() => setModalType('creator')}
                             className={`relative px-6 py-3 rounded-xl text-sm font-bold tracking-wide transition-all duration-300 ${modalType === 'creator'
-                                    ? 'bg-gradient-to-r from-amber-400 to-amber-600 text-black shadow-lg shadow-amber-500/25'
-                                    : 'text-gray-400 hover:text-white hover:bg-white/5'
+                                ? 'bg-gradient-to-r from-amber-400 to-amber-600 text-black shadow-lg shadow-amber-500/25'
+                                : 'text-gray-400 hover:text-white hover:bg-white/5'
                                 }`}
                         >
                             <span className="flex items-center gap-2">

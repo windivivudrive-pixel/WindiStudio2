@@ -187,7 +187,7 @@ const Hero: React.FC<HeroProps> = ({ onEnterStudio }) => {
 
             <p className="text-sm sm:text-base md:text-lg text-gray-400 font-light max-w-xl leading-relaxed">
               Tiết kiệm <span className="text-white font-medium">90% chi phí</span> thuê mẫu và nhiếp ảnh gia.
-              Chỉ cần ảnh quần áo (flat-lay hoặc manequin), có ngay bộ ảnh chất lượng chưa tới 50K.
+              Chỉ cần ảnh quần áo (flat-lay hoặc manequin), có ngay bộ ảnh chất lượng chưa tới 100K.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 pt-4">
@@ -209,7 +209,7 @@ const Hero: React.FC<HeroProps> = ({ onEnterStudio }) => {
             <div className="pt-2 flex items-center gap-6 text-sm text-gray-500">
               <div className="flex items-center gap-2">
                 <Zap className="w-4 h-4 text-purple-400" />
-                <span>Xử lý trong 20s</span>
+                <span>Xử lý trong 30s</span>
               </div>
               <div className="flex items-center gap-2">
                 <Star className="w-4 h-4 text-yellow-500" />
