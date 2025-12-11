@@ -104,6 +104,7 @@ export const generateStudioImage = async (
     conceptReferences?: string[],
     flexibleMode?: boolean,
     randomFace?: boolean,
+    keepFace?: boolean,
     accessoryImages?: string[],
     backgroundImage?: string | null,
     numberOfImages: number,
@@ -131,6 +132,7 @@ export const generateStudioImage = async (
             aspectRatio: config.aspectRatio,
             flexibleMode: config.flexibleMode,
             randomFace: config.randomFace,
+            keepFace: config.keepFace,
             accessoryImages: config.accessoryImages,
             backgroundImage: config.backgroundImage,
             numberOfImages: 1, // Request 1 image at a time

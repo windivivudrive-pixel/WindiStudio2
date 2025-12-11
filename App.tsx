@@ -58,6 +58,7 @@ const App: React.FC = () => {
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [flexibleMode, setFlexibleMode] = useState(false);
   const [randomFace, setRandomFace] = useState(false);
+  const [keepFace, setKeepFace] = useState(true);
 
   // Application State
   const [isGenerating, setIsGenerating] = useState(false);
@@ -531,6 +532,7 @@ const App: React.FC = () => {
           aspectRatio,
           flexibleMode,
           randomFace,
+          keepFace,
           numberOfImages,
           accessoryImages: accessoryImages,
           backgroundImage: null,
@@ -652,6 +654,7 @@ const App: React.FC = () => {
     setAspectRatio('3:4' as AspectRatio);
     setFlexibleMode(false);
     setRandomFace(false);
+    setKeepFace(true);
     setNumberOfImages(1);
     setSelectedModel('gemini-2.5-flash-image');
     setAccessoryImages([]);
@@ -1561,6 +1564,12 @@ const App: React.FC = () => {
                       </div>
 
                       <div className="space-y-2 pt-1">
+                        {(mode === AppMode.CREATIVE_POSE) && (
+                          <button onClick={() => setKeepFace(!keepFace)} className={`w-full flex items-center justify-between p-2.5 rounded-lg border transition-all ${keepFace ? 'bg-mystic-accent/10 border-mystic-accent text-white' : 'bg-transparent border-white/5 text-gray-400 hover:bg-white/5'}`}>
+                            <div className="flex items-center gap-2"><ScanFace size={14} /><span className="text-xs font-medium">Giữ khuôn mặt</span></div>
+                            {keepFace ? <ToggleRight className="text-mystic-accent" size={20} /> : <ToggleLeft size={20} />}
+                          </button>
+                        )}
                         {(mode !== AppMode.CREATIVE_POSE && mode !== AppMode.CREATE_MODEL && mode !== AppMode.VIRTUAL_TRY_ON) && (
                           <button onClick={() => setFlexibleMode(!flexibleMode)} className={`w-full flex items-center justify-between p-2.5 rounded-lg border transition-all ${flexibleMode ? 'bg-mystic-accent/10 border-mystic-accent text-white' : 'bg-transparent border-white/5 text-gray-400 hover:bg-white/5'}`}>
                             <div className="flex items-center gap-2"><Shuffle size={14} /><span className="text-xs font-medium">Creative Freedom</span></div>
