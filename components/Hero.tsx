@@ -95,6 +95,7 @@ interface HeroProps {
 const Hero: React.FC<HeroProps> = ({ onEnterStudio }) => {
   const [activeCase, setActiveCase] = useState(0);
   const [zoomedImage, setZoomedImage] = useState<string | null>(null);
+  const [showVideo, setShowVideo] = useState(false);
 
   useEffect(() => {
     // Pause auto-rotation if an image is zoomed
@@ -197,11 +198,12 @@ const Hero: React.FC<HeroProps> = ({ onEnterStudio }) => {
               >
                 Dùng Thử Miễn Phí
               </button>
-              {/* Hidden until video demo is ready
-              <Button variant="glass" className="h-14 px-8 text-base group" onClick={onEnterStudio}>
+              <button
+                className="inline-flex items-center justify-center h-11 px-6 rounded-full font-medium text-gray-300 bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 active:scale-95 transition-all duration-300 group"
+                onClick={() => setShowVideo(true)}
+              >
                 <Play className="w-4 h-4 mr-2 fill-white group-hover:scale-110 transition-transform" /> Xem Demo
-              </Button>
-              */}
+              </button>
             </div>
 
             <div className="pt-2 flex items-center gap-6 text-sm text-gray-500">
@@ -370,6 +372,32 @@ const Hero: React.FC<HeroProps> = ({ onEnterStudio }) => {
               src={zoomedImage}
               alt="Zoomed view"
               className="max-w-full max-h-[90vh] rounded-lg shadow-2xl scale-95 animate-in zoom-in-95 duration-300 select-none"
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Video Demo Modal */}
+      {showVideo && (
+        <div
+          className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-xl flex items-center justify-center p-4 animate-in fade-in duration-300"
+          onClick={() => setShowVideo(false)}
+        >
+          <button
+            className="absolute top-6 right-6 p-2 bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors z-50"
+            onClick={() => setShowVideo(false)}
+          >
+            <X size={24} />
+          </button>
+          <div
+            className="relative w-full max-w-4xl aspect-video rounded-2xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <iframe
+              src="https://drive.google.com/file/d/1_iLL0opAEKCBXfhDnzh0e71l9RAci997/preview"
+              className="w-full h-full"
+              allow="autoplay; encrypted-media"
+              allowFullScreen
             />
           </div>
         </div>

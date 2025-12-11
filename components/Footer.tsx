@@ -11,9 +11,8 @@ const Footer: React.FC = () => {
         </div>
 
         <div className="flex gap-8">
-
+          <a href="?view=terms" className="hover:text-white transition-colors">Điều khoản sử dụng</a>
           <a href="?view=privacy" className="hover:text-white transition-colors">Chính sách bảo mật</a>
-
         </div>
 
         {/* <div className="flex gap-4">

@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Pricing from './components/Pricing';
-import { Sparkles, Shirt, Camera, Wand2, Download, AlertCircle, History, Trash2, ChevronDown, ChevronUp, User, Image as ImageIcon, Bone, Layers, ToggleLeft, ToggleRight, XCircle, Archive, Shuffle, Copy, ScanFace, RefreshCw, LogIn, Coins, X, CreditCard, Wallet, LogOut, Zap, Cloud, ArrowLeft, Calendar, FileText, CheckCircle, XOctagon, QrCode, Smartphone, Check, Maximize2, Plus, Stamp, Heart, Star } from 'lucide-react';
+import { Sparkles, Shirt, Camera, Wand2, Download, AlertCircle, History, Trash2, ChevronDown, ChevronUp, User, Image as ImageIcon, Bone, Layers, ToggleLeft, ToggleRight, XCircle, Archive, Shuffle, Copy, ScanFace, RefreshCw, LogIn, Coins, X, CreditCard, Wallet, LogOut, Zap, Cloud, ArrowLeft, Calendar, FileText, CheckCircle, XOctagon, QrCode, Smartphone, Check, Maximize2, Plus, Stamp, Heart, Star, Info } from 'lucide-react';
 import JSZip from 'jszip';
 import { AppMode, AspectRatio, HistoryItem, UserProfile, Transaction } from './types';
 import { ImageUploader } from './components/ImageUploader';
 import { ImageViewer } from './components/ImageViewer';
 import { AnimatedLogo } from './components/AnimatedLogo';
 import { PrivacyPolicy } from './components/PrivacyPolicy';
+import { TermsOfService } from './components/TermsOfService';
 import { generateStudioImage, ensureApiKey } from './services/geminiService';
 import { BrandingPage } from './components/BrandingPage';
 
@@ -37,8 +38,10 @@ const BANK_CONFIG = {
 
 const App: React.FC = () => {
   // Navigation State
-  const [currentView, setCurrentView] = useState<'STUDIO' | 'HISTORY' | 'PAYMENT' | 'PRIVACY' | 'BRANDING'>('STUDIO');
+  const [currentView, setCurrentView] = useState<'STUDIO' | 'HISTORY' | 'PAYMENT' | 'PRIVACY' | 'TERMS' | 'BRANDING'>('STUDIO');
   const [studioTab, setStudioTab] = useState<'studio' | 'fun' | 'library'>('studio');
+  const [showModeGuide, setShowModeGuide] = useState<AppMode | null>(null);
+  const [showModelGuide, setShowModelGuide] = useState<'air' | 'pro' | null>(null);
 
   // Main State
   const [mode, setMode] = useState<AppMode>(AppMode.CREATIVE_POSE);
@@ -320,7 +323,7 @@ const App: React.FC = () => {
 
         if (viewParam) {
           const view = viewParam.toUpperCase() as typeof currentView;
-          if (['STUDIO', 'HISTORY', 'PAYMENT', 'PRIVACY', 'BRANDING'].includes(view)) {
+          if (['STUDIO', 'HISTORY', 'PAYMENT', 'PRIVACY', 'TERMS', 'BRANDING'].includes(view)) {
             setCurrentView(view);
           } else {
             setCurrentView('STUDIO');
@@ -347,7 +350,7 @@ const App: React.FC = () => {
 
     if (viewParam) {
       const view = viewParam.toUpperCase() as typeof currentView;
-      if (['STUDIO', 'HISTORY', 'PAYMENT', 'PRIVACY', 'BRANDING'].includes(view)) {
+      if (['STUDIO', 'HISTORY', 'PAYMENT', 'PRIVACY', 'TERMS', 'BRANDING'].includes(view)) {
         setCurrentView(view);
       }
     }
@@ -1014,8 +1017,15 @@ const App: React.FC = () => {
 
   // --- RENDER HELPERS ---
 
-  const ModeButton = ({ active, icon: Icon, label, onClick }: any) => (
+  const ModeButton = ({ active, icon: Icon, label, onClick, modeType }: any) => (
     <button onClick={onClick} className={`relative group p-4 rounded-2xl flex flex-col items-center justify-center gap-3 transition-all duration-300 glass-button ${active ? 'glass-button-active' : 'text-gray-400 hover:text-white'}`}>
+      {/* Info Icon */}
+      <div
+        onClick={(e) => { e.stopPropagation(); setShowModeGuide(modeType); }}
+        className="absolute top-2 right-2 w-5 h-5 rounded-full bg-white/10 hover:bg-mystic-accent/30 flex items-center justify-center cursor-pointer transition-all opacity-50 hover:opacity-100 z-10"
+      >
+        <Info size={10} className="text-gray-400" />
+      </div>
       <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 shadow-glass-inset ${active ? 'bg-mystic-accent text-white shadow-glow' : 'bg-black/20 text-gray-500 group-hover:text-white'}`}>
         <Icon size={18} />
       </div>
@@ -1023,6 +1033,141 @@ const App: React.FC = () => {
       {active && <div className="absolute inset-x-4 bottom-0 h-0.5 bg-mystic-accent shadow-[0_0_10px_#8b5cf6]" />}
     </button>
   );
+
+  // Mode Guide Modal Images & Content
+  const modeGuideContent = {
+    [AppMode.CREATIVE_POSE]: {
+      title: 'Pose Mode',
+      description: 'Tải lên ảnh pose để AI tạo ra các tư thế khác nhau cho người mẫu của bạn.',
+      inputImages: [
+        'https://zpjphixcttehkkgxlmsn.supabase.co/storage/v1/object/public/windi-bucket/WEB/in1.png.jpeg'
+      ],
+      outputImages: [
+        'https://zpjphixcttehkkgxlmsn.supabase.co/storage/v1/object/public/windi-bucket/WEB/out21.png',
+        'https://zpjphixcttehkkgxlmsn.supabase.co/storage/v1/object/public/windi-bucket/WEB/out31.png',
+        'https://zpjphixcttehkkgxlmsn.supabase.co/storage/v1/object/public/windi-bucket/WEB/1765446932309_out1.png.jpeg'
+      ]
+    },
+    [AppMode.VIRTUAL_TRY_ON]: {
+      title: 'Try-On Mode',
+      description: 'Tải lên ảnh người và ảnh trang phục để AI thử đồ lên người mẫu.',
+      inputImages: [
+        'https://zpjphixcttehkkgxlmsn.supabase.co/storage/v1/object/public/windi-bucket/WEB/in21.png.jpeg',
+        'https://zpjphixcttehkkgxlmsn.supabase.co/storage/v1/object/public/windi-bucket/WEB/in22.png'
+      ],
+      outputImages: [
+        'https://zpjphixcttehkkgxlmsn.supabase.co/storage/v1/object/public/windi-bucket/WEB/out2.png.jpeg'
+      ]
+    },
+    [AppMode.CREATE_MODEL]: {
+      title: 'Model Mode',
+      description: 'Tải lên ảnh trang phục để AI tạo người mẫu mặc outfit của bạn.',
+      inputImages: [
+        'https://zpjphixcttehkkgxlmsn.supabase.co/storage/v1/object/public/windi-bucket/WEB/Screenshot%202025-12-09%20at%2012.50.20%20AM.png'
+      ],
+      outputImages: [
+        'https://zpjphixcttehkkgxlmsn.supabase.co/storage/v1/object/public/windi-bucket/WEB/windistudio_pro_Generated_Image_1765452974622_0.jpg'
+      ]
+    }
+  };
+
+  // Mode Guide Modal Component
+  const ModeGuideModal = () => {
+    if (!showModeGuide) return null;
+    const content = modeGuideContent[showModeGuide as keyof typeof modeGuideContent];
+    if (!content) return null;
+
+    return (
+      <div
+        className="fixed inset-0 z-[70] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200"
+        onClick={() => setShowModeGuide(null)}
+      >
+        <div
+          className="relative w-full max-w-4xl bg-[#0f0c1d] border border-white/10 rounded-3xl p-6 sm:p-8 shadow-2xl animate-in zoom-in-95 duration-300"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Close Button */}
+          <button
+            onClick={() => setShowModeGuide(null)}
+            className="absolute top-4 right-4 p-2 rounded-full bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition-all"
+          >
+            <X size={18} />
+          </button>
+
+          {/* Title */}
+          <div className="text-center mb-6">
+            <h3 className="text-xl font-bold text-white mb-2">{content.title}</h3>
+            <p className="text-sm text-gray-400">{content.description}</p>
+          </div>
+
+          {/* Cards Display */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
+            {/* Input Cards */}
+            <div
+              className="flex items-end justify-center shrink-0"
+              style={{ filter: 'drop-shadow(0 0 15px rgba(168, 85, 247, 0.4))' }}
+            >
+              {content.inputImages.map((img, idx) => (
+                <div
+                  key={`input-${idx}`}
+                  className="relative w-16 h-20 sm:w-32 sm:h-40 md:w-44 md:h-56 rounded-lg sm:rounded-xl md:rounded-2xl overflow-hidden border-2 border-white/30 bg-black"
+                  style={{
+                    transform: content.inputImages.length > 1
+                      ? `rotate(${(idx - (content.inputImages.length - 1) / 2) * 8}deg)`
+                      : 'rotate(-5deg)',
+                    marginLeft: idx > 0 ? '-12px' : '0',
+                    zIndex: idx + 1
+                  }}
+                >
+                  <img src={img} alt={`Input ${idx + 1}`} className="w-full h-full object-cover" />
+                  <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/80 to-transparent p-0.5 sm:p-1 md:p-2">
+                    <span className="text-[6px] sm:text-[8px] md:text-[10px] text-gray-300 font-bold uppercase">Input</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Arrow */}
+            <div className="flex flex-row sm:flex-col items-center gap-1 px-2 py-1 sm:py-0">
+              <Sparkles size={14} className="text-mystic-accent animate-pulse sm:block md:w-5 md:h-5" />
+              <div className="w-6 h-0.5 sm:w-8 md:w-12 bg-gradient-to-r from-mystic-accent to-pink-500 rounded-full" />
+              <span className="text-[7px] sm:text-[8px] md:text-[10px] text-gray-500 font-bold">AI</span>
+            </div>
+
+            {/* Output Cards */}
+            <div
+              className="flex items-end justify-center shrink-0"
+              style={{ filter: 'drop-shadow(0 0 15px rgba(236, 72, 153, 0.4))' }}
+            >
+              {content.outputImages.map((img, idx) => (
+                <div
+                  key={`output-${idx}`}
+                  className="relative w-16 h-20 sm:w-32 sm:h-40 md:w-44 md:h-56 rounded-lg sm:rounded-xl md:rounded-2xl overflow-hidden border-2 border-pink-400/50 bg-black"
+                  style={{
+                    transform: content.outputImages.length > 1
+                      ? `rotate(${(idx - (content.outputImages.length - 1) / 2) * 6}deg)`
+                      : 'rotate(5deg)',
+                    marginLeft: idx > 0 ? '-16px' : '0',
+                    zIndex: idx + 1
+                  }}
+                >
+                  <img src={img} alt={`Output ${idx + 1}`} className="w-full h-full object-cover" />
+                  <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/80 to-transparent p-0.5 sm:p-1 md:p-2">
+                    <span className="text-[6px] sm:text-[8px] md:text-[10px] text-pink-300 font-bold uppercase">Output</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Tip */}
+          <div className="mt-6 p-3 rounded-xl bg-mystic-accent/10 border border-mystic-accent/20 text-center">
+            <p className="text-xs text-mystic-accent">💡 Tip: Sử dụng ảnh chất lượng cao để có kết quả tốt nhất!</p>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   const GlassCard = ({ children, className }: { children: React.ReactNode, className?: string }) => (
     <div className={`glass-panel ${className || ''}`}>{children}</div>
@@ -1182,9 +1327,9 @@ const App: React.FC = () => {
                 {studioTab === 'studio' && (
                   <div className="mb-6">
                     <div className="glass-panel p-1.5 rounded-[24px] grid grid-cols-3 gap-1.5 shrink-0">
-                      <ModeButton active={mode === AppMode.CREATIVE_POSE} icon={Camera} label="Pose" onClick={() => setMode(AppMode.CREATIVE_POSE)} />
-                      <ModeButton active={mode === AppMode.VIRTUAL_TRY_ON} icon={Shirt} label="Try-On" onClick={() => setMode(AppMode.VIRTUAL_TRY_ON)} />
-                      <ModeButton active={mode === AppMode.CREATE_MODEL} icon={User} label="Model" onClick={() => setMode(AppMode.CREATE_MODEL)} />
+                      <ModeButton active={mode === AppMode.CREATIVE_POSE} icon={Camera} label="Pose" onClick={() => setMode(AppMode.CREATIVE_POSE)} modeType={AppMode.CREATIVE_POSE} />
+                      <ModeButton active={mode === AppMode.VIRTUAL_TRY_ON} icon={Shirt} label="Try-On" onClick={() => setMode(AppMode.VIRTUAL_TRY_ON)} modeType={AppMode.VIRTUAL_TRY_ON} />
+                      <ModeButton active={mode === AppMode.CREATE_MODEL} icon={User} label="Model" onClick={() => setMode(AppMode.CREATE_MODEL)} modeType={AppMode.CREATE_MODEL} />
                     </div>
                   </div>
                 )}
@@ -1275,9 +1420,48 @@ const App: React.FC = () => {
                   </span>
                 </button>
 
-                <div className="grid grid-cols-2 gap-2 mt-4">
-                  <div className="glass-panel p-2 rounded-[20px] flex flex-col gap-2">
-                    <div className="flex items-center gap-1.5 text-[9px] font-bold text-gray-500 uppercase ml-1"><Zap size={10} className="text-purple-400" />Processing Model</div>
+                <div className="grid grid-cols-2 gap-2 mt-4 relative z-20">
+                  <div className="glass-panel p-2 rounded-[20px] flex flex-col gap-2 relative z-30 overflow-visible">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5 text-[9px] font-bold text-gray-500 uppercase ml-1"><Zap size={10} className="text-purple-400" />Chế Độ</div>
+                      <div
+                        className="relative"
+                      >
+                        <div
+                          onClick={() => setShowModelGuide(showModelGuide ? null : 'air')}
+                          className="w-4 h-4 rounded-full bg-white/10 hover:bg-mystic-accent/30 flex items-center justify-center cursor-pointer transition-all opacity-50 hover:opacity-100"
+                        >
+                          <Info size={8} className="text-gray-400" />
+                        </div>
+                        {/* Model Guide Tooltip - Absolute positioned */}
+                        {showModelGuide && (
+                          <div className="absolute top-6 right-0 z-[100] w-48 p-3 rounded-xl bg-[#1a1625] border border-white/20 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+                            <div className="space-y-2.5">
+                              <div className="flex items-start gap-2">
+                                <div className="w-5 h-5 rounded-full bg-white flex items-center justify-center shrink-0">
+                                  <Zap size={10} className="text-black" />
+                                </div>
+                                <div>
+                                  <p className="text-[10px] font-bold text-white">Air</p>
+                                  <p className="text-[9px] text-gray-400 leading-relaxed">Tạo ảnh nhanh, chi phí thấp.</p>
+                                </div>
+                              </div>
+                              <div className="flex items-start gap-2">
+                                <div className="w-5 h-5 rounded-full bg-indigo-600 flex items-center justify-center shrink-0">
+                                  <Sparkles size={10} className="text-white" />
+                                </div>
+                                <div>
+                                  <p className="text-[10px] font-bold text-white">Pro</p>
+                                  <p className="text-[9px] text-gray-400 leading-relaxed">Rõ chi tiết, form dáng. Xử lý các yêu cầu phức tạp.</p>
+                                </div>
+                              </div>
+                            </div>
+                            {/* Arrow pointer */}
+                            <div className="absolute -top-1.5 right-1.5 w-3 h-3 bg-[#1a1625] border-l border-t border-white/20 rotate-45" />
+                          </div>
+                        )}
+                      </div>
+                    </div>
                     <div className="flex bg-black/20 rounded-xl p-1 gap-1">
                       <button onClick={() => { setSelectedModel('gemini-2.5-flash-image'); setAccessoryImages([]); }} className={`relative flex-1 py-1.5 rounded-lg text-[10px] font-bold transition-all ${selectedModel === 'gemini-2.5-flash-image' ? 'bg-white text-black shadow-sm' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}>
                         {mode === AppMode.CREATIVE_POSE && <Star size={14} className="absolute -top-1.5 -left-1.5 text-yellow-400 fill-yellow-400 rotate-[45deg]" />}
@@ -1290,7 +1474,7 @@ const App: React.FC = () => {
                     </div>
                   </div>
                   <div className="glass-panel p-2 rounded-[20px] flex flex-col gap-2">
-                    <div className="flex items-center gap-1.5 text-[9px] font-bold text-gray-500 uppercase ml-1"><Layers size={10} className="text-mystic-accent" />Batch Size</div>
+                    <div className="flex items-center gap-1.5 text-[9px] font-bold text-gray-500 uppercase ml-1"><Layers size={10} className="text-mystic-accent" />Số lượng ảnh</div>
                     <div className="flex gap-1">
                       {[1, 2, 3, 4].map((num) => (
                         <button key={num} onClick={() => setNumberOfImages(num)} className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold transition-all border ${numberOfImages === num ? 'bg-mystic-accent border-mystic-accent text-white shadow-glow' : 'bg-black/20 border-transparent text-gray-500 hover:text-white hover:bg-white/5'}`}>{num}</button>
@@ -1299,20 +1483,20 @@ const App: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="glass-panel p-4 rounded-[24px] space-y-4 mt-4">
+                <div className="glass-panel p-4 rounded-[24px] space-y-4 mt-4 relative z-10">
                   <div className="flex justify-between items-center cursor-pointer" onClick={() => setShowAdvanced(!showAdvanced)}>
-                    <span className="text-xs font-bold text-gray-300 uppercase tracking-wider flex items-center gap-2"><Layers size={14} className="text-mystic-accent" /> Configuration</span>
+                    <span className="text-xs font-bold text-gray-300 uppercase tracking-wider flex items-center gap-2"><Layers size={14} className="text-mystic-accent" /> Tùy chỉnh</span>
                     <button className="p-1.5 rounded-full hover:bg-white/5 transition-colors">{showAdvanced ? <ChevronUp size={14} /> : <ChevronDown size={14} />}</button>
                   </div>
                   {showAdvanced && (
                     <div className="space-y-5 pt-2 animate-in slide-in-from-top-2">
                       <div className="space-y-1.5">
-                        <label className="text-[10px] font-semibold text-gray-500 uppercase ml-1">AI Guidance</label>
+                        <label className="text-[10px] font-semibold text-gray-500 uppercase ml-1">Mô tả chi tiết</label>
                         <textarea value={prompt} onChange={(e) => setPrompt(e.target.value)} placeholder="e.g., Cyberpunk background..." className="w-full bg-black/20 border border-white/10 rounded-xl p-3 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-mystic-accent focus:bg-black/40 transition-all resize-none shadow-inner h-20" />
                       </div>
                       <div className="grid grid-cols-2 gap-3">
                         <div>
-                          <label className="text-[10px] font-semibold text-gray-500 uppercase ml-1 mb-1.5 block">Aspect Ratio</label>
+                          <label className="text-[10px] font-semibold text-gray-500 uppercase ml-1 mb-1.5 block">Tỉ lệ</label>
                           <div className="relative">
                             <select value={aspectRatio} onChange={(e) => setAspectRatio(e.target.value as AspectRatio)} className="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-xs text-white appearance-none focus:border-mystic-accent outline-none">
                               {Object.values(AspectRatio).map(ratio => (<option key={ratio} value={ratio} className="bg-mystic-900 text-white">{ratio}</option>))}
@@ -1322,7 +1506,7 @@ const App: React.FC = () => {
                         </div>
 
                         <div className="col-span-2">
-                          <label className="text-[10px] font-semibold text-gray-500 uppercase ml-1 mb-1.5 block">Accessory Images (+3 xu/img)</label>
+                          <label className="text-[10px] font-semibold text-gray-500 uppercase ml-1 mb-1.5 block">Ảnh Phụ Kiện, Background (+3 xu/ảnh)</label>
                           <div className="grid grid-cols-3 gap-2">
                             {accessoryImages.map((img, idx) => (
                               <div key={idx} className="relative aspect-square rounded-lg overflow-hidden border border-white/10 group">
@@ -1331,7 +1515,32 @@ const App: React.FC = () => {
                               </div>
                             ))}
                             {accessoryImages.length < 3 && (
-                              <label className="aspect-square rounded-lg border border-white/10 border-dashed flex flex-col items-center justify-center cursor-pointer hover:bg-white/5 transition-colors gap-1">
+                              <label
+                                className="aspect-square rounded-lg border border-white/10 border-dashed flex flex-col items-center justify-center cursor-pointer hover:bg-white/5 transition-colors gap-1"
+                                onDragOver={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  e.currentTarget.classList.add('bg-white/10', 'border-mystic-accent');
+                                }}
+                                onDragLeave={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  e.currentTarget.classList.remove('bg-white/10', 'border-mystic-accent');
+                                }}
+                                onDrop={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  e.currentTarget.classList.remove('bg-white/10', 'border-mystic-accent');
+                                  const file = e.dataTransfer.files?.[0];
+                                  if (file && file.type.startsWith('image/')) {
+                                    const reader = new FileReader();
+                                    reader.onloadend = () => {
+                                      setAccessoryImages(prev => [...prev, reader.result as string]);
+                                    };
+                                    reader.readAsDataURL(file);
+                                  }
+                                }}
+                              >
                                 <Plus size={16} className="text-gray-500" />
                                 <span className="text-[9px] text-gray-500">Add</span>
                                 <input type="file" accept="image/*" className="hidden" onChange={(e) => {
@@ -1528,6 +1737,7 @@ const App: React.FC = () => {
       {currentView === 'HISTORY' && renderHistoryPage()}
       {currentView === 'PAYMENT' && renderPaymentPage()}
       {currentView === 'PRIVACY' && <PrivacyPolicy onBack={() => navigateTo('STUDIO')} />}
+      {currentView === 'TERMS' && <TermsOfService onBack={() => navigateTo('STUDIO')} />}
       {/* PRICING MODAL */}
       {showPricingModal && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
@@ -1565,15 +1775,24 @@ const App: React.FC = () => {
         />
       )}
 
-      {/* Privacy Policy Link (Static Footer) */}
-      {currentView !== 'PRIVACY' && (
+      {/* Privacy Policy & Terms Links (Static Footer) */}
+      {currentView !== 'PRIVACY' && currentView !== 'TERMS' && (
         <div className="w-full py-6 mt-auto flex flex-col items-center gap-1 z-10 relative">
-          <button
-            onClick={() => navigateTo('PRIVACY')}
-            className="text-[10px] text-gray-500 hover:text-gray-300 transition-colors uppercase tracking-widest font-bold px-2 py-1 rounded"
-          >
-            Chính Sách Bảo Mật
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => navigateTo('TERMS')}
+              className="text-[10px] text-gray-500 hover:text-gray-300 transition-colors uppercase tracking-widest font-bold px-2 py-1 rounded"
+            >
+              Điều Khoản Sử Dụng
+            </button>
+            <span className="text-gray-600">|</span>
+            <button
+              onClick={() => navigateTo('PRIVACY')}
+              className="text-[10px] text-gray-500 hover:text-gray-300 transition-colors uppercase tracking-widest font-bold px-2 py-1 rounded"
+            >
+              Chính Sách Bảo Mật
+            </button>
+          </div>
           <span className="text-[9px] text-gray-700 font-medium tracking-wide">Copyright ©2025</span>
         </div>
       )}
@@ -1733,6 +1952,9 @@ const App: React.FC = () => {
         </div>
       )
       }
+
+      {/* MODE GUIDE MODAL */}
+      <ModeGuideModal />
 
       {/* SAFETY WARNING MODAL */}
       {safetyWarning && (

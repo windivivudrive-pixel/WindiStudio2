@@ -9,9 +9,9 @@ const corsHeaders = {
 // --- CONSTANTS & PROMPTS ---
 const STYLE_GUIDE = `
 CRITICAL STYLE RULES:
-1. PHOTOREALISM ONLY: The output MUST be a high-quality Photograph (8K, Raw Photo, Cinematic Lighting, Depth of Field).
-2. NO ARTISTIC STYLES: Do NOT generate cartoons, anime, illustrations, paintings, or 3D renders.
-3. TEXTURE: Skin texture must be realistic (pores, smooth). Fabrics must have realistic weave/weight.
+1. PHOTOREALISM ONLY: The output MUST be a high-quality fashion Photograph (Cinematic Lighting, Depth of Field).
+2. Do NOT generate cartoons, anime, or 3D renders.
+3. Skin texture must be realistic (pores, smooth). Fabrics must have realistic weave/weight.
 `;
 
 const BG_KEEPING = `
@@ -366,7 +366,7 @@ Deno.serve(async (req) => {
 
         }
 
-        else {
+        else if (mode !== 'CREATE_MODEL') {
             promptText += `${BG_KEEPING}`;
         }
 
