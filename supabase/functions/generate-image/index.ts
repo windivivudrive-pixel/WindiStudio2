@@ -8,8 +8,7 @@ const corsHeaders = {
 
 // --- CONSTANTS & PROMPTS ---
 const STYLE_GUIDE = `
-CRITICAL STYLE RULES:
-1. PHOTOREALISM ONLY: The output MUST be a high-quality fashion Photograph (Cinematic Lighting, Depth of Field).
+1. PHOTOREALISM ONLY: The output MUST be a high-quality fashion Photograph
 2. Do NOT generate cartoons, anime, or 3D renders.
 3. Skin texture must be realistic (pores, smooth). Fabrics must have realistic weave/weight.
 `;
@@ -99,6 +98,7 @@ Deno.serve(async (req) => {
             aspectRatio,
             flexibleMode,
             randomFace,
+            keepFace = true, // Default to true for backward compatibility
             accessoryImages,
             backgroundImage,
             numberOfImages = 1, // Legacy support, but we will mostly use 1 per request now
@@ -216,10 +216,19 @@ Deno.serve(async (req) => {
             if (primaryImage) parts.push(await processImagePart(primaryImage));
 
             let subjectInstruction = "";
-            {
+            if (keepFace) {
+                // Default behavior: preserve face
                 subjectInstruction = `
                  - STRICTLY PRESERVE the Subject's Face, Hair, Skin Tone, and Outfit from Image 1.
                  - This is a RE-POSING task. Do not change the person's identity or clothes.
+                 - POSE:
+                 - Create a NEW, creative, natural, and professional fashion pose (Variation #${i + 1}).
+                 `;
+            } else {
+                // keepFace = false: Only preserve outfit, allow different face/model
+                subjectInstruction = `
+                 - STRICTLY PRESERVE the Outfit from Image 1.
+                 - Change the face/model.
                  - POSE:
                  - Create a NEW, creative, natural, and professional fashion pose (Variation #${i + 1}).
                  `;
@@ -230,8 +239,6 @@ Deno.serve(async (req) => {
           ${STYLE_GUIDE}
 
           ${subjectInstruction}
-
-         ${BG_KEEPING}
           
           ${variationInstruction}
         `;
@@ -389,6 +396,9 @@ Deno.serve(async (req) => {
         }
 
         console.log(`Generating with config: Model=${modelName || activeModel}, AspectRatio=${aspectRatio}`);
+        console.log(`=== FINAL PROMPT TEXT ===`);
+        console.log(promptText);
+        console.log(`=========================`);
 
         const response = await ai.models.generateContent({
             model: modelName || activeModel,
