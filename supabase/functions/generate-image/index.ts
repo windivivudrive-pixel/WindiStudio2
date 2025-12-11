@@ -18,6 +18,14 @@ const BG_KEEPING = `
     - PRESERVE the vibe/environment of Image 1 unless instructed otherwise.
 `;
 
+// 1. Tạo các mảng đặc điểm
+const hairStyles = ["short bob hair", "brown hair", "high ponytail", "dyed hair", "shoulder-length straight hair"];
+const faceShapes = ["round face", "diamond face shape", "sharp jawline", "heart-shaped face"];
+const expressions = ["neutral expression", "soft smile", "edgy look", "laughing"];
+
+// 2. Random lấy 1 giá trị từ mỗi mảng
+const randomHair = hairStyles[Math.floor(Math.random() * hairStyles.length)];
+const randomFace = faceShapes[Math.floor(Math.random() * faceShapes.length)];
 // Helper to process image parts
 
 const processImagePart = async (dataUriOrUrl: string) => {
@@ -228,7 +236,7 @@ Deno.serve(async (req) => {
                 // keepFace = false: Only preserve outfit, allow different face/model
                 subjectInstruction = `
                  - STRICTLY PRESERVE the Outfit from Image 1.
-                 - Change the face/model.
+                 - CHANGE MODEL to a Vietnamese young model with ${randomHair} and${randomFace}.
                  - POSE:
                  - Create a NEW, creative, natural, and professional fashion pose (Variation #${i + 1}).
                  `;
