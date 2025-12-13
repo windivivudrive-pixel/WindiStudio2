@@ -287,7 +287,7 @@ export const BrandingPage: React.FC<BrandingPageProps> = ({
 
                         <button
                             onClick={handleSaveBranding}
-                            disabled={!brandingLogo || isSavingBranding}
+                            disabled={isSavingBranding}
                             className="w-full py-4 rounded-[20px] bg-gradient-to-r from-mystic-accent to-pink-500 font-bold text-white shadow-liquid hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:grayscale"
                         >
                             {isSavingBranding ? <RefreshCw className="animate-spin" /> : <Save size={18} />} Save Branding

@@ -150,9 +150,29 @@ Deno.serve(async (req) => {
         const i = variationIndex;
         const isBatchMode = totalBatchSize > 1;
 
-        const variationInstruction = isBatchMode
-            ? `\nVARIATION INSTRUCTION (Image ${i + 1} of ${totalBatchSize}): Change the camera angle or pose slightly to create a diverse set.`
-            : "";
+
+        let variationInstruction = "";
+
+        // SPECIAL BATCH MODE (Set button = 4 images with different shot types)
+        if (mode === "CREATIVE_POSE" && totalBatchSize === 4) {
+            const shotTypes = [
+                "WIDE SHOT (Toàn Cảnh): Show full body and a wider view of the environment.",
+                "MEDIUM SHOT (Trung Cảnh - Knees Up): Focus on the outfit and pose, framing from around the knees up (American Shot).",
+                "PORTRAIT SHOT (Bán Thân - Chest Up): Frame from the CHEST UP. Do NOT zoom in too tight on the face. Compose nicely with balanced headroom (avoid excessive empty space above).",
+                "DETAIL SHOT (Cận Cảnh - Neck Down): Frame from the NECK DOWN. Exclude the face/head completely. Focus strictly on the OUTFIT details, material texture, and accessories."
+            ];
+
+            variationInstruction = `
+            \n--- BATCH VARIATION ${i + 1}/4 ---
+            SHOT TYPE: ${shotTypes[i]}
+            BACKGROUND DYNAMICS: Keep the original background VIBE/THEME (colors, location type) but RE-ARRANGE elements to make it lively and less boring. 
+            Make the background feel like a dynamic, around the subject. If the background is like a studio or room, keep the lighting right.
+            ${i === 3 ? "SPECIAL FRAMING: HEADLESS SHOT. Start framing from the neck down. No face." : ""}
+          `;
+        } else if (isBatchMode) {
+            // Standard variation for other batch sizes
+            variationInstruction = `\n(Variation ${i + 1}): Change the camera angle or pose slightly to create a diverse set.`;
+        }
 
         const parts: any[] = [];
         let promptText = "";
@@ -381,7 +401,7 @@ Deno.serve(async (req) => {
 
         }
 
-        else if (mode !== 'CREATE_MODEL') {
+        else if (mode !== 'CREATE_MODEL' || totalBatchSize !== 4) {
             promptText += `${BG_KEEPING}`;
         }
 

@@ -42,6 +42,7 @@ const App: React.FC = () => {
   const [studioTab, setStudioTab] = useState<'studio' | 'fun' | 'library'>('studio');
   const [showModeGuide, setShowModeGuide] = useState<AppMode | null>(null);
   const [showModelGuide, setShowModelGuide] = useState<'air' | 'pro' | null>(null);
+  const [showSetGuide, setShowSetGuide] = useState(false);
 
   // Main State
   const [mode, setMode] = useState<AppMode>(AppMode.CREATIVE_POSE);
@@ -439,7 +440,7 @@ const App: React.FC = () => {
       cost = 25;
     }
 
-    if (accessoryImages.length > 0) cost += (accessoryImages.length * 3);
+    if (accessoryImages.length > 0) cost += (accessoryImages.length * 2);
     return cost;
   };
 
@@ -674,7 +675,7 @@ const App: React.FC = () => {
     setShowUpscaleModal(false);
     if (results.length === 0) return;
 
-    const cost = resolution === '4K' ? 50 : 20;
+    const cost = resolution === '4K' ? 30 : 15;
 
     if (!session || !userProfile) {
       setShowLoginModal(true);
@@ -1183,6 +1184,110 @@ const App: React.FC = () => {
     );
   };
 
+  // Set Guide Modal Component (for batch Set = 4 images)
+  const SetGuideModal = () => {
+    if (!showSetGuide) return null;
+
+    // INPUT IMAGE - thay link ảnh input tại đây
+    const inputImage = 'https://zpjphixcttehkkgxlmsn.supabase.co/storage/v1/object/public/windi-bucket/WEB/set/windistudio_pro_1_tay_cm_d_1765513524021_0.jpg';
+
+    // OUTPUT IMAGES - thay link 4 ảnh output tại đây
+    const shotLabels = [
+      { key: 'W', name: 'Toàn thân', desc: 'Wide Shot', image: 'https://zpjphixcttehkkgxlmsn.supabase.co/storage/v1/object/public/windi-bucket/WEB/set/windistudio_pro_art_1765522033658.jpg' },
+      { key: 'M', name: 'Trung cảnh', desc: 'Medium Shot', image: 'https://zpjphixcttehkkgxlmsn.supabase.co/storage/v1/object/public/windi-bucket/WEB/set/windistudio_pro_art_1765513740998.jpg' },
+      { key: 'P', name: 'Trung thân', desc: 'Medium Shot', image: 'https://zpjphixcttehkkgxlmsn.supabase.co/storage/v1/object/public/windi-bucket/WEB/set/windistudio_pro_art_1765522039770.jpg' },
+      { key: 'D', name: 'Chi tiết', desc: 'Detail Shot', image: 'https://zpjphixcttehkkgxlmsn.supabase.co/storage/v1/object/public/windi-bucket/WEB/set/windistudio_pro_art_1765529063512.jpg' }
+    ];
+
+    return (
+      <div
+        className="fixed inset-0 z-[70] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200"
+        onClick={() => setShowSetGuide(false)}
+      >
+        <div
+          className="relative w-full max-w-3xl bg-[#0f0c1d] border border-white/10 rounded-3xl p-6 sm:p-8 shadow-2xl animate-in zoom-in-95 duration-300"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Close Button */}
+          <button
+            onClick={() => setShowSetGuide(false)}
+            className="absolute top-4 right-4 p-2 rounded-full bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition-all"
+          >
+            <X size={18} />
+          </button>
+
+          {/* Title */}
+          <div className="text-center mb-6">
+            <h3 className="text-xl font-bold text-white mb-2">📸 Set Mode</h3>
+            <p className="text-sm text-gray-400">Tạo bộ 4 ảnh với các góc chụp khác nhau từ 1 ảnh đầu vào</p>
+          </div>
+
+          {/* Visual Diagram */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6">
+            {/* Input Card */}
+            <div
+              className="shrink-0"
+              style={{ filter: 'drop-shadow(0 0 15px rgba(168, 85, 247, 0.4))' }}
+            >
+              <div className="relative w-24 h-32 sm:w-32 sm:h-44 rounded-xl overflow-hidden border-2 border-white/30 bg-black">
+                {inputImage.startsWith('http') ? (
+                  <img src={inputImage} alt="Input" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-mystic-accent/30 to-purple-600/30 flex items-center justify-center">
+                    <ImageIcon size={32} className="text-mystic-accent" />
+                  </div>
+                )}
+                <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/80 to-transparent p-2">
+                  <span className="text-[10px] text-gray-300 font-bold uppercase">Input</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Arrow */}
+            <div className="flex flex-row sm:flex-col items-center gap-2">
+              <Sparkles size={18} className="text-mystic-accent animate-pulse" />
+              <div className="w-8 h-0.5 sm:w-0.5 sm:h-8 bg-gradient-to-r sm:bg-gradient-to-b from-mystic-accent to-pink-500 rounded-full" />
+              <span className="text-[10px] text-gray-500 font-bold">AI</span>
+            </div>
+
+            {/* Output Cards Grid */}
+            <div
+              className="grid grid-cols-2 gap-2 sm:gap-3"
+              style={{ filter: 'drop-shadow(0 0 15px rgba(236, 72, 153, 0.4))' }}
+            >
+              {shotLabels.map((shot) => (
+                <div key={shot.key} className="relative w-20 h-28 sm:w-24 sm:h-32 rounded-xl overflow-hidden border-2 border-pink-400/50 bg-black">
+                  {shot.image.startsWith('http') ? (
+                    <img src={shot.image} alt={shot.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-pink-500/20 to-purple-500/20 flex items-center justify-center">
+                      <span className="text-2xl font-bold text-pink-400/60">{shot.key}</span>
+                    </div>
+                  )}
+                  <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/90 to-transparent p-1.5">
+                    <p className="text-[9px] text-pink-300 font-bold">{shot.name}</p>
+                    <p className="text-[7px] text-gray-500">{shot.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Tip */}
+          <div className="mt-6 p-4 rounded-xl bg-mystic-accent/10 border border-mystic-accent/20 space-y-2">
+            <p className="text-xs text-mystic-accent font-bold">💡 Tips:</p>
+            <ul className="text-xs text-gray-400 space-y-1 list-disc list-inside">
+              <li>Dùng <span className="text-white font-semibold">ảnh đã hoàn thiện</span> làm đầu vào</li>
+              <li>Nên <span className="text-pink-300 font-semibold">Upscale</span> ảnh trước khi tạo Set để đạt chất lượng tốt nhất</li>
+              <li>Set mode chỉ hoạt động với mode <span className="text-mystic-accent font-semibold">Pose</span></li>
+              <li>Nên Chọn chế độ <span className="text-mystic-accent font-semibold">PRO</span> để chi tiết tốt nhất</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   const GlassCard = ({ children, className }: { children: React.ReactNode, className?: string }) => (
     <div className={`glass-panel ${className || ''}`}>{children}</div>
   );
@@ -1487,12 +1592,27 @@ const App: React.FC = () => {
                       </button>
                     </div>
                   </div>
-                  <div className="glass-panel p-2 rounded-[20px] flex flex-col gap-2">
+                  <div className="glass-panel p-2 rounded-[20px] flex flex-col gap-2 relative overflow-visible">
                     <div className="flex items-center gap-1.5 text-[9px] font-bold text-gray-500 uppercase ml-1"><Layers size={10} className="text-mystic-accent" />Số lượng ảnh</div>
                     <div className="flex gap-1">
-                      {[1, 2, 3, 4].map((num) => (
-                        <button key={num} onClick={() => setNumberOfImages(num)} className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold transition-all border ${numberOfImages === num ? 'bg-mystic-accent border-mystic-accent text-white shadow-glow' : 'bg-black/20 border-transparent text-gray-500 hover:text-white hover:bg-white/5'}`}>{num}</button>
+                      {[1, 2].map((num) => (
+                        <button key={num} onClick={() => setNumberOfImages(num)} className={`w-8 py-1.5 rounded-lg text-[10px] font-bold transition-all border ${numberOfImages === num ? 'bg-mystic-accent border-mystic-accent text-white shadow-glow' : 'bg-black/20 border-transparent text-gray-500 hover:text-white hover:bg-white/5'}`}>{num}</button>
                       ))}
+                      <div className="relative flex-1">
+                        <button
+                          onClick={() => setNumberOfImages(4)}
+                          className={`w-full py-1.5 rounded-lg text-[10px] font-bold transition-all border ${numberOfImages === 4 ? 'bg-mystic-accent border-mystic-accent text-white shadow-glow' : 'bg-black/20 border-transparent text-gray-500 hover:text-white hover:bg-white/5'}`}
+                        >
+                          Set(4 ảnh)
+                        </button>
+                        <div
+                          onClick={(e) => { e.stopPropagation(); setShowSetGuide(!showSetGuide); }}
+                          className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-white/10 hover:bg-mystic-accent/30 flex items-center justify-center cursor-pointer transition-all opacity-60 hover:opacity-100 z-10"
+                        >
+                          <Info size={8} className="text-gray-400" />
+                        </div>
+                        {/* Set Guide Modal - rendered at top level */}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1520,7 +1640,7 @@ const App: React.FC = () => {
                         </div>
 
                         <div className="col-span-2">
-                          <label className="text-[10px] font-semibold text-gray-500 uppercase ml-1 mb-1.5 block">Ảnh Phụ Kiện, Background (+3 xu/ảnh)</label>
+                          <label className="text-[10px] font-semibold text-gray-500 uppercase ml-1 mb-1.5 block">Ảnh Phụ Kiện, Background (+2 xu/ảnh)</label>
                           <div className="grid grid-cols-3 gap-2">
                             {accessoryImages.map((img, idx) => (
                               <div key={idx} className="relative aspect-square rounded-lg overflow-hidden border border-white/10 group">
@@ -1976,6 +2096,9 @@ const App: React.FC = () => {
       {/* MODE GUIDE MODAL */}
       <ModeGuideModal />
 
+      {/* SET GUIDE MODAL */}
+      <SetGuideModal />
+
       {/* SAFETY WARNING MODAL */}
       {safetyWarning && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/90 backdrop-blur-md p-6">
@@ -2127,7 +2250,7 @@ const App: React.FC = () => {
                 <div className="text-2xl font-bold text-white mb-1">2K</div>
                 <div className="text-sm text-white/50 group-hover:text-white/80">Standard</div>
                 <div className="mt-3 px-3 py-1 rounded-full bg-purple-500/20 text-purple-300 text-xs font-medium">
-                  20 xu
+                  15 xu
                 </div>
               </button>
 
@@ -2138,7 +2261,7 @@ const App: React.FC = () => {
                 <div className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400 mb-1">4K</div>
                 <div className="text-sm text-white/50 group-hover:text-white/80">Ultra HD</div>
                 <div className="mt-3 px-3 py-1 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-medium shadow-lg shadow-purple-500/20">
-                  50 xu
+                  30 xu
                 </div>
               </button>
             </div>

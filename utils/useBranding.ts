@@ -110,32 +110,31 @@ export const useBranding = (
                 finalLogoUrl = await uploadImageToStorage(brandingLogo, fileName);
             }
 
-            if (finalLogoUrl) {
-                await saveBrandingToDb(userProfile.id, finalLogoUrl, brandingConfig);
+            // Save to DB (finalLogoUrl can be null if user deleted logo)
+            await saveBrandingToDb(userProfile.id, finalLogoUrl, brandingConfig);
 
-                // Deduct credits if first time
-                if (!eligibility.isFree) {
-                    const newBalance = userProfile.credits - BRANDING_COST;
-                    await updateUserCredits(userProfile.id, newBalance);
-                    setUserProfile({
-                        ...userProfile,
-                        credits: newBalance,
-                        branding_logo_url: finalLogoUrl,
-                        branding_config: brandingConfig
-                    });
-                } else {
-                    // Update local profile state
-                    setUserProfile({
-                        ...userProfile,
-                        branding_logo_url: finalLogoUrl,
-                        branding_config: brandingConfig
-                    });
-                }
-
-                // Reload logo to ensure we use the remote URL
-                setBrandingLogo(finalLogoUrl);
-                alert("Branding settings saved!");
+            // Deduct credits if first time
+            if (!eligibility.isFree && finalLogoUrl) {
+                const newBalance = userProfile.credits - BRANDING_COST;
+                await updateUserCredits(userProfile.id, newBalance);
+                setUserProfile({
+                    ...userProfile,
+                    credits: newBalance,
+                    branding_logo_url: finalLogoUrl,
+                    branding_config: brandingConfig
+                });
+            } else {
+                // Update local profile state
+                setUserProfile({
+                    ...userProfile,
+                    branding_logo_url: finalLogoUrl,
+                    branding_config: brandingConfig
+                });
             }
+
+            // Reload logo to ensure we use the remote URL
+            setBrandingLogo(finalLogoUrl);
+            alert(finalLogoUrl ? "Branding settings saved!" : "Branding logo removed!");
         } catch (e) {
             console.error(e);
             alert("Failed to save branding settings.");

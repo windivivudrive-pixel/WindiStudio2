@@ -331,7 +331,7 @@ export const fetchUserBranding = async (userId: string): Promise<{ branding_logo
 
 export const saveBrandingToDb = async (
   userId: string,
-  brandingLogo: string,
+  brandingLogo: string | null,
   brandingConfig: BrandingConfig
 ) => {
 
