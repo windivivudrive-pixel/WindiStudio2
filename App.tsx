@@ -1223,14 +1223,14 @@ const App: React.FC = () => {
     if (!showSetGuide) return null;
 
     // INPUT IMAGE - thay link ảnh input tại đây
-    const inputImage = 'https://zpjphixcttehkkgxlmsn.supabase.co/storage/v1/object/public/windi-bucket/WEB/set/windistudio_pro_1_tay_cm_d_1765513524021_0.jpg';
+    const inputImage = 'https://zpjphixcttehkkgxlmsn.supabase.co/storage/v1/object/public/windi-bucket/WEB/set/Screenshot%202025-12-16%20at%209.06.24%20PM.png';
 
     // OUTPUT IMAGES - thay link 4 ảnh output tại đây
     const shotLabels = [
-      { key: 'W', name: 'Toàn thân', desc: 'Wide Shot', image: 'https://zpjphixcttehkkgxlmsn.supabase.co/storage/v1/object/public/windi-bucket/WEB/set/windistudio_pro_art_1765522033658.jpg' },
-      { key: 'M', name: 'Trung cảnh', desc: 'Medium Shot', image: 'https://zpjphixcttehkkgxlmsn.supabase.co/storage/v1/object/public/windi-bucket/WEB/set/windistudio_pro_art_1765513740998.jpg' },
-      { key: 'P', name: 'Trung thân', desc: 'Medium Shot', image: 'https://zpjphixcttehkkgxlmsn.supabase.co/storage/v1/object/public/windi-bucket/WEB/set/windistudio_pro_art_1765522039770.jpg' },
-      { key: 'D', name: 'Chi tiết', desc: 'Detail Shot', image: 'https://zpjphixcttehkkgxlmsn.supabase.co/storage/v1/object/public/windi-bucket/WEB/set/windistudio_pro_art_1765529063512.jpg' }
+      { key: 'W', name: ' ', desc: ' ', image: 'https://zpjphixcttehkkgxlmsn.supabase.co/storage/v1/object/public/windi-bucket/WEB/set/windistudio_pro_art_1765515614263.jpg' },
+      { key: 'W', name: ' ', desc: ' ', image: 'https://zpjphixcttehkkgxlmsn.supabase.co/storage/v1/object/public/windi-bucket/WEB/set/windistudio_pro_art_1765515630098.jpg' },
+      { key: 'M', name: ' ', desc: ' ', image: 'https://zpjphixcttehkkgxlmsn.supabase.co/storage/v1/object/public/windi-bucket/WEB/set/windistudio_pro_art_1765515300725_1.jpg' },
+      { key: 'M', name: ' ', desc: ' ', image: 'https://zpjphixcttehkkgxlmsn.supabase.co/storage/v1/object/public/windi-bucket/WEB/set/windistudio_pro_art_1765515618366.jpg' }
     ];
 
     return (
