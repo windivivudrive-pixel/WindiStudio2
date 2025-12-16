@@ -1,5 +1,41 @@
 import { AppMode, AspectRatio, BackgroundMode } from "../types";
 import { supabase } from "./supabaseClient";
+import { CLOUDFLARE_WORKER_URL, isCloudflareConfigured, getGenerateImageUrl } from "../config/cloudflareConfig";
+import { compressImageToMaxSize, getBase64Size } from "../utils/imageUtils";
+
+// Maximum image size for Cloudflare Workers (3MB)
+const MAX_IMAGE_SIZE_BYTES = 3 * 1024 * 1024;
+
+/**
+ * Compress image if it exceeds the maximum size for API calls
+ */
+const compressImageIfNeeded = async (imageData: string | null): Promise<string | null> => {
+  if (!imageData) return null;
+
+  // Skip if it's a URL (will be fetched by worker)
+  if (imageData.startsWith('http://') || imageData.startsWith('https://')) {
+    console.log(`[ImageSize] Skipping URL image`);
+    return imageData;
+  }
+
+  const size = getBase64Size(imageData);
+  const sizeMB = (size / 1024 / 1024).toFixed(2);
+  console.log(`[ImageSize] ${sizeMB}MB (limit: 3MB)`);
+
+  if (size > MAX_IMAGE_SIZE_BYTES) {
+    console.log(`[ImageSize] Compressing...`);
+    try {
+      const compressed = await compressImageToMaxSize(imageData, MAX_IMAGE_SIZE_BYTES);
+      const newSize = getBase64Size(compressed);
+      console.log(`[ImageSize] Compressed to ${(newSize / 1024 / 1024).toFixed(2)}MB`);
+      return compressed;
+    } catch (e) {
+      console.error("[ImageSize] Failed to compress:", e);
+      return imageData; // Return original if compression fails
+    }
+  }
+  return imageData;
+};
 
 /**
  * Ensures the user has selected a paid API key via the AI Studio UI.
@@ -90,6 +126,52 @@ const processImagePart = async (dataUriOrUrl: string) => {
 };
 
 /**
+ * Helper to get auth token for Cloudflare Worker requests
+ */
+const getAuthToken = async (): Promise<string | null> => {
+  const { data: { session } } = await supabase.auth.getSession();
+  return session?.access_token || null;
+};
+
+/**
+ * Call generate-image API (Cloudflare Worker or Supabase fallback)
+ */
+const callGenerateImageAPI = async (body: any): Promise<{ data: any; error: any }> => {
+  // Use Cloudflare Worker if configured
+  if (isCloudflareConfigured()) {
+    try {
+      const token = await getAuthToken();
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      const response = await fetch(getGenerateImageUrl(), {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(body)
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        return { data: null, error: { message: data.error || `HTTP ${response.status}` } };
+      }
+
+      return { data, error: null };
+    } catch (e: any) {
+      console.error("Cloudflare Worker call failed:", e);
+      return { data: null, error: { message: e.message || "Network error" } };
+    }
+  }
+
+  // Fallback to Supabase function
+  return await supabase.functions.invoke('generate-image', { body });
+};
+
+/**
  * Generates images based on the mode and inputs.
  */
 export const generateStudioImage = async (
@@ -119,27 +201,38 @@ export const generateStudioImage = async (
   const promises = [];
   const results: string[] = [];
 
+  // Compress images once before the loop (they're the same for all variations)
+  const compressedPrimaryImage = await compressImageIfNeeded(config.primaryImage);
+  const compressedSecondaryImage = await compressImageIfNeeded(config.secondaryImage);
+  const compressedBackgroundImage = await compressImageIfNeeded(config.backgroundImage || null);
+
+  // Compress accessory images if present
+  let compressedAccessoryImages: string[] | undefined;
+  if (config.accessoryImages && config.accessoryImages.length > 0) {
+    compressedAccessoryImages = await Promise.all(
+      config.accessoryImages.map(img => compressImageIfNeeded(img))
+    ).then(results => results.filter((img): img is string => img !== null));
+  }
+
   for (let i = 0; i < config.numberOfImages; i++) {
     const requestPromise = (async () => {
       try {
-        const { data, error } = await supabase.functions.invoke('generate-image', {
-          body: {
-            mode: config.mode,
-            modelName: config.modelName,
-            primaryImage: config.primaryImage,
-            secondaryImage: config.secondaryImage,
-            userPrompt: config.userPrompt,
-            aspectRatio: config.aspectRatio,
-            flexibleMode: config.flexibleMode,
-            randomFace: config.randomFace,
-            keepFace: config.keepFace,
-            accessoryImages: config.accessoryImages,
-            backgroundImage: config.backgroundImage,
-            numberOfImages: 1, // Request 1 image at a time
-            variationIndex: i,
-            totalBatchSize: config.numberOfImages,
-            targetResolution: config.targetResolution
-          }
+        const { data, error } = await callGenerateImageAPI({
+          mode: config.mode,
+          modelName: config.modelName,
+          primaryImage: compressedPrimaryImage,
+          secondaryImage: compressedSecondaryImage,
+          userPrompt: config.userPrompt,
+          aspectRatio: config.aspectRatio,
+          flexibleMode: config.flexibleMode,
+          randomFace: config.randomFace,
+          keepFace: config.keepFace,
+          accessoryImages: compressedAccessoryImages,
+          backgroundImage: compressedBackgroundImage,
+          numberOfImages: 1, // Request 1 image at a time
+          variationIndex: i,
+          totalBatchSize: config.numberOfImages,
+          targetResolution: config.targetResolution
         });
 
         if (error) {

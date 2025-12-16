@@ -1,0 +1,9 @@
+
+ ⛅️ wrangler 4.54.0
+───────────────────
+Total Upload: 1211.52 KiB / gzip: 189.57 KiB
+Worker Startup Time: 9 ms
+Uploaded windi-api (6.59 sec)
+Deployed windi-api triggers (1.84 sec)
+  https://windi-api.windi.workers.dev
+Current Version ID: 9be12977-a462-4111-8b40-76503e4bf7f5

@@ -534,17 +534,35 @@ export const fetchLibraryImages = async (options: LibraryFilterOptions = {}): Pr
   // we will assume that if this function is called for "Library/Discover" or "All Users", we want global data.
 
   try {
-    const { data, error } = await supabase.functions.invoke('get-gallery', {
-      body: {
-        page,
-        limit,
-        categoryId,
-        userId,
-        imageType,
-        daysAgo,
-        onlyFavorites // Pass this through. true = Discover, false = All Users
+    const body = {
+      page,
+      limit,
+      categoryId,
+      userId,
+      imageType,
+      daysAgo,
+      onlyFavorites // Pass this through. true = Discover, false = All Users
+    };
+
+    // Use Cloudflare Worker if configured
+    const cloudflareUrl = import.meta.env.VITE_CLOUDFLARE_WORKER_URL;
+    if (cloudflareUrl) {
+      const response = await fetch(`${cloudflareUrl}/get-gallery`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
       }
-    });
+
+      const data = await response.json();
+      return data.images || [];
+    }
+
+    // Fallback to Supabase function
+    const { data, error } = await supabase.functions.invoke('get-gallery', { body });
 
     if (error) {
       console.error('Error fetching gallery:', error);
@@ -560,9 +578,28 @@ export const fetchLibraryImages = async (options: LibraryFilterOptions = {}): Pr
 
 export const fetchImageById = async (id: string): Promise<HistoryItem | null> => {
   try {
-    const { data, error } = await supabase.functions.invoke('get-gallery', {
-      body: { id }
-    });
+    const body = { id };
+
+    // Use Cloudflare Worker if configured
+    const cloudflareUrl = import.meta.env.VITE_CLOUDFLARE_WORKER_URL;
+    if (cloudflareUrl) {
+      const response = await fetch(`${cloudflareUrl}/get-gallery`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      const data = await response.json();
+      const images = data.images || [];
+      return images.length > 0 ? images[0] : null;
+    }
+
+    // Fallback to Supabase function
+    const { data, error } = await supabase.functions.invoke('get-gallery', { body });
 
     if (error) {
       console.error('Error fetching image by ID:', error);
