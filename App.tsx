@@ -134,8 +134,8 @@ const App: React.FC = () => {
   const leftPanelRef = useRef<HTMLDivElement>(null);
 
   const isAdmin = userProfile?.role === 'admin' || userProfile?.email === 'quochungdn151@gmail.com';
-  console.log("App.tsx - UserProfile:", userProfile);
-  console.log("App.tsx - isAdmin:", isAdmin);
+  // console.log("App.tsx - UserProfile:", userProfile);
+  // console.log("App.tsx - isAdmin:", isAdmin);
   const [showUpscaleModal, setShowUpscaleModal] = useState(false);
 
   /* --- BRANDING FEATURE START --- */
@@ -437,7 +437,7 @@ const App: React.FC = () => {
       cost = 5;
     } else {
       // Pro Model Pricing (Fixed)
-      cost = 25;
+      cost = 20;
     }
 
     if (accessoryImages.length > 0) cost += (accessoryImages.length * 2);
@@ -675,7 +675,7 @@ const App: React.FC = () => {
     setShowUpscaleModal(false);
     if (results.length === 0) return;
 
-    const cost = resolution === '4K' ? 30 : 15;
+    const cost = resolution === '4K' ? 20 : 10;
 
     if (!session || !userProfile) {
       setShowLoginModal(true);
@@ -792,9 +792,43 @@ const App: React.FC = () => {
     };
 
     const fetchViaProxy = async (url: string): Promise<Blob> => {
-      const { data, error } = await supabase.functions.invoke('proxy-image', {
-        body: { imageUrl: url }
-      });
+      // Use Cloudflare Worker if configured
+      const cloudflareUrl = import.meta.env.VITE_CLOUDFLARE_WORKER_URL;
+
+      let data: any;
+      let error: any;
+
+      if (cloudflareUrl) {
+        try {
+          const response = await fetch(`${cloudflareUrl}/proxy-image`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ imageUrl: url })
+          });
+
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+          }
+
+          data = await response.json();
+        } catch (e) {
+          console.error("Cloudflare proxy failed, falling back to Supabase:", e);
+          // Fallback to Supabase
+          const result = await supabase.functions.invoke('proxy-image', {
+            body: { imageUrl: url }
+          });
+          data = result.data;
+          error = result.error;
+        }
+      } else {
+        // Use Supabase function
+        const result = await supabase.functions.invoke('proxy-image', {
+          body: { imageUrl: url }
+        });
+        data = result.data;
+        error = result.error;
+      }
+
       if (error || !data) throw new Error("Proxy fetch failed");
       const base64 = data.image;
       const byteCharacters = atob(base64.split(',')[1] || base64);
@@ -1790,7 +1824,7 @@ const App: React.FC = () => {
                   {history.length === 0 ? (
                     <div className="col-span-2 h-40 flex flex-col items-center justify-center text-gray-600 gap-2"><History size={24} className="opacity-20" /><p className="text-xs">No artifacts yet.</p></div>
                   ) : (
-                    history.slice(0, 10).map((item) => ( // Only show recent 10 in sidebar
+                    history.slice(0, 30).map((item) => ( // Only show recent 30 in sidebar
                       <div key={item.id} className="group relative flex flex-col bg-[#0f0c1d] border border-white/10 rounded-xl overflow-hidden hover:border-mystic-accent/50 transition-all cursor-pointer shadow-lg shrink-0" onClick={() => { setResults(item.images); setSelectedResultIndex(0); setMode(item.mode); setShowMobileHistory(false); if (isGenerating) setViewingHistoryDuringGeneration(true); if (window.innerWidth < 1024) setTimeout(() => outputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100); }}>
                         <div className="w-full aspect-[3/4] bg-black relative">
                           <img src={item.thumbnail} alt="" className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity duration-500" />
@@ -2250,7 +2284,7 @@ const App: React.FC = () => {
                 <div className="text-2xl font-bold text-white mb-1">2K</div>
                 <div className="text-sm text-white/50 group-hover:text-white/80">Standard</div>
                 <div className="mt-3 px-3 py-1 rounded-full bg-purple-500/20 text-purple-300 text-xs font-medium">
-                  15 xu
+                  10 xu
                 </div>
               </button>
 
@@ -2261,7 +2295,7 @@ const App: React.FC = () => {
                 <div className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400 mb-1">4K</div>
                 <div className="text-sm text-white/50 group-hover:text-white/80">Ultra HD</div>
                 <div className="mt-3 px-3 py-1 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-medium shadow-lg shadow-purple-500/20">
-                  30 xu
+                  20 xu
                 </div>
               </button>
             </div>

@@ -106,7 +106,7 @@ const HolidayCampaign: React.FC = () => {
                                 </div>
 
                                 {/* FOMO Progress Bar */}
-                                <div className="bg-white/5 rounded-xl p-5 mb-8 border border-white/5">
+                                {/* <div className="bg-white/5 rounded-xl p-5 mb-8 border border-white/5">
                                     <div className="flex justify-between text-sm font-medium mb-2">
                                         <span className="text-red-300 flex items-center gap-2">
                                             <span className="relative flex h-2 w-2">
@@ -127,7 +127,7 @@ const HolidayCampaign: React.FC = () => {
                                         </div>
                                     </div>
                                     <p className="text-xs text-gray-500 mt-2 italic">*Chỉ dành cho 50 Shop đăng ký sớm nhất.</p>
-                                </div>
+                                </div> */}
 
                                 <div className="mt-auto">
                                     <Button

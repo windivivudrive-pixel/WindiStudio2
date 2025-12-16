@@ -1,9 +1,22 @@
+/**
+ * Windi Studio API - Cloudflare Workers
+ * Handles: generate-image, get-gallery, proxy-image
+ */
+
 import { GoogleGenAI, HarmCategory, HarmBlockThreshold } from "@google/genai";
 import { createClient } from '@supabase/supabase-js';
+
+// Environment interface
+interface Env {
+    GEMINI_API_KEY: string;
+    SUPABASE_URL: string;
+    SUPABASE_SERVICE_ROLE_KEY: string;
+}
 
 const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
 };
 
 // --- CONSTANTS & PROMPTS ---
@@ -18,16 +31,10 @@ const BG_KEEPING = `
     - PRESERVE the vibe/environment of Image 1 unless instructed otherwise.
 `;
 
-// 1. Tạo các mảng đặc điểm
 const hairStyles = ["short bob hair", "brown hair", "high ponytail", "dyed hair", "shoulder-length straight hair"];
 const faceShapes = ["round face", "diamond face shape", "sharp jawline", "heart-shaped face"];
-const expressions = ["neutral expression", "soft smile", "edgy look", "laughing"];
 
-// 2. Random lấy 1 giá trị từ mỗi mảng
-const randomHair = hairStyles[Math.floor(Math.random() * hairStyles.length)];
-const randomFace = faceShapes[Math.floor(Math.random() * faceShapes.length)];
 // Helper to process image parts
-
 const processImagePart = async (dataUriOrUrl: string) => {
     if (!dataUriOrUrl) return null;
 
@@ -42,7 +49,7 @@ const processImagePart = async (dataUriOrUrl: string) => {
             const blob = await response.blob();
             const arrayBuffer = await blob.arrayBuffer();
 
-            // Safer base64 conversion to avoid "Maximum call stack size exceeded"
+            // Safer base64 conversion
             let binary = '';
             const bytes = new Uint8Array(arrayBuffer);
             const len = bytes.byteLength;
@@ -84,19 +91,47 @@ const processImagePart = async (dataUriOrUrl: string) => {
     };
 };
 
-Deno.serve(async (req) => {
-    // Handle CORS preflight request
-    if (req.method === 'OPTIONS') {
-        return new Response('ok', { headers: corsHeaders });
-    }
+// Type interfaces for request bodies
+interface GenerateImageRequest {
+    mode: string;
+    modelName: string;
+    primaryImage: string | null;
+    secondaryImage: string | null;
+    userPrompt: string;
+    aspectRatio: string;
+    flexibleMode?: boolean;
+    randomFace?: boolean;
+    keepFace?: boolean;
+    accessoryImages?: string[];
+    backgroundImage?: string | null;
+    numberOfImages?: number;
+    variationIndex?: number;
+    totalBatchSize?: number;
+    targetResolution?: '2K' | '4K';
+}
 
-    // --- AUTH & SAFETY CHECK ---
-    const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+interface GalleryRequest {
+    page?: number;
+    limit?: number;
+    categoryId?: number;
+    userId?: string;
+    imageType?: string;
+    daysAgo?: number;
+    onlyFavorites?: boolean;
+    id?: string;
+}
+
+interface ProxyImageRequest {
+    imageUrl: string;
+}
+
+// ============ GENERATE IMAGE HANDLER ============
+async function handleGenerateImage(request: Request, env: Env): Promise<Response> {
+    const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
     let userId: string | null = null;
 
     try {
+        const body = await request.json() as GenerateImageRequest;
         const {
             mode,
             modelName,
@@ -106,25 +141,25 @@ Deno.serve(async (req) => {
             aspectRatio,
             flexibleMode,
             randomFace,
-            keepFace = true, // Default to true for backward compatibility
+            keepFace = true,
             accessoryImages,
             backgroundImage,
-            numberOfImages = 1, // Legacy support, but we will mostly use 1 per request now
+            numberOfImages = 1,
             variationIndex = 0,
             totalBatchSize = 1,
-            targetResolution = '2K' // Default to 2K
-        } = await req.json();
+            targetResolution = '2K'
+        } = body;
 
-        const apiKey = Deno.env.get('GEMINI_API_KEY');
+        const apiKey = env.GEMINI_API_KEY;
         if (!apiKey) {
             throw new Error("GEMINI_API_KEY is not set in environment variables.");
         }
 
-        const authHeader = req.headers.get('Authorization');
+        const authHeader = request.headers.get('Authorization');
 
         if (authHeader) {
             const token = authHeader.replace('Bearer ', '');
-            const { data: { user }, error: userError } = await supabase.auth.getUser(token);
+            const { data: { user } } = await supabase.auth.getUser(token);
             if (user) {
                 userId = user.id;
 
@@ -144,14 +179,13 @@ Deno.serve(async (req) => {
         const ai = new GoogleGenAI({ apiKey });
         const results: string[] = [];
 
-        // We now generate only 1 image per request to support progressive loading on frontend
-        // The frontend will call this function N times.
-
         const i = variationIndex;
         const isBatchMode = totalBatchSize > 1;
 
-        //"DETAIL SHOT (Cận Cảnh - Neck Down): Frame from the NECK DOWN. Exclude the face/head completely. Focus strictly on the OUTFIT details, material texture, and accessories.
-        // ${i === 3 ? "SPECIAL FRAMING: HEADLESS SHOT. Start framing from the neck down. No face." 
+        // Random features
+        const randomHair = hairStyles[Math.floor(Math.random() * hairStyles.length)];
+        const randomFaceShape = faceShapes[Math.floor(Math.random() * faceShapes.length)];
+
         let variationInstruction = "";
 
         // SPECIAL BATCH MODE (Set button = 4 images with different shot types)
@@ -170,13 +204,12 @@ Deno.serve(async (req) => {
             Make the background feel like a dynamic, around the subject. If the background is like a studio or room, keep the lighting right.
           `;
         } else if (isBatchMode) {
-            // Standard variation for other batch sizes
             variationInstruction = `\n(Variation ${i + 1}): Change the camera angle or pose slightly to create a diverse set.`;
         }
 
         const parts: any[] = [];
         let promptText = "";
-        let generatedIdentityRef: string | null = null; // Note: This won't persist across requests. If needed, frontend must pass it back.
+        let generatedIdentityRef: string | null = null;
         const activeModel = "gemini-2.5-flash-image";
 
         // --- UPSCALE LOGIC ---
@@ -187,13 +220,11 @@ Deno.serve(async (req) => {
                 throw new Error("Upscale requires an input image.");
             }
 
-            // Process image (handles URL or Base64)
             const processedImage = await processImagePart(primaryImage);
             if (!processedImage) {
                 throw new Error("Failed to process input image for upscale.");
             }
 
-            // Use Gemini 3 Pro for High-Res Image-to-Image refinement
             const response = await ai.models.generateContent({
                 model: 'gemini-3-pro-image-preview',
                 contents: {
@@ -245,7 +276,6 @@ Deno.serve(async (req) => {
 
             let subjectInstruction = "";
             if (keepFace) {
-                // Default behavior: preserve face
                 subjectInstruction = `
                  - STRICTLY PRESERVE the Subject's Face, Hair, Skin Tone, and Outfit from Image 1.
                  - This is a RE-POSING task. Do not change the person's identity or clothes.
@@ -253,10 +283,9 @@ Deno.serve(async (req) => {
                  - Create a NEW, creative, natural, and professional fashion pose (Variation #${i + 1}).
                  `;
             } else {
-                // keepFace = false: Only preserve outfit, allow different face/model
                 subjectInstruction = `
                  - STRICTLY PRESERVE the Outfit from Image 1.
-                 - CHANGE MODEL to a Vietnamese young model with ${randomHair} and${randomFace}.
+                 - CHANGE MODEL to a Vietnamese young model with ${randomHair} and${randomFaceShape}.
                  - POSE:
                  - Create a NEW, creative, natural, and professional fashion pose (Variation #${i + 1}).
                  `;
@@ -308,16 +337,15 @@ Deno.serve(async (req) => {
             }
 
             promptText = `
-             GENERATE a full body photorealistic Young Korean Girl (Smooth White Skin, Black Hair, medium breast, small waist) with the exact outfit (primaryImage)
-             POSE: Create a dynamic, professional fashion pose (Variation #${i + 1}). 
+             GENERATE a photorealistic Young Korean Girl (Smooth White Skin, Black Hair, medium breast, small waist) with the exact outfit (primaryImage)
+             POSE: Create a fashion pose, full body Stand facing the camera slightly tilted to see outfit details(Variation #${i + 1}). 
              ${faceInstruction}
-
             ${variationInstruction}
           `;
 
         } else if (mode === 'COPY_CONCEPT') {
-            if (secondaryImage) parts.push(await processImagePart(secondaryImage)); // Image 1 (Concept)
-            if (primaryImage) parts.push(await processImagePart(primaryImage)); // Image 2 (Face)
+            if (secondaryImage) parts.push(await processImagePart(secondaryImage));
+            if (primaryImage) parts.push(await processImagePart(primaryImage));
 
             promptText = `
         I have provided a FACE IDENTITY SOURCE (Image 2) and a CONCEPT/OUTFIT REFERENCE (Image 1).
@@ -345,7 +373,6 @@ Deno.serve(async (req) => {
         ${variationInstruction}
         `;
         } else if (mode === 'FUN_FREEDOM') {
-            // Process all images
             let hasImages = false;
             if (primaryImage) {
                 parts.push(await processImagePart(primaryImage));
@@ -355,7 +382,6 @@ Deno.serve(async (req) => {
                 parts.push(await processImagePart(secondaryImage));
                 hasImages = true;
             }
-            // Accessory images are processed below automatically
 
             const basePrompt = userPrompt || "A creative image based on the provided references.";
 
@@ -370,9 +396,6 @@ Deno.serve(async (req) => {
             } else {
                 promptText = basePrompt;
             }
-
-            // Add variation instruction if batch
-
 
             promptText += variationInstruction;
         }
@@ -390,18 +413,15 @@ Deno.serve(async (req) => {
         // Process Accessory Images
         if (accessoryImages && accessoryImages.length > 0) {
             console.log(`Processing ${accessoryImages.length} accessory images...`);
-            for (let i = 0; i < accessoryImages.length; i++) {
-                const accPart = await processImagePart(accessoryImages[i]);
+            for (let j = 0; j < accessoryImages.length; j++) {
+                const accPart = await processImagePart(accessoryImages[j]);
                 if (accPart) {
                     parts.push(accPart);
                     promptText += `\n\nACCESSORY REFERENCE (Image ${parts.length}): Incorporate the accessory shown in this image into the outfit naturally.`;
                 }
             }
             promptText += `\n\nBACKGROUND REFERENCE (Image ${parts.length}): PRESERVE the vibe/environment unless instructed otherwise.`;
-
-        }
-
-        else if (mode !== 'CREATE_MODEL' || totalBatchSize !== 4) {
+        } else if (mode !== 'CREATE_MODEL' || totalBatchSize !== 4) {
             promptText += `${BG_KEEPING}`;
         }
 
@@ -459,7 +479,6 @@ Deno.serve(async (req) => {
             }
         }
 
-
         if (results.length === 0) {
             console.error("Gemini Response (Full):", JSON.stringify(response, null, 2));
             if (response.candidates && response.candidates.length > 0) {
@@ -467,10 +486,8 @@ Deno.serve(async (req) => {
                 console.error("Candidate 0 Finish Reason:", candidate.finishReason);
                 console.error("Candidate 0 Safety Ratings:", JSON.stringify(candidate.safetyRatings, null, 2));
 
-                // Check for safety block
                 const reason = candidate.finishReason as any;
                 if (reason === "SAFETY" || reason === "PROHIBITED_CONTENT" || reason === "BLOCK_REASON_SAFETY" || reason === "IMAGE_OTHER" || reason === "IMAGE_SAFETY") {
-                    // Return 200 with error object so frontend can properly parse it
                     return new Response(
                         JSON.stringify({
                             images: [],
@@ -490,10 +507,9 @@ Deno.serve(async (req) => {
         );
 
     } catch (error: any) {
-        console.error("Edge Function Error:", error);
+        console.error("Worker Error:", error);
 
         // --- SAFETY VIOLATION HANDLING ---
-        // Check for safety-related errors (from library or our own checks)
         const isSafetyError =
             error.message?.includes("SAFETY") ||
             error.message?.includes("PROHIBITED_CONTENT") ||
@@ -504,7 +520,8 @@ Deno.serve(async (req) => {
             console.warn(`Safety violation detected for user ${userId}. Incrementing warning count.`);
 
             try {
-                // Fetch current profile to get latest count
+                const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
+
                 const { data: profile } = await supabase
                     .from('profiles')
                     .select('warning_count')
@@ -537,10 +554,6 @@ Deno.serve(async (req) => {
                 }
             } catch (dbError: any) {
                 console.error("Failed to update user safety stats:", dbError);
-                // If it was our custom error, rethrow it
-                if (dbError.message && (dbError.message.includes("SAFETY_VIOLATION") || dbError.message.includes("ACCOUNT_BANNED"))) {
-                    throw dbError;
-                }
             }
         }
 
@@ -549,4 +562,175 @@ Deno.serve(async (req) => {
             { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
         );
     }
-});
+}
+
+// ============ GET GALLERY HANDLER ============
+async function handleGetGallery(request: Request, env: Env): Promise<Response> {
+    try {
+        const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
+
+        const body = await request.json() as GalleryRequest;
+        const {
+            page = 0,
+            limit = 60,
+            categoryId,
+            userId,
+            imageType,
+            daysAgo,
+            onlyFavorites,
+            id
+        } = body;
+
+        let query = supabase
+            .from('generations')
+            .select('*, profiles(email)');
+
+        // If ID is provided, fetch specific item
+        if (id) {
+            query = query.eq('id', id);
+        } else {
+            // Apply filters
+            if (onlyFavorites) {
+                query = query.eq('is_favorite', true);
+            }
+            if (categoryId) {
+                query = query.eq('category_id', categoryId);
+            }
+            if (userId) {
+                query = query.eq('user_id', userId);
+            }
+            if (imageType) {
+                query = query.eq('image_type', imageType);
+            }
+            if (daysAgo) {
+                const date = new Date();
+                date.setDate(date.getDate() - daysAgo);
+                query = query.gte('created_at', date.toISOString());
+            }
+
+            // Apply Order and Pagination LAST
+            query = query.order('created_at', { ascending: false })
+                .range(page * limit, (page + 1) * limit - 1);
+        }
+
+        const { data, error } = await query;
+
+        if (error) {
+            console.error('Error fetching gallery:', error);
+            throw error;
+        }
+
+        // Transform data to match frontend expectations
+        const formattedData = (data || []).map((item: any) => ({
+            id: item.id,
+            thumbnail: item.image_url,
+            images: [item.image_url],
+            prompt: item.prompt,
+            timestamp: new Date(item.created_at).getTime(),
+            mode: item.mode,
+            modelName: item.model_name,
+            cost: item.cost_credits,
+            imageType: item.image_type,
+            isFavorite: item.is_favorite,
+            categoryId: item.category_id,
+            userEmail: item.profiles?.email
+        }));
+
+        return new Response(
+            JSON.stringify({ images: formattedData }),
+            { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+
+    } catch (error: any) {
+        console.error("Gallery Worker Error:", error);
+        return new Response(
+            JSON.stringify({ error: error.message }),
+            { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+    }
+}
+
+// ============ PROXY IMAGE HANDLER ============
+async function handleProxyImage(request: Request): Promise<Response> {
+    try {
+        const body = await request.json() as ProxyImageRequest;
+        const { imageUrl } = body;
+
+        if (!imageUrl) {
+            return new Response(
+                JSON.stringify({ error: 'imageUrl is required' }),
+                { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            );
+        }
+
+        // Fetch the image from the URL
+        const response = await fetch(imageUrl);
+        if (!response.ok) {
+            throw new Error(`Failed to fetch image: ${response.status}`);
+        }
+
+        const arrayBuffer = await response.arrayBuffer();
+        const uint8Array = new Uint8Array(arrayBuffer);
+
+        // Convert to base64
+        let binary = '';
+        for (let i = 0; i < uint8Array.length; i++) {
+            binary += String.fromCharCode(uint8Array[i]);
+        }
+        const base64 = btoa(binary);
+
+        // Determine mime type
+        const contentType = response.headers.get('content-type') || 'image/jpeg';
+        const dataUrl = `data:${contentType};base64,${base64}`;
+
+        return new Response(
+            JSON.stringify({ image: dataUrl }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+    } catch (error: any) {
+        console.error('Proxy error:', error);
+        return new Response(
+            JSON.stringify({ error: 'Failed to proxy image', details: error.message }),
+            { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+    }
+}
+
+// ============ MAIN ROUTER ============
+export default {
+    async fetch(request: Request, env: Env): Promise<Response> {
+        // Handle CORS preflight
+        if (request.method === 'OPTIONS') {
+            return new Response('ok', { headers: corsHeaders });
+        }
+
+        const url = new URL(request.url);
+        const path = url.pathname;
+
+        // Route to appropriate handler
+        if (path === '/generate-image' || path === '/api/generate-image') {
+            return handleGenerateImage(request, env);
+        }
+
+        if (path === '/get-gallery' || path === '/api/get-gallery') {
+            return handleGetGallery(request, env);
+        }
+
+        if (path === '/proxy-image' || path === '/api/proxy-image') {
+            return handleProxyImage(request);
+        }
+
+        // Health check
+        if (path === '/' || path === '/health') {
+            return new Response(
+                JSON.stringify({ status: 'ok', version: '1.0.0', endpoints: ['/generate-image', '/get-gallery', '/proxy-image'] }),
+                { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            );
+        }
+
+        return new Response(
+            JSON.stringify({ error: 'Not Found' }),
+            { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+    }
+};

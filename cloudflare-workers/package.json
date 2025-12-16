@@ -1,0 +1,21 @@
+{
+    "name": "windi-workers",
+    "version": "1.0.0",
+    "private": true,
+    "scripts": {
+        "dev": "wrangler dev",
+        "deploy": "wrangler deploy",
+        "deploy:generate": "wrangler deploy --config wrangler.toml",
+        "deploy:gallery": "wrangler deploy --config wrangler.gallery.toml",
+        "deploy:proxy": "wrangler deploy --config wrangler.proxy.toml"
+    },
+    "dependencies": {
+        "@google/genai": "^1.3.0",
+        "@supabase/supabase-js": "^2.49.4"
+    },
+    "devDependencies": {
+        "@cloudflare/workers-types": "^4.20250522.0",
+        "typescript": "^5.7.3",
+        "wrangler": "^4.16.1"
+    }
+}

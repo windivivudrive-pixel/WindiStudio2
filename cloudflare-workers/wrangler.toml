@@ -1,0 +1,18 @@
+name = "windi-api"
+main = "src/index.ts"
+compatibility_date = "2024-12-01"
+
+# Routes - you can customize your domain here
+# routes = [
+#   { pattern = "api.yourdomain.com/*", zone_name = "yourdomain.com" }
+# ]
+
+[vars]
+# Non-secret variables can go here
+# ENVIRONMENT = "production"
+
+# Secret variables should be set via `wrangler secret put`
+# Run these commands after deployment:
+# wrangler secret put GEMINI_API_KEY
+# wrangler secret put SUPABASE_URL
+# wrangler secret put SUPABASE_SERVICE_ROLE_KEY
