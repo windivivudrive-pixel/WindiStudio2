@@ -10,6 +10,12 @@ compatibility_date = "2024-12-01"
 [vars]
 # Non-secret variables can go here
 # ENVIRONMENT = "production"
+R2_PUBLIC_DOMAIN = "https://img.windistudio.app"
+
+# R2 Bucket Binding - for storing Seedream images permanently
+[[r2_buckets]]
+binding = "R2_BUCKET"
+bucket_name = "windi-bucket"
 
 # Secret variables should be set via `wrangler secret put`
 # Run these commands after deployment:

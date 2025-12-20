@@ -4,7 +4,7 @@ export enum AppMode {
   VIRTUAL_TRY_ON = 'VIRTUAL_TRY_ON',
   CREATE_MODEL = 'CREATE_MODEL',
   COPY_CONCEPT = 'COPY_CONCEPT',
-  FUN_FREEDOM = 'FUN_FREEDOM',
+  CREATIVE = 'CREATIVE',
 }
 
 export enum AspectRatio {
@@ -31,7 +31,7 @@ export interface HistoryItem {
   mode: AppMode;
   modelName?: string;
   cost?: number;
-  imageType?: 'STANDARD' | 'PREMIUM' | 'SCALEX2' | 'SCALE2' | 'SCALE4';
+  imageType?: 'STANDARD' | 'PREMIUM' | 'SCALEX2' | 'SCALE2' | 'SCALE4' | 'S4.0' | 'S4.5';
   isFavorite?: boolean;
   categoryId?: number;
   userEmail?: string;

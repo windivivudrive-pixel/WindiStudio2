@@ -344,7 +344,7 @@ Deno.serve(async (req) => {
            
         ${variationInstruction}
         `;
-        } else if (mode === 'FUN_FREEDOM') {
+        } else if (mode === 'CREATIVE') {
             // Process all images
             let hasImages = false;
             if (primaryImage) {

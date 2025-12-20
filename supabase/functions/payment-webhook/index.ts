@@ -98,10 +98,11 @@ Deno.serve(async (req) => {
         }
 
         // --- BONUS LOGIC ---
+        // 200k → 10%, 500k → 20%, 2M → 60%
         const getBonusMultiplier = (amount: number): number => {
-            if (amount >= 3000000) return 2;     // +100%
-            if (amount >= 1000000) return 1.5;   // +50%
-            if (amount >= 500000) return 1.2;    // +20%
+            if (amount >= 2000000) return 1.6;    // +60%
+            if (amount >= 500000) return 1.2;     // +20%
+            if (amount >= 200000) return 1.1;     // +10%
             return 1; // No bonus
         };
 

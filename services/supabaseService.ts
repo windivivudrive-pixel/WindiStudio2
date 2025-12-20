@@ -56,7 +56,7 @@ export const createProfileIfNotExists = async (user: any) => {
     full_name: user.user_metadata.full_name || user.email?.split('@')[0],
     avatar_url: user.user_metadata.avatar_url,
     payment_code: generatePaymentCode(),
-    credits: 50, // Default 50 Wpoint
+    credits: 10, // Default 10 Wpoint for new users
   };
 
   const { data, error } = await supabase
@@ -209,7 +209,7 @@ export const saveGenerationToDb = async (
   userId: string,
   item: HistoryItem,
   cost: number,
-  imageType: 'STANDARD' | 'PREMIUM' | 'SCALEX2' | 'SCALE2' | 'SCALE4'
+  imageType: 'STANDARD' | 'PREMIUM' | 'SCALEX2' | 'SCALE2' | 'SCALE4' | 'S4.0' | 'S4.5'
 ) => {
   if (userId === 'dev-user') {
     return item; // Mock save, return item as is (images are already base64 or URLs)
@@ -217,17 +217,24 @@ export const saveGenerationToDb = async (
 
   const uploadedUrls: string[] = [];
 
-  // 1. Upload Images
-  // 1. Upload Images
+  // 1. Upload Images (or use existing URLs)
   for (let i = 0; i < item.images.length; i++) {
-    const base64 = item.images[i];
+    const imageData = item.images[i];
     const fileName = `${userId}/${item.timestamp}_${i}.png`; // Use .png for R2
 
     try {
-      const res = await fetch(base64);
-      const blob = await res.blob();
-      const publicUrl = await uploadToR2(blob, fileName, 'image/png');
-      if (publicUrl) uploadedUrls.push(publicUrl);
+      // Check if it's already a public URL (from Seedream/BytePlus) - don't re-upload
+      if (imageData.startsWith('http://') || imageData.startsWith('https://')) {
+        // It's already a URL - use directly (Seedream returns public URLs)
+        uploadedUrls.push(imageData);
+        console.log(`Image ${i} is already a URL, using directly`);
+      } else {
+        // It's base64 - upload to R2
+        const res = await fetch(imageData);
+        const blob = await res.blob();
+        const publicUrl = await uploadToR2(blob, fileName, 'image/png');
+        if (publicUrl) uploadedUrls.push(publicUrl);
+      }
     } catch (e) {
       console.error("Failed to upload generation to R2", e);
     }

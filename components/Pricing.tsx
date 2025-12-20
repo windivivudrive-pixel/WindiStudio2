@@ -68,7 +68,7 @@ const Pricing: React.FC<PricingProps> = ({ userProfile = null, bankConfig = DEFA
     };
 
     return (
-        <section id="pricing" className="py-24 relative overflow-hidden bg-black/40">
+        <section id="pricing" className="pt-10 pb-16 relative overflow-hidden bg-black/40">
             {/* Background Gradients */}
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full pointer-events-none">
                 <div className="absolute top-[20%] left-[20%] w-[500px] h-[500px] bg-purple-900/10 rounded-full blur-[120px]" />
@@ -76,7 +76,7 @@ const Pricing: React.FC<PricingProps> = ({ userProfile = null, bankConfig = DEFA
             </div>
 
             <div className="max-w-7xl mx-auto px-6 relative z-10">
-                <div className="text-center mb-16">
+                <div className="text-center mb-4">
                     <h2 className="text-3xl md:text-5xl font-display font-semibold mb-4">
                         Bảng giá <span className="text-gradient-gold">Nạp Credit</span>
                     </h2>
@@ -88,124 +88,9 @@ const Pricing: React.FC<PricingProps> = ({ userProfile = null, bankConfig = DEFA
                 </div>
 
 
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch mb-12">
-                    {/* Card 1: Starter */}
-                    <div className="glass-panel p-8 rounded-3xl border border-white/5 relative group hover:border-white/20 transition-all duration-300 flex flex-col">
-                        <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-green-500/10 border border-green-500/50 text-green-400 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider backdrop-blur-md">
-                            +20% Giá trị
-                        </div>
-                        <div className="text-center mb-8 pt-4">
-                            <h3 className="text-xl font-medium text-white mb-2">Gói Trải Nghiệm</h3>
-                            <div className="text-4xl font-bold text-white mb-1">500.000<span className="text-base font-normal text-gray-500 ml-1">đ</span></div>
-                            <p className="text-sm text-gray-500 mt-2">Phù hợp cho shop nhỏ hoặc muốn test thử chất lượng.</p>
-                        </div>
-                        <ul className="space-y-4 mb-8 text-sm flex-grow">
-                            <li className="flex items-center gap-3 text-gray-300">
-                                <Check className="w-4 h-4 text-green-500 shrink-0" />
-                                <span>Tổng nhận: <strong className="text-white">600.000đ</strong></span>
-                            </li>
-
-                        </ul>
-                        {!hidePurchaseOptions && (
-                            <Button
-                                variant="liquid"
-                                className="w-full mt-auto group-hover:bg-green-500/10 group-hover:border-green-500/30 group-hover:shadow-[inset_0_1px_0_0_rgba(74,222,128,0.2)]"
-                                onClick={() => handleTopUpClick(500000)}
-                            >
-                                Nạp 500k
-                            </Button>
-                        )}
-                    </div>
-
-                    {/* Card 2: Professional (Highlight) */}
-                    <div className="glass-panel p-8 rounded-3xl border border-purple-500/30 relative group shadow-[0_0_50px_-15px_rgba(168,85,247,0.2)] bg-gradient-to-b from-purple-900/10 to-transparent flex flex-col">
-                        <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-wider shadow-lg shadow-purple-500/30">
-                            +50% Giá trị
-                        </div>
-
-                        {/* Recommended Badge */}
-                        <div className="absolute top-4 right-4 flex">
-                            <span className="bg-purple-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-sm uppercase tracking-wide">Khuyên dùng</span>
-                        </div>
-
-                        <div className="text-center mb-8 pt-4">
-                            <h3 className="text-xl font-medium text-white mb-2 flex items-center justify-center gap-2">
-                                Gói Chuyên Nghiệp <Sparkles className="w-4 h-4 text-purple-400 fill-purple-400 animate-pulse" />
-                            </h3>
-                            <div className="text-4xl font-bold text-white mb-1">1.000.000<span className="text-base font-normal text-gray-500 ml-1">đ</span></div>
-                            <p className="text-sm text-purple-200/80 mt-2">Dành cho shop ra mẫu đều đặn hàng tuần.</p>
-                        </div>
-                        <ul className="space-y-4 mb-8 text-sm flex-grow">
-                            <li className="flex items-center gap-3 text-white">
-                                <div className="w-6 h-6 rounded-full bg-purple-500/20 flex items-center justify-center shrink-0"><Check className="w-3.5 h-3.5 text-purple-400" /></div>
-                                <span>Tổng nhận: <strong className="text-purple-300 text-lg">1.500.000đ</strong></span>
-                            </li>
-                            <li className="flex items-center gap-3 text-gray-300">
-                                <div className="w-6 h-6 rounded-full bg-purple-500/20 flex items-center justify-center shrink-0"><Check className="w-3.5 h-3.5 text-purple-400" /></div>
-                                <span>Tiết kiệm 500k so với gói thường</span>
-                            </li>
-                            <li className="flex items-center gap-3 text-gray-300">
-                                <div className="w-6 h-6 rounded-full bg-purple-500/20 flex items-center justify-center shrink-0"><Check className="w-3.5 h-3.5 text-purple-400" /></div>
-                                <span>Tặng Tính Năng Thêm Watermark Tự Động</span>
-                            </li>
-                        </ul>
-                        {!hidePurchaseOptions && (
-                            <Button
-                                variant="liquid"
-                                className="w-full mt-auto font-bold text-purple-100 border-purple-500/30 bg-purple-500/10 hover:bg-purple-500/20 shadow-[inset_0_1px_0_0_rgba(168,85,247,0.4),0_10px_20px_-10px_rgba(168,85,247,0.3)]"
-                                onClick={() => handleTopUpClick(1000000)}
-                            >
-                                Nạp 1 Triệu
-                            </Button>
-                        )}
-                    </div>
-
-                    {/* Card 3: Agency (VIP) */}
-                    <div className="glass-panel p-8 rounded-3xl border border-yellow-500/20 relative group hover:border-yellow-500/40 transition-all duration-300 flex flex-col">
-                        <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gradient-to-r from-yellow-600 to-yellow-400 text-black text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow-lg shadow-yellow-500/20">
-                            X2 Tài Khoản
-                        </div>
-                        <div className="text-center mb-8 pt-4">
-                            <h3 className="text-xl font-medium text-white mb-2 flex items-center justify-center gap-2">
-                                Gói Studio / Agency <Crown className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-                            </h3>
-                            <div className="text-4xl font-bold text-white mb-1">3.000.000<span className="text-base font-normal text-gray-500 ml-1">đ</span></div>
-                            <p className="text-sm text-gray-500 mt-2">Giải pháp tối ưu chi phí nhất cho chuỗi shop.</p>
-                        </div>
-                        <ul className="space-y-4 mb-8 text-sm flex-grow">
-                            <li className="flex items-center gap-3 text-gray-300">
-                                <Check className="w-4 h-4 text-yellow-500 shrink-0" />
-                                <span>Tổng nhận: <strong className="text-yellow-400 text-lg">6.000.000đ</strong></span>
-                            </li>
-                            <li className="flex items-center gap-3 text-gray-300">
-                                <Check className="w-4 h-4 text-yellow-500 shrink-0" />
-                                <span>Mua 1 được 2 (Siêu hời)</span>
-                            </li>
-                            <li className="flex items-center gap-3 text-gray-300">
-                                <Check className="w-4 h-4 text-yellow-500 shrink-0" />
-                                <span>Hỗ trợ Hoàn Xu Khi Ảnh Lỗi</span>
-                            </li>
-                            <li className="flex items-center gap-3 text-gray-300">
-                                <Check className="w-4 h-4 text-yellow-500 shrink-0" />
-                                <span>Ưu Tiên sử dụng các Model AI mới nhất</span>
-                            </li>
-                        </ul>
-                        {!hidePurchaseOptions && (
-                            <Button
-                                variant="liquid"
-                                className="w-full mt-auto font-bold text-yellow-200 border-yellow-500/30 bg-yellow-500/10 hover:bg-yellow-500/20 shadow-[inset_0_1px_0_0_rgba(234,179,8,0.4),0_10px_20px_-10px_rgba(234,179,8,0.3)]"
-                                onClick={() => handleTopUpClick(3000000)}
-                            >
-                                Nạp 3 Triệu
-                            </Button>
-                        )}
-                    </div>
-                </div>
-
                 {/* Custom Input Section */}
                 {!hidePurchaseOptions && (
-                    <div className="max-w-xl mx-auto">
+                    <div className="max-w-xl mx-auto mb-12">
                         <div className="glass-panel p-6 md:p-8 rounded-2xl border border-white/10 flex flex-col md:flex-row items-center gap-6">
                             <div className="flex-1 w-full">
                                 <label className="block text-sm text-gray-400 mb-2 font-medium">Nhập số tiền muốn nạp</label>
@@ -240,6 +125,120 @@ const Pricing: React.FC<PricingProps> = ({ userProfile = null, bankConfig = DEFA
                         <p className="text-center text-xs text-gray-500 mt-3">*Hệ thống tự động tính toán Bonus dựa trên số tiền nạp.</p>
                     </div>
                 )}
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch mb-12">
+                    {/* Card 1: Starter */}
+                    <div className="glass-panel p-8 rounded-3xl border border-white/5 relative group hover:border-white/20 transition-all duration-300 flex flex-col">
+                        <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-green-500/10 border border-green-500/50 text-green-400 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider backdrop-blur-md">
+                            +10% Giá trị
+                        </div>
+                        <div className="text-center mb-8 pt-4">
+                            <h3 className="text-xl font-medium text-white mb-2">Gói Trải Nghiệm</h3>
+                            <div className="text-4xl font-bold text-white mb-1">200.000<span className="text-base font-normal text-gray-500 ml-1">đ</span></div>
+                            <p className="text-sm text-gray-500 mt-2">Phù hợp để test thử chất lượng dịch vụ.</p>
+                        </div>
+                        <ul className="space-y-4 mb-8 text-sm flex-grow">
+                            <li className="flex items-center gap-3 text-gray-300">
+                                <Check className="w-4 h-4 text-green-500 shrink-0" />
+                                <span>Tổng nhận: <strong className="text-white">220.000đ</strong></span>
+                            </li>
+
+                        </ul>
+                        {!hidePurchaseOptions && (
+                            <Button
+                                variant="liquid"
+                                className="w-full mt-auto group-hover:bg-green-500/10 group-hover:border-green-500/30 group-hover:shadow-[inset_0_1px_0_0_rgba(74,222,128,0.2)]"
+                                onClick={() => handleTopUpClick(200000)}
+                            >
+                                Nạp 200k
+                            </Button>
+                        )}
+                    </div>
+
+                    {/* Card 2: Professional (Highlight) */}
+                    <div className="glass-panel p-8 rounded-3xl border border-purple-500/30 relative group shadow-[0_0_50px_-15px_rgba(168,85,247,0.2)] bg-gradient-to-b from-purple-900/10 to-transparent flex flex-col">
+                        <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-wider shadow-lg shadow-purple-500/30">
+                            +20% Giá trị
+                        </div>
+
+                        {/* Recommended Badge */}
+                        <div className="absolute top-4 right-4 flex">
+                            <span className="bg-purple-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-sm uppercase tracking-wide">Phổ biến</span>
+                        </div>
+
+                        <div className="text-center mb-8 pt-4">
+                            <h3 className="text-xl font-medium text-white mb-2 flex items-center justify-center gap-2">
+                                Gói Creator <Sparkles className="w-4 h-4 text-purple-400 fill-purple-400 animate-pulse" />
+                            </h3>
+                            <div className="text-4xl font-bold text-white mb-1">500.000<span className="text-base font-normal text-gray-500 ml-1">đ</span></div>
+                            <p className="text-sm text-purple-200/80 mt-2">Tối ưu chi phí khi sử dụng đều đặn.</p>
+                        </div>
+                        <ul className="space-y-4 mb-8 text-sm flex-grow">
+                            <li className="flex items-center gap-3 text-white">
+                                <div className="w-6 h-6 rounded-full bg-purple-500/20 flex items-center justify-center shrink-0"><Check className="w-3.5 h-3.5 text-purple-400" /></div>
+                                <span>Tổng nhận: <strong className="text-purple-300 text-lg">600.000đ</strong></span>
+                            </li>
+                            <li className="flex items-center gap-3 text-gray-300">
+                                <div className="w-6 h-6 rounded-full bg-purple-500/20 flex items-center justify-center shrink-0"><Check className="w-3.5 h-3.5 text-purple-400" /></div>
+                                <span>Tiết kiệm hơn gói trải nghiệm</span>
+                            </li>
+                        </ul>
+                        {!hidePurchaseOptions && (
+                            <Button
+                                variant="liquid"
+                                className="w-full mt-auto font-bold text-purple-100 border-purple-500/30 bg-purple-500/10 hover:bg-purple-500/20 shadow-[inset_0_1px_0_0_rgba(168,85,247,0.4),0_10px_20px_-10px_rgba(168,85,247,0.3)]"
+                                onClick={() => handleTopUpClick(500000)}
+                            >
+                                Nạp 500k
+                            </Button>
+                        )}
+                    </div>
+
+                    {/* Card 3: Agency (VIP) */}
+                    <div className="glass-panel p-8 rounded-3xl border border-yellow-500/20 relative group hover:border-yellow-500/40 transition-all duration-300 flex flex-col">
+                        <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gradient-to-r from-yellow-600 to-yellow-400 text-black text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow-lg shadow-yellow-500/20">
+                            +60% Giá Trị
+                        </div>
+                        <div className="text-center mb-8 pt-4">
+                            <h3 className="text-xl font-medium text-white mb-2 flex items-center justify-center gap-2">
+                                Gói Chủ Shop <Crown className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+                            </h3>
+                            <div className="text-4xl font-bold text-white mb-1">2.000.000<span className="text-base font-normal text-gray-500 ml-1">đ</span></div>
+                            <p className="text-sm text-gray-500 mt-2">Giải pháp tối ưu chi phí cho shop ra mẫu đều đặn.</p>
+                        </div>
+                        <ul className="space-y-4 mb-8 text-sm flex-grow">
+                            <li className="flex items-center gap-3 text-gray-300">
+                                <Check className="w-4 h-4 text-yellow-500 shrink-0" />
+                                <span>Tổng nhận: <strong className="text-yellow-400 text-lg">3.200.000đ</strong></span>
+                            </li>
+                            <li className="flex items-center gap-3 text-gray-300">
+                                <Check className="w-4 h-4 text-yellow-500 shrink-0" />
+                                <span>Tiết kiệm 1.2 triệu so với nạp thường</span>
+                            </li>
+                            <li className="flex items-center gap-3 text-gray-300">
+                                <Check className="w-4 h-4 text-yellow-500 shrink-0" />
+                                <span>Tặng Tính năng Watermark</span>
+                            </li>
+                            <li className="flex items-center gap-3 text-gray-300">
+                                <Check className="w-4 h-4 text-yellow-500 shrink-0" />
+                                <span>Hỗ trợ Hoàn Xu Khi Ảnh Lỗi</span>
+                            </li>
+                            <li className="flex items-center gap-3 text-gray-300">
+                                <Check className="w-4 h-4 text-yellow-500 shrink-0" />
+                                <span>Ưu Tiên sử dụng các Model AI mới nhất</span>
+                            </li>
+                        </ul>
+                        {!hidePurchaseOptions && (
+                            <Button
+                                variant="liquid"
+                                className="w-full mt-auto font-bold text-yellow-200 border-yellow-500/30 bg-yellow-500/10 hover:bg-yellow-500/20 shadow-[inset_0_1px_0_0_rgba(234,179,8,0.4),0_10px_20px_-10px_rgba(234,179,8,0.3)]"
+                                onClick={() => handleTopUpClick(2000000)}
+                            >
+                                Nạp 2 Triệu
+                            </Button>
+                        )}
+                    </div>
+                </div>
             </div>
 
 

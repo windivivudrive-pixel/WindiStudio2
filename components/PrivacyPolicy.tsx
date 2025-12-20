@@ -57,11 +57,7 @@ export const PrivacyPolicy: React.FC<PrivacyPolicyProps> = ({ onBack }) => {
                                 <li><strong>Cookies và công nghệ tương tự:</strong> Chúng tôi sử dụng cookies và các công nghệ theo dõi tương tự để ghi nhớ tùy chọn của bạn, duy trì trạng thái đăng nhập và phân tích cách người dùng tương tác với Dịch vụ. Bạn có thể kiểm soát việc sử dụng cookies qua cài đặt trình duyệt của mình.</li>
                             </ul>
 
-                            <h3 className="font-bold text-white mt-4">1.3. Thông tin về thanh toán</h3>
-                            <p>Nếu bạn thực hiện thanh toán trên Dịch vụ (ví dụ: nạp tín dụng để sử dụng tính năng tạo ảnh), chúng tôi sẽ thu thập thông tin liên quan đến giao dịch, chẳng hạn như số tiền, thời gian giao dịch và mã tham chiếu.</p>
-                            <div className="bg-yellow-500/10 border border-yellow-500/20 p-3 rounded-lg text-yellow-200 text-xs mt-2">
-                                <strong>Quan trọng:</strong> Chúng tôi KHÔNG trực tiếp thu thập hoặc lưu trữ thông tin thẻ tín dụng, thẻ ghi nợ hoặc thông tin tài khoản ngân hàng nhạy cảm của bạn. Các giao dịch thanh toán được xử lý bởi các nhà cung cấp dịch vụ thanh toán bên thứ ba uy tín (ví dụ: SePay, VietQR, các cổng thanh toán ngân hàng). Thông tin thanh toán của bạn sẽ chịu sự điều chỉnh của chính sách bảo mật của các nhà cung cấp dịch vụ đó.
-                            </div>
+
                         </div>
                     </section>
 
@@ -89,9 +85,9 @@ export const PrivacyPolicy: React.FC<PrivacyPolicyProps> = ({ onBack }) => {
                             <li>
                                 <strong>Nhà cung cấp dịch vụ:</strong> Chúng tôi chia sẻ thông tin với các bên thứ ba tin cậy giúp chúng tôi vận hành Dịch vụ, chẳng hạn như:
                                 <ul className="list-circle pl-5 mt-1 space-y-1 text-gray-500">
-                                    <li>Supabase: Để lưu trữ cơ sở dữ liệu và xác thực người dùng.</li>
+                                    <li>Cloudflare: Để lưu trữ cơ sở dữ liệu và xác thực người dùng.</li>
                                     <li>Google (Google Cloud/OAuth): Để cung cấp tính năng đăng nhập và các dịch vụ AI (nếu có).</li>
-                                    <li>Nhà cung cấp dịch vụ thanh toán (SePay, VietQR...): Để xử lý các giao dịch thanh toán.</li>
+                                    <li>Nhà cung cấp dịch vụ thanh toán VietQR để xử lý các giao dịch thanh toán.</li>
                                 </ul>
                             </li>
                             <li><strong>Yêu cầu pháp lý:</strong> Chúng tôi có thể tiết lộ thông tin của bạn nếu tin rằng điều đó là cần thiết để tuân thủ luật pháp, quy định, quy trình pháp lý hoặc yêu cầu hợp lệ từ cơ quan chính phủ.</li>

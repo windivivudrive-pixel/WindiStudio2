@@ -12,6 +12,8 @@ interface Env {
     BYTEPLUS_API_KEY: string;
     SUPABASE_URL: string;
     SUPABASE_SERVICE_ROLE_KEY: string;
+    R2_BUCKET: R2Bucket;
+    R2_PUBLIC_DOMAIN: string;
 }
 
 const corsHeaders = {
@@ -108,7 +110,7 @@ interface GenerateImageRequest {
     numberOfImages?: number;
     variationIndex?: number;
     totalBatchSize?: number;
-    targetResolution?: '2K' | '4K';
+    targetResolution?: '1K' | '2K' | '4K';
 }
 
 interface GalleryRequest {
@@ -381,36 +383,34 @@ async function handleGenerateImage(request: Request, env: Env): Promise<Response
            
         ${variationInstruction}
         `;
-        } else if (mode === 'FUN_FREEDOM') {
-            let hasImages = false;
+        } else if (mode === 'CREATIVE') {
+
+            console.log("CREATIVE mode");
+            // Process images if provided
             if (primaryImage) {
                 parts.push(await processImagePart(primaryImage));
-                hasImages = true;
             }
             if (secondaryImage) {
                 parts.push(await processImagePart(secondaryImage));
-                hasImages = true;
+            }
+            // Process accessory images for CREATIVE mode
+            if (accessoryImages && accessoryImages.length > 0) {
+                for (let j = 0; j < accessoryImages.length; j++) {
+                    const accPart = await processImagePart(accessoryImages[j]);
+                    if (accPart) {
+                        parts.push(accPart);
+                    }
+                }
             }
 
-            const basePrompt = userPrompt || "A creative image based on the provided references.";
+            // CREATIVE mode: ONLY user's prompt + minimal photorealism rules
+            promptText = `${userPrompt}`;
 
-            if (hasImages) {
-                promptText = `
-                 I have provided input images as references.
-                 
-                 USER PROMPT: ${basePrompt}
-                 
-                 INSTRUCTION: Generate an image based on the USER PROMPT. You MUST use the provided images as visual references (for style, content, subject, or composition) as appropriate for the request.
-                 `;
-            } else {
-                promptText = basePrompt;
-            }
-
-            promptText += variationInstruction;
+            // Skip all other prompt appending for CREATIVE mode
         }
 
-        // Process Background Image
-        if (backgroundImage) {
+        // Process Background Image (NOT for CREATIVE mode)
+        if (mode !== 'CREATIVE' && backgroundImage) {
             console.log("Processing background image...");
             const bgPart = await processImagePart(backgroundImage);
             if (bgPart) {
@@ -419,24 +419,24 @@ async function handleGenerateImage(request: Request, env: Env): Promise<Response
             }
         }
 
-        // Process Accessory Images
-        if (accessoryImages && accessoryImages.length > 0) {
+        // Process Accessory Images (NOT for CREATIVE mode - already handled above)
+        if (mode !== 'CREATIVE' && accessoryImages && accessoryImages.length > 0) {
             console.log(`Processing ${accessoryImages.length} accessory images...`);
             for (let j = 0; j < accessoryImages.length; j++) {
                 const accPart = await processImagePart(accessoryImages[j]);
                 if (accPart) {
                     parts.push(accPart);
-                    promptText += `\n\nACCESSORY REFERENCE (Image ${parts.length}): Incorporate the accessory shown in this image into the outfit naturally.`;
+                    promptText += `\nACCESSORY REFERENCE (Image ${parts.length}): Incorporate the accessory shown in this image into the outfit naturally.`;
                 }
             }
-            promptText += `\n\nBACKGROUND REFERENCE (Image ${parts.length}): PRESERVE the vibe/environment unless instructed otherwise.`;
-        } else if (mode !== 'CREATE_MODEL' || totalBatchSize !== 4) {
+            promptText += `\nBACKGROUND REFERENCE (Image ${parts.length}): PRESERVE the vibe/environment unless instructed otherwise.`;
+        } else if (mode !== 'CREATIVE' && (mode !== 'CREATE_MODEL' || totalBatchSize !== 4)) {
             promptText += `${BG_KEEPING}`;
         }
 
-        // Append User Prompt
-        if (userPrompt) {
-            promptText += `\n\nUSER OVERRIDE INSTRUCTIONS: ${userPrompt}`;
+        // Append User Prompt (NOT for CREATIVE mode - already included)
+        if (mode !== 'CREATIVE' && userPrompt) {
+            promptText += `\nUSER PROMPT: ${userPrompt}`;
         }
 
         // Enforce Aspect Ratio in Prompt
@@ -457,9 +457,10 @@ async function handleGenerateImage(request: Request, env: Env): Promise<Response
         console.log(promptText);
         console.log(`=========================`);
 
-        // --- SEEDREAM 4.5 API CALL (uses shared promptText) ---
-        if (modelName === 'seedream-4-5') {
-            console.log("Using BytePlus Seedream 4.5 API with shared promptText...");
+        // --- SEEDREAM 4.0/4.5 API CALL (uses shared promptText) ---
+        if (modelName === 'seedream-4-5' || modelName === 'seedream-4-0') {
+            const seedreamModelId = modelName === 'seedream-4-5' ? 'seedream-4-5-251128' : 'seedream-4-0-250828';
+            console.log(`Using BytePlus ${modelName} API (model: ${seedreamModelId}) with shared promptText...`);
 
             const byteplusApiKey = env.BYTEPLUS_API_KEY;
 
@@ -584,10 +585,10 @@ async function handleGenerateImage(request: Request, env: Env): Promise<Response
 
             // Build request body using enhanced prompt
             const requestBody: any = {
-                model: 'seedream-4-5-251128',
+                model: seedreamModelId,
                 prompt: seedreamPrompt,
                 response_format: 'url',
-                size: '2K',
+                size: targetResolution || '2K',
                 stream: false,
                 watermark: false
             };
@@ -643,13 +644,67 @@ async function handleGenerateImage(request: Request, env: Env): Promise<Response
             const data = await response.json() as any;
             console.log("Seedream 4.5 response:", JSON.stringify(data, null, 2));
 
-            // Extract image URL from response
+            // Extract image URL from response and upload to R2 for permanent storage
+            // BytePlus URLs expire in 24 hours, so we need to save them to our R2
             if (data.data && data.data.length > 0) {
-                for (const item of data.data) {
+                for (let idx = 0; idx < data.data.length; idx++) {
+                    const item = data.data[idx];
+                    let imageUrl = '';
+
                     if (item.url) {
-                        results.push(item.url);
+                        // Fetch the image from BytePlus and upload to R2
+                        try {
+                            console.log(`Fetching Seedream image from: ${item.url.substring(0, 60)}...`);
+                            const imgResponse = await fetch(item.url);
+                            if (imgResponse.ok) {
+                                const arrayBuffer = await imgResponse.arrayBuffer();
+                                const fileName = `seedream/${Date.now()}_${idx}.png`;
+
+                                // Upload to R2 if bucket is available
+                                if (env.R2_BUCKET) {
+                                    await env.R2_BUCKET.put(fileName, arrayBuffer, {
+                                        httpMetadata: { contentType: 'image/png' }
+                                    });
+                                    imageUrl = `${env.R2_PUBLIC_DOMAIN}/${fileName}`;
+                                    console.log(`Uploaded to R2: ${imageUrl}`);
+                                } else {
+                                    // Fallback to original URL (will expire in 24h)
+                                    console.warn("R2 bucket not configured, using original URL");
+                                    imageUrl = item.url;
+                                }
+                            } else {
+                                imageUrl = item.url; // Fallback
+                            }
+                        } catch (e) {
+                            console.error("Failed to upload to R2:", e);
+                            imageUrl = item.url; // Fallback to original URL
+                        }
                     } else if (item.b64_json) {
-                        results.push(`data:image/png;base64,${item.b64_json}`);
+                        // Base64 - upload to R2 directly
+                        try {
+                            const binaryString = atob(item.b64_json);
+                            const bytes = new Uint8Array(binaryString.length);
+                            for (let i = 0; i < binaryString.length; i++) {
+                                bytes[i] = binaryString.charCodeAt(i);
+                            }
+                            const fileName = `seedream/${Date.now()}_${idx}.png`;
+
+                            if (env.R2_BUCKET) {
+                                await env.R2_BUCKET.put(fileName, bytes, {
+                                    httpMetadata: { contentType: 'image/png' }
+                                });
+                                imageUrl = `${env.R2_PUBLIC_DOMAIN}/${fileName}`;
+                            } else {
+                                imageUrl = `data:image/png;base64,${item.b64_json}`;
+                            }
+                        } catch (e) {
+                            console.error("Failed to upload b64 to R2:", e);
+                            imageUrl = `data:image/png;base64,${item.b64_json}`;
+                        }
+                    }
+
+                    if (imageUrl) {
+                        results.push(imageUrl);
                     }
                 }
             }
