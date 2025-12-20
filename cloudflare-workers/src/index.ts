@@ -6,6 +6,15 @@
 import { GoogleGenAI, HarmCategory, HarmBlockThreshold } from "@google/genai";
 import { createClient } from '@supabase/supabase-js';
 
+// R2Bucket interface for Cloudflare Workers
+interface R2Bucket {
+    put(key: string, value: ReadableStream | ArrayBuffer | ArrayBufferView | string | null | Blob, options?: any): Promise<any>;
+    get(key: string, options?: any): Promise<any>;
+    delete(key: string): Promise<void>;
+    list(options?: any): Promise<any>;
+    head(key: string): Promise<any>;
+}
+
 // Environment interface
 interface Env {
     GEMINI_API_KEY: string;
