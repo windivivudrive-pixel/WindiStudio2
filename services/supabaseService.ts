@@ -645,3 +645,39 @@ export const fetchAllUserGenerations = async (): Promise<HistoryItem[]> => {
     imageType: row.image_type
   }));
 };
+
+/* --- REFERENCE IMAGE FOR ADMIN --- */
+export interface ReferenceImageInput {
+  user_id: string;
+  image_url: string;
+  prompt?: string;
+  image_type: string;
+  category_id?: number;
+  is_favorite: boolean;
+}
+
+export const createReferenceImage = async (input: ReferenceImageInput): Promise<boolean> => {
+  const { data, error } = await supabase
+    .from('generations')
+    .insert({
+      user_id: input.user_id,
+      image_url: input.image_url,
+      prompt: input.prompt || '',
+      image_type: input.image_type,
+      category_id: input.category_id,
+      is_favorite: input.is_favorite,
+      model_name: 'reference',
+      cost_credits: 0,
+      mode: 'reference'
+    })
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error creating reference image:', error);
+    return false;
+  }
+
+  console.log('Reference image created:', data);
+  return true;
+};

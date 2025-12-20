@@ -2228,6 +2228,7 @@ const App: React.FC = () => {
           isSavingBranding={isSavingBranding}
           handleSaveBranding={handleSaveBranding}
           onBack={() => navigateTo('STUDIO')}
+          userId={userProfile?.id}
         />
       )}
 
