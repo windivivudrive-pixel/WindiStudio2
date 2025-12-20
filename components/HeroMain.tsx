@@ -8,12 +8,13 @@ import Button from './ui/Button';
 const showcases = [
   {
     id: 1,
-    name: "Váy Dài",
-    inputs: [], // Tee
-    output: "https://img.windistudio.app/outstu4.jpg", // Model Tee
+    name: "Tạo Poster",
+    inputs: ["https://img.windistudio.app/stock1.png",
+      "https://img.windistudio.app/poster_mau1.jpg"], // Tee
+    output: "https://img.windistudio.app/poster%20linhka.png", // Model Tee
     color: "from-gray-500 to-slate-500",
-    prompt: "Chi tiết vải chân thực",
-    model: "Pro"
+    prompt: "Tạo Poster tương tự với poster mẫu, theo chủ đề lunar new year",
+    model: "Seedream 4.5"
   },
   {
     id: 2,
@@ -26,28 +27,28 @@ const showcases = [
     output: "https://img.windistudio.app/outhome3.png", // Model Blazer
     color: "from-blue-500 to-indigo-500",
     prompt: "Life Style Chân Thực",
-    model: "Pro"
+    model: "Nano Banana Pro"
   },
   {
     id: 3,
-    name: "High Fashion",
+    name: "Typography",
     // Dual Input: Jeans + Top
     inputs: [
       // Denim Jeans
     ],
-    output: "https://img.windistudio.app/outhome2.png", // Model Denim
+    output: "https://img.windistudio.app/outputmain33.jpg", // Model Denim
     color: "from-blue-800 to-cyan-700",
-    prompt: "Low angle shot, low key light, hard light, Ảnh Chân Dung nửa người",
-    model: "Pro"
+    prompt: "Sáng tạo theo Font chữ của bạn",
+    model: "Nano Banana Pro"
   },
   {
     id: 4,
-    name: "Điều Chỉnh Background Tự Nhiên",
-    inputs: [], // Dress
-    output: "https://img.windistudio.app/outputstu1.jpg", // Model Dress
+    name: "Poster theo Chủ đề",
+    inputs: ["https://img.windistudio.app/Screenshot%202025-12-19%20at%2011.37.22%E2%80%AFPM.png"], // Dress
+    output: "https://img.windistudio.app/poster2.jpeg", // Model Dress
     color: "from-purple-500 to-pink-500",
-    prompt: "Chuẩn Vibe với background tự nhiên",
-    model: "Pro"
+    prompt: "Poster Sản phẩm chủ đề noel",
+    model: "Seedream 4.5"
   },
 
   // {
@@ -64,9 +65,9 @@ const showcases = [
   // },
   {
     id: 5,
-    name: "Đa Dạng Background",
-    inputs: ["https://img.windistudio.app/bgstu1.jpg", "https://img.windistudio.app/stockstu2.png"], // Tee
-    output: "https://img.windistudio.app/outputstu2.png", // Model Tee
+    name: "Model 3D",
+    inputs: [], // Tee
+    output: "https://img.windistudio.app/output_hanoi.jpg", // Model Tee
     color: "from-gray-500 to-slate-500",
     prompt: "Thỏa Sức Sáng Tạo",
     model: "Nano Banana Pro"
@@ -76,7 +77,7 @@ const showcases = [
     id: 7,
     name: "Áo Dài",
     inputs: ["https://img.windistudio.app/inputaodai.png"], // Tee
-    output: "https://img.windistudio.app/4f018bf9-b2c6-4075-8a21-9018efcb003f/1765033902074_0.png", // Model Tee
+    output: "https://img.windistudio.app/aodaido.jpeg", // Model Tee
     color: "from-gray-500 to-slate-500",
     prompt: "Đang đứng tạo dáng ở chùa cầu Hà Nội",
     model: "Nano Banana Pro"
@@ -168,36 +169,42 @@ const Hero: React.FC<HeroProps> = ({ onEnterStudio }) => {
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
 
           {/* Text Content */}
-          <div className="space-y-8 z-10 relative">
+          <div className="space-y-4 z-10 relative">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 backdrop-blur-md animate-fade-in-up">
               <span className="flex h-2 w-2 rounded-full bg-green-500 animate-pulse"></span>
               <span className="text-xs font-medium text-gray-300 tracking-wide uppercase">Early Access</span>
             </div>
 
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl leading-[1.1] tracking-tight">
-              <span className="font-miller text-white">Tạo Ảnh Lookbook</span> <br />
-              <span className="font-motion text-gradient-gold text-5xl sm:text-6xl md:text-7xl lg:text-8xl pr-4 tracking-wide -mt-3 sm:-mt-5 inline-block">chuẩn Studio</span> <br />
-              <span className="font-miller text-white">bằng AI</span>
+            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl leading-[1.1] tracking-tight">
+              <span className="font-miller text-white text-2xl sm:text-3xl md:text-4xl lg:text-5xl">Thuần Hóa AI</span> <br />
+              <span className="font-motion text-gradient-gold text-4xl sm:text-5xl md:text-6xl lg:text-7xl pr-4 tracking-wide inline-block mb-2.5 pb-2">Kiến tạo Tương Lai</span>
             </h1>
 
             <p className="text-sm sm:text-base md:text-lg text-gray-400 font-light max-w-xl leading-relaxed">
-              Tiết kiệm <span className="text-white font-medium">90% chi phí</span> thuê mẫu và nhiếp ảnh gia.
-              Chỉ cần ảnh quần áo (flat-lay hoặc manequin), có ngay bộ ảnh chất lượng chưa tới 100K.
+              Tương lai thuộc về những người biết điều khiển AI. <br />
+              <span className="font-semibold text-white">Đừng để AI thay thế bạn!</span>
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-4 pt-4">
+            <div className="flex flex-col sm:flex-row gap-4 pt-2">
+
               <button
+                className="inline-flex items-center justify-center h-11 px-6 rounded-full font-bold text-white bg-purple-800/60 border border-purple-500/50 hover:border-purple-400 hover:shadow-[0_0_40px_rgba(168,85,247,0.8)] active:scale-95 transition-all duration-300 shadow-[inset_0_1px_0_0_rgba(168,85,247,0.4),0_10px_20px_-10px_rgba(168,85,247,0.3)]"
+                onClick={onEnterStudio}
+              >
+                Bắt Đầu Ngay
+              </button>
+              {/* <button
                 className="inline-flex items-center justify-center h-11 px-6 rounded-full font-medium text-gray-300 bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 active:scale-95 transition-all duration-300 group"
                 onClick={() => setShowVideo(true)}
               >
                 <Play className="w-4 h-4 mr-2 fill-white group-hover:scale-110 transition-transform" /> Xem Demo
-              </button>
+              </button> */}
             </div>
 
             <div className="pt-2 flex items-center gap-6 text-sm text-gray-500">
               <div className="flex items-center gap-2">
                 <Zap className="w-4 h-4 text-purple-400" />
-                <span>Xử lý trong 30s</span>
+                <span>Mô hình Nano Banana Pro, Seedream 4.5</span>
               </div>
               <div className="flex items-center gap-2">
                 <Star className="w-4 h-4 text-yellow-500" />
@@ -217,7 +224,7 @@ const Hero: React.FC<HeroProps> = ({ onEnterStudio }) => {
               <div
                 key={item.id}
                 style={getSlideStyles(index)}
-                className="w-[260px] md:w-[320px]"
+                className="w-[300px] md:w-[380px]"
               >
                 {/* 
                    GROUP CONTAINER: Output (Model) + Inputs (Cloth) + Prompt Box
@@ -286,7 +293,7 @@ const Hero: React.FC<HeroProps> = ({ onEnterStudio }) => {
                     return (
                       <div
                         key={`${item.id}-input-${idx}`}
-                        className={`absolute w-24 md:w-32 aspect-[3/4] glass-panel rounded-xl p-1.5 shadow-[0_20px_50px_rgba(0,0,0,0.5)] transition-all duration-300 bg-neutral-800 ${positionClasses} ${index === activeCase ? 'opacity-100' : 'opacity-0 scale-75'}`}
+                        className={`absolute w-28 md:w-36 aspect-[3/4] glass-panel rounded-xl p-1.5 shadow-[0_20px_50px_rgba(0,0,0,0.5)] transition-all duration-300 bg-neutral-800 ${positionClasses} ${index === activeCase ? 'opacity-100' : 'opacity-0 scale-75'}`}
                       >
                         <div className="w-full h-full rounded-lg bg-neutral-900 overflow-hidden relative group">
                           <div className="absolute top-0 left-0 right-0 bg-black/60 backdrop-blur-sm px-2 py-1 flex items-center gap-1 z-10">
@@ -315,12 +322,11 @@ const Hero: React.FC<HeroProps> = ({ onEnterStudio }) => {
                         <Command className="w-3 h-3 text-purple-400" />
                         <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Prompt Used</span>
                       </div>
-                      {item.inputs.length > 1 && (
-                        <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-white/5 border border-white/5">
-                          <Layers className="w-3 h-3 text-gray-400" />
-                          <span className="text-[10px] text-gray-400">Multi-Input</span>
-                        </div>
-                      )}
+                      {/* Show model name that created this image */}
+                      <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-purple-500/10 border border-purple-400/20">
+                        <Sparkles className="w-3 h-3 text-purple-400" />
+                        <span className="text-[10px] text-purple-300 font-medium">{item.model}</span>
+                      </div>
                       <div className="flex gap-1 ml-auto">
                         <div className="w-2 h-2 rounded-full bg-red-500/50"></div>
                         <div className="w-2 h-2 rounded-full bg-yellow-500/50"></div>

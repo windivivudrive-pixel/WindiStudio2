@@ -190,7 +190,7 @@ export const generateStudioImage = async (
     accessoryImages?: string[],
     backgroundImage?: string | null,
     numberOfImages: number,
-    targetResolution?: '2K' | '4K', // Optional resolution for upscale
+    targetResolution?: '1K' | '2K' | '4K', // Optional resolution for Seedream
     onImageGenerated?: (url: string) => void // Callback for progressive rendering
   }
 ): Promise<string[]> => {

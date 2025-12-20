@@ -48,10 +48,10 @@ const Process: React.FC = () => {
       <div className="max-w-7xl mx-auto px-6">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-display font-semibold mb-4">
-            Quy trình <span className="text-gradient">đơn giản</span>
+            Chế độ Studio <span className="text-gradient">dành cho chủ shop</span>
           </h2>
           <p className="text-gray-400 max-w-2xl mx-auto">
-            Biến ảnh chụp điện thoại thành ảnh Look Book chuyên nghiệp chỉ trong 3 bước.
+            Tối ưu hóa để tạo ảnh Look Book chuyên nghiệp chỉ trong 3 bước.
           </p>
         </div>
 
@@ -76,7 +76,7 @@ const Process: React.FC = () => {
 
                 {/* Image Cards Section */}
                 <div
-                  className="flex justify-center items-end mb-8 h-48 relative"
+                  className="flex justify-center items-end mb-8 h-56 relative"
                   style={{
                     filter: 'drop-shadow(0 0 20px rgba(168, 85, 247, 0.5)) drop-shadow(0 8px 20px rgba(0, 0, 0, 0.5))'
                   }}
@@ -86,8 +86,8 @@ const Process: React.FC = () => {
                     const isStep3 = step.id === 3;
                     const isLastInStep3 = isStep3 && idx === step.images.length - 1;
 
-                    const cardWidth = isLastInStep3 ? 'w-40' : 'w-32';
-                    const cardHeight = isLastInStep3 ? 'h-52' : 'h-44';
+                    const cardWidth = isLastInStep3 ? 'w-48' : 'w-40';
+                    const cardHeight = isLastInStep3 ? 'h-60' : 'h-52';
                     const marginLeft = idx > 0 ? '-24px' : '0';
 
                     return (

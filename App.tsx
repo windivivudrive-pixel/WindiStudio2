@@ -10,6 +10,7 @@ import { PrivacyPolicy } from './components/PrivacyPolicy';
 import { TermsOfService } from './components/TermsOfService';
 import { generateStudioImage, ensureApiKey } from './services/geminiService';
 import { BrandingPage } from './components/BrandingPage';
+import LandingPage from './LandingPage';
 
 import { StudioTabs } from './components/StudioTabs';
 import { LibraryView } from './components/LibraryView';
@@ -39,7 +40,7 @@ const BANK_CONFIG = {
 const App: React.FC = () => {
   // Navigation State
   const [currentView, setCurrentView] = useState<'STUDIO' | 'HISTORY' | 'PAYMENT' | 'PRIVACY' | 'TERMS' | 'BRANDING'>('STUDIO');
-  const [studioTab, setStudioTab] = useState<'studio' | 'fun' | 'library'>('studio');
+  const [studioTab, setStudioTab] = useState<'studio' | 'creative' | 'library'>('creative');
   const [showModeGuide, setShowModeGuide] = useState<AppMode | null>(null);
   const [showModelGuide, setShowModelGuide] = useState<'air' | 'pro' | null>(null);
   const [showSetGuide, setShowSetGuide] = useState(false);
@@ -54,6 +55,8 @@ const App: React.FC = () => {
   const [aspectRatio, setAspectRatio] = useState<AspectRatio>(AspectRatio.PORTRAIT);
   const [numberOfImages, setNumberOfImages] = useState(1);
   const [selectedModel, setSelectedModel] = useState('gemini-2.5-flash-image');
+  const [targetResolution, setTargetResolution] = useState<'1K' | '2K' | '4K'>('2K');
+  const [showModelDropdown, setShowModelDropdown] = useState(false);
 
   // Advanced Features State
   const [showAdvanced, setShowAdvanced] = useState(false);
@@ -74,10 +77,12 @@ const App: React.FC = () => {
   const [isZipping, setIsZipping] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [accessoryImages, setAccessoryImages] = useState<string[]>([]);
+  const [showStudioPromo, setShowStudioPromo] = useState(true);
+  const [showLandingPopup, setShowLandingPopup] = useState(false);
 
-  // Auto-switch to Pro model when accessory images are added
+  // Auto-switch to Pro model when accessory images are added (only if using Air model)
   useEffect(() => {
-    if (accessoryImages.length > 0 && selectedModel !== 'gemini-3-pro-image-preview') {
+    if (accessoryImages.length > 0 && selectedModel === 'gemini-2.5-flash-image') {
       setSelectedModel('gemini-3-pro-image-preview');
       setToast({ message: "Switched to Pro model for accessory support", type: 'success' });
     }
@@ -267,7 +272,7 @@ const App: React.FC = () => {
 
   // --- NAVIGATION & HISTORY ---
 
-  const navigateTo = (view: typeof currentView, replace = false, tab?: 'studio' | 'fun' | 'library') => {
+  const navigateTo = (view: typeof currentView, replace = false, tab?: 'studio' | 'creative' | 'library') => {
     setCurrentView(view);
 
     let nextTab = tab;
@@ -334,7 +339,7 @@ const App: React.FC = () => {
           setCurrentView('STUDIO');
         }
 
-        if (tabParam && ['studio', 'fun', 'library'].includes(tabParam)) {
+        if (tabParam && ['studio', 'creative', 'library'].includes(tabParam)) {
           setStudioTab(tabParam as any);
         }
       }
@@ -357,7 +362,7 @@ const App: React.FC = () => {
       }
     }
 
-    if (tabParam && ['studio', 'fun', 'library'].includes(tabParam)) {
+    if (tabParam && ['studio', 'creative', 'library'].includes(tabParam)) {
       setStudioTab(tabParam as any);
     }
 
@@ -433,11 +438,30 @@ const App: React.FC = () => {
   // --- COST CALCULATION ---
   const getCostPerImage = () => {
     let cost = 0;
-    if (selectedModel.includes('flash')) {
-      cost = 5;
+
+    // Creative mode pricing (when studioTab is 'creative')
+    if (studioTab === 'creative') {
+      if (selectedModel === 'gemini-2.5-flash-image') {
+        // Nano Banana: 2 xu
+        cost = 2;
+      } else if (selectedModel === 'seedream-4-0') {
+        // Seedream 4.0: 4 xu, 4K = 5 xu
+        cost = targetResolution === '4K' ? 5 : 4;
+      } else if (selectedModel === 'seedream-4-5') {
+        // Seedream 4.5: 6 xu, 4K = 7 xu
+        cost = targetResolution === '4K' ? 7 : 6;
+      } else if (selectedModel === 'gemini-3-pro-image-preview') {
+        // Nano Banana Pro: 10 xu
+        cost = 10;
+      }
     } else {
-      // Pro Model Pricing (Fixed)
-      cost = 20;
+      // Studio mode pricing (original)
+      if (selectedModel.includes('flash')) {
+        cost = 5;
+      } else {
+        // Pro model: 15 xu
+        cost = 15;
+      }
     }
 
     if (accessoryImages.length > 0) cost += (accessoryImages.length * 2);
@@ -493,14 +517,10 @@ const App: React.FC = () => {
       return;
     }
 
-    if (mode === AppMode.CREATIVE_POSE && !primaryImage) { setError("Please upload Source Photo."); return; }
-    if (mode === AppMode.CREATE_MODEL && !primaryImage && !randomFace) { setError("Please upload Outfit Reference or enable Randomize Model."); return; }
-    if ((mode === AppMode.VIRTUAL_TRY_ON || mode === AppMode.COPY_CONCEPT) && (!primaryImage || !secondaryImage)) {
+    if (studioTab !== 'creative' && mode === AppMode.CREATIVE_POSE && !primaryImage) { setError("Please upload Source Photo."); return; }
+    if (studioTab !== 'creative' && mode === AppMode.CREATE_MODEL && !primaryImage && !randomFace) { setError("Please upload Outfit Reference or enable Randomize Model."); return; }
+    if (studioTab !== 'creative' && (mode === AppMode.VIRTUAL_TRY_ON || mode === AppMode.COPY_CONCEPT) && (!primaryImage || !secondaryImage)) {
       setError("Please upload both required images.");
-      return;
-    }
-    if (mode === AppMode.FUN_FREEDOM && !primaryImage && !secondaryImage && accessoryImages.length === 0 && !prompt) {
-      setError("Please upload at least one image or provide a prompt for Freedom Mode.");
       return;
     }
 
@@ -517,6 +537,9 @@ const App: React.FC = () => {
 
     if (window.innerWidth < 1024) setTimeout(() => outputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100);
 
+    // Override mode to CREATIVE when on Creative tab
+    const effectiveMode = studioTab === 'creative' ? AppMode.CREATIVE : mode;
+
     const maxRetries = 2;
     let attempt = 0;
     let success = false;
@@ -525,7 +548,7 @@ const App: React.FC = () => {
     while (attempt <= maxRetries && !success) {
       try {
         generatedBatch = await generateStudioImage({
-          mode,
+          mode: effectiveMode,
           modelName: selectedModel,
           primaryImage: primaryImage,
           secondaryImage: (mode === AppMode.CREATIVE_POSE || mode === AppMode.CREATE_MODEL) ? null : secondaryImage,
@@ -537,6 +560,7 @@ const App: React.FC = () => {
           numberOfImages,
           accessoryImages: accessoryImages,
           backgroundImage: null,
+          targetResolution: targetResolution,
           onImageGenerated: (url) => { setResults(prev => [...prev, url]); }
         });
         success = true;
@@ -599,7 +623,7 @@ const App: React.FC = () => {
         images: generatedBatch,
         prompt: prompt || "Generated Image",
         timestamp: Date.now(),
-        mode,
+        mode: effectiveMode,
         modelName: selectedModel,
         cost: actualCost
       };
@@ -611,7 +635,17 @@ const App: React.FC = () => {
 
       await updateUserCredits(userProfile.id, newBalance);
 
-      const imageType = (mode === AppMode.FUN_FREEDOM) ? 'STANDARD' : (getCostPerImage() > 5 ? 'PREMIUM' : 'STANDARD');
+      // Determine imageType based on model
+      let imageType: 'STANDARD' | 'PREMIUM' | 'SCALEX2' | 'SCALE2' | 'SCALE4' | 'S4.0' | 'S4.5';
+      if (selectedModel === 'seedream-4-0') {
+        imageType = 'S4.0';
+      } else if (selectedModel === 'seedream-4-5') {
+        imageType = 'S4.5';
+      } else if (effectiveMode === AppMode.CREATIVE) {
+        imageType = 'STANDARD';
+      } else {
+        imageType = getCostPerImage() > 5 ? 'PREMIUM' : 'STANDARD';
+      }
       saveGenerationToDb(userProfile.id, newItem, cost, imageType).then(savedItem => {
         if (savedItem) {
           setHistory(prev => prev.map(h => h.id === newItem.id ? savedItem : h));
@@ -675,7 +709,8 @@ const App: React.FC = () => {
     setShowUpscaleModal(false);
     if (results.length === 0) return;
 
-    const cost = resolution === '4K' ? 20 : 10;
+    // Upscale pricing: 2K = 3 xu, 4K = 10 xu
+    const cost = resolution === '4K' ? 10 : 3;
 
     if (!session || !userProfile) {
       setShowLoginModal(true);
@@ -1089,33 +1124,33 @@ const App: React.FC = () => {
       title: 'Pose Mode',
       description: 'Tải lên ảnh pose để AI tạo ra các tư thế khác nhau cho người mẫu của bạn.',
       inputImages: [
-        'https://zpjphixcttehkkgxlmsn.supabase.co/storage/v1/object/public/windi-bucket/WEB/in1.png.jpeg'
+        'https://img.windistudio.app/in1.png.jpeg'
       ],
       outputImages: [
-        'https://zpjphixcttehkkgxlmsn.supabase.co/storage/v1/object/public/windi-bucket/WEB/out21.png',
-        'https://zpjphixcttehkkgxlmsn.supabase.co/storage/v1/object/public/windi-bucket/WEB/out31.png',
-        'https://zpjphixcttehkkgxlmsn.supabase.co/storage/v1/object/public/windi-bucket/WEB/1765446932309_out1.png.jpeg'
+        'https://img.windistudio.app/out21.png',
+        'https://img.windistudio.app/out31.png',
+        'https://img.windistudio.app/1765446932309_out1.png.jpeg'
       ]
     },
     [AppMode.VIRTUAL_TRY_ON]: {
       title: 'Try-On Mode',
       description: 'Tải lên ảnh người và ảnh trang phục để AI thử đồ lên người mẫu.',
       inputImages: [
-        'https://zpjphixcttehkkgxlmsn.supabase.co/storage/v1/object/public/windi-bucket/WEB/in21.png.jpeg',
-        'https://zpjphixcttehkkgxlmsn.supabase.co/storage/v1/object/public/windi-bucket/WEB/in22.png'
+        'https://img.windistudio.app/in21.png.jpeg',
+        'https://img.windistudio.app/in22.png'
       ],
       outputImages: [
-        'https://zpjphixcttehkkgxlmsn.supabase.co/storage/v1/object/public/windi-bucket/WEB/out2.png.jpeg'
+        'https://img.windistudio.app/out2.png.jpeg'
       ]
     },
     [AppMode.CREATE_MODEL]: {
       title: 'Model Mode',
       description: 'Tải lên ảnh trang phục để AI tạo người mẫu mặc outfit của bạn.',
       inputImages: [
-        'https://zpjphixcttehkkgxlmsn.supabase.co/storage/v1/object/public/windi-bucket/WEB/Screenshot%202025-12-09%20at%2012.50.20%20AM.png'
+        'https://img.windistudio.app/Screenshot%202025-12-09%20at%2010.20.33%20AM.png'
       ],
       outputImages: [
-        'https://zpjphixcttehkkgxlmsn.supabase.co/storage/v1/object/public/windi-bucket/WEB/windistudio_pro_Generated_Image_1765452974622_0.jpg'
+        'https://img.windistudio.app/windistudio_pro_Generated_Image_1765452974622_0.jpg'
       ]
     }
   };
@@ -1223,14 +1258,14 @@ const App: React.FC = () => {
     if (!showSetGuide) return null;
 
     // INPUT IMAGE - thay link ảnh input tại đây
-    const inputImage = 'https://zpjphixcttehkkgxlmsn.supabase.co/storage/v1/object/public/windi-bucket/WEB/set/Screenshot%202025-12-16%20at%209.06.24%20PM.png';
+    const inputImage = 'https://img.windistudio.app/set/Screenshot%202025-12-16%20at%209.06.24%20PM.png';
 
     // OUTPUT IMAGES - thay link 4 ảnh output tại đây
     const shotLabels = [
-      { key: 'W', name: ' ', desc: ' ', image: 'https://zpjphixcttehkkgxlmsn.supabase.co/storage/v1/object/public/windi-bucket/WEB/set/windistudio_pro_art_1765515614263.jpg' },
-      { key: 'W', name: ' ', desc: ' ', image: 'https://zpjphixcttehkkgxlmsn.supabase.co/storage/v1/object/public/windi-bucket/WEB/set/windistudio_pro_art_1765515630098.jpg' },
-      { key: 'M', name: ' ', desc: ' ', image: 'https://zpjphixcttehkkgxlmsn.supabase.co/storage/v1/object/public/windi-bucket/WEB/set/windistudio_pro_art_1765515300725_1.jpg' },
-      { key: 'M', name: ' ', desc: ' ', image: 'https://zpjphixcttehkkgxlmsn.supabase.co/storage/v1/object/public/windi-bucket/WEB/set/windistudio_pro_art_1765515618366.jpg' }
+      { key: 'W', name: ' ', desc: ' ', image: 'https://img.windistudio.app/set/windistudio_pro_art_1765515614263.jpg' },
+      { key: 'W', name: ' ', desc: ' ', image: 'https://img.windistudio.app/set/windistudio_pro_art_1765515630098.jpg' },
+      { key: 'M', name: ' ', desc: ' ', image: 'https://img.windistudio.app/set/windistudio_pro_art_1765515300725_1.jpg' },
+      { key: 'M', name: ' ', desc: ' ', image: 'https://img.windistudio.app/set/windistudio_pro_art_1765515618366.jpg' }
     ];
 
     return (
@@ -1402,7 +1437,7 @@ const App: React.FC = () => {
                     </div>
                   </div>
                   <div className="absolute top-2 left-2 px-2 py-1 rounded-md bg-black/40 backdrop-blur-md border border-white/10 text-[10px] font-bold text-gray-300 uppercase">
-                    {item.modelName ? (item.modelName.includes('flash') ? 'AIR' : 'PRO') : 'AI'}
+                    {item.modelName ? (item.modelName.includes('flash') ? 'AIR' : item.modelName.includes('seedream') ? '4.5' : 'PRO') : 'AI'}
                   </div>
                 </div>
                 <div className="p-4 flex-1 flex flex-col gap-2">
@@ -1446,7 +1481,7 @@ const App: React.FC = () => {
         (mode === AppMode.CREATE_MODEL && !primaryImage && !randomFace) ||
         ((mode === AppMode.VIRTUAL_TRY_ON || mode === AppMode.COPY_CONCEPT) && (!primaryImage || !secondaryImage))
       )) ||
-      (studioTab === 'fun' && !primaryImage && !secondaryImage && accessoryImages.length === 0 && !prompt);
+      (studioTab === 'creative' && !primaryImage && !secondaryImage && accessoryImages.length === 0 && !prompt);
 
     // Handle Tab Side Effects (Moved to top level)
 
@@ -1454,8 +1489,8 @@ const App: React.FC = () => {
 
     return (
       <div className="flex-1 flex flex-col w-full min-h-0">
-        {/* TABS HIDDEN FOR NOW - Uncomment to re-enable */}
-        {/* <StudioTabs activeTab={studioTab} onTabChange={(tab) => navigateTo('STUDIO', false, tab)} /> */}
+        {/* TABS */}
+        <StudioTabs activeTab={studioTab} onTabChange={(tab) => navigateTo('STUDIO', false, tab)} />
 
         {studioTab === 'library' ? (
           <div className="flex-1 p-6 lg:p-10 overflow-hidden">
@@ -1475,6 +1510,31 @@ const App: React.FC = () => {
             {/* LEFT PANEL */}
             <div ref={leftPanelRef} className="w-full lg:w-[380px] xl:w-[420px] flex flex-col border-b lg:border-b-0 lg:border-r border-white/5 bg-black/10 backdrop-blur-sm z-10 h-auto lg:h-full shrink-0">
               <div className="p-4 lg:p-5 flex-1 overflow-y-auto custom-scrollbar">
+                {/* Studio Promo Banner - Dismissible */}
+                {studioTab === 'studio' && showStudioPromo && (
+                  <div className="mb-4 relative group">
+                    <button
+                      onClick={() => setShowLandingPopup(true)}
+                      className="w-full p-3 rounded-xl bg-gradient-to-r from-fuchsia-600/20 via-indigo-600/20 to-purple-600/20 border border-fuchsia-500/30 hover:border-fuchsia-400/50 transition-all duration-300 text-left"
+                    >
+                      <div className="flex items-center gap-2">
+                        <div className="p-1.5 rounded-lg bg-fuchsia-500/20">
+                          <Sparkles className="w-4 h-4 text-fuchsia-400" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-sm font-semibold text-white">Chế độ chuyên tạo Lookbook chuẩn Studio</p>
+                          <p className="text-xs text-fuchsia-300 hover:text-fuchsia-200">Xem thêm →</p>
+                        </div>
+                      </div>
+                    </button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setShowStudioPromo(false); }}
+                      className="absolute -top-1.5 -right-1.5 p-1 rounded-full bg-gray-800 hover:bg-gray-700 border border-white/10 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <X className="w-3 h-3 text-gray-400" />
+                    </button>
+                  </div>
+                )}
 
                 {/* Mode Selection - Only show in Studio tab */}
                 {studioTab === 'studio' && (
@@ -1487,33 +1547,172 @@ const App: React.FC = () => {
                   </div>
                 )}
 
-                {/* FUN MODE: Freedom Input */}
-                {studioTab === 'fun' && (
-                  <div className="mb-6">
-                    <div className="p-3 rounded-xl bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/20 mb-3">
-                      <h3 className="text-sm font-bold text-white mb-1 flex items-center gap-2"><Sparkles size={14} className="text-pink-400" /> Freedom Mode</h3>
-                      <p className="text-xs text-gray-400">Upload multiple reference images and describe exactly what you want. No templates, pure creativity.</p>
+                {/* CREATIVE MODE: Model Selection & Quality */}
+                {studioTab === 'creative' && (
+                  <div className="mb-6 space-y-4">
+                    {/* Model Dropdown */}
+                    <div className="relative">
+                      <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 block">Chọn Model</label>
+                      {(() => {
+                        const models = [
+                          { id: 'gemini-2.5-flash-image', name: 'Nano Banana', desc: 'Nhanh, cân bằng' },
+                          { id: 'seedream-4-0', name: 'Seedream 4.0', desc: 'Ổn định, đáng tin cậy' },
+                          { id: 'seedream-4-5', name: 'Seedream 4.5', desc: 'Chất lượng cao nhất' },
+                          { id: 'gemini-3-pro-image-preview', name: 'Nano Banana Pro', desc: 'Chi tiết cao, xử lý phức tạp' },
+                        ];
+                        const currentModel = models.find(m => m.id === selectedModel) || models[0];
+
+                        return (
+                          <>
+                            {/* Selected Model Button */}
+                            <button
+                              onClick={() => setShowModelDropdown(!showModelDropdown)}
+                              className="w-full flex items-center justify-between p-3 rounded-xl bg-purple-600/20 border border-purple-500/50 text-white hover:bg-purple-600/30 transition-all"
+                            >
+                              <div className="text-left">
+                                <div className="font-bold text-sm">{currentModel.name}</div>
+                                <div className="text-xs text-gray-400">{currentModel.desc}</div>
+                              </div>
+                              <ChevronDown size={18} className={`text-gray-400 transition-transform ${showModelDropdown ? 'rotate-180' : ''}`} />
+                            </button>
+
+                            {/* Dropdown List */}
+                            {showModelDropdown && (
+                              <div className="absolute z-50 left-0 right-0 mt-2 bg-[#1a1625] border border-white/10 rounded-xl shadow-xl overflow-hidden">
+                                {models.map((m) => (
+                                  <button
+                                    key={m.id}
+                                    onClick={() => {
+                                      setSelectedModel(m.id);
+                                      setShowModelDropdown(false);
+                                    }}
+                                    className={`w-full flex items-center gap-3 p-3 transition-all ${selectedModel === m.id
+                                      ? 'bg-purple-600/30 text-white'
+                                      : 'text-gray-300 hover:bg-white/5'
+                                      }`}
+                                  >
+                                    <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${selectedModel === m.id ? 'border-purple-400' : 'border-gray-500'
+                                      }`}>
+                                      {selectedModel === m.id && <div className="w-2 h-2 rounded-full bg-purple-400" />}
+                                    </div>
+                                    <div className="text-left flex-1">
+                                      <div className="font-bold text-sm">{m.name}</div>
+                                      <div className="text-xs text-gray-500">{m.desc}</div>
+                                    </div>
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                          </>
+                        );
+                      })()}
                     </div>
 
-                    <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 block">Reference Images</label>
-                    <div className="grid grid-cols-2 gap-2 mb-3">
-                      {/* Reuse Accessory Images for multiple uploads in Fun mode for simplicity, or we can use primary/secondary + accessory */}
-                      <ImageUploader
-                        label="Image 1"
-                        image={primaryImage}
-                        onImageChange={setPrimaryImage}
-                      />
-                      <ImageUploader
-                        label="Image 2"
-                        image={secondaryImage}
-                        onImageChange={setSecondaryImage}
-                      />
-                    </div>
-                    <div className="mb-4">
-                      <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 block">More References</label>
-                      <div className="grid grid-cols-3 gap-2">
-                        {[0, 1, 2].map((idx) => (
-                          <div key={idx} className="aspect-square relative rounded-lg border border-white/10 bg-black/20 overflow-hidden flex items-center justify-center hover:border-white/30 transition-colors">
+                    {/* Image Uploaders - 6 images max */}
+                    <div>
+                      <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 block">Ảnh tham chiếu (tối đa 6)</label>
+                      {/* 2 Large Images on Top */}
+                      <div className="grid grid-cols-2 gap-2 mb-2">
+                        {/* Primary Image */}
+                        <div
+                          className="aspect-[4/3] relative rounded-lg border border-white/10 bg-black/20 overflow-hidden flex items-center justify-center hover:border-white/30 transition-colors"
+                          onDragOver={(e) => { e.preventDefault(); e.currentTarget.classList.add('border-purple-500', 'bg-purple-500/10'); }}
+                          onDragLeave={(e) => { e.preventDefault(); e.currentTarget.classList.remove('border-purple-500', 'bg-purple-500/10'); }}
+                          onDrop={(e) => {
+                            e.preventDefault();
+                            e.currentTarget.classList.remove('border-purple-500', 'bg-purple-500/10');
+                            const file = e.dataTransfer.files?.[0];
+                            if (file && file.type.startsWith('image/')) {
+                              const reader = new FileReader();
+                              reader.onload = (ev) => { if (ev.target?.result) setPrimaryImage(ev.target.result as string); };
+                              reader.readAsDataURL(file);
+                            }
+                          }}
+                        >
+                          {primaryImage ? (
+                            <>
+                              <img src={primaryImage} alt="" className="w-full h-full object-cover" />
+                              <button onClick={() => setPrimaryImage(null)} className="absolute top-1 right-1 p-1 bg-black/60 rounded-full text-white hover:bg-red-500/80 transition-colors">
+                                <X size={12} />
+                              </button>
+                            </>
+                          ) : (
+                            <label className="cursor-pointer w-full h-full flex flex-col items-center justify-center text-gray-500 hover:text-white transition-colors gap-1">
+                              <Plus size={20} />
+                              <span className="text-xs">Kéo thả ảnh</span>
+                              <input type="file" accept="image/*" className="hidden" onChange={(e) => {
+                                if (e.target.files?.[0]) {
+                                  const reader = new FileReader();
+                                  reader.onload = (ev) => { if (ev.target?.result) setPrimaryImage(ev.target.result as string); };
+                                  reader.readAsDataURL(e.target.files[0]);
+                                }
+                              }} />
+                            </label>
+                          )}
+                        </div>
+                        {/* Secondary Image */}
+                        <div
+                          className="aspect-[4/3] relative rounded-lg border border-white/10 bg-black/20 overflow-hidden flex items-center justify-center hover:border-white/30 transition-colors"
+                          onDragOver={(e) => { e.preventDefault(); e.currentTarget.classList.add('border-purple-500', 'bg-purple-500/10'); }}
+                          onDragLeave={(e) => { e.preventDefault(); e.currentTarget.classList.remove('border-purple-500', 'bg-purple-500/10'); }}
+                          onDrop={(e) => {
+                            e.preventDefault();
+                            e.currentTarget.classList.remove('border-purple-500', 'bg-purple-500/10');
+                            const file = e.dataTransfer.files?.[0];
+                            if (file && file.type.startsWith('image/')) {
+                              const reader = new FileReader();
+                              reader.onload = (ev) => { if (ev.target?.result) setSecondaryImage(ev.target.result as string); };
+                              reader.readAsDataURL(file);
+                            }
+                          }}
+                        >
+                          {secondaryImage ? (
+                            <>
+                              <img src={secondaryImage} alt="" className="w-full h-full object-cover" />
+                              <button onClick={() => setSecondaryImage(null)} className="absolute top-1 right-1 p-1 bg-black/60 rounded-full text-white hover:bg-red-500/80 transition-colors">
+                                <X size={12} />
+                              </button>
+                            </>
+                          ) : (
+                            <label className="cursor-pointer w-full h-full flex flex-col items-center justify-center text-gray-500 hover:text-white transition-colors gap-1">
+                              <Plus size={20} />
+                              <span className="text-xs">Kéo thả ảnh</span>
+                              <input type="file" accept="image/*" className="hidden" onChange={(e) => {
+                                if (e.target.files?.[0]) {
+                                  const reader = new FileReader();
+                                  reader.onload = (ev) => { if (ev.target?.result) setSecondaryImage(ev.target.result as string); };
+                                  reader.readAsDataURL(e.target.files[0]);
+                                }
+                              }} />
+                            </label>
+                          )}
+                        </div>
+                      </div>
+                      {/* 4 Smaller Images on Bottom */}
+                      <div className="grid grid-cols-4 gap-2">
+                        {[0, 1, 2, 3].map((idx) => (
+                          <div
+                            key={idx}
+                            className="aspect-square relative rounded-lg border border-white/10 bg-black/20 overflow-hidden flex items-center justify-center hover:border-white/30 transition-colors"
+                            onDragOver={(e) => { e.preventDefault(); e.currentTarget.classList.add('border-purple-500', 'bg-purple-500/10'); }}
+                            onDragLeave={(e) => { e.preventDefault(); e.currentTarget.classList.remove('border-purple-500', 'bg-purple-500/10'); }}
+                            onDrop={(e) => {
+                              e.preventDefault();
+                              e.currentTarget.classList.remove('border-purple-500', 'bg-purple-500/10');
+                              const file = e.dataTransfer.files?.[0];
+                              if (file && file.type.startsWith('image/')) {
+                                const reader = new FileReader();
+                                reader.onload = (ev) => {
+                                  if (ev.target?.result) {
+                                    const newAcc = [...accessoryImages];
+                                    newAcc[idx] = ev.target.result as string;
+                                    setAccessoryImages(newAcc.filter(Boolean));
+                                  }
+                                };
+                                reader.readAsDataURL(file);
+                              }
+                            }}
+                          >
                             {accessoryImages[idx] ? (
                               <>
                                 <img src={accessoryImages[idx]} alt="" className="w-full h-full object-cover" />
@@ -1530,27 +1729,44 @@ const App: React.FC = () => {
                               </>
                             ) : (
                               <label className="cursor-pointer w-full h-full flex items-center justify-center text-gray-500 hover:text-white transition-colors">
-                                <Plus size={16} />
-                                <input
-                                  type="file"
-                                  accept="image/*"
-                                  className="hidden"
-                                  onChange={(e) => {
-                                    if (e.target.files?.[0]) {
-                                      const reader = new FileReader();
-                                      reader.onload = (ev) => {
-                                        if (ev.target?.result) {
-                                          setAccessoryImages([...accessoryImages, ev.target.result as string]);
-                                        }
-                                      };
-                                      reader.readAsDataURL(e.target.files[0]);
-                                    }
-                                  }}
-                                />
+                                <Plus size={14} />
+                                <input type="file" accept="image/*" className="hidden" onChange={(e) => {
+                                  if (e.target.files?.[0]) {
+                                    const reader = new FileReader();
+                                    reader.onload = (ev) => {
+                                      if (ev.target?.result) {
+                                        setAccessoryImages([...accessoryImages, ev.target.result as string]);
+                                      }
+                                    };
+                                    reader.readAsDataURL(e.target.files[0]);
+                                  }
+                                }} />
                               </label>
                             )}
                           </div>
                         ))}
+                      </div>
+                    </div>
+
+                    {/* Description */}
+                    <div>
+                      <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 block">Mô tả chi tiết</label>
+                      <textarea
+                        value={prompt}
+                        onChange={(e) => setPrompt(e.target.value)}
+                        placeholder="Mô tả ý tưởng của bạn..."
+                        className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-600 focus:border-purple-500 focus:bg-black/40 transition-all resize-none outline-none h-24"
+                      />
+                    </div>
+
+                    {/* Ratio Dropdown */}
+                    <div>
+                      <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 block">Tỉ lệ</label>
+                      <div className="relative">
+                        <select value={aspectRatio} onChange={(e) => setAspectRatio(e.target.value as AspectRatio)} className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-sm text-white appearance-none focus:border-purple-500 outline-none">
+                          {Object.values(AspectRatio).map(ratio => (<option key={ratio} value={ratio} className="bg-[#1a1625] text-white">{ratio}</option>))}
+                        </select>
+                        <ChevronDown size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
                       </div>
                     </div>
                   </div>
@@ -1573,184 +1789,227 @@ const App: React.FC = () => {
                   </span>
                 </button>
 
-                <div className="grid grid-cols-2 gap-2 mt-4 relative z-20">
-                  <div className="glass-panel p-2 rounded-[20px] flex flex-col gap-2 relative z-30 overflow-visible">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-1.5 text-[9px] font-bold text-gray-500 uppercase ml-1"><Zap size={10} className="text-purple-400" />Chế Độ</div>
-                      <div
-                        className="relative"
-                      >
+                <div className={`grid ${studioTab === 'creative' ? 'grid-cols-2' : 'grid-cols-2'} gap-2 mt-4 relative z-20`}>
+                  {/* Model selector - only show for Studio tab */}
+                  {studioTab === 'studio' && (
+                    <div className="glass-panel p-2 rounded-[20px] flex flex-col gap-2 relative z-30 overflow-visible">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-1.5 text-[9px] font-bold text-gray-500 uppercase ml-1"><Zap size={10} className="text-purple-400" />Chế Độ</div>
                         <div
-                          onClick={() => setShowModelGuide(showModelGuide ? null : 'air')}
-                          className="w-4 h-4 rounded-full bg-white/10 hover:bg-mystic-accent/30 flex items-center justify-center cursor-pointer transition-all opacity-50 hover:opacity-100"
+                          className="relative"
                         >
-                          <Info size={8} className="text-gray-400" />
-                        </div>
-                        {/* Model Guide Tooltip - Absolute positioned */}
-                        {showModelGuide && (
-                          <div className="absolute top-6 right-0 z-[100] w-48 p-3 rounded-xl bg-[#1a1625] border border-white/20 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
-                            <div className="space-y-2.5">
-                              <div className="flex items-start gap-2">
-                                <div className="w-5 h-5 rounded-full bg-white flex items-center justify-center shrink-0">
-                                  <Zap size={10} className="text-black" />
+                          <div
+                            onClick={() => setShowModelGuide(showModelGuide ? null : 'air')}
+                            className="w-4 h-4 rounded-full bg-white/10 hover:bg-mystic-accent/30 flex items-center justify-center cursor-pointer transition-all opacity-50 hover:opacity-100"
+                          >
+                            <Info size={8} className="text-gray-400" />
+                          </div>
+                          {/* Model Guide Tooltip - Absolute positioned */}
+                          {showModelGuide && (
+                            <div className="absolute top-6 right-0 z-[100] w-52 p-3 rounded-xl bg-[#1a1625] border border-white/20 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+                              <div className="space-y-2.5">
+                                <div className="flex items-start gap-2">
+                                  <div className="w-5 h-5 rounded-full bg-white flex items-center justify-center shrink-0">
+                                    <Zap size={10} className="text-black" />
+                                  </div>
+                                  <div>
+                                    <p className="text-[10px] font-bold text-white">Air</p>
+                                    <p className="text-[9px] text-gray-400 leading-relaxed">Tạo ảnh nhanh, chi phí thấp.</p>
+                                  </div>
                                 </div>
-                                <div>
-                                  <p className="text-[10px] font-bold text-white">Air</p>
-                                  <p className="text-[9px] text-gray-400 leading-relaxed">Tạo ảnh nhanh, chi phí thấp.</p>
+                                <div className="flex items-start gap-2">
+                                  <div className="w-5 h-5 rounded-full bg-indigo-600 flex items-center justify-center shrink-0">
+                                    <Sparkles size={10} className="text-white" />
+                                  </div>
+                                  <div>
+                                    <p className="text-[10px] font-bold text-white">Pro</p>
+                                    <p className="text-[9px] text-gray-400 leading-relaxed">Rõ chi tiết, form dáng. Xử lý các yêu cầu phức tạp.</p>
+                                  </div>
+                                </div>
+                                <div className="flex items-start gap-2">
+                                  <div className="w-5 h-5 rounded-full bg-teal-500 flex items-center justify-center shrink-0">
+                                    <Cloud size={10} className="text-white" />
+                                  </div>
+                                  <div>
+                                    <p className="text-[10px] font-bold text-white">4.5</p>
+                                    <p className="text-[9px] text-gray-400 leading-relaxed">Seedream 4.5 - Chất lượng cao, nghệ thuật.</p>
+                                  </div>
                                 </div>
                               </div>
-                              <div className="flex items-start gap-2">
-                                <div className="w-5 h-5 rounded-full bg-indigo-600 flex items-center justify-center shrink-0">
-                                  <Sparkles size={10} className="text-white" />
-                                </div>
-                                <div>
-                                  <p className="text-[10px] font-bold text-white">Pro</p>
-                                  <p className="text-[9px] text-gray-400 leading-relaxed">Rõ chi tiết, form dáng. Xử lý các yêu cầu phức tạp.</p>
-                                </div>
-                              </div>
+                              {/* Arrow pointer */}
+                              <div className="absolute -top-1.5 right-1.5 w-3 h-3 bg-[#1a1625] border-l border-t border-white/20 rotate-45" />
                             </div>
-                            {/* Arrow pointer */}
-                            <div className="absolute -top-1.5 right-1.5 w-3 h-3 bg-[#1a1625] border-l border-t border-white/20 rotate-45" />
-                          </div>
-                        )}
+                          )}
+                        </div>
                       </div>
-                    </div>
-                    <div className="flex bg-black/20 rounded-xl p-1 gap-1">
-                      <button onClick={() => { setSelectedModel('gemini-2.5-flash-image'); setAccessoryImages([]); }} className={`relative flex-1 py-1.5 rounded-lg text-[10px] font-bold transition-all ${selectedModel === 'gemini-2.5-flash-image' ? 'bg-white text-black shadow-sm' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}>
-                        {mode === AppMode.CREATIVE_POSE && <Star size={14} className="absolute -top-1.5 -left-1.5 text-yellow-400 fill-yellow-400 rotate-[45deg]" />}
-                        Air
-                      </button>
-                      <button onClick={() => setSelectedModel('gemini-3-pro-image-preview')} className={`relative flex-1 py-1.5 rounded-lg text-[10px] font-bold transition-all ${selectedModel === 'gemini-3-pro-image-preview' ? 'bg-indigo-600 text-white shadow-glow' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}>
-                        {(mode === AppMode.VIRTUAL_TRY_ON || mode === AppMode.CREATE_MODEL) && <Star size={14} className="absolute -top-1.5 -right-1.5 text-yellow-400 fill-yellow-400 rotate-[-45deg]" />}
-                        Pro
-                      </button>
-                    </div>
-                  </div>
-                  <div className="glass-panel p-2 rounded-[20px] flex flex-col gap-2 relative overflow-visible">
-                    <div className="flex items-center gap-1.5 text-[9px] font-bold text-gray-500 uppercase ml-1"><Layers size={10} className="text-mystic-accent" />Số lượng ảnh</div>
-                    <div className="flex gap-1">
-                      {[1, 2].map((num) => (
-                        <button key={num} onClick={() => setNumberOfImages(num)} className={`w-8 py-1.5 rounded-lg text-[10px] font-bold transition-all border ${numberOfImages === num ? 'bg-mystic-accent border-mystic-accent text-white shadow-glow' : 'bg-black/20 border-transparent text-gray-500 hover:text-white hover:bg-white/5'}`}>{num}</button>
-                      ))}
-                      <div className="relative flex-1">
-                        <button
-                          onClick={() => setNumberOfImages(4)}
-                          className={`w-full py-1.5 rounded-lg text-[10px] font-bold transition-all border ${numberOfImages === 4 ? 'bg-mystic-accent border-mystic-accent text-white shadow-glow' : 'bg-black/20 border-transparent text-gray-500 hover:text-white hover:bg-white/5'}`}
-                        >
-                          Set(4 ảnh)
+                      <div className="flex bg-black/20 rounded-xl p-1 gap-1">
+                        <button onClick={() => { setSelectedModel('gemini-2.5-flash-image'); setAccessoryImages([]); }} className={`relative flex-1 py-1.5 rounded-lg text-[10px] font-bold transition-all ${selectedModel === 'gemini-2.5-flash-image' ? 'bg-white text-black shadow-sm' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}>
+                          {mode === AppMode.CREATIVE_POSE && <Star size={14} className="absolute -top-1.5 -left-1.5 text-yellow-400 fill-yellow-400 rotate-[45deg]" />}
+                          Air
                         </button>
-                        <div
-                          onClick={(e) => { e.stopPropagation(); setShowSetGuide(!showSetGuide); }}
-                          className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-white/10 hover:bg-mystic-accent/30 flex items-center justify-center cursor-pointer transition-all opacity-60 hover:opacity-100 z-10"
-                        >
-                          <Info size={8} className="text-gray-400" />
-                        </div>
-                        {/* Set Guide Modal - rendered at top level */}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="glass-panel p-4 rounded-[24px] space-y-4 mt-4 relative z-10">
-                  <div className="flex justify-between items-center cursor-pointer" onClick={() => setShowAdvanced(!showAdvanced)}>
-                    <span className="text-xs font-bold text-gray-300 uppercase tracking-wider flex items-center gap-2"><Layers size={14} className="text-mystic-accent" /> Tùy chỉnh</span>
-                    <button className="p-1.5 rounded-full hover:bg-white/5 transition-colors">{showAdvanced ? <ChevronUp size={14} /> : <ChevronDown size={14} />}</button>
-                  </div>
-                  {showAdvanced && (
-                    <div className="space-y-5 pt-2 animate-in slide-in-from-top-2">
-                      <div className="space-y-1.5">
-                        <label className="text-[10px] font-semibold text-gray-500 uppercase ml-1">Mô tả chi tiết</label>
-                        <textarea value={prompt} onChange={(e) => setPrompt(e.target.value)} placeholder="Ảnh chân dung, background decor giáng sinh,.." className="w-full bg-black/20 border border-white/10 rounded-xl p-3 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-mystic-accent focus:bg-black/40 transition-all resize-none shadow-inner h-20" />
-                      </div>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <label className="text-[10px] font-semibold text-gray-500 uppercase ml-1 mb-1.5 block">Tỉ lệ</label>
-                          <div className="relative">
-                            <select value={aspectRatio} onChange={(e) => setAspectRatio(e.target.value as AspectRatio)} className="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-xs text-white appearance-none focus:border-mystic-accent outline-none">
-                              {Object.values(AspectRatio).map(ratio => (<option key={ratio} value={ratio} className="bg-mystic-900 text-white">{ratio}</option>))}
-                            </select>
-                            <ChevronDown size={12} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
-                          </div>
-                        </div>
-
-                        <div className="col-span-2">
-                          <label className="text-[10px] font-semibold text-gray-500 uppercase ml-1 mb-1.5 block">Ảnh Phụ Kiện, Background (+2 xu/ảnh)</label>
-                          <div className="grid grid-cols-3 gap-2">
-                            {accessoryImages.map((img, idx) => (
-                              <div key={idx} className="relative aspect-square rounded-lg overflow-hidden border border-white/10 group">
-                                <img src={img} alt={`Accessory ${idx}`} className="w-full h-full object-cover" />
-                                <button onClick={() => setAccessoryImages(prev => prev.filter((_, i) => i !== idx))} className="absolute top-1 right-1 p-1 rounded-full bg-black/50 text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500"><X size={12} /></button>
-                              </div>
-                            ))}
-                            {accessoryImages.length < 3 && (
-                              <label
-                                className="aspect-square rounded-lg border border-white/10 border-dashed flex flex-col items-center justify-center cursor-pointer hover:bg-white/5 transition-colors gap-1"
-                                onDragOver={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  e.currentTarget.classList.add('bg-white/10', 'border-mystic-accent');
-                                }}
-                                onDragLeave={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  e.currentTarget.classList.remove('bg-white/10', 'border-mystic-accent');
-                                }}
-                                onDrop={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  e.currentTarget.classList.remove('bg-white/10', 'border-mystic-accent');
-                                  const file = e.dataTransfer.files?.[0];
-                                  if (file && file.type.startsWith('image/')) {
-                                    const reader = new FileReader();
-                                    reader.onloadend = () => {
-                                      setAccessoryImages(prev => [...prev, reader.result as string]);
-                                    };
-                                    reader.readAsDataURL(file);
-                                  }
-                                }}
-                              >
-                                <Plus size={16} className="text-gray-500" />
-                                <span className="text-[9px] text-gray-500">Add</span>
-                                <input type="file" accept="image/*" className="hidden" onChange={(e) => {
-                                  const file = e.target.files?.[0];
-                                  if (file) {
-                                    const reader = new FileReader();
-                                    reader.onloadend = () => {
-                                      setAccessoryImages(prev => [...prev, reader.result as string]);
-                                    };
-                                    reader.readAsDataURL(file);
-                                  }
-                                }} />
-                              </label>
-                            )}
-                          </div>
-                        </div>
-
-                      </div>
-
-                      <div className="space-y-2 pt-1">
-                        {(mode === AppMode.CREATIVE_POSE) && (
-                          <button onClick={() => setKeepFace(!keepFace)} className={`w-full flex items-center justify-between p-2.5 rounded-lg border transition-all ${keepFace ? 'bg-mystic-accent/10 border-mystic-accent text-white' : 'bg-transparent border-white/5 text-gray-400 hover:bg-white/5'}`}>
-                            <div className="flex items-center gap-2"><ScanFace size={14} /><span className="text-xs font-medium">Giữ khuôn mặt</span></div>
-                            {keepFace ? <ToggleRight className="text-mystic-accent" size={20} /> : <ToggleLeft size={20} />}
-                          </button>
-                        )}
-                        {(mode !== AppMode.CREATIVE_POSE && mode !== AppMode.CREATE_MODEL && mode !== AppMode.VIRTUAL_TRY_ON) && (
-                          <button onClick={() => setFlexibleMode(!flexibleMode)} className={`w-full flex items-center justify-between p-2.5 rounded-lg border transition-all ${flexibleMode ? 'bg-mystic-accent/10 border-mystic-accent text-white' : 'bg-transparent border-white/5 text-gray-400 hover:bg-white/5'}`}>
-                            <div className="flex items-center gap-2"><Shuffle size={14} /><span className="text-xs font-medium">Creative Freedom</span></div>
-                            {flexibleMode ? <ToggleRight className="text-mystic-accent" size={20} /> : <ToggleLeft size={20} />}
-                          </button>
-                        )}
-                        {(mode === AppMode.CREATE_MODEL) && (
-                          <button onClick={() => setRandomFace(!randomFace)} className={`w-full flex items-center justify-between p-2.5 rounded-lg border transition-all ${randomFace ? 'bg-pink-500/10 border-pink-500 text-white' : 'bg-transparent border-white/5 text-gray-400 hover:bg-white/5'}`}>
-                            <div className="flex items-center gap-2"><ScanFace size={14} /><span className="text-xs font-medium">Randomize Model</span></div>
-                            {randomFace ? <ToggleRight className="text-pink-500" size={20} /> : <ToggleLeft size={20} />}
-                          </button>
-                        )}
+                        <button onClick={() => setSelectedModel('gemini-3-pro-image-preview')} className={`relative flex-1 py-1.5 rounded-lg text-[10px] font-bold transition-all ${selectedModel === 'gemini-3-pro-image-preview' ? 'bg-indigo-600 text-white shadow-glow' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}>
+                          {(mode === AppMode.VIRTUAL_TRY_ON || mode === AppMode.CREATE_MODEL) && <Star size={14} className="absolute -top-1.5 -right-1.5 text-yellow-400 fill-yellow-400 rotate-[-45deg]" />}
+                          Pro
+                        </button>
+                        {/* Temporarily hidden - uncomment to enable 4.5 in Studio mode
+                        <button onClick={() => setSelectedModel('seedream-4-5')} className={`relative flex-1 py-1.5 rounded-lg text-[10px] font-bold transition-all ${selectedModel === 'seedream-4-5' ? 'bg-teal-500 text-white shadow-glow' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}>
+                          4.5
+                        </button>
+                        */}
                       </div>
                     </div>
                   )}
+
+                  {/* Quality selector - only show for Creative tab */}
+                  {studioTab === 'creative' && (
+                    <div className="glass-panel p-2 rounded-[20px] flex flex-col gap-2 relative overflow-visible">
+                      <div className="flex items-center gap-1.5 text-[9px] font-bold text-gray-500 uppercase ml-1"><Zap size={10} className="text-purple-400" />Chất lượng</div>
+                      <div className="flex bg-black/20 rounded-xl p-1 gap-1">
+                        {(['1K', '2K', '4K'] as const).map((q) => (
+                          <button
+                            key={q}
+                            onClick={() => setTargetResolution(q)}
+                            className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold transition-all ${targetResolution === q
+                              ? 'bg-purple-600 text-white shadow-sm'
+                              : 'text-gray-400 hover:text-white hover:bg-white/5'
+                              }`}
+                          >
+                            {q}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="glass-panel p-2 rounded-[20px] flex flex-col gap-2 relative overflow-visible">
+                    <div className="flex items-center gap-1.5 text-[9px] font-bold text-gray-500 uppercase ml-1"><Layers size={10} className="text-mystic-accent" />Số lượng</div>
+                    <div className="flex bg-black/20 rounded-xl p-1 gap-1">
+                      {(studioTab === 'creative' ? [1, 2, 3, 4] : [1, 2]).map((num) => (
+                        <button key={num} onClick={() => setNumberOfImages(num)} className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold transition-all ${numberOfImages === num ? 'bg-mystic-accent text-white shadow-sm' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}>{num}</button>
+                      ))}
+                      {studioTab === 'studio' && (
+                        <div className="relative flex-1">
+                          <button
+                            onClick={() => setNumberOfImages(4)}
+                            className={`w-full py-1.5 rounded-lg text-[10px] font-bold transition-all ${numberOfImages === 4 ? 'bg-mystic-accent text-white shadow-sm' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
+                          >
+                            Set
+                          </button>
+                          <div
+                            onClick={(e) => { e.stopPropagation(); setShowSetGuide(!showSetGuide); }}
+                            className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-white/10 hover:bg-mystic-accent/30 flex items-center justify-center cursor-pointer transition-all opacity-60 hover:opacity-100 z-10"
+                          >
+                            <Info size={8} className="text-gray-400" />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
+
+                {/* Tùy chỉnh - Only show for Studio tab */}
+                {studioTab === 'studio' && (
+                  <div className="glass-panel p-4 rounded-[24px] space-y-4 mt-4 relative z-10">
+                    <div className="flex justify-between items-center cursor-pointer" onClick={() => setShowAdvanced(!showAdvanced)}>
+                      <span className="text-xs font-bold text-gray-300 uppercase tracking-wider flex items-center gap-2"><Layers size={14} className="text-mystic-accent" /> Tùy chỉnh</span>
+                      <button className="p-1.5 rounded-full hover:bg-white/5 transition-colors">{showAdvanced ? <ChevronUp size={14} /> : <ChevronDown size={14} />}</button>
+                    </div>
+                    {showAdvanced && (
+                      <div className="space-y-5 pt-2 animate-in slide-in-from-top-2">
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] font-semibold text-gray-500 uppercase ml-1">Mô tả chi tiết</label>
+                          <textarea value={prompt} onChange={(e) => setPrompt(e.target.value)} placeholder="Ảnh chân dung, background decor giáng sinh,.." className="w-full bg-black/20 border border-white/10 rounded-xl p-3 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-mystic-accent focus:bg-black/40 transition-all resize-none shadow-inner h-20" />
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="text-[10px] font-semibold text-gray-500 uppercase ml-1 mb-1.5 block">Tỉ lệ</label>
+                            <div className="relative">
+                              <select value={aspectRatio} onChange={(e) => setAspectRatio(e.target.value as AspectRatio)} className="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-xs text-white appearance-none focus:border-mystic-accent outline-none">
+                                {Object.values(AspectRatio).map(ratio => (<option key={ratio} value={ratio} className="bg-mystic-900 text-white">{ratio}</option>))}
+                              </select>
+                              <ChevronDown size={12} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
+                            </div>
+                          </div>
+
+                          <div className="col-span-2">
+                            <label className="text-[10px] font-semibold text-gray-500 uppercase ml-1 mb-1.5 block">Ảnh Phụ Kiện, Background (+2 xu/ảnh)</label>
+                            <div className="grid grid-cols-3 gap-2">
+                              {accessoryImages.map((img, idx) => (
+                                <div key={idx} className="relative aspect-square rounded-lg overflow-hidden border border-white/10 group">
+                                  <img src={img} alt={`Accessory ${idx}`} className="w-full h-full object-cover" />
+                                  <button onClick={() => setAccessoryImages(prev => prev.filter((_, i) => i !== idx))} className="absolute top-1 right-1 p-1 rounded-full bg-black/50 text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500"><X size={12} /></button>
+                                </div>
+                              ))}
+                              {accessoryImages.length < 3 && (
+                                <label
+                                  className="aspect-square rounded-lg border border-white/10 border-dashed flex flex-col items-center justify-center cursor-pointer hover:bg-white/5 transition-colors gap-1"
+                                  onDragOver={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    e.currentTarget.classList.add('bg-white/10', 'border-mystic-accent');
+                                  }}
+                                  onDragLeave={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    e.currentTarget.classList.remove('bg-white/10', 'border-mystic-accent');
+                                  }}
+                                  onDrop={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    e.currentTarget.classList.remove('bg-white/10', 'border-mystic-accent');
+                                    const file = e.dataTransfer.files?.[0];
+                                    if (file && file.type.startsWith('image/')) {
+                                      const reader = new FileReader();
+                                      reader.onloadend = () => {
+                                        setAccessoryImages(prev => [...prev, reader.result as string]);
+                                      };
+                                      reader.readAsDataURL(file);
+                                    }
+                                  }}
+                                >
+                                  <Plus size={16} className="text-gray-500" />
+                                  <span className="text-[9px] text-gray-500">Add</span>
+                                  <input type="file" accept="image/*" className="hidden" onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    if (file) {
+                                      const reader = new FileReader();
+                                      reader.onloadend = () => {
+                                        setAccessoryImages(prev => [...prev, reader.result as string]);
+                                      };
+                                      reader.readAsDataURL(file);
+                                    }
+                                  }} />
+                                </label>
+                              )}
+                            </div>
+                          </div>
+
+                        </div>
+
+                        <div className="space-y-2 pt-1">
+                          {(mode === AppMode.CREATIVE_POSE) && (
+                            <button onClick={() => setKeepFace(!keepFace)} className={`w-full flex items-center justify-between p-2.5 rounded-lg border transition-all ${keepFace ? 'bg-mystic-accent/10 border-mystic-accent text-white' : 'bg-transparent border-white/5 text-gray-400 hover:bg-white/5'}`}>
+                              <div className="flex items-center gap-2"><ScanFace size={14} /><span className="text-xs font-medium">Giữ khuôn mặt</span></div>
+                              {keepFace ? <ToggleRight className="text-mystic-accent" size={20} /> : <ToggleLeft size={20} />}
+                            </button>
+                          )}
+                          {(mode !== AppMode.CREATIVE_POSE && mode !== AppMode.CREATE_MODEL && mode !== AppMode.VIRTUAL_TRY_ON) && (
+                            <button onClick={() => setFlexibleMode(!flexibleMode)} className={`w-full flex items-center justify-between p-2.5 rounded-lg border transition-all ${flexibleMode ? 'bg-mystic-accent/10 border-mystic-accent text-white' : 'bg-transparent border-white/5 text-gray-400 hover:bg-white/5'}`}>
+                              <div className="flex items-center gap-2"><Shuffle size={14} /><span className="text-xs font-medium">Creative Freedom</span></div>
+                              {flexibleMode ? <ToggleRight className="text-mystic-accent" size={20} /> : <ToggleLeft size={20} />}
+                            </button>
+                          )}
+                          {(mode === AppMode.CREATE_MODEL) && (
+                            <button onClick={() => setRandomFace(!randomFace)} className={`w-full flex items-center justify-between p-2.5 rounded-lg border transition-all ${randomFace ? 'bg-pink-500/10 border-pink-500 text-white' : 'bg-transparent border-white/5 text-gray-400 hover:bg-white/5'}`}>
+                              <div className="flex items-center gap-2"><ScanFace size={14} /><span className="text-xs font-medium">Randomize Model</span></div>
+                              {randomFace ? <ToggleRight className="text-pink-500" size={20} /> : <ToggleLeft size={20} />}
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
                 {error && <div className="p-4 bg-red-900/20 border border-red-500/50 rounded-2xl flex items-start gap-3 text-red-200 animate-in fade-in slide-in-from-top-2 shrink-0"><AlertCircle className="shrink-0 mt-0.5" size={18} /><p className="text-sm leading-relaxed">{error}</p></div>}
               </div>
             </div>
@@ -1779,7 +2038,10 @@ const App: React.FC = () => {
                       <div className="absolute top-4 right-4 flex flex-col gap-3 z-30">
                         <button onClick={() => downloadImage(results[selectedResultIndex], selectedResultIndex, prompt, selectedModel)} className="glass-button w-12 h-12 rounded-full flex items-center justify-center text-white hover:text-mystic-accent transition-all group shadow-glass" title="Save Image"><Download size={22} className="group-hover:translate-y-0.5 transition-transform" /></button>
                         <button onClick={handleNewPose} className="glass-button w-12 h-12 rounded-full flex items-center justify-center text-white hover:text-pink-400 transition-all shadow-glass" title="Use as Pose"><Bone size={22} /></button>
-                        <button onClick={handleUpscale} className="glass-button w-12 h-12 rounded-full flex items-center justify-center text-white hover:text-purple-400 transition-all shadow-glass" title="Upscale 4K"><Maximize2 size={22} /></button>
+                        {/* Hide upscale for Seedream models */}
+                        {!selectedModel.startsWith('seedream') && (
+                          <button onClick={handleUpscale} className="glass-button w-12 h-12 rounded-full flex items-center justify-center text-white hover:text-purple-400 transition-all shadow-glass" title="Upscale 4K"><Maximize2 size={22} /></button>
+                        )}
 
                       </div>
                       {/* Mobile Hint */}
@@ -1936,6 +2198,26 @@ const App: React.FC = () => {
         </div>
       )}
 
+      {/* LANDING PAGE POPUP */}
+      {showLandingPopup && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/90 backdrop-blur-md p-4 animate-in fade-in duration-200">
+          <div className="relative w-full max-w-6xl h-[90vh] overflow-y-auto rounded-3xl bg-[#0f0c1d] border border-white/10 shadow-2xl custom-scrollbar">
+            {/* Sticky close button */}
+            <div className="sticky top-0 z-20 flex justify-end p-4 bg-gradient-to-b from-[#0f0c1d] via-[#0f0c1d]/90 to-transparent pointer-events-none">
+              <button
+                onClick={() => setShowLandingPopup(false)}
+                className="p-2 rounded-full bg-black/50 text-white/50 hover:text-white hover:bg-white/20 transition-all pointer-events-auto"
+              >
+                <X size={24} />
+              </button>
+            </div>
+            <div className="-mt-16">
+              <LandingPage onEnterStudio={() => setShowLandingPopup(false)} />
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* 6. BRANDING VIEW */}
       {currentView === 'BRANDING' && (
         <BrandingPage
@@ -1987,12 +2269,12 @@ const App: React.FC = () => {
                     <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-6 border border-white/10 shadow-glass-inset">
                       <User size={32} className="text-mystic-accent" />
                     </div>
-                    <h2 className="text-2xl font-bold text-white mb-2">Welcome Back</h2>
-                    <p className="text-sm text-gray-400 mb-8">Sign in to sync your gallery and credits across devices.</p>
+                    <h2 className="text-2xl font-bold text-white mb-2">Welcome</h2>
+                    <p className="text-sm text-gray-400 mb-8">Chào mừng bạn đến với Windi Studio</p>
 
                     <button onClick={handleLogin} className="w-full py-3.5 rounded-xl bg-white text-black font-bold text-sm tracking-wide hover:scale-[1.02] active:scale-[0.98] transition-all shadow-glow flex items-center justify-center gap-3">
                       <img src="https://www.google.com/favicon.ico" alt="G" className="w-4 h-4" />
-                      Continue with Google
+                      Đăng nhập bằng Google
                     </button>
 
                     {/* Dev Login Button */}

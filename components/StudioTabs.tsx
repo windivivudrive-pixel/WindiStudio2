@@ -1,17 +1,17 @@
 import React from 'react';
 
 interface StudioTabsProps {
-  activeTab: 'studio' | 'fun' | 'library';
-  onTabChange: (tab: 'studio' | 'fun' | 'library') => void;
+  activeTab: 'studio' | 'creative' | 'library';
+  onTabChange: (tab: 'studio' | 'creative' | 'library') => void;
 }
 
 export const StudioTabs: React.FC<StudioTabsProps> = ({ activeTab, onTabChange }) => {
-  // Calculate position based on active tab
+  // Calculate position based on active tab (Creative first, Studio second, Library third)
   const getPosition = () => {
     switch (activeTab) {
-      case 'studio': return '6px';
-      case 'fun': return 'calc(33.33% + 4px)';
-      case 'library': return 'calc(66.66% + 2px)';
+      case 'creative': return '6px'; // Creative (first)
+      case 'studio': return 'calc(33.33% + 4px)'; // Studio (second)
+      case 'library': return 'calc(66.66% + 2px)'; // Library (third)
       default: return '6px';
     }
   };
@@ -27,18 +27,18 @@ export const StudioTabs: React.FC<StudioTabsProps> = ({ activeTab, onTabChange }
         }}
       />
 
-      {/* Buttons */}
+      {/* Buttons - Creative first, Studio second, Library third */}
+      <button
+        onClick={() => onTabChange('creative')}
+        className={`relative z-10 flex-1 py-1.5 flex items-center justify-center text-xs font-bold uppercase tracking-widest text-center transition-colors duration-500 ${activeTab === 'creative' ? 'text-white' : 'text-gray-400 hover:text-white'}`}
+      >
+        Creative
+      </button>
       <button
         onClick={() => onTabChange('studio')}
         className={`relative z-10 flex-1 py-1.5 flex items-center justify-center text-xs font-bold uppercase tracking-widest text-center transition-colors duration-500 ${activeTab === 'studio' ? 'text-white' : 'text-gray-400 hover:text-white'}`}
       >
         Studio
-      </button>
-      <button
-        onClick={() => onTabChange('fun')}
-        className={`relative z-10 flex-1 py-1.5 flex items-center justify-center text-xs font-bold uppercase tracking-widest text-center transition-colors duration-500 ${activeTab === 'fun' ? 'text-white' : 'text-gray-400 hover:text-white'}`}
-      >
-        Fun
       </button>
       <button
         onClick={() => onTabChange('library')}

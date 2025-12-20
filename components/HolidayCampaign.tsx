@@ -101,7 +101,7 @@ const HolidayCampaign: React.FC = () => {
                                         <span className="text-red-400">Giáng Sinh & Tết 🎁</span>
                                     </h3>
                                     <p className="text-gray-400 mt-4 text-lg">
-                                        Nhận ngay <strong className="text-white">500 Xu Miễn Phí</strong> (Trị giá 500k) để trải nghiệm tạo ảnh Lookbook không giới hạn.
+                                        Nhận ngay <strong className="text-white">200 Xu Miễn Phí</strong> (Trị giá 200k) để trải nghiệm tạo ảnh Lookbook không giới hạn.
                                     </p>
                                 </div>
 
@@ -135,7 +135,7 @@ const HolidayCampaign: React.FC = () => {
                                         className="w-full h-14 text-lg shadow-[0_0_30px_-5px_rgba(239,68,68,0.4)] hover:shadow-[0_0_50px_-10px_rgba(239,68,68,0.6)] animate-[pulse_3s_ease-in-out_infinite]"
                                         onClick={() => setIsModalOpen(true)}
                                     >
-                                        Nhận 500 Xu Ngay <ArrowRight className="w-5 h-5 ml-2" />
+                                        Nhận 200 Xu Ngay <ArrowRight className="w-5 h-5 ml-2" />
                                     </Button>
                                 </div>
                             </div>
