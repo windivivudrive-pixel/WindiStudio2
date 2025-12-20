@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Pricing from './components/Pricing';
-import { Sparkles, Shirt, Camera, Wand2, Download, AlertCircle, History, Trash2, ChevronDown, ChevronUp, User, Image as ImageIcon, Bone, Layers, ToggleLeft, ToggleRight, XCircle, Archive, Shuffle, Copy, ScanFace, RefreshCw, LogIn, Coins, X, CreditCard, Wallet, LogOut, Zap, Cloud, ArrowLeft, Calendar, FileText, CheckCircle, XOctagon, QrCode, Smartphone, Check, Maximize2, Plus, Stamp, Heart, Star, Info } from 'lucide-react';
+import { Sparkles, Shirt, Camera, Wand2, Download, AlertCircle, History, Trash2, ChevronDown, ChevronUp, User, Image as ImageIcon, Bone, Layers, ToggleLeft, ToggleRight, XCircle, Archive, Shuffle, Copy, ScanFace, RefreshCw, LogIn, Coins, X, CreditCard, Wallet, LogOut, Zap, Cloud, ArrowLeft, Calendar, FileText, CheckCircle, XOctagon, QrCode, Smartphone, Check, Maximize2, Plus, Stamp, Heart, Star, Info, ImagePlus } from 'lucide-react';
 import JSZip from 'jszip';
 import { AppMode, AspectRatio, HistoryItem, UserProfile, Transaction } from './types';
 import { ImageUploader } from './components/ImageUploader';
@@ -25,7 +25,9 @@ import {
   deleteHistoryFromDb,
   fetchTransactions,
   createTransaction,
-  getProfile
+  getProfile,
+  createReferenceImage,
+  fetchCategories
 } from './services/supabaseService';
 import { supabase } from './services/supabaseClient';
 
@@ -110,6 +112,15 @@ const App: React.FC = () => {
   const [calculatedCoins, setCalculatedCoins] = useState(0);
   const [qrUrl, setQrUrl] = useState('');
   const [showPricingModal, setShowPricingModal] = useState(false);
+
+  // Reference Image Modal State (Admin only)
+  const [showRefImageModal, setShowRefImageModal] = useState(false);
+  const [refCategories, setRefCategories] = useState<{ id: number, name: string }[]>([]);
+  const [refImageUrl, setRefImageUrl] = useState('');
+  const [refPrompt, setRefPrompt] = useState('');
+  const [refImageType, setRefImageType] = useState('premium');
+  const [refCategoryId, setRefCategoryId] = useState<number | undefined>(undefined);
+  const [isSubmittingRef, setIsSubmittingRef] = useState(false);
 
   // Toast Notification State
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
@@ -432,6 +443,44 @@ const App: React.FC = () => {
     const numericAmount = parseInt(topUpAmount.replace(/\D/g, '') || '0');
     setCalculatedCoins(Math.floor(numericAmount / 1000));
   }, [topUpAmount]);
+
+  // Fetch categories when ref image modal opens
+  useEffect(() => {
+    if (showRefImageModal) {
+      fetchCategories().then(setRefCategories);
+    }
+  }, [showRefImageModal]);
+
+  // Handler for submitting reference image
+  const handleSubmitRefImage = async () => {
+    if (!refImageUrl || !userProfile?.id) {
+      alert('Vui lòng nhập URL ảnh');
+      return;
+    }
+
+    setIsSubmittingRef(true);
+    const success = await createReferenceImage({
+      user_id: userProfile.id,
+      image_url: refImageUrl,
+      prompt: refPrompt,
+      image_type: refImageType,
+      category_id: refCategoryId,
+      is_favorite: true
+    });
+
+    setIsSubmittingRef(false);
+
+    if (success) {
+      alert('Đã thêm ảnh tham chiếu thành công!');
+      setShowRefImageModal(false);
+      setRefImageUrl('');
+      setRefPrompt('');
+      setRefImageType('premium');
+      setRefCategoryId(undefined);
+    } else {
+      alert('Lỗi khi thêm ảnh tham chiếu');
+    }
+  };
 
   const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -2228,7 +2277,6 @@ const App: React.FC = () => {
           isSavingBranding={isSavingBranding}
           handleSaveBranding={handleSaveBranding}
           onBack={() => navigateTo('STUDIO')}
-          userId={userProfile?.id}
         />
       )}
 
@@ -2398,6 +2446,14 @@ const App: React.FC = () => {
                     <span className="text-xs font-bold text-gray-200">Branding Kit</span>
                   </button>
                   {/* --- BRANDING FEATURE END --- */}
+
+                  {/* Admin Only: Reference Image Button */}
+                  {isAdmin && (
+                    <button onClick={() => { setShowRefImageModal(true); setShowLoginModal(false); }} className="w-full p-3 rounded-xl bg-gradient-to-r from-green-500/20 to-teal-500/20 hover:from-green-500/30 hover:to-teal-500/30 border border-white/10 flex items-center justify-center gap-2 transition-all">
+                      <ImagePlus size={20} className="text-green-400" />
+                      <span className="text-xs font-bold text-gray-200">Thêm ảnh tham chiếu</span>
+                    </button>
+                  )}
 
                   <button onClick={handleLogout} className="w-full py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 font-bold flex items-center justify-center gap-2 hover:bg-red-500/20 transition-colors">
                     <LogOut size={16} /> Logout
@@ -2582,6 +2638,96 @@ const App: React.FC = () => {
                 </div>
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Reference Image Modal (Admin Only) */}
+      {showRefImageModal && (
+        <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-neutral-900 border border-white/10 rounded-3xl w-full max-w-md p-6 space-y-5 relative max-h-[90vh] overflow-y-auto">
+            <button
+              onClick={() => setShowRefImageModal(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-white"
+            >
+              <X size={20} />
+            </button>
+
+            <h3 className="text-xl font-bold text-white flex items-center gap-2">
+              <ImagePlus size={22} className="text-green-400" />
+              Thêm ảnh tham chiếu
+            </h3>
+
+            {/* Image URL */}
+            <div className="space-y-2">
+              <label className="text-sm text-gray-400">URL Ảnh *</label>
+              <input
+                type="text"
+                value={refImageUrl}
+                onChange={(e) => setRefImageUrl(e.target.value)}
+                placeholder="https://example.com/image.jpg"
+                className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-green-500"
+              />
+            </div>
+
+            {/* Prompt */}
+            <div className="space-y-2">
+              <label className="text-sm text-gray-400">Prompt</label>
+              <textarea
+                value={refPrompt}
+                onChange={(e) => setRefPrompt(e.target.value)}
+                placeholder="Mô tả về ảnh..."
+                rows={3}
+                className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-green-500 resize-none"
+              />
+            </div>
+
+            {/* Image Type Dropdown */}
+            <div className="space-y-2">
+              <label className="text-sm text-gray-400">Image Type *</label>
+              <select
+                value={refImageType}
+                onChange={(e) => setRefImageType(e.target.value)}
+                className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-green-500"
+              >
+                <option value="premium">Premium</option>
+                <option value="standard">Standard</option>
+                <option value="s4.0">S4.0</option>
+                <option value="s4.5">S4.5</option>
+              </select>
+            </div>
+
+            {/* Category Dropdown */}
+            <div className="space-y-2">
+              <label className="text-sm text-gray-400">Category</label>
+              <select
+                value={refCategoryId || ''}
+                onChange={(e) => setRefCategoryId(e.target.value ? Number(e.target.value) : undefined)}
+                className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-green-500"
+              >
+                <option value="">-- Không chọn --</option>
+                {refCategories.map(cat => (
+                  <option key={cat.id} value={cat.id}>{cat.name}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Preview */}
+            {refImageUrl && (
+              <div className="rounded-xl overflow-hidden border border-white/10 bg-black/30">
+                <img src={refImageUrl} alt="Preview" className="w-full max-h-40 object-contain" />
+              </div>
+            )}
+
+            {/* Submit Button */}
+            <button
+              onClick={handleSubmitRefImage}
+              disabled={isSubmittingRef || !refImageUrl}
+              className="w-full py-3.5 rounded-xl bg-gradient-to-r from-green-600 to-teal-600 font-bold text-white hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:grayscale flex items-center justify-center gap-2"
+            >
+              {isSubmittingRef ? <RefreshCw className="animate-spin" size={18} /> : <Plus size={18} />}
+              {isSubmittingRef ? 'Đang thêm...' : 'Thêm ảnh'}
+            </button>
           </div>
         </div>
       )}
