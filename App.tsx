@@ -115,11 +115,12 @@ const App: React.FC = () => {
 
   // Reference Image Modal State (Admin only)
   const [showRefImageModal, setShowRefImageModal] = useState(false);
-  const [refCategories, setRefCategories] = useState<{ id: number, name: string }[]>([]);
+  const [refCategories, setRefCategories] = useState<{ id: number, name: string, section_type?: 'STUDIO' | 'CREATIVE' }[]>([]);
   const [refImageUrl, setRefImageUrl] = useState('');
   const [refPrompt, setRefPrompt] = useState('');
   const [refImageType, setRefImageType] = useState('premium');
   const [refCategoryId, setRefCategoryId] = useState<number | undefined>(undefined);
+  const [refMode, setRefMode] = useState('CREATIVE_POSE'); // Mode: CREATIVE or CREATIVE_POSE
   const [isSubmittingRef, setIsSubmittingRef] = useState(false);
 
   // Toast Notification State
@@ -465,18 +466,18 @@ const App: React.FC = () => {
       prompt: refPrompt,
       image_type: refImageType,
       category_id: refCategoryId,
-      is_favorite: true
+      is_favorite: true,
+      mode: refMode
     });
 
     setIsSubmittingRef(false);
 
     if (success) {
       alert('Đã thêm ảnh tham chiếu thành công!');
-      setShowRefImageModal(false);
+      // Keep modal open to allow adding more images
       setRefImageUrl('');
       setRefPrompt('');
-      setRefImageType('premium');
-      setRefCategoryId(undefined);
+      // Keep imageType and category for batch adding similar images
     } else {
       alert('Lỗi khi thêm ảnh tham chiếu');
     }
@@ -1544,11 +1545,49 @@ const App: React.FC = () => {
         {studioTab === 'library' ? (
           <div className="flex-1 p-6 lg:p-10 overflow-hidden">
             <LibraryView
-              onSelectImage={(url) => {
+              onSelectImage={(url, options) => {
+                console.log('LibraryView onSelectImage called:', { url, options });
+
                 setPrimaryImage(url);
-                setMode(AppMode.CREATIVE_POSE);
-                setStudioTab('studio');
-                setToast({ message: "Image selected as Pose", type: 'success' });
+
+                // Determine tab and mode based on image mode
+                const imageMode = options?.mode;
+                console.log('imageMode:', imageMode);
+
+                if (imageMode === 'CREATIVE') {
+                  // CREATIVE mode -> navigate to CREATIVE tab
+                  setStudioTab('creative');
+                  setToast({ message: "Image selected - Switched to CREATIVE tab", type: 'success' });
+                } else {
+                  // STUDIO modes (CREATIVE_POSE, VIRTUAL_TRY_ON, CREATE_MODEL) -> stay in STUDIO
+                  if (imageMode === 'VIRTUAL_TRY_ON') {
+                    setMode(AppMode.VIRTUAL_TRY_ON);
+                  } else if (imageMode === 'CREATE_MODEL') {
+                    setMode(AppMode.CREATE_MODEL);
+                  } else {
+                    setMode(AppMode.CREATIVE_POSE);
+                  }
+                  setStudioTab('studio');
+                  setToast({ message: "Image selected as Pose", type: 'success' });
+                }
+
+                // Set model based on imageType
+                const imageType = options?.imageType?.toLowerCase();
+                console.log('imageType:', imageType);
+                if (imageType === 's4.5') {
+                  setSelectedModel('seedream-4-5');
+                } else if (imageType === 's4.0') {
+                  setSelectedModel('seedream-4-0');
+                } else if (imageType === 'premium') {
+                  setSelectedModel('gemini-3-pro-image-preview');
+                } else if (imageType === 'standard') {
+                  setSelectedModel('gemini-2.5-flash-image');
+                }
+
+                // Set prompt if available
+                if (options?.prompt) {
+                  setPrompt(options.prompt);
+                }
               }}
               onClose={() => setStudioTab('studio')}
               isAdmin={isAdmin}
@@ -2697,18 +2736,40 @@ const App: React.FC = () => {
               </select>
             </div>
 
-            {/* Category Dropdown */}
+            {/* Mode Dropdown */}
             <div className="space-y-2">
-              <label className="text-sm text-gray-400">Category</label>
+              <label className="text-sm text-gray-400">Mode *</label>
+              <select
+                value={refMode}
+                onChange={(e) => { setRefMode(e.target.value); setRefCategoryId(undefined); }}
+                className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-green-500"
+              >
+                <option value="CREATIVE_POSE">Creative Pose (→ STUDIO)</option>
+                <option value="CREATIVE">Creative (→ CREATIVE)</option>
+                <option value="VIRTUAL_TRY_ON">Try-On (→ STUDIO)</option>
+                <option value="CREATE_MODEL">Create Model (→ STUDIO)</option>
+              </select>
+            </div>
+
+            {/* Category Dropdown - Filtered by Mode */}
+            <div className="space-y-2">
+              <label className="text-sm text-gray-400">Category ({refMode === 'CREATIVE' ? 'Creative' : 'Studio'})</label>
               <select
                 value={refCategoryId || ''}
                 onChange={(e) => setRefCategoryId(e.target.value ? Number(e.target.value) : undefined)}
                 className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-green-500"
               >
                 <option value="">-- Không chọn --</option>
-                {refCategories.map(cat => (
-                  <option key={cat.id} value={cat.id}>{cat.name}</option>
-                ))}
+                {refCategories
+                  .filter(cat => {
+                    // If mode is CREATIVE, show CREATIVE categories
+                    // Otherwise (CREATIVE_POSE, VIRTUAL_TRY_ON, CREATE_MODEL), show STUDIO categories
+                    const targetSection = refMode === 'CREATIVE' ? 'CREATIVE' : 'STUDIO';
+                    return !cat.section_type || cat.section_type === targetSection;
+                  })
+                  .map(cat => (
+                    <option key={cat.id} value={cat.id}>{cat.name}</option>
+                  ))}
               </select>
             </div>
 

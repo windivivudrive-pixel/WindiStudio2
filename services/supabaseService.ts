@@ -507,6 +507,7 @@ export interface LibraryFilterOptions {
   daysAgo?: number;
   page?: number;
   limit?: number;
+  sectionType?: 'STUDIO' | 'CREATIVE'; // Main section filter
 }
 
 export const fetchProfiles = async (): Promise<{ id: string; email: string }[]> => {
@@ -524,7 +525,7 @@ export const fetchProfiles = async (): Promise<{ id: string; email: string }[]> 
 
 // Replaces old fetchLibraryImages
 export const fetchLibraryImages = async (options: LibraryFilterOptions = {}): Promise<HistoryItem[]> => {
-  const { onlyFavorites = true, categoryId, userId, imageType, daysAgo, page = 0, limit = 60 } = options;
+  const { onlyFavorites = true, categoryId, userId, imageType, daysAgo, page = 0, limit = 60, sectionType } = options;
 
   // We use the Edge Function 'get-gallery' for ALL global queries to bypass RLS.
   // This includes:
@@ -548,7 +549,8 @@ export const fetchLibraryImages = async (options: LibraryFilterOptions = {}): Pr
       userId,
       imageType,
       daysAgo,
-      onlyFavorites // Pass this through. true = Discover, false = All Users
+      onlyFavorites, // Pass this through. true = Discover, false = All Users
+      sectionType // STUDIO or CREATIVE
     };
 
     // Use Cloudflare Worker if configured
@@ -654,6 +656,7 @@ export interface ReferenceImageInput {
   image_type: string;
   category_id?: number;
   is_favorite: boolean;
+  mode?: string; // CREATIVE or CREATIVE_POSE
 }
 
 export const createReferenceImage = async (input: ReferenceImageInput): Promise<boolean> => {
@@ -668,7 +671,7 @@ export const createReferenceImage = async (input: ReferenceImageInput): Promise<
       is_favorite: input.is_favorite,
       model_name: 'reference',
       cost_credits: 0,
-      mode: 'reference'
+      mode: input.mode || 'CREATIVE_POSE'
     })
     .select()
     .single();

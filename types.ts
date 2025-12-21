@@ -105,6 +105,7 @@ export interface Category {
   id: number;
   name: string;
   created_at: string;
+  section_type?: 'STUDIO' | 'CREATIVE'; // Which section this category belongs to
 }
 
 export interface LibraryImage {
