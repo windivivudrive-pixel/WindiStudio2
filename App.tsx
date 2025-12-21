@@ -691,7 +691,9 @@ const App: React.FC = () => {
         imageType = 'S4.0';
       } else if (selectedModel === 'seedream-4-5') {
         imageType = 'S4.5';
-      } else if (effectiveMode === AppMode.CREATIVE) {
+      } else if (selectedModel === 'gemini-3-pro-image-preview') {
+        imageType = 'PREMIUM';
+      } else if (selectedModel === 'gemini-2.5-flash-image') {
         imageType = 'STANDARD';
       } else {
         imageType = getCostPerImage() > 5 ? 'PREMIUM' : 'STANDARD';
