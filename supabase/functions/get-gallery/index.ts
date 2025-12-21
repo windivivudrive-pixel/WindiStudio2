@@ -30,7 +30,8 @@ Deno.serve(async (req) => {
             imageType,
             daysAgo,
             onlyFavorites,
-            id // Add ID support
+            id, // Add ID support
+            sectionType // 'STUDIO' or 'CREATIVE'
         } = await req.json();
 
         let query = supabase
@@ -61,6 +62,15 @@ Deno.serve(async (req) => {
                 const date = new Date();
                 date.setDate(date.getDate() - daysAgo);
                 query = query.gte('created_at', date.toISOString());
+            }
+
+            // Section Type Filter: STUDIO or CREATIVE
+            if (sectionType === 'STUDIO') {
+                // STUDIO includes: CREATIVE_POSE, VIRTUAL_TRY_ON, CREATE_MODEL
+                query = query.in('mode', ['CREATIVE_POSE', 'VIRTUAL_TRY_ON', 'CREATE_MODEL']);
+            } else if (sectionType === 'CREATIVE') {
+                // CREATIVE includes only CREATIVE mode
+                query = query.eq('mode', 'CREATIVE');
             }
 
             // Apply Order and Pagination LAST

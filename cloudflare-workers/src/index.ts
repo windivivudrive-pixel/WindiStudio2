@@ -131,6 +131,7 @@ interface GalleryRequest {
     daysAgo?: number;
     onlyFavorites?: boolean;
     id?: string;
+    sectionType?: 'STUDIO' | 'CREATIVE';
 }
 
 interface ProxyImageRequest {
@@ -858,7 +859,8 @@ async function handleGetGallery(request: Request, env: Env): Promise<Response> {
             imageType,
             daysAgo,
             onlyFavorites,
-            id
+            id,
+            sectionType // 'STUDIO' or 'CREATIVE'
         } = body;
 
         let query = supabase
@@ -886,6 +888,15 @@ async function handleGetGallery(request: Request, env: Env): Promise<Response> {
                 const date = new Date();
                 date.setDate(date.getDate() - daysAgo);
                 query = query.gte('created_at', date.toISOString());
+            }
+
+            // Section Type Filter: STUDIO or CREATIVE
+            if (sectionType === 'STUDIO') {
+                // STUDIO includes: CREATIVE_POSE, VIRTUAL_TRY_ON, CREATE_MODEL
+                query = query.in('mode', ['CREATIVE_POSE', 'VIRTUAL_TRY_ON', 'CREATE_MODEL']);
+            } else if (sectionType === 'CREATIVE') {
+                // CREATIVE includes only CREATIVE mode
+                query = query.eq('mode', 'CREATIVE');
             }
 
             // Apply Order and Pagination LAST

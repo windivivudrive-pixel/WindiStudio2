@@ -3,9 +3,10 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { HistoryItem, Category, AppMode } from '../types';
 import { fetchLibraryImages, toggleGenerationFavorite, fetchCategories, createCategory, fetchProfiles, deleteGenerationsBulk, fetchImageById } from '../services/supabaseService';
 import { Heart, Plus, X, FolderPlus, Filter, Calendar, User, Layers, Copy, ChevronLeft, ChevronRight, Trash2, CheckSquare, Square, Minus, ZoomIn, ZoomOut, Info } from 'lucide-react';
+import Masonry from 'react-masonry-css';
 
 interface LibraryViewProps {
-    onSelectImage: (image: string) => void;
+    onSelectImage: (image: string, options?: { mode?: string; imageType?: string; prompt?: string }) => void;
     onClose: () => void;
     isAdmin?: boolean;
 }
@@ -18,6 +19,7 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onSelectImage, onClose
     const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [viewMode, setViewMode] = useState<'ALL_USERS' | 'LIBRARY'>('LIBRARY');
+    const [sectionType, setSectionType] = useState<'STUDIO' | 'CREATIVE'>('CREATIVE'); // Main section filter - default to CREATIVE
 
     // Filters
     const [users, setUsers] = useState<{ id: string, email: string }[]>([]);
@@ -48,7 +50,7 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onSelectImage, onClose
         setHasMore(true);
         setImages([]);
         loadData(0, true);
-    }, [viewMode, selectedCategory, selectedUser, selectedImageType, selectedDays]);
+    }, [viewMode, selectedCategory, selectedUser, selectedImageType, selectedDays, sectionType]);
 
     // Fetch Trending Images on Mount
     // Fetch Trending Images on Mount
@@ -136,7 +138,8 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onSelectImage, onClose
             imageType: viewMode === 'ALL_USERS' && selectedImageType ? selectedImageType : undefined,
             daysAgo: viewMode === 'ALL_USERS' ? selectedDays : undefined,
             page: pageToLoad,
-            limit: 60
+            limit: 60,
+            sectionType: viewMode === 'LIBRARY' ? sectionType : undefined // Apply section filter only in LIBRARY mode
         };
 
         const newImages = await fetchLibraryImages(fetchOptions);
@@ -722,10 +725,10 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onSelectImage, onClose
 
 
             {/* Grid */}
-            <div className="flex-1 overflow-y-auto p-6 custom-scrollbar bg-[#0a0a0a]">
+            <div className="flex-1 overflow-y-auto px-6 pt-6 pb-0 custom-scrollbar bg-[#0a0a0a]">
 
 
-                {/* TRENDING SECTION (Horizontal Scroll) */}
+                {/* TRENDING SECTION - HIDDEN
                 {viewMode === 'LIBRARY' && !selectedCategory && (
                     <div className="mb-8">
                         <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
@@ -746,89 +749,104 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onSelectImage, onClose
                         </div>
                     </div>
                 )}
+                */}
 
-                {/* Category Bar */}
-                <div className="h-14 border-b border-white/5 flex items-center px-6 gap-2 overflow-x-auto custom-scrollbar bg-black/30 shrink-0 mb-6 rounded-xl">
-                    <button
-                        onClick={() => setSelectedCategory(null)}
-                        className={`px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all border ${selectedCategory === null ? 'bg-white text-black border-white' : 'bg-transparent text-gray-400 border-white/10 hover:border-white/30 hover:text-white'}`}
-                    >
-                        All Categories
-                    </button>
-                    {categories.map(cat => (
+                {/* CREATIVE / STUDIO Section Tabs */}
+                {viewMode === 'LIBRARY' && (
+                    <div className="flex gap-2 mb-4">
                         <button
-                            key={cat.id}
-                            onClick={() => setSelectedCategory(cat.id)}
-                            className={`px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all border ${selectedCategory === cat.id ? 'bg-white text-black border-white' : 'bg-transparent text-gray-400 border-white/10 hover:border-white/30 hover:text-white'}`}
+                            onClick={() => { setSectionType('CREATIVE'); setSelectedCategory(null); }}
+                            className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${sectionType === 'CREATIVE' ? 'bg-gradient-to-r from-green-600 to-teal-600 text-white shadow-lg' : 'bg-white/5 text-gray-400 hover:text-white border border-white/10'}`}
                         >
-                            {cat.name}
+                            ✨ CREATIVE
                         </button>
-                    ))}
+                        <button
+                            onClick={() => { setSectionType('STUDIO'); setSelectedCategory(null); }}
+                            className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${sectionType === 'STUDIO' ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg' : 'bg-white/5 text-gray-400 hover:text-white border border-white/10'}`}
+                        >
+                            🎨 STUDIO
+                        </button>
+                    </div>
+                )}
 
-                    {isAdmin && (
+                {/* Category Bar - Only show if more than 1 category in current section */}
+                {categories.filter(cat => viewMode !== 'LIBRARY' || !cat.section_type || cat.section_type === sectionType).length > 1 && (
+                    <div className="h-14 border-b border-white/5 flex items-center px-6 gap-2 overflow-x-auto custom-scrollbar bg-black/30 shrink-0 mb-6 rounded-xl">
                         <button
-                            onClick={() => setShowAddCategory(true)}
-                            className="w-8 h-8 rounded-full border border-dashed border-white/20 flex items-center justify-center text-white/40 hover:text-white hover:border-white/50 transition-all ml-2"
-                            title="Add Category"
+                            onClick={() => setSelectedCategory(null)}
+                            className={`px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all border ${selectedCategory === null ? 'bg-white text-black border-white' : 'bg-transparent text-gray-400 border-white/10 hover:border-white/30 hover:text-white'}`}
                         >
-                            <Plus size={14} />
+                            Tất cả
                         </button>
-                    )}
-                </div>
+                        {categories
+                            .filter(cat => viewMode !== 'LIBRARY' || !cat.section_type || cat.section_type === sectionType)
+                            .map(cat => (
+                                <button
+                                    key={cat.id}
+                                    onClick={() => setSelectedCategory(cat.id)}
+                                    className={`px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all border ${selectedCategory === cat.id ? 'bg-white text-black border-white' : 'bg-transparent text-gray-400 border-white/10 hover:border-white/30 hover:text-white'}`}
+                                >
+                                    {cat.name}
+                                </button>
+                            ))}
+
+                        {isAdmin && (
+                            <button
+                                onClick={() => setShowAddCategory(true)}
+                                className="w-8 h-8 rounded-full border border-dashed border-white/20 flex items-center justify-center text-white/40 hover:text-white hover:border-white/50 transition-all ml-2"
+                                title="Add Category"
+                            >
+                                <Plus size={14} />
+                            </button>
+                        )}
+                    </div>
+                )}
 
                 {/* MAIN GRID HEADER */}
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
                     {/* ... (Header content if any, currently empty in previous view but structure implies it) ... */}
                 </div>
 
-                {/* MAIN GRID */}
-                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-                    {images.filter(item => {
-                        // Only filter out trending images if we are in LIBRARY mode AND no category is selected (Trending section is visible)
-                        if (viewMode === 'LIBRARY' && !selectedCategory) {
-                            return !trendingImages.some(t => t.id === item.id);
-                        }
-                        return true;
-                    }).map((item, index, arr) => (
-                        <div
-                            key={`${item.id}-${index}`}
-                            ref={index === arr.length - 1 ? lastImageElementRef : null}
-                            onClick={() => {
-                                if (isSelectionMode) {
-                                    toggleSelection(item.id);
-                                } else {
-                                    setSelectedImageForModal(item);
-                                    window.history.pushState({ modalOpen: true }, '');
-                                }
-                            }}
-                            className={`group relative aspect-[2/3] bg-[#1a1a1a] rounded-xl overflow-hidden border transition-all shadow-lg hover:shadow-glow-sm cursor-pointer ${selectedItems.has(item.id) ? 'border-red-500 ring-2 ring-red-500/50' : 'border-white/5 hover:border-mystic-accent/50'}`}
-                        >
-                            <img
-                                src={item.thumbnail}
-                                alt={item.prompt}
-                                className="w-full h-full object-cover"
-                                loading="lazy"
-                            />
+                {/* MAIN GRID - Masonry for CREATIVE, Fixed grid for STUDIO */}
+                {viewMode === 'LIBRARY' && sectionType === 'CREATIVE' ? (
+                    <Masonry
+                        breakpointCols={{ default: 5, 1280: 4, 1024: 3, 768: 2 }}
+                        className="flex -ml-3 w-auto"
+                        columnClassName="pl-3 bg-clip-padding"
+                    >
+                        {images.filter(item => {
+                            if (viewMode === 'LIBRARY' && !selectedCategory) {
+                                return !trendingImages.some(t => t.id === item.id);
+                            }
+                            return true;
+                        }).map((item, index, arr) => (
+                            <div
+                                key={`${item.id}-${index}`}
+                                ref={index === arr.length - 1 ? lastImageElementRef : null}
+                                onClick={() => {
+                                    if (isSelectionMode) {
+                                        toggleSelection(item.id);
+                                    } else {
+                                        setSelectedImageForModal(item);
+                                        window.history.pushState({ modalOpen: true }, '');
+                                    }
+                                }}
+                                className={`group relative mb-3 bg-[#1a1a1a] rounded-xl overflow-hidden border transition-all shadow-lg hover:shadow-glow-sm cursor-pointer ${selectedItems.has(item.id) ? 'border-red-500 ring-2 ring-red-500/50' : 'border-white/5 hover:border-mystic-accent/50'}`}
+                            >
+                                <img
+                                    src={item.thumbnail}
+                                    alt={item.prompt}
+                                    className="w-full h-auto block"
+                                    loading="lazy"
+                                    onError={(e) => {
+                                        const target = e.target as HTMLImageElement;
+                                        target.style.minHeight = '200px';
+                                        target.style.background = 'linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%)';
+                                    }}
+                                />
 
-                            {/* Heart Button */}
-                            {isAdmin && (
-                                <>
-                                    {/* Quick Delete Button (Only in All Users view) */}
-                                    {viewMode === 'ALL_USERS' && (
-                                        <div className={`absolute top-2 right-10 z-10 transition-all duration-200 opacity-0 group-hover:opacity-100`}>
-                                            <button
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    handleQuickDelete(item);
-                                                }}
-                                                className="p-2 rounded-full backdrop-blur-md bg-black/40 text-white/60 hover:bg-red-600 hover:text-white transition-all"
-                                                title="Delete Image"
-                                            >
-                                                <X size={16} />
-                                            </button>
-                                        </div>
-                                    )}
-
+                                {/* Heart Button */}
+                                {isAdmin && (
                                     <div className={`absolute top-2 right-2 z-10 transition-all duration-200 ${item.isFavorite ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
                                         <button
                                             onClick={(e) => {
@@ -843,42 +861,137 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onSelectImage, onClose
                                             <Heart size={16} className={item.isFavorite ? "fill-current" : ""} />
                                         </button>
                                     </div>
-                                </>
-                            )}
+                                )}
 
-                            {/* Bottom Overlay */}
-                            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col justify-end p-3 pt-12">
-                                <p className="text-[10px] text-gray-300 line-clamp-2 font-medium leading-relaxed">{item.prompt}</p>
-                            </div>
-
-                            {/* Type Badge */}
-                            {item.imageType && (
-                                <div className={`absolute top-2 left-2 px-2 py-1 rounded-md backdrop-blur-md border text-[10px] font-bold uppercase shadow-lg ${item.imageType === 'SCALE2' ? 'bg-black/60 text-purple-400 border-purple-500/50' :
-                                    (item.imageType === 'SCALE4' || item.imageType === 'SCALEX2') ? 'bg-black/60 text-pink-500 border-pink-500/50' :
-                                        'bg-black/60 text-white border-white/10'
-                                    }`}>
-                                    {(() => {
-                                        const type = item.imageType?.toUpperCase();
-                                        if (type === 'STANDARD') return 'AIR';
-                                        if (type === 'PREMIUM') return 'PRO';
-                                        if (type === 'SCALE2' || type === 'SCALEX2') return '2K';
-                                        if (type === 'SCALE4') return '4K';
-                                        return '';
-                                    })()}
+                                {/* Bottom Overlay */}
+                                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col justify-end p-3 pt-12">
+                                    <p className="text-[10px] text-gray-300 line-clamp-2 font-medium leading-relaxed">{item.prompt}</p>
                                 </div>
-                            )}
 
-                            {/* Selection Checkbox */}
-                            {isSelectionMode && (
-                                <div className="absolute inset-0 bg-black/20 z-20 flex items-start justify-end p-2">
-                                    <div className={`p-1 rounded-full ${selectedItems.has(item.id) ? 'bg-red-500 text-white' : 'bg-black/50 text-gray-400'}`}>
-                                        {selectedItems.has(item.id) ? <CheckSquare size={18} /> : <Square size={18} />}
+                                {/* Type Badge */}
+                                {item.imageType && (
+                                    <div className="absolute top-2 left-2 px-2 py-1 rounded-lg backdrop-blur-xl bg-white/10 border border-white/20 text-[10px] font-medium text-white/90 shadow-lg">
+                                        {(() => {
+                                            const type = item.imageType?.toLowerCase();
+                                            if (type === 'standard') return '🍌 Banana';
+                                            if (type === 'premium') return '🍌 BananaPro';
+                                            if (type === 's4.0') return '🌱 Seedream 4';
+                                            if (type === 's4.5') return '🌱 Seedream 4.5';
+                                            return item.imageType;
+                                        })()}
                                     </div>
+                                )}
+
+                                {/* Selection Checkbox */}
+                                {isSelectionMode && (
+                                    <div className="absolute inset-0 bg-black/20 z-20 flex items-start justify-end p-2">
+                                        <div className={`p-1 rounded-full ${selectedItems.has(item.id) ? 'bg-red-500 text-white' : 'bg-black/50 text-gray-400'}`}>
+                                            {selectedItems.has(item.id) ? <CheckSquare size={18} /> : <Square size={18} />}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+                    </Masonry>
+                ) : (
+                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+                        {images.filter(item => {
+                            if (viewMode === 'LIBRARY' && !selectedCategory) {
+                                return !trendingImages.some(t => t.id === item.id);
+                            }
+                            return true;
+                        }).map((item, index, arr) => (
+                            <div
+                                key={`${item.id}-${index}`}
+                                ref={index === arr.length - 1 ? lastImageElementRef : null}
+                                onClick={() => {
+                                    if (isSelectionMode) {
+                                        toggleSelection(item.id);
+                                    } else {
+                                        setSelectedImageForModal(item);
+                                        window.history.pushState({ modalOpen: true }, '');
+                                    }
+                                }}
+                                className={`group relative aspect-[2/3] bg-[#1a1a1a] rounded-xl overflow-hidden border transition-all shadow-lg hover:shadow-glow-sm cursor-pointer ${selectedItems.has(item.id) ? 'border-red-500 ring-2 ring-red-500/50' : 'border-white/5 hover:border-mystic-accent/50'}`}
+                            >
+                                <img
+                                    src={item.thumbnail}
+                                    alt={item.prompt}
+                                    className="w-full h-full object-cover"
+                                    loading="lazy"
+                                />
+
+                                {/* Heart Button */}
+                                {isAdmin && (
+                                    <>
+                                        {/* Quick Delete Button (Only in All Users view) */}
+                                        {viewMode === 'ALL_USERS' && (
+                                            <div className={`absolute top-2 right-10 z-10 transition-all duration-200 opacity-0 group-hover:opacity-100`}>
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleQuickDelete(item);
+                                                    }}
+                                                    className="p-2 rounded-full backdrop-blur-md bg-black/40 text-white/60 hover:bg-red-600 hover:text-white transition-all"
+                                                    title="Delete Image"
+                                                >
+                                                    <X size={16} />
+                                                </button>
+                                            </div>
+                                        )}
+
+                                        <div className={`absolute top-2 right-2 z-10 transition-all duration-200 ${item.isFavorite ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleHeartClick(item);
+                                                }}
+                                                className={`p-2 rounded-full backdrop-blur-md transition-all ${item.isFavorite
+                                                    ? 'bg-red-500 text-white shadow-lg scale-110'
+                                                    : 'bg-black/40 text-white/60 hover:bg-white hover:text-black'
+                                                    }`}
+                                            >
+                                                <Heart size={16} className={item.isFavorite ? "fill-current" : ""} />
+                                            </button>
+                                        </div>
+                                    </>
+                                )}
+
+                                {/* Bottom Overlay */}
+                                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col justify-end p-3 pt-12">
+                                    <p className="text-[10px] text-gray-300 line-clamp-2 font-medium leading-relaxed">{item.prompt}</p>
                                 </div>
-                            )}
-                        </div>
-                    ))}
-                </div>
+
+                                {/* Type Badge */}
+                                {item.imageType && (
+                                    <div className={`absolute top-2 left-2 px-2 py-1 rounded-md backdrop-blur-md border text-[10px] font-bold uppercase shadow-lg ${item.imageType === 'SCALE2' ? 'bg-black/60 text-purple-400 border-purple-500/50' :
+                                        (item.imageType === 'SCALE4' || item.imageType === 'SCALEX2') ? 'bg-black/60 text-pink-500 border-pink-500/50' :
+                                            'bg-black/60 text-white border-white/10'
+                                        }`}>
+                                        {(() => {
+                                            const type = item.imageType?.toUpperCase();
+                                            if (type === 'STANDARD') return 'AIR';
+                                            if (type === 'PREMIUM') return 'PRO';
+                                            if (type === 'SCALE2' || type === 'SCALEX2') return '2K';
+                                            if (type === 'SCALE4') return '4K';
+                                            return '';
+                                        })()}
+                                    </div>
+                                )}
+
+                                {/* Selection Checkbox */}
+                                {isSelectionMode && (
+                                    <div className="absolute inset-0 bg-black/20 z-20 flex items-start justify-end p-2">
+                                        <div className={`p-1 rounded-full ${selectedItems.has(item.id) ? 'bg-red-500 text-white' : 'bg-black/50 text-gray-400'}`}>
+                                            {selectedItems.has(item.id) ? <CheckSquare size={18} /> : <Square size={18} />}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                )}
+
 
                 {isLoading && (
                     <div className="flex w-full items-center justify-center py-8">
@@ -1057,17 +1170,16 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onSelectImage, onClose
                                 </button>
 
                                 {/* Type Badge */}
-                                <div className={`absolute top-4 left-4 px-3 py-1.5 rounded-lg backdrop-blur-md border text-xs font-bold uppercase shadow-lg pointer-events-none ${selectedImageForModal.imageType === 'SCALE2' ? 'bg-black/60 text-purple-400 border-purple-500/50' :
-                                    (selectedImageForModal.imageType === 'SCALE4' || selectedImageForModal.imageType === 'SCALEX2') ? 'bg-black/60 text-pink-500 border-pink-500/50' :
-                                        'bg-black/60 text-white border-white/10'
-                                    }`}>
+                                <div className="absolute top-4 left-4 px-3 py-1.5 rounded-lg backdrop-blur-xl bg-white/10 border border-white/20 text-xs font-medium text-white/90 shadow-lg pointer-events-none">
                                     {(() => {
-                                        const type = selectedImageForModal.imageType?.toUpperCase();
-                                        if (type === 'STANDARD') return 'AIR';
-                                        if (type === 'PREMIUM') return 'PRO';
-                                        if (type === 'SCALE2' || type === 'SCALEX2') return '2K';
-                                        if (type === 'SCALE4') return '4K';
-                                        return 'AI';
+                                        const type = selectedImageForModal.imageType?.toLowerCase();
+                                        if (type === 'standard') return '🍌 Banana';
+                                        if (type === 'premium') return '🍌 BananaPro';
+                                        if (type === 's4.0') return '🌱 Seedream 4';
+                                        if (type === 's4.5') return '🌱 Seedream 4.5';
+                                        if (type === 'scale2' || type === 'scalex2') return '2K';
+                                        if (type === 'scale4') return '4K';
+                                        return selectedImageForModal.imageType || 'AI';
                                     })()}
                                 </div>
                             </div>
@@ -1108,8 +1220,12 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onSelectImage, onClose
 
                                     <button
                                         onClick={() => {
-                                            onSelectImage(selectedImageForModal.thumbnail);
-                                            window.history.back();
+                                            onSelectImage(selectedImageForModal.thumbnail, {
+                                                mode: selectedImageForModal.mode,
+                                                imageType: selectedImageForModal.imageType,
+                                                prompt: selectedImageForModal.prompt
+                                            });
+                                            setSelectedImageForModal(null);
                                         }}
                                         className="w-full py-3 rounded-xl bg-white text-black font-bold text-sm hover:bg-gray-200 transition-all shadow-glow flex items-center justify-center gap-2 mt-2"
                                     >
@@ -1153,8 +1269,12 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onSelectImage, onClose
                                         <div className="mt-auto pt-2">
                                             <button
                                                 onClick={() => {
-                                                    onSelectImage(selectedImageForModal.thumbnail);
-                                                    window.history.back();
+                                                    onSelectImage(selectedImageForModal.thumbnail, {
+                                                        mode: selectedImageForModal.mode,
+                                                        imageType: selectedImageForModal.imageType,
+                                                        prompt: selectedImageForModal.prompt
+                                                    });
+                                                    setSelectedImageForModal(null);
                                                 }}
                                                 className="w-full py-3 rounded-xl bg-white text-black font-bold text-sm hover:bg-gray-200 transition-all shadow-glow flex items-center justify-center gap-2"
                                             >
