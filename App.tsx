@@ -292,6 +292,15 @@ const App: React.FC = () => {
       nextTab = studioTab;
     }
 
+    // Set default mode/model when switching between studio and creative tabs
+    if (nextTab === 'studio' && studioTab === 'creative') {
+      // Switching from creative to studio -> set mode to POSE
+      setMode(AppMode.CREATIVE_POSE);
+    } else if (nextTab === 'creative' && studioTab === 'studio') {
+      // Switching from studio to creative -> set model to nano banana
+      setSelectedModel('gemini-2.5-flash-image');
+    }
+
     if (nextTab) setStudioTab(nextTab);
 
     const url = new URL(window.location.href);
