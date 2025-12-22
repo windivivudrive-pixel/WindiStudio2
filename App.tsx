@@ -528,7 +528,20 @@ const App: React.FC = () => {
   };
 
   const getTotalCost = () => {
-    return getCostPerImage() * numberOfImages;
+    const baseCost = getCostPerImage() * numberOfImages;
+
+    // Apply Set discount for studio tab with 4 images (Set mode)
+    if (studioTab === 'studio' && numberOfImages === 4) {
+      // Pro model: 60 xu -> 50 xu (discount 10 xu)
+      // Air model: 20 xu -> 15 xu (discount 5 xu)
+      if (selectedModel.includes('flash')) {
+        return 15; // Air Set price (was 5*4=20)
+      } else {
+        return 50; // Pro Set price (was 15*4=60)
+      }
+    }
+
+    return baseCost;
   };
 
   // Helper function to show error modal with appropriate message
@@ -673,8 +686,13 @@ const App: React.FC = () => {
     }
 
     if (success && generatedBatch.length > 0) {
-      // Calculate actual cost based on successfully generated images, not requested amount
-      const actualCost = getCostPerImage() * generatedBatch.length;
+      // Calculate actual cost based on successfully generated images
+      // Apply Set discount if 4 images were generated in studio mode
+      let actualCost = getCostPerImage() * generatedBatch.length;
+      if (studioTab === 'studio' && generatedBatch.length === 4) {
+        // Apply Set discount: Pro 50 xu, Air 15 xu
+        actualCost = selectedModel.includes('flash') ? 15 : 50;
+      }
 
       const newItem: HistoryItem = {
         id: Date.now().toString(),
@@ -1884,7 +1902,7 @@ const App: React.FC = () => {
                 {/* Common controls for both Studio and Fun tabs */}
                 <button onClick={handleGenerate} disabled={isGenerateDisabled} className={`w-full py-3 rounded-[20px] font-bold text-base tracking-wide text-white shadow-liquid shrink-0 liquid-btn-style transition-all duration-500 transform ${isGenerateDisabled ? 'opacity-50 grayscale cursor-not-allowed' : 'hover:scale-[1.01] active:scale-[0.99]'}`}>
                   <span className="relative z-10 flex items-center justify-center gap-2 drop-shadow-md">
-                    {isGenerating ? <><RefreshCw className="animate-spin" size={18} />{loadingState.title === "Upscaling..." ? "Upscaling..." : loadingState.title === "Dreaming..." ? "Synthesizing..." : "Retrying..."}</> : <><Sparkles size={18} className="fill-white" />GENERATE {getTotalCost() > 0 && (<div className="flex items-center gap-1 bg-black/20 rounded-full px-2 py-0.5 ml-1"><span className="text-sm font-extrabold text-yellow-300">{getTotalCost()}</span><Coins size={14} className="text-yellow-400 fill-yellow-400" /></div>)}</>}
+                    {isGenerating ? <><RefreshCw className="animate-spin" size={18} />{loadingState.title === "Upscaling..." ? "Upscaling..." : loadingState.title === "Dreaming..." ? "Synthesizing..." : "Retrying..."}</> : <><Sparkles size={18} className="fill-white" />GENERATE {getTotalCost() > 0 && (<div className="flex items-center gap-1 bg-black/20 rounded-full px-2 py-0.5 ml-1">{studioTab === 'studio' && numberOfImages === 4 && <span className="text-[10px] text-gray-400 line-through mr-1">{selectedModel.includes('flash') ? '20' : '60'}</span>}<span className="text-sm font-extrabold text-yellow-300">{getTotalCost()}</span><Coins size={14} className="text-yellow-400 fill-yellow-400" /></div>)}</>}
                   </span>
                 </button>
 
@@ -2673,7 +2691,7 @@ const App: React.FC = () => {
                 <div className="text-2xl font-bold text-white mb-1">2K</div>
                 <div className="text-sm text-white/50 group-hover:text-white/80">Standard</div>
                 <div className="mt-3 px-3 py-1 rounded-full bg-purple-500/20 text-purple-300 text-xs font-medium">
-                  10 xu
+                  3 xu
                 </div>
               </button>
 
@@ -2684,7 +2702,7 @@ const App: React.FC = () => {
                 <div className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400 mb-1">4K</div>
                 <div className="text-sm text-white/50 group-hover:text-white/80">Ultra HD</div>
                 <div className="mt-3 px-3 py-1 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-medium shadow-lg shadow-purple-500/20">
-                  20 xu
+                  10 xu
                 </div>
               </button>
             </div>
