@@ -504,14 +504,14 @@ const App: React.FC = () => {
         // Nano Banana: 2 xu
         cost = 2;
       } else if (selectedModel === 'seedream-4-0') {
-        // Seedream 4.0: 4 xu, 4K = 5 xu
-        cost = targetResolution === '4K' ? 5 : 4;
+        // Seedream 4.0: 2K = 3 xu, 4K = 3 xu
+        cost = 3;
       } else if (selectedModel === 'seedream-4-5') {
-        // Seedream 4.5: 6 xu, 4K = 7 xu
-        cost = targetResolution === '4K' ? 7 : 6;
+        // Seedream 4.5: 2K = 4 xu, 4K = 5 xu
+        cost = targetResolution === '4K' ? 5 : 4;
       } else if (selectedModel === 'gemini-3-pro-image-preview') {
-        // Nano Banana Pro: 10 xu
-        cost = 10;
+        // Nano Banana Pro: 8 xu
+        cost = 8;
       }
     } else {
       // Studio mode pricing (original)
@@ -617,9 +617,11 @@ const App: React.FC = () => {
     let success = false;
     let generatedBatch: string[] = [];
 
+    let batchResult: { images: string[]; errors: { index: number; message: string }[]; hasSafetyError: boolean; safetyErrorMessage?: string } | null = null;
+
     while (attempt <= maxRetries && !success) {
       try {
-        generatedBatch = await generateStudioImage({
+        batchResult = await generateStudioImage({
           mode: effectiveMode,
           modelName: selectedModel,
           primaryImage: primaryImage,
@@ -635,7 +637,18 @@ const App: React.FC = () => {
           targetResolution: targetResolution,
           onImageGenerated: (url) => { setResults(prev => [...prev, url]); }
         });
-        success = true;
+
+        // Consider it a success if we got at least one image
+        if (batchResult.images.length > 0) {
+          generatedBatch = batchResult.images;
+          success = true;
+        } else if (batchResult.errors.length > 0) {
+          // All images failed - check the first error
+          const firstError = batchResult.errors[0]?.message || "Failed to generate any images";
+          throw new Error(firstError);
+        } else {
+          throw new Error("Failed to generate any images. Please try again.");
+        }
       } catch (err: any) {
         const errorMsg = err.message || "";
         // Only use safetyWarning modal for account bans (which have serious implications)
@@ -685,6 +698,8 @@ const App: React.FC = () => {
       }
     }
 
+    // IMPORTANT: Save successful images to DB BEFORE showing any error modals
+    // This ensures that if 2/4 images succeed, they still get saved
     if (success && generatedBatch.length > 0) {
       // Calculate actual cost based on successfully generated images
       // Apply Set discount if 4 images were generated in studio mode
@@ -731,6 +746,28 @@ const App: React.FC = () => {
         }
         setIsSyncing(false);
       }).catch(() => setIsSyncing(false));
+
+      // Show safety error notification AFTER saving successful images
+      // This way user knows some images failed but successful ones are preserved
+      if (batchResult && batchResult.hasSafetyError && batchResult.errors.length > 0) {
+        // Show error with info about how many succeeded vs failed
+        const successCount = generatedBatch.length;
+        const failCount = batchResult.errors.length;
+        const totalRequested = numberOfImages;
+
+        if (successCount > 0 && failCount > 0) {
+          // Partial success - show toast instead of blocking modal
+          setToast({
+            message: `${successCount}/${totalRequested} ảnh đã tạo thành công. ${failCount} ảnh bị chặn do nội dung nhạy cảm.`,
+            type: 'error'
+          });
+        }
+      }
+    }
+
+    // If no images were generated at all but there are safety errors, show the error modal
+    if (!success && batchResult && batchResult.hasSafetyError) {
+      showErrorModal(batchResult.safetyErrorMessage || "Hình ảnh bị chặn do nội dung nhạy cảm");
     }
 
     // Reset viewing history state and show new results when generation completes
@@ -749,6 +786,7 @@ const App: React.FC = () => {
       setPrimaryImage(currentImage);
       setSecondaryImage(null);
       setNumberOfImages(1);
+      setKeepFace(true);
 
       // Scroll to left panel (top) on mobile - same approach as generate scroll
       if (window.innerWidth < 1024) {
@@ -811,7 +849,7 @@ const App: React.FC = () => {
     setIsGenerating(true);
 
     try {
-      const upscaledImages = await generateStudioImage({
+      const upscaleResult = await generateStudioImage({
         mode: mode,
         modelName: 'upscale-4k',
         primaryImage: imageToUpscale,
@@ -822,6 +860,8 @@ const App: React.FC = () => {
         numberOfImages: 1,
         targetResolution: resolution
       });
+
+      const upscaledImages = upscaleResult.images;
 
       if (upscaledImages && upscaledImages.length > 0) {
         setResults(prev => [...prev, ...upscaledImages]);
@@ -855,6 +895,9 @@ const App: React.FC = () => {
             }
           });
         }
+      } else if (upscaleResult.errors.length > 0) {
+        const errorMsg = upscaleResult.errors[0]?.message || "Upscale failed";
+        throw new Error(errorMsg);
       }
     } catch (error: any) {
       console.error("Upscale failed:", error);
@@ -1960,19 +2003,20 @@ const App: React.FC = () => {
                         </div>
                       </div>
                       <div className="flex bg-black/20 rounded-xl p-1 gap-1">
-                        <button onClick={() => { setSelectedModel('gemini-2.5-flash-image'); setAccessoryImages([]); }} className={`relative flex-1 py-1.5 rounded-lg text-[10px] font-bold transition-all ${selectedModel === 'gemini-2.5-flash-image' ? 'bg-white text-black shadow-sm' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}>
+                        <button onClick={() => { setSelectedModel('gemini-2.5-flash-image'); setAccessoryImages([]); if (targetResolution === '4K') setTargetResolution('2K'); }} className={`relative flex-1 py-1.5 rounded-lg text-[10px] font-bold transition-all ${selectedModel === 'gemini-2.5-flash-image' ? 'bg-white text-black shadow-sm' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}>
                           {mode === AppMode.CREATIVE_POSE && <Star size={14} className="absolute -top-1.5 -left-1.5 text-yellow-400 fill-yellow-400 rotate-[45deg]" />}
                           Air
                         </button>
-                        <button onClick={() => setSelectedModel('gemini-3-pro-image-preview')} className={`relative flex-1 py-1.5 rounded-lg text-[10px] font-bold transition-all ${selectedModel === 'gemini-3-pro-image-preview' ? 'bg-indigo-600 text-white shadow-glow' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}>
+                        <button onClick={() => { setSelectedModel('gemini-3-pro-image-preview'); if (targetResolution === '4K') setTargetResolution('2K'); }} className={`relative flex-1 py-1.5 rounded-lg text-[10px] font-bold transition-all ${selectedModel === 'gemini-3-pro-image-preview' ? 'bg-indigo-600 text-white shadow-glow' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}>
                           {(mode === AppMode.VIRTUAL_TRY_ON || mode === AppMode.CREATE_MODEL) && <Star size={14} className="absolute -top-1.5 -right-1.5 text-yellow-400 fill-yellow-400 rotate-[-45deg]" />}
                           Pro
                         </button>
-                        {/* Temporarily hidden - uncomment to enable 4.5 in Studio mode
-                        <button onClick={() => setSelectedModel('seedream-4-5')} className={`relative flex-1 py-1.5 rounded-lg text-[10px] font-bold transition-all ${selectedModel === 'seedream-4-5' ? 'bg-teal-500 text-white shadow-glow' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}>
-                          4.5
-                        </button>
-                        */}
+                        {/* 4.5 model - Admin only */}
+                        {isAdmin && (
+                          <button onClick={() => setSelectedModel('seedream-4-5')} className={`relative flex-1 py-1.5 rounded-lg text-[10px] font-bold transition-all ${selectedModel === 'seedream-4-5' ? 'bg-teal-500 text-white shadow-glow' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}>
+                            4.5
+                          </button>
+                        )}
                       </div>
                     </div>
                   )}
@@ -1982,18 +2026,26 @@ const App: React.FC = () => {
                     <div className="glass-panel p-2 rounded-[20px] flex flex-col gap-2 relative overflow-visible">
                       <div className="flex items-center gap-1.5 text-[9px] font-bold text-gray-500 uppercase ml-1"><Zap size={10} className="text-purple-400" />Chất lượng</div>
                       <div className="flex bg-black/20 rounded-xl p-1 gap-1">
-                        {(['1K', '2K', '4K'] as const).map((q) => (
-                          <button
-                            key={q}
-                            onClick={() => setTargetResolution(q)}
-                            className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold transition-all ${targetResolution === q
-                              ? 'bg-purple-600 text-white shadow-sm'
-                              : 'text-gray-400 hover:text-white hover:bg-white/5'
-                              }`}
-                          >
-                            {q}
-                          </button>
-                        ))}
+                        {(['1K', '2K', '4K'] as const)
+                          .filter((q) => {
+                            // Hide 4K option for Nano Banana and Nano Banana Pro
+                            if (q === '4K' && (selectedModel === 'gemini-2.5-flash-image' || selectedModel === 'gemini-3-pro-image-preview')) {
+                              return false;
+                            }
+                            return true;
+                          })
+                          .map((q) => (
+                            <button
+                              key={q}
+                              onClick={() => setTargetResolution(q)}
+                              className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold transition-all ${targetResolution === q
+                                ? 'bg-purple-600 text-white shadow-sm'
+                                : 'text-gray-400 hover:text-white hover:bg-white/5'
+                                }`}
+                            >
+                              {q}
+                            </button>
+                          ))}
                       </div>
                     </div>
                   )}

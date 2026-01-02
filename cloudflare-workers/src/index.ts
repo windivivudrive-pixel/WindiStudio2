@@ -167,7 +167,7 @@ async function handleGenerateImage(request: Request, env: Env): Promise<Response
         if (!apiKey) {
             throw new Error("GEMINI_API_KEY is not set in environment variables.");
         }
-
+        console.log("API Key: ", apiKey);
         const authHeader = request.headers.get('Authorization');
 
         if (authHeader) {
@@ -358,7 +358,7 @@ async function handleGenerateImage(request: Request, env: Env): Promise<Response
             }
 
             promptText = `
-             GENERATE a photorealistic Young Korean Girl (Smooth White Skin, Black Hair, medium breast, small waist) with the exact outfit (primaryImage)
+             GENERATE a photorealistic Young Korean Girl (Smooth White Skin, medium breast, small waist) with the exact outfit (primaryImage)
              POSE: Create a fashion pose, full body Stand facing the camera slightly tilted to see outfit details(Variation #${i + 1}). 
              ${faceInstruction}
             ${variationInstruction}

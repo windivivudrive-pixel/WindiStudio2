@@ -59,7 +59,7 @@ export const TermsOfService: React.FC<TermsOfServiceProps> = ({ onBack }) => {
                             <div>
                                 <h3 className="font-bold text-white">Chính sách Giá dịch vụ</h3>
                                 <p className="text-gray-400">
-                                    Giá dịch vụ (số Xu cần để tạo ảnh) có thể <strong className="text-yellow-400">thay đổi tăng hoặc giảm</strong> tùy thuộc vào chi phí của các nhà cung cấp dịch vụ AI bên thứ ba mà chúng tôi sử dụng (bao gồm nhưng không giới hạn: Google, ByteDance, v.v.). Chúng tôi sẽ cố gắng thông báo trước khi có thay đổi lớn về giá, tuy nhiên không cam kết thời gian thông báo cụ thể.
+                                    Giá dịch vụ (số Xu cần để tạo ảnh) có thể <strong className="text-yellow-400">thay đổi tăng hoặc giảm</strong> tùy thuộc vào chi phí của các nhà cung cấp dịch vụ AI bên thứ ba mà chúng tôi sử dụng (bao gồm nhưng không giới hạn: Google, ByteDance, v.v.).
                                 </p>
                             </div>
                         </div>

@@ -172,7 +172,18 @@ const callGenerateImageAPI = async (body: any): Promise<{ data: any; error: any 
 };
 
 /**
+ * Result type for batch image generation
+ */
+export interface BatchGenerationResult {
+  images: string[];
+  errors: { index: number; message: string }[];
+  hasSafetyError: boolean;
+  safetyErrorMessage?: string;
+}
+
+/**
  * Generates images based on the mode and inputs.
+ * Returns both successful images and any errors that occurred.
  */
 export const generateStudioImage = async (
   config: {
@@ -191,14 +202,18 @@ export const generateStudioImage = async (
     backgroundImage?: string | null,
     numberOfImages: number,
     targetResolution?: '1K' | '2K' | '4K', // Optional resolution for Seedream
-    onImageGenerated?: (url: string) => void // Callback for progressive rendering
+    onImageGenerated?: (url: string) => void, // Callback for progressive rendering
+    onError?: (index: number, error: string) => void // Callback for errors during batch
   }
-): Promise<string[]> => {
+): Promise<BatchGenerationResult> => {
 
   // We now split the batch into individual requests to support progressive rendering
   // and error isolation (so one failure doesn't fail the whole batch).
 
   const promises = [];
+  const errors: { index: number; message: string }[] = [];
+  let hasSafetyError = false;
+  let safetyErrorMessage: string | undefined;
   const results: string[] = [];
 
   // Compress images once before the loop (they're the same for all variations)
@@ -280,8 +295,12 @@ export const generateStudioImage = async (
         }
       } catch (err: any) {
         console.error(`Failed to generate image ${i + 1}:`, err);
-        // Rethrow safety errors immediately to stop the process and alert the user
         const errorMsg = err.message || "";
+
+        // Record the error instead of throwing
+        errors.push({ index: i, message: errorMsg });
+
+        // Track safety errors but don't throw - let other images complete
         if (errorMsg.includes("SAFETY_VIOLATION") ||
           errorMsg.includes("IMAGE_CONTENT_BLOCKED") ||
           errorMsg.includes("CONTENT_BLOCKED") ||
@@ -291,10 +310,15 @@ export const generateStudioImage = async (
           errorMsg.includes("PROHIBITED") ||
           errorMsg.includes("blocked") ||
           errorMsg.includes("content")) {
-          throw err;
+          hasSafetyError = true;
+          safetyErrorMessage = errorMsg;
         }
-        // We don't rethrow other errors here to allow other images to succeed.
-        // But if ALL fail, the caller might want to know.
+
+        // Notify caller about the error
+        if (config.onError) {
+          config.onError(i, errorMsg);
+        }
+
         return null;
       }
     })();
@@ -304,9 +328,10 @@ export const generateStudioImage = async (
   // Wait for all to finish (settled)
   await Promise.all(promises);
 
-  if (results.length === 0) {
-    throw new Error("Failed to generate any images. Please try again.");
-  }
-
-  return results;
+  return {
+    images: results,
+    errors,
+    hasSafetyError,
+    safetyErrorMessage
+  };
 };
