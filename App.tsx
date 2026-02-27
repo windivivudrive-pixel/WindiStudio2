@@ -14,6 +14,7 @@ import LandingPage from './LandingPage';
 
 import { StudioTabs } from './components/StudioTabs';
 import { LibraryView } from './components/LibraryView';
+import { FullscreenImageModal } from './components/FullscreenImageModal';
 import { useBranding } from './utils/useBranding';
 import {
   signInWithGoogle,
@@ -151,9 +152,8 @@ const App: React.FC = () => {
   const leftPanelRef = useRef<HTMLDivElement>(null);
 
   const isAdmin = userProfile?.role === 'admin' || userProfile?.email === 'quochungdn151@gmail.com';
-  // console.log("App.tsx - UserProfile:", userProfile);
-  // console.log("App.tsx - isAdmin:", isAdmin);
   const [showUpscaleModal, setShowUpscaleModal] = useState(false);
+  const [selectedHistoryForModal, setSelectedHistoryForModal] = useState<HistoryItem | null>(null);
 
   /* --- BRANDING FEATURE START --- */
   // Effect to generate watermarked image for DISPLAY (Preview Quality)
@@ -297,8 +297,8 @@ const App: React.FC = () => {
       // Switching from creative to studio -> set mode to POSE
       setMode(AppMode.CREATIVE_POSE);
     } else if (nextTab === 'creative' && studioTab === 'studio') {
-      // Switching from studio to creative -> set model to nano banana
-      setSelectedModel('gemini-2.5-flash-image');
+      // Switching from studio to creative -> set model to nano banana pro
+      setSelectedModel('gemini-3-pro-image-preview');
     }
 
     if (nextTab) setStudioTab(nextTab);
@@ -1549,13 +1549,13 @@ const App: React.FC = () => {
             <div className="col-span-full py-20 text-center text-gray-500">No images generated yet.</div>
           ) : (
             history.map((item) => (
-              <div key={item.id} className="glass-panel rounded-[24px] overflow-hidden group flex flex-col">
+              <div key={item.id} className="glass-panel rounded-[24px] overflow-hidden group flex flex-col cursor-pointer hover:border-mystic-accent/50 transition-all shadow-lg" onClick={() => setSelectedHistoryForModal(item)}>
                 <div className="relative aspect-[3/4] bg-black overflow-hidden">
                   <img src={item.thumbnail} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-4 pointer-events-none">
                     <div className="flex justify-end gap-2">
-                      <button onClick={(e) => deleteHistoryItem(item.id, e)} className="p-2 rounded-full bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white transition-all pointer-events-auto"><Trash2 size={16} /></button>
-                      <button onClick={() => downloadImage(item.thumbnail, 0, item.prompt, item.modelName)} className="p-2 rounded-full bg-white/20 text-white hover:bg-mystic-accent transition-all pointer-events-auto"><Download size={16} /></button>
+                      <button onClick={(e) => { e.stopPropagation(); deleteHistoryItem(item.id, e); }} className="p-2 rounded-full bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white transition-all pointer-events-auto"><Trash2 size={16} /></button>
+                      <button onClick={(e) => { e.stopPropagation(); downloadImage(item.thumbnail, 0, item.prompt, item.modelName); }} className="p-2 rounded-full bg-white/20 text-white hover:bg-mystic-accent transition-all pointer-events-auto"><Download size={16} /></button>
                     </div>
                   </div>
                   <div className="absolute top-2 left-2 px-2 py-1 rounded-md bg-black/40 backdrop-blur-md border border-white/10 text-[10px] font-bold text-gray-300 uppercase">
@@ -1715,10 +1715,10 @@ const App: React.FC = () => {
                       <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 block">Chọn Model</label>
                       {(() => {
                         const models = [
-                          { id: 'gemini-2.5-flash-image', name: 'Nano Banana', desc: 'Nhanh, cân bằng' },
-                          { id: 'seedream-4-0', name: 'Seedream 4.0', desc: 'Ổn định, đáng tin cậy' },
-                          { id: 'seedream-4-5', name: 'Seedream 4.5', desc: 'Chất lượng cao nhất' },
                           { id: 'gemini-3-pro-image-preview', name: 'Nano Banana Pro', desc: 'Chi tiết cao, xử lý phức tạp' },
+                          { id: 'gemini-2.5-flash-image', name: 'Nano Banana', desc: 'Nhanh, cân bằng' },
+                          // { id: 'seedream-4-0', name: 'Seedream 4.0', desc: 'Ổn định, đáng tin cậy' },
+                          // { id: 'seedream-4-5', name: 'Seedream 4.5', desc: 'Chất lượng cao nhất' },
                         ];
                         const currentModel = models.find(m => m.id === selectedModel) || models[0];
 
@@ -2646,6 +2646,45 @@ const App: React.FC = () => {
             </button>
           </div>
         </div>
+      )}
+
+      {/* FULLSCREEN IMAGE MODAL FOR HISTORY */}
+      {selectedHistoryForModal && (
+        <FullscreenImageModal
+          images={history.map(h => ({
+            id: h.id,
+            thumbnail: h.thumbnail,
+            prompt: h.prompt,
+            mode: h.mode,
+            imageType: h.modelName,
+            userEmail: ''
+          }))}
+          selectedImage={{
+            id: selectedHistoryForModal.id,
+            thumbnail: selectedHistoryForModal.thumbnail,
+            prompt: selectedHistoryForModal.prompt,
+            mode: selectedHistoryForModal.mode,
+            imageType: selectedHistoryForModal.modelName,
+            userEmail: ''
+          }}
+          onClose={() => setSelectedHistoryForModal(null)}
+          onNavigate={(newImage) => {
+            const newItem = history.find(h => h.id === newImage.id);
+            if (newItem) setSelectedHistoryForModal(newItem);
+          }}
+          onUseImage={(url, options) => {
+            const itemToLoad = history.find(h => h.thumbnail === url);
+            if (itemToLoad) {
+              setResults(itemToLoad.images);
+              setSelectedResultIndex(0);
+              setMode(itemToLoad.mode);
+              setShowMobileHistory(false);
+              if (isGenerating) setViewingHistoryDuringGeneration(true);
+              if (window.innerWidth < 1024) setTimeout(() => outputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+            }
+          }}
+          showCreatorInfo={false}
+        />
       )}
 
       {/* TOP UP MODAL (2-STEP) */}
