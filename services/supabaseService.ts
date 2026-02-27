@@ -480,10 +480,13 @@ export const createCategory = async (name: string): Promise<Category | null> => 
 
 
 
-export const toggleGenerationFavorite = async (id: string, isFavorite: boolean, categoryId?: number) => {
+export const toggleGenerationFavorite = async (id: string, isFavorite: boolean, categoryId?: number, mode?: string) => {
   const updateData: any = { is_favorite: isFavorite };
   if (categoryId !== undefined) {
     updateData.category_id = categoryId;
+  }
+  if (mode) {
+    updateData.mode = mode;
   }
 
   const { error } = await supabase
