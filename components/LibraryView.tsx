@@ -199,15 +199,17 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onSelectImage, onClose
 
     const confirmAddToLibrary = async (categoryId?: number) => {
         if (!itemToFavorite) return;
-        await handleToggleFavorite(itemToFavorite, true, categoryId);
+        // Determine the mode based on the selected section type in the modal
+        const modeForSection = modalSectionType === 'CREATIVE' ? 'CREATIVE' : (itemToFavorite.mode !== 'CREATIVE' ? itemToFavorite.mode : 'CREATIVE_POSE');
+        await handleToggleFavorite(itemToFavorite, true, categoryId, modeForSection);
         setShowCategorySelect(false);
         setItemToFavorite(null);
     };
 
-    const handleToggleFavorite = async (item: HistoryItem, isFavorite: boolean, categoryId?: number) => {
+    const handleToggleFavorite = async (item: HistoryItem, isFavorite: boolean, categoryId?: number, mode?: string) => {
         // Optimistic update
         setImages(prev => prev.map(img =>
-            img.id === item.id ? { ...img, isFavorite: isFavorite, categoryId: categoryId } : img
+            img.id === item.id ? { ...img, isFavorite: isFavorite, categoryId: categoryId, mode: (mode as AppMode) || img.mode } : img
         ));
 
         // If in Library view and removing, remove from list
@@ -215,11 +217,9 @@ export const LibraryView: React.FC<LibraryViewProps> = ({ onSelectImage, onClose
             setImages(prev => prev.filter(img => img.id !== item.id));
         }
 
-        const success = await toggleGenerationFavorite(item.id, isFavorite, categoryId);
+        const success = await toggleGenerationFavorite(item.id, isFavorite, categoryId, mode);
 
         if (!success) {
-            // Revert on failure
-            // We might want to reload data here, but for now just alert
             alert("Failed to update favorite status");
         }
     };

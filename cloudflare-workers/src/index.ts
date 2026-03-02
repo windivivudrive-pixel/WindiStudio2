@@ -243,7 +243,7 @@ async function handleGenerateImage(request: Request, env: Env): Promise<Response
                 contents: {
                     parts: [
                         processedImage,
-                        { text: "Upscale this image to 4K resolution. Maintain exact identity, pose, and details but significantly improve clarity, sharpness, and texture. Photorealistic output." }
+                        { text: "Enhance and upscale this image. STRICT RULES: 1) PRESERVE the exact original art style and medium (if it is 3D, keep it 3D; if it is an illustration, keep it as an illustration; if photorealistic, keep it photorealistic). 2) KEEP the exact same identity, pose, outfit, colors, and composition. 3) Improve lighting, smooth shadow transitions, and clean up jagged edges. 4) Sharpen details WITHOUT altering the core aesthetic or flattening the image." }
                     ]
                 },
                 config: {
