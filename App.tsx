@@ -50,14 +50,14 @@ const App: React.FC = () => {
 
   // Main State
   const [mode, setMode] = useState<AppMode>(AppMode.CREATIVE_POSE);
-  const [modelName, setModelName] = useState<string>('gemini-2.5-flash-image');
+  const [modelName, setModelName] = useState<string>('gemini-3.1-flash-image-preview');
   const [primaryImage, setPrimaryImage] = useState<string | null>(null);
   const [secondaryImage, setSecondaryImage] = useState<string | null>(null);
 
   const [prompt, setPrompt] = useState('');
   const [aspectRatio, setAspectRatio] = useState<AspectRatio>(AspectRatio.PORTRAIT);
   const [numberOfImages, setNumberOfImages] = useState(1);
-  const [selectedModel, setSelectedModel] = useState('gemini-2.5-flash-image');
+  const [selectedModel, setSelectedModel] = useState('gemini-3.1-flash-image-preview');
   const [targetResolution, setTargetResolution] = useState<'1K' | '2K' | '4K'>('2K');
   const [showModelDropdown, setShowModelDropdown] = useState(false);
 
@@ -85,7 +85,7 @@ const App: React.FC = () => {
 
   // Auto-switch to Pro model when accessory images are added (only if using Air model)
   useEffect(() => {
-    if (accessoryImages.length > 0 && selectedModel === 'gemini-2.5-flash-image') {
+    if (accessoryImages.length > 0 && (selectedModel === 'gemini-2.5-flash-image' || selectedModel === 'gemini-3.1-flash-image-preview')) {
       setSelectedModel('gemini-3-pro-image-preview');
       setToast({ message: "Switched to Pro model for accessory support", type: 'success' });
     }
@@ -93,8 +93,8 @@ const App: React.FC = () => {
 
   // Auto-switch model based on mode: Pose → Air, Try-on/Model → Pro
   useEffect(() => {
-    if (mode === AppMode.CREATIVE_POSE && selectedModel !== 'gemini-2.5-flash-image') {
-      setSelectedModel('gemini-2.5-flash-image');
+    if (mode === AppMode.CREATIVE_POSE && selectedModel !== 'gemini-3.1-flash-image-preview' && selectedModel !== 'gemini-2.5-flash-image') {
+      setSelectedModel('gemini-3.1-flash-image-preview');
       setAccessoryImages([]);
     } else if ((mode === AppMode.VIRTUAL_TRY_ON || mode === AppMode.CREATE_MODEL) && selectedModel !== 'gemini-3-pro-image-preview') {
       setSelectedModel('gemini-3-pro-image-preview');
@@ -260,7 +260,7 @@ const App: React.FC = () => {
           setCurrentView('STUDIO');
           // Clean up URL hash from OAuth
           if (window.location.hash.includes('access_token')) {
-            window.history.replaceState({}, '', window.location.pathname + '?view=studio&tab=studio');
+            window.history.replaceState({}, '', window.location.pathname + '?view=studio&tab=creative');
           }
         }
       }
@@ -273,7 +273,7 @@ const App: React.FC = () => {
         // After login via OAuth, redirect to studio
         if (_event === 'SIGNED_IN' && window.location.hash.includes('access_token')) {
           setCurrentView('STUDIO');
-          window.history.replaceState({}, '', window.location.pathname + '?view=studio&tab=studio');
+          window.history.replaceState({}, '', window.location.pathname + '?view=studio&tab=creative');
         }
       }
       else setUserProfile(null);
@@ -297,8 +297,8 @@ const App: React.FC = () => {
       // Switching from creative to studio -> set mode to POSE
       setMode(AppMode.CREATIVE_POSE);
     } else if (nextTab === 'creative' && studioTab === 'studio') {
-      // Switching from studio to creative -> set model to nano banana pro
-      setSelectedModel('gemini-3-pro-image-preview');
+      // Switching from studio to creative -> set model to nano banana 2
+      setSelectedModel('gemini-3.1-flash-image-preview');
     }
 
     if (nextTab) setStudioTab(nextTab);
@@ -391,8 +391,8 @@ const App: React.FC = () => {
       // Set initial state without pushing to history
       const url = new URL(window.location.href);
       url.searchParams.set('view', 'studio');
-      url.searchParams.set('tab', 'studio');
-      window.history.replaceState({ view: 'STUDIO', tab: 'studio' }, '', url.toString());
+      url.searchParams.set('tab', 'creative');
+      window.history.replaceState({ view: 'STUDIO', tab: 'creative' }, '', url.toString());
     }
   }, []);
 
@@ -503,6 +503,9 @@ const App: React.FC = () => {
       if (selectedModel === 'gemini-2.5-flash-image') {
         // Nano Banana: 2 xu
         cost = 2;
+      } else if (selectedModel === 'gemini-3.1-flash-image-preview') {
+        // Nano Banana 2: 3 xu
+        cost = 3;
       } else if (selectedModel === 'seedream-4-0') {
         // Seedream 4.0: 2K = 3 xu, 4K = 3 xu
         cost = 3;
@@ -735,6 +738,8 @@ const App: React.FC = () => {
         imageType = 'S4.5';
       } else if (selectedModel === 'gemini-3-pro-image-preview') {
         imageType = 'PREMIUM';
+      } else if (selectedModel === 'gemini-3.1-flash-image-preview') {
+        imageType = 'STANDARD';
       } else if (selectedModel === 'gemini-2.5-flash-image') {
         imageType = 'STANDARD';
       } else {
@@ -808,7 +813,7 @@ const App: React.FC = () => {
     setRandomFace(false);
     setKeepFace(true);
     setNumberOfImages(1);
-    setSelectedModel('gemini-2.5-flash-image');
+    setSelectedModel('gemini-3.1-flash-image-preview');
     setAccessoryImages([]);
     setResults([]);
     setSelectedResultIndex(0);
@@ -1653,7 +1658,7 @@ const App: React.FC = () => {
                 } else if (imageType === 'premium') {
                   setSelectedModel('gemini-3-pro-image-preview');
                 } else if (imageType === 'standard') {
-                  setSelectedModel('gemini-2.5-flash-image');
+                  setSelectedModel('gemini-3.1-flash-image-preview');
                 }
 
                 // Set prompt if available
@@ -1715,6 +1720,7 @@ const App: React.FC = () => {
                       <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 block">Chọn Model</label>
                       {(() => {
                         const models = [
+                          { id: 'gemini-3.1-flash-image-preview', name: 'Nano Banana 2', desc: 'Chất lượng cao, cân bằng hoàn hảo' },
                           { id: 'gemini-3-pro-image-preview', name: 'Nano Banana Pro', desc: 'Chi tiết cao, xử lý phức tạp' },
                           { id: 'gemini-2.5-flash-image', name: 'Nano Banana', desc: 'Nhanh, cân bằng' },
                           // { id: 'seedream-4-0', name: 'Seedream 4.0', desc: 'Ổn định, đáng tin cậy' },
@@ -2003,9 +2009,11 @@ const App: React.FC = () => {
                         </div>
                       </div>
                       <div className="flex bg-black/20 rounded-xl p-1 gap-1">
-                        <button onClick={() => { setSelectedModel('gemini-2.5-flash-image'); setAccessoryImages([]); if (targetResolution === '4K') setTargetResolution('2K'); }} className={`relative flex-1 py-1.5 rounded-lg text-[10px] font-bold transition-all ${selectedModel === 'gemini-2.5-flash-image' ? 'bg-white text-black shadow-sm' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}>
-                          {mode === AppMode.CREATIVE_POSE && <Star size={14} className="absolute -top-1.5 -left-1.5 text-yellow-400 fill-yellow-400 rotate-[45deg]" />}
-                          Air
+                        <button onClick={() => { setSelectedModel('gemini-3.1-flash-image-preview'); setAccessoryImages([]); if (targetResolution === '4K') setTargetResolution('2K'); }} className={`relative flex-1 py-1.5 rounded-lg text-[10px] font-bold transition-all ${selectedModel === 'gemini-3.1-flash-image-preview' ? 'bg-white text-black shadow-sm' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}>
+                          <div className="flex items-center justify-center gap-1.5">
+                            <Zap size={10} className={selectedModel === 'gemini-3.1-flash-image-preview' ? 'text-black' : 'text-amber-400'} />
+                            <span>15s</span>
+                          </div>
                         </button>
                         <button onClick={() => { setSelectedModel('gemini-3-pro-image-preview'); if (targetResolution === '4K') setTargetResolution('2K'); }} className={`relative flex-1 py-1.5 rounded-lg text-[10px] font-bold transition-all ${selectedModel === 'gemini-3-pro-image-preview' ? 'bg-indigo-600 text-white shadow-glow' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}>
                           {(mode === AppMode.VIRTUAL_TRY_ON || mode === AppMode.CREATE_MODEL) && <Star size={14} className="absolute -top-1.5 -right-1.5 text-yellow-400 fill-yellow-400 rotate-[-45deg]" />}
@@ -2029,7 +2037,7 @@ const App: React.FC = () => {
                         {(['1K', '2K', '4K'] as const)
                           .filter((q) => {
                             // Hide 4K option for Nano Banana and Nano Banana Pro
-                            if (q === '4K' && (selectedModel === 'gemini-2.5-flash-image' || selectedModel === 'gemini-3-pro-image-preview')) {
+                            if (q === '4K' && (selectedModel === 'gemini-3.1-flash-image-preview' || selectedModel === 'gemini-2.5-flash-image' || selectedModel === 'gemini-3-pro-image-preview')) {
                               return false;
                             }
                             return true;
@@ -2038,6 +2046,7 @@ const App: React.FC = () => {
                             <button
                               key={q}
                               onClick={() => setTargetResolution(q)}
+                              disabled={q === '4K' && (selectedModel === 'gemini-3.1-flash-image-preview' || selectedModel === 'gemini-2.5-flash-image' || selectedModel === 'gemini-3-pro-image-preview')}
                               className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold transition-all ${targetResolution === q
                                 ? 'bg-purple-600 text-white shadow-sm'
                                 : 'text-gray-400 hover:text-white hover:bg-white/5'
