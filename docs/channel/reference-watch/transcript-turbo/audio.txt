@@ -1,0 +1,9 @@
+Tự trend một mô hình ngôn ngữ từ con số 0, chỉ mất 2 tiếng và chưa tới nửa đôi.
+Minimile cho bạn tự tay dựng một con LLM 64 triệu tham số, từ tokenizer tới khi nó biết trả lời.
+56.600 sao, 7.300 fork, giấy phép Apache mở hoàn toàn.
+Điểm đắt nhất, thật toán lõi viết tay bằng Pythorch thuần, bạn hiểu từng dòng, không gọi hàm rồi cầu may.
+64 triệu tham số, nhỏ hơn GPT-3 2700 lần.
+Một cạc, khoảng 2 tiếng, 3 tệ tiền thuê.
+Đủ cả quy trình, pre-train, SFT, LoRa, chưng cất, DPO, GRPO và huấn luyện agent.
+Clone repo, tải dataset, chạy trên pre-train là bắt đầu.
+Theo dõi ADF repo để không bỏ lỡ repo xịn mỗi ngày.

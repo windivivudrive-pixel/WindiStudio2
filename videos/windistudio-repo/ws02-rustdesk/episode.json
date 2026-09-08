@@ -1,0 +1,47 @@
+{
+  "id": "WS02",
+  "status": "DELIVERED",
+  "repo": "https://github.com/rustdesk/rustdesk-server",
+  "angle": "TeamViewer bị ngắt giữa chừng → RustDesk cho phiên hỗ trợ chủ động hơn",
+  "ideaVersion": 2,
+  "candidates": [
+    "WS02-A",
+    "WS02-B",
+    "WS02-C"
+  ],
+  "approval": {
+    "message": "duyệt v2, bỏ con vịt bay ở dưới đi cho đỡ rối, lưu lại để lần sau k cần thêm con vịt nữa",
+    "recordedAt": "2026-09-07T15:41:01+07:00",
+    "idea": "WS02-A",
+    "ideaVersion": 2
+  },
+  "sourceCheckedAt": "2026-09-07T07:24:18Z",
+  "claimSources": [
+    "https://github.com/rustdesk/rustdesk-server",
+    "https://github.com/rustdesk/rustdesk-server/releases",
+    "https://rustdesk.com/docs/en/self-host/",
+    "https://rustdesk.com/docs/en/self-host/rustdesk-server-oss/docker/",
+    "https://rustdesk.com/docs/en/self-host/client-configuration/",
+    "repo-snapshot-2026-09-07.json"
+  ],
+  "artifacts": {
+    "ideas": "IDEAS-2026-09-07.md",
+    "watchReport": "reference-watch/report.md",
+    "transcript": "reference-watch/transcript-turbo/audio.srt",
+    "repoSnapshot": "repo-snapshot-2026-09-07.json",
+    "script": "script.md",
+    "scriptV2Review": "script-v2-review.md",
+    "storyboardV2Review": "storyboard-v2-review.md",
+    "captions": "captions.srt",
+    "video": "final.mp4",
+    "cover": "cover.png",
+    "qa": "qa.md",
+    "source": "src/Composition.tsx",
+    "assetManifest": "evidence/asset-manifest.json",
+    "finalAudioTranscript": "evidence/transcript-final-sfx/voice.txt",
+    "sceneStills": "evidence/v2-stills",
+    "transitionChecks": "evidence/v2-final-check"
+  },
+  "blockers": [],
+  "nextAction": "Review final.mp4"
+}

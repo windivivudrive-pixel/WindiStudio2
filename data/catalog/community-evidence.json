@@ -1,0 +1,36 @@
+{
+  "status": "REVIEW_ONLY",
+  "coverage": { "catalogTools": 200, "toolsWithResearch": 1, "evidenceEntries": 2, "remainingTools": 199, "published": 0 },
+  "entries": [
+    {
+      "resourceIdentity": "skill:https://github.com/remotion-dev/skills:remotion-best-practices",
+      "source_url": "https://www.reddit.com/r/ClaudeCode/comments/1qkmh4z/remotionvideo_skill_very_interesting_skill_but/",
+      "platform": "Reddit",
+      "author_name": "luongnv-com",
+      "author_relationship": "USER",
+      "title": "Dùng Remotion skill để tạo video từ dự án, cần nhiều vòng chỉnh prompt",
+      "summary_vi": "Tác giả chia sẻ video thử nghiệm cùng prompt giúp agent xem codebase, hỏi phong cách và lập kế hoạch trước khi dựng. Bài viết dẫn rõ repo remotion-dev/skills.",
+      "positive_notes": "Có quy trình thử nghiệm và prompt để người khác tham khảo.",
+      "limitation_notes": "Tác giả nói kết quả chưa đạt kỳ vọng; phần thảo luận cho biết quá trình thử mất cả ngày, không phải một prompt là xong.",
+      "resource_match": "EXACT",
+      "match_explanation": "Bài gốc chỉ rõ remotion-dev/skills; chưa xác minh commit hoặc phiên bản đã dùng.",
+      "observed_at": "2026-09-03T08:00:00Z",
+      "media": [{ "kind": "SOURCE_LINK", "source_url": "https://www.reddit.com/r/ClaudeCode/comments/1qkmh4z/remotionvideo_skill_very_interesting_skill_but/", "alt_text": "Xem video thử nghiệm trong bài Reddit", "rights_basis": "LINK_ONLY" }]
+    },
+    {
+      "resourceIdentity": "skill:https://github.com/remotion-dev/skills:remotion-best-practices",
+      "source_url": "https://www.reddit.com/r/ClaudeCode/comments/1rawu2w/built_a_brand_video_with_claude_code_remotion/",
+      "platform": "Reddit / YouTube",
+      "author_name": "nav132",
+      "author_relationship": "USER",
+      "title": "Video giới thiệu sản phẩm bằng Claude Code và Remotion",
+      "summary_vi": "Người dùng chia sẻ video quảng bá sản phẩm của mình, kèm dự án mở và trải nghiệm xây dựng bằng Claude Code với Remotion.",
+      "positive_notes": "Theo tác giả, agent hữu ích khi dựng cấu trúc ban đầu và sắp xếp các cảnh.",
+      "limitation_notes": "Tác giả nhận xét thành phẩm còn giống slide chuyển cảnh, chưa thay thế được chuyên gia motion design. Đây cũng là bài giới thiệu sản phẩm riêng của tác giả.",
+      "resource_match": "RELATED_PROJECT",
+      "match_explanation": "Xác nhận dùng Remotion, chưa đủ bằng chứng dùng đúng gói remotion-best-practices trong catalog.",
+      "observed_at": "2026-09-03T08:00:00Z",
+      "media": [{ "kind": "YOUTUBE", "source_url": "https://www.youtube.com/watch?v=5GCzrX0CNkc", "media_url": "https://www.youtube.com/watch?v=5GCzrX0CNkc", "alt_text": "Xem video thương hiệu do tác giả chia sẻ", "rights_basis": "LINK_ONLY" }]
+    }
+  ]
+}

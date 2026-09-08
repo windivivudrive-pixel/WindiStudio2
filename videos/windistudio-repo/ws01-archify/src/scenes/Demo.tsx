@@ -1,0 +1,2 @@
+import {useCurrentFrame} from 'remotion';import {Title,Window,Proof,C,pop} from '../ui';
+export const Demo=()=>{const f=useCurrentFrame();return <><Title a="Từ ý tưởng" b="đến kết quả."/><Window title="Mô tả của mình" tone={C.blue}><div style={{fontSize:40,padding:28,lineHeight:1.5}}>“Idea → kịch bản → dựng<br/>→ kiểm tra.”</div></Window><div style={{marginTop:28,opacity:pop(f,40)}}><Window title="Kết quả thật từ Archify" tone={C.green}><Proof file="workflow.png" zoom={1.12}/></Window></div><div style={{marginTop:25,fontSize:28}}>✓ Đã tạo và kiểm tra bằng Archify</div></>};

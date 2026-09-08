@@ -1,0 +1,77 @@
+{
+  "frames": 1425,
+  "scenes": [
+    {
+      "id": "hook",
+      "title": "Đừng vẽ lại từng ô.",
+      "text": "Còn đang kéo từng ô để vẽ quy trình? Xem cách này trước khi làm sơ đồ tiếp theo.",
+      "start": 0.0,
+      "end": 4.1,
+      "fromFrame": 0,
+      "durationInFrames": 123
+    },
+    {
+      "id": "repo",
+      "title": "Gặp Archify.",
+      "text": "Archify biến mô tả thành sơ đồ tương tác.",
+      "start": 4.1,
+      "end": 7.333333333333333,
+      "fromFrame": 123,
+      "durationInFrames": 97
+    },
+    {
+      "id": "demo",
+      "title": "Video workflow",
+      "text": "Một: làm video. Ý tưởng, kịch bản, dựng, kiểm tra. Liếc là biết bước nào đang chờ.",
+      "start": 7.333333333333333,
+      "end": 13.5,
+      "fromFrame": 220,
+      "durationInFrames": 185
+    },
+    {
+      "id": "booking",
+      "title": "Lịch hẹn tiệm tóc",
+      "text": "Hai: lịch hẹn tiệm tóc. Khách nhắn, chốt giờ, nhắc lịch, làm dịch vụ, rồi chăm sóc. Customer journey này ai cũng hiểu.",
+      "start": 13.5,
+      "end": 21.266666666666666,
+      "fromFrame": 405,
+      "durationInFrames": 233
+    },
+    {
+      "id": "onboarding",
+      "title": "Onboarding nhân sự mới",
+      "text": "Ba: onboarding người mới. Hành chính tạo tài khoản, quản lý bàn giao, người mới xong checklist, rồi check-in tuần đầu. Swimlane cho thấy ai phụ trách việc nào.",
+      "start": 21.266666666666666,
+      "end": 30.166666666666668,
+      "fromFrame": 638,
+      "durationInFrames": 267
+    },
+    {
+      "id": "interact",
+      "title": "Ba style, một công cụ",
+      "text": "Cùng một công cụ, ba nhu cầu, ba style. Bấm từng bước, lần theo luồng, rồi gửi HTML cho cả đội.",
+      "start": 30.166666666666668,
+      "end": 36.9,
+      "fromFrame": 905,
+      "durationInFrames": 202
+    },
+    {
+      "id": "limit",
+      "title": "Có một điều cần nhớ.",
+      "text": "Nhưng kiểm tra mối nối. Sơ đồ đẹp chưa chắc đúng quy trình, chi phí AI tùy dịch vụ.",
+      "start": 36.9,
+      "end": 41.63333333333333,
+      "fromFrame": 1107,
+      "durationInFrames": 142
+    },
+    {
+      "id": "cta",
+      "title": "Lưu repo. Dùng lúc cần.",
+      "text": "Hay giải thích workflow? Lưu Archify lại. Khám phá thêm công cụ tại Windi Studio chấm app.",
+      "start": 41.63333333333333,
+      "end": 46.9,
+      "fromFrame": 1249,
+      "durationInFrames": 158
+    }
+  ]
+}

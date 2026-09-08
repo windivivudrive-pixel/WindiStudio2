@@ -1,0 +1,45 @@
+{
+  "episode": "WS02",
+  "voice": {
+    "provider": "Cartesia",
+    "model": "sonic-3.6",
+    "voiceId": "de943f91-2f7f-47ca-88db-4a8d1cfc5291",
+    "speed": 1.15,
+    "scenes": {
+      "hook": 5.250563,
+      "solution": 8.280813,
+      "family": 5.485688,
+      "office": 5.642438,
+      "route": 4.75425,
+      "tradeoff": 7.62775,
+      "cta": 8.672625
+    }
+  },
+  "music": {
+    "file": "public/musicbg.mp3",
+    "volume": 1
+  },
+  "soundEffects": {
+    "library": "@remotion/sfx@4.0.521",
+    "cues": [
+      {"frame": 100, "effect": "recordScratch", "role": "TeamViewer bị đá ra"},
+      {"frame": 163, "effect": "uiSwitch", "role": "mở giải pháp RustDesk"},
+      {"frame": 448, "effect": "mouseClick", "role": "nhập mã kết nối"},
+      {"frame": 600, "effect": "ding", "role": "tìm thấy file văn phòng"},
+      {"frame": 762, "effect": "whoosh", "role": "chuyển sang đường kết nối"},
+      {"frame": 910, "effect": "pageTurn", "role": "mở lưu ý self-host"},
+      {"frame": 1144, "effect": "ding", "role": "CTA lưu công cụ"}
+    ],
+    "mix": "low-volume accents under voice and music"
+  },
+  "visualSources": [
+    "https://www.teamviewer.com/en/global/support/knowledge-base/teamviewer-classic/licensing/personal-use/commercial-use-suspected/",
+    "https://github.com/rustdesk/rustdesk-server",
+    "https://rustdesk.com/docs/en/client/",
+    "https://rustdesk.com/docs/en/self-host/",
+    "https://rustdesk.com/docs/en/self-host/rustdesk-server-oss/docker/"
+  ],
+  "reference": "/Users/win/Documents/snaptik.vn_7682364904963132693_wm.mp4",
+  "referenceUse": "Pain-to-solution rhythm and cumulative modular layout only; creator marks and copy were not reused.",
+  "mascotPolicy": "No pixel duck or bird in WS02 or future WindiStudio repo-video defaults."
+}

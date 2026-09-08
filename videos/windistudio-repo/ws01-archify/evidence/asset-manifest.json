@@ -1,0 +1,74 @@
+{
+  "archify": {
+    "repo": "https://github.com/tt-a1i/archify",
+    "commit": "c6519401f7b91b9d43011657880893b0a8955548",
+    "license": "MIT",
+    "generated_files": [
+      "public/workflow.html",
+      "public/workflow-revised.html",
+      "public/booking.html",
+      "public/onboarding.html"
+    ],
+    "screenshots": [
+      "public/workflow.png",
+      "public/workflow-selected.png",
+      "public/workflow-revised.png",
+      "public/booking.png",
+      "public/onboarding.png"
+    ],
+    "verified": "Both delivery receipts show 9 successful checks; browser selection opened node details. The final video renders booking.html and onboarding.html directly in Remotion IFrames for native-resolution camera moves."
+  },
+  "font": {
+    "source": "WindiStudio2/public/SVN-Calling Code Regular.otf and Bold.otf",
+    "reuse": "Existing user brand assets"
+  },
+  "mascot": {
+    "source": "WindiStudio2/windi/pixel-duck.tsx",
+    "reuse": "Existing user code-native mascot"
+  },
+  "voice": {
+    "provider": "Cartesia",
+    "model": "sonic-3.6",
+    "voice": "Clone Pro 2.1",
+    "voice_id": "de943f91-2f7f-47ca-88db-4a8d1cfc5291",
+    "language": "vi",
+    "speed": 1.15
+  },
+  "music": {
+    "source": "Original synthesized melody and click effects in scripts/finish-assets.py",
+    "sampled_external_audio": false
+  },
+  "claimSources": [
+    "https://github.com/tt-a1i/archify",
+    "evidence/archify-receipt.json",
+    "evidence/archify-revised-receipt.json"
+  ],
+  "website": {
+    "checked": "https://windistudio.app",
+    "observed": "Legacy live landing; CTA is general, no Archify tutorial claim"
+  },
+  "viewer_locale": "Authored content Vietnamese; fixed viewer controls use upstream English fallback."
+  ,"examples": {
+    "booking": {
+      "use_case": "Lịch hẹn tiệm tóc",
+      "visual_style": "Customer journey / Editorial",
+      "input": "public/booking.workflow.json",
+      "artifact": "public/booking.html",
+      "validation": "9 successful showcase checks"
+    },
+    "onboarding": {
+      "use_case": "Onboarding nhân sự mới",
+      "visual_style": "Swimlane / Blueprint",
+      "input": "public/onboarding.workflow.json",
+      "artifact": "public/onboarding.html",
+      "validation": "9 successful showcase checks"
+    }
+  }
+  ,"visualTreatment": {
+    "theme": "dark retro navy",
+    "grid": "52px loop with frame-driven background position",
+    "highlight": "teal and warm-gold radial glows with slow sine motion",
+    "floating": "scene wrapper and native diagram window translate and tilt driven by useCurrentFrame",
+    "diagramCamera": "Direct Archify HTML rendered in Remotion IFrames; cubic frame-driven zoom and pan between spoken nodes"
+  }
+}

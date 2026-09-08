@@ -1,0 +1,31 @@
+{
+  "edition":"creator-100-v1",
+  "target":100,
+  "scope":"Tuyển chọn 100 repo công khai phù hợp creator từ pool nghiên cứu; không phải top 100 toàn GitHub hay bảng xếp hạng số người dùng.",
+  "criteria":["Ưu tiên ứng dụng thực tế cho content, social, video, audio và thiết kế.","Repo chính chủ, có tài liệu để biên tập; không lấy bản sao không rõ nguồn.","Dùng stars/forks có thời điểm làm tín hiệu quan tâm, không đồng nhất với người dùng hoạt động.","Loại repo archived, giảm sản phẩm trùng công dụng và chỉ giữ 4 mục thuần tech/bảo mật.","Không gắn top trending hiện tại từ thứ tự kết quả tìm kiếm hoặc tuyên bố marketing không có bản đối chiếu."],
+  "excluded":{
+    "leamsigc/magicsync":"Tín hiệu sử dụng/quan tâm còn thấp so với các lựa chọn social trong pool.",
+    "trypostit/trypost":"Ưu tiên Postiz/Mixpost có tín hiệu cộng đồng lớn hơn cho lượt tuyển này.",
+    "realkimbarrett/advertising-skills":"Tín hiệu cộng đồng nhỏ hơn, giấy phép chưa xác nhận; có bộ marketing thay thế rộng hơn.",
+    "openclaudia/openclaudia-skills":"Giảm chồng lặp với Marketing Skills trong danh sách 100.",
+    "kareadita/kavita":"Thiên về quản lý thư viện đọc, xa mục tiêu sản xuất/phân phối nội dung.",
+    "outline/outline":"Quản lý tri thức nhóm, giảm trùng với AppFlowy/Karakeep.",
+    "phuryn/pm-skills":"Thiên về quản lý sản phẩm, không ưu tiên trong đợt creator-first.",
+    "deanpeters/product-manager-skills":"Thiên về quản lý sản phẩm, không ưu tiên trong đợt creator-first.",
+    "jina-ai/reader":"Giảm chồng lặp lớp đọc web với Firecrawl/Crawl4AI.",
+    "posthog/posthog":"Product analytics thiên kỹ thuật; giữ Umami/Plausible/Matomo cho bài toán nội dung.",
+    "chenyme/chenyme-aavt":"Repo đã archived tại thời điểm nghiên cứu.",
+    "lightricks/ltx-video":"Ưu tiên thế hệ LTX-2 thay vì liệt kê hai thế hệ cùng sản phẩm.",
+    "blaizzy/mlx-video":"Tín hiệu cộng đồng nhỏ hơn và môi trường phần cứng hẹp.",
+    "ggml-org/whisper.cpp":"Giảm trùng nền tảng Whisper, giữ Whisper và WhisperX cho nhu cầu phụ đề.",
+    "systran/faster-whisper":"Backend suy luận, giảm trùng với tool phụ đề có quy trình rõ hơn.",
+    "myshell-ai/melotts":"Giảm chồng lặp TTS để giữ danh mục gọn.",
+    "ace-step/ace-step":"Ưu tiên ACE-Step 1.5 thay vì hai thế hệ cùng dự án.",
+    "sanster/iopaint":"Repo đã archived tại thời điểm nghiên cứu.",
+    "vladmandic/sdnext":"Giảm số giao diện Stable Diffusion chồng lặp.",
+    "flowiseai/flowise":"Repo đã archived tại thời điểm nghiên cứu.",
+    "kestra-io/kestra":"Thiên về điều phối hạ tầng, ngoài trọng tâm creator-first.",
+    "rayventura/shortgpt":"Lần cập nhật nguồn gần nhất từ 2025; ưu tiên workflow video có tín hiệu bảo trì mới hơn.",
+    "opentalker/sadtalker":"Lần cập nhật nguồn gần nhất từ 2024; ưu tiên LivePortrait/LiveTalking cho lượt tuyển này."
+  }
+}

@@ -22,3 +22,9 @@ bucket_name = "windi-bucket"
 # wrangler secret put GEMINI_API_KEY
 # wrangler secret put SUPABASE_URL
 # wrangler secret put SUPABASE_SERVICE_ROLE_KEY
+# 
+# === VERTEX AI SECRETS (Optional: To use $300 Trial on GCP instead of Gemini API) ===
+# wrangler secret put VERTEX_PROJECT_ID
+# wrangler secret put VERTEX_LOCATION
+# wrangler secret put VERTEX_CLIENT_EMAIL
+# wrangler secret put VERTEX_PRIVATE_KEY

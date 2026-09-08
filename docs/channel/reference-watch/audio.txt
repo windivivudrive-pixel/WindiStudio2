@@ -1,0 +1,6 @@
+Tự truyền một mùi mùi ngữ từ con số không, chỉ mất 2 tiếng và chưa tới nửa đưa.
+Minimai cho bạn tự tay dựng 1 con LLM 60 tư triệu tham số, từ Thu Cân ai giờ từ khi nói biết trả lời.
+56.600 sao, 7.300 phóng, dây phép A3G mở hoàn toàn.
+Điểm đắt nhất, thật tòn lỗi với tay bằng Phai Thóch thuần, bãnh hiểu tương rồng, không gọi hàng dừa cầu ai.
+60 tư triệu tham số, nhỏ hơn GPT3 2.700 lần, một cạc khoảng 2 tiếng, 3 tệ tỉnh thuê, đủ cả quý trình, pre-tren, sft, lora, chân cất, lipio, gia pio và hồi luyện ai dạng.
+Clone repo, tải data set, chạm trên pre-tren là bắt đầu, theo dõi ai đẹp repo để không bỏ lỡ repo xịp mỗi này.

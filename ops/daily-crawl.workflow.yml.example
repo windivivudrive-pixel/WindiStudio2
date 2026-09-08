@@ -1,0 +1,39 @@
+# Manual GitHub Actions fallback. The active six-hour schedule is owned by the Codex project automation.
+# Adds only 5-10 new repositories to REVIEW; never publishes. Do not enable a second schedule concurrently.
+name: Windi candidate discovery
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: windi-candidate-discovery
+  cancel-in-progress: false
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/cache@v4
+        with:
+          path: .cache/windi-ingestion
+          key: windi-ingestion-${{ github.run_id }}
+          restore-keys: windi-ingestion-
+      - run: node scripts/collect-creator-candidates.mjs --fresh --enqueue
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          WINDI_SCHEDULED: ${{ github.event_name == 'schedule' }}
+      - run: node scripts/collect-creator-candidates.mjs --verify
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: windi-candidates-${{ github.run_id }}
+          retention-days: 30
+          path: |
+            data/catalog/
+            data/ingestion/runs/

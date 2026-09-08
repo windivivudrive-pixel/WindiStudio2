@@ -1,0 +1,1666 @@
+{
+  "text": " Đang sửa máy cho bố mẹ bằng TeamViewer, chưa xong đã bị đá ra, đây là lúc bạn nên biết Rodead. Rodead cũng cho phép bạn nhìn và điều khiển máy tính từ xa. Khi cần, bạn có thể dùng máy chủ do mình quản lý để bớt phụ thuộc vào giới hạn của dịch vụ khác. Bố mẹ gọi vì máy tính lỗi, nhập mã tết nối, nhìn thấy màn hình và xử lý ngay, không cần chạy qua tận nơi. Hoặc file khách hàng nằm trong máy văn phòng, mở Rodead, vào đúng máy và lấy file dù bạn đang ở ngoài. Hai máy ưu tiên nối trực tiếp. Nếu mạng chặn, vẫn có đường dự phòng để phiên hỗ trợ tiếp tục. Máy chủ riêng vẫn cần người cài đặt, cập nhật và trả chi phí máy chạy. Vì vậy, hãy thử Rodead trước, rồi chỉ tự dựng khi thực sự cần. Nếu bạn là người cả nhà gọi mỗi khi máy lỗi, hoặc thường xuyên cầm vào máy văn phòng, lưu Rodead lại. Khám phá thêm công cụ hữu dụng tại windystudio.app.",
+  "segments": [
+    {
+      "id": 0,
+      "seek": 0,
+      "start": 0.0,
+      "end": 4.92,
+      "text": " Đang sửa máy cho bố mẹ bằng TeamViewer, chưa xong đã bị đá ra, đây là lúc bạn nên biết Rodead.",
+      "tokens": [
+        50365,
+        13055,
+        656,
+        262,
+        27801,
+        64,
+        12228,
+        88,
+        1586,
+        272,
+        7863,
+        275,
+        26965,
+        272,
+        27215,
+        7606,
+        30203,
+        260,
+        11,
+        46575,
+        2031,
+        556,
+        17283,
+        32113,
+        2934,
+        842,
+        3342,
+        11,
+        20199,
+        3684,
+        287,
+        31585,
+        14647,
+        40606,
+        28432,
+        497,
+        1429,
+        345,
+        13,
+        50611
+      ],
+      "temperature": 0.0,
+      "avg_logprob": -0.0853331756591797,
+      "compression_ratio": 1.5194508009153318,
+      "no_speech_prob": 2.0013383311701105e-11,
+      "words": [
+        {
+          "word": " Đang",
+          "start": 0.0,
+          "end": 0.32,
+          "probability": 0.9733899235725403
+        },
+        {
+          "word": " sửa",
+          "start": 0.32,
+          "end": 0.54,
+          "probability": 0.9978835185368856
+        },
+        {
+          "word": " máy",
+          "start": 0.54,
+          "end": 0.74,
+          "probability": 0.9981850385665894
+        },
+        {
+          "word": " cho",
+          "start": 0.74,
+          "end": 0.86,
+          "probability": 0.9985502362251282
+        },
+        {
+          "word": " bố",
+          "start": 0.86,
+          "end": 1.04,
+          "probability": 0.9991534650325775
+        },
+        {
+          "word": " mẹ",
+          "start": 1.04,
+          "end": 1.16,
+          "probability": 0.9998418390750885
+        },
+        {
+          "word": " bằng",
+          "start": 1.16,
+          "end": 1.36,
+          "probability": 0.9995807111263275
+        },
+        {
+          "word": " TeamViewer,",
+          "start": 1.36,
+          "end": 2.04,
+          "probability": 0.748942236105601
+        },
+        {
+          "word": " chưa",
+          "start": 2.2,
+          "end": 2.46,
+          "probability": 0.9981446266174316
+        },
+        {
+          "word": " xong",
+          "start": 2.46,
+          "end": 2.7,
+          "probability": 0.9976306855678558
+        },
+        {
+          "word": " đã",
+          "start": 2.7,
+          "end": 2.82,
+          "probability": 0.8471839427947998
+        },
+        {
+          "word": " bị",
+          "start": 2.82,
+          "end": 2.94,
+          "probability": 0.9999284744262695
+        },
+        {
+          "word": " đá",
+          "start": 2.94,
+          "end": 3.16,
+          "probability": 0.9993095695972443
+        },
+        {
+          "word": " ra,",
+          "start": 3.16,
+          "end": 3.38,
+          "probability": 0.9997889399528503
+        },
+        {
+          "word": " đây",
+          "start": 3.58,
+          "end": 3.72,
+          "probability": 0.99940025806427
+        },
+        {
+          "word": " là",
+          "start": 3.72,
+          "end": 3.84,
+          "probability": 0.9994004964828491
+        },
+        {
+          "word": " lúc",
+          "start": 3.84,
+          "end": 4.0,
+          "probability": 0.9994119703769684
+        },
+        {
+          "word": " bạn",
+          "start": 4.0,
+          "end": 4.14,
+          "probability": 0.9991225600242615
+        },
+        {
+          "word": " nên",
+          "start": 4.14,
+          "end": 4.3,
+          "probability": 0.9982624650001526
+        },
+        {
+          "word": " biết",
+          "start": 4.3,
+          "end": 4.48,
+          "probability": 0.9960825443267822
+        },
+        {
+          "word": " Rodead.",
+          "start": 4.48,
+          "end": 4.92,
+          "probability": 0.21541223675012589
+        }
+      ]
+    },
+    {
+      "id": 1,
+      "seek": 0,
+      "start": 5.5200000000000005,
+      "end": 8.28,
+      "text": " Rodead cũng cho phép bạn nhìn và điều khiển máy tính từ xa.",
+      "tokens": [
+        50640,
+        497,
+        1429,
+        345,
+        22747,
+        1586,
+        903,
+        16171,
+        14647,
+        6245,
+        41320,
+        10274,
+        42082,
+        23526,
+        38197,
+        12228,
+        88,
+        256,
+        26994,
+        26834,
+        2031,
+        64,
+        13,
+        50780
+      ],
+      "temperature": 0.0,
+      "avg_logprob": -0.0853331756591797,
+      "compression_ratio": 1.5194508009153318,
+      "no_speech_prob": 2.0013383311701105e-11,
+      "words": [
+        {
+          "word": " Rodead",
+          "start": 5.5200000000000005,
+          "end": 5.88,
+          "probability": 0.9990215301513672
+        },
+        {
+          "word": " cũng",
+          "start": 5.88,
+          "end": 6.0,
+          "probability": 0.9996166229248047
+        },
+        {
+          "word": " cho",
+          "start": 6.0,
+          "end": 6.16,
+          "probability": 0.9996287822723389
+        },
+        {
+          "word": " phép",
+          "start": 6.16,
+          "end": 6.34,
+          "probability": 0.999802440404892
+        },
+        {
+          "word": " bạn",
+          "start": 6.34,
+          "end": 6.56,
+          "probability": 0.9997829794883728
+        },
+        {
+          "word": " nhìn",
+          "start": 6.56,
+          "end": 6.9,
+          "probability": 0.9997615814208984
+        },
+        {
+          "word": " và",
+          "start": 6.9,
+          "end": 7.08,
+          "probability": 0.9995194673538208
+        },
+        {
+          "word": " điều",
+          "start": 7.08,
+          "end": 7.24,
+          "probability": 0.9998494386672974
+        },
+        {
+          "word": " khiển",
+          "start": 7.24,
+          "end": 7.46,
+          "probability": 0.9994301199913025
+        },
+        {
+          "word": " máy",
+          "start": 7.46,
+          "end": 7.64,
+          "probability": 0.9997203946113586
+        },
+        {
+          "word": " tính",
+          "start": 7.64,
+          "end": 7.78,
+          "probability": 0.9991638362407684
+        },
+        {
+          "word": " từ",
+          "start": 7.78,
+          "end": 7.94,
+          "probability": 0.9999438524246216
+        },
+        {
+          "word": " xa.",
+          "start": 7.94,
+          "end": 8.28,
+          "probability": 0.9996814131736755
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "seek": 0,
+      "start": 8.58,
+      "end": 13.4,
+      "text": " Khi cần, bạn có thể dùng máy chủ do mình quản lý để bớt phụ thuộc vào giới hạn của dịch vụ khác.",
+      "tokens": [
+        50802,
+        591,
+        4954,
+        47580,
+        11,
+        14647,
+        6333,
+        24491,
+        274,
+        27065,
+        12228,
+        88,
+        23579,
+        100,
+        360,
+        14526,
+        421,
+        31926,
+        287,
+        11822,
+        20081,
+        272,
+        27260,
+        83,
+        903,
+        17740,
+        40295,
+        34259,
+        24995,
+        1735,
+        12242,
+        276,
+        12937,
+        11990,
+        274,
+        46829,
+        371,
+        17740,
+        43713,
+        13,
+        51036
+      ],
+      "temperature": 0.0,
+      "avg_logprob": -0.0853331756591797,
+      "compression_ratio": 1.5194508009153318,
+      "no_speech_prob": 2.0013383311701105e-11,
+      "words": [
+        {
+          "word": " Khi",
+          "start": 8.58,
+          "end": 8.84,
+          "probability": 0.9995482861995697
+        },
+        {
+          "word": " cần,",
+          "start": 8.84,
+          "end": 9.06,
+          "probability": 0.9999047517776489
+        },
+        {
+          "word": " bạn",
+          "start": 9.22,
+          "end": 9.4,
+          "probability": 0.9999260902404785
+        },
+        {
+          "word": " có",
+          "start": 9.4,
+          "end": 9.54,
+          "probability": 0.999724805355072
+        },
+        {
+          "word": " thể",
+          "start": 9.54,
+          "end": 9.64,
+          "probability": 0.9999687671661377
+        },
+        {
+          "word": " dùng",
+          "start": 9.64,
+          "end": 9.8,
+          "probability": 0.9998902082443237
+        },
+        {
+          "word": " máy",
+          "start": 9.8,
+          "end": 10.04,
+          "probability": 0.9999311566352844
+        },
+        {
+          "word": " chủ",
+          "start": 10.04,
+          "end": 10.28,
+          "probability": 0.9988568425178528
+        },
+        {
+          "word": " do",
+          "start": 10.28,
+          "end": 10.44,
+          "probability": 0.9953944683074951
+        },
+        {
+          "word": " mình",
+          "start": 10.44,
+          "end": 10.58,
+          "probability": 0.9997650980949402
+        },
+        {
+          "word": " quản",
+          "start": 10.58,
+          "end": 10.82,
+          "probability": 0.9992697238922119
+        },
+        {
+          "word": " lý",
+          "start": 10.82,
+          "end": 11.06,
+          "probability": 0.9997524619102478
+        },
+        {
+          "word": " để",
+          "start": 11.06,
+          "end": 11.42,
+          "probability": 0.9170864224433899
+        },
+        {
+          "word": " bớt",
+          "start": 11.42,
+          "end": 11.7,
+          "probability": 0.9985138773918152
+        },
+        {
+          "word": " phụ",
+          "start": 11.7,
+          "end": 11.86,
+          "probability": 0.9921650886535645
+        },
+        {
+          "word": " thuộc",
+          "start": 11.86,
+          "end": 12.08,
+          "probability": 0.9989183247089386
+        },
+        {
+          "word": " vào",
+          "start": 12.08,
+          "end": 12.24,
+          "probability": 0.9996297359466553
+        },
+        {
+          "word": " giới",
+          "start": 12.24,
+          "end": 12.44,
+          "probability": 0.999692291021347
+        },
+        {
+          "word": " hạn",
+          "start": 12.44,
+          "end": 12.68,
+          "probability": 0.9996625185012817
+        },
+        {
+          "word": " của",
+          "start": 12.68,
+          "end": 12.82,
+          "probability": 0.9973656535148621
+        },
+        {
+          "word": " dịch",
+          "start": 12.82,
+          "end": 12.98,
+          "probability": 0.999820739030838
+        },
+        {
+          "word": " vụ",
+          "start": 12.98,
+          "end": 13.14,
+          "probability": 0.9998829364776611
+        },
+        {
+          "word": " khác.",
+          "start": 13.14,
+          "end": 13.4,
+          "probability": 0.9999542236328125
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "seek": 0,
+      "start": 13.780000000000001,
+      "end": 19.2,
+      "text": " Bố mẹ gọi vì máy tính lỗi, nhập mã tết nối, nhìn thấy màn hình và xử lý ngay, không cần chạy qua tận nơi.",
+      "tokens": [
+        51067,
+        363,
+        7863,
+        275,
+        26965,
+        290,
+        34282,
+        37902,
+        12228,
+        88,
+        256,
+        26994,
+        287,
+        49572,
+        11,
+        6245,
+        35148,
+        22410,
+        256,
+        13888,
+        297,
+        24273,
+        11,
+        6245,
+        41320,
+        27793,
+        13901,
+        77,
+        276,
+        10116,
+        10274,
+        2031,
+        27801,
+        287,
+        11822,
+        6415,
+        320,
+        11,
+        11415,
+        47580,
+        417,
+        5890,
+        88,
+        24159,
+        256,
+        27410,
+        297,
+        21537,
+        13,
+        51325
+      ],
+      "temperature": 0.0,
+      "avg_logprob": -0.0853331756591797,
+      "compression_ratio": 1.5194508009153318,
+      "no_speech_prob": 2.0013383311701105e-11,
+      "words": [
+        {
+          "word": " Bố",
+          "start": 13.780000000000001,
+          "end": 14.14,
+          "probability": 0.9996685683727264
+        },
+        {
+          "word": " mẹ",
+          "start": 14.14,
+          "end": 14.28,
+          "probability": 0.9999523758888245
+        },
+        {
+          "word": " gọi",
+          "start": 14.28,
+          "end": 14.48,
+          "probability": 0.9997528493404388
+        },
+        {
+          "word": " vì",
+          "start": 14.48,
+          "end": 14.62,
+          "probability": 0.9745508432388306
+        },
+        {
+          "word": " máy",
+          "start": 14.62,
+          "end": 14.76,
+          "probability": 0.9999383091926575
+        },
+        {
+          "word": " tính",
+          "start": 14.76,
+          "end": 14.88,
+          "probability": 0.9996389150619507
+        },
+        {
+          "word": " lỗi,",
+          "start": 14.88,
+          "end": 15.1,
+          "probability": 0.9990139007568359
+        },
+        {
+          "word": " nhập",
+          "start": 15.5,
+          "end": 15.72,
+          "probability": 0.9992294311523438
+        },
+        {
+          "word": " mã",
+          "start": 15.72,
+          "end": 15.86,
+          "probability": 0.9529412984848022
+        },
+        {
+          "word": " tết",
+          "start": 15.86,
+          "end": 16.04,
+          "probability": 0.5606798082590103
+        },
+        {
+          "word": " nối,",
+          "start": 16.04,
+          "end": 16.3,
+          "probability": 0.9991483688354492
+        },
+        {
+          "word": " nhìn",
+          "start": 16.6,
+          "end": 16.76,
+          "probability": 0.9996662735939026
+        },
+        {
+          "word": " thấy",
+          "start": 16.76,
+          "end": 16.88,
+          "probability": 0.9993932247161865
+        },
+        {
+          "word": " màn",
+          "start": 16.88,
+          "end": 17.06,
+          "probability": 0.8644816875457764
+        },
+        {
+          "word": " hình",
+          "start": 17.06,
+          "end": 17.2,
+          "probability": 0.9998993873596191
+        },
+        {
+          "word": " và",
+          "start": 17.2,
+          "end": 17.36,
+          "probability": 0.9995335340499878
+        },
+        {
+          "word": " xử",
+          "start": 17.36,
+          "end": 17.54,
+          "probability": 0.9993061125278473
+        },
+        {
+          "word": " lý",
+          "start": 17.54,
+          "end": 17.64,
+          "probability": 0.9996967017650604
+        },
+        {
+          "word": " ngay,",
+          "start": 17.64,
+          "end": 17.9,
+          "probability": 0.9998857975006104
+        },
+        {
+          "word": " không",
+          "start": 18.18,
+          "end": 18.34,
+          "probability": 0.9999181032180786
+        },
+        {
+          "word": " cần",
+          "start": 18.34,
+          "end": 18.52,
+          "probability": 0.9989857077598572
+        },
+        {
+          "word": " chạy",
+          "start": 18.52,
+          "end": 18.7,
+          "probability": 0.9997027516365051
+        },
+        {
+          "word": " qua",
+          "start": 18.7,
+          "end": 18.82,
+          "probability": 0.9996497631072998
+        },
+        {
+          "word": " tận",
+          "start": 18.82,
+          "end": 18.96,
+          "probability": 0.997087836265564
+        },
+        {
+          "word": " nơi.",
+          "start": 18.96,
+          "end": 19.2,
+          "probability": 0.9997975826263428
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "seek": 0,
+      "start": 19.42,
+      "end": 24.92,
+      "text": " Hoặc file khách hàng nằm trong máy văn phòng, mở Rodead, vào đúng máy và lấy file dù bạn đang ở ngoài.",
+      "tokens": [
+        51348,
+        3631,
+        38464,
+        3991,
+        7168,
+        39569,
+        48373,
+        297,
+        24125,
+        76,
+        18826,
+        12228,
+        88,
+        371,
+        49214,
+        903,
+        36782,
+        11,
+        275,
+        13755,
+        497,
+        1429,
+        345,
+        11,
+        24995,
+        2934,
+        16926,
+        12228,
+        88,
+        10274,
+        287,
+        13417,
+        3991,
+        274,
+        5035,
+        14647,
+        30723,
+        19272,
+        45843,
+        21971,
+        13,
+        51611
+      ],
+      "temperature": 0.0,
+      "avg_logprob": -0.0853331756591797,
+      "compression_ratio": 1.5194508009153318,
+      "no_speech_prob": 2.0013383311701105e-11,
+      "words": [
+        {
+          "word": " Hoặc",
+          "start": 19.42,
+          "end": 19.78,
+          "probability": 0.9981697499752045
+        },
+        {
+          "word": " file",
+          "start": 19.78,
+          "end": 19.92,
+          "probability": 0.9881574511528015
+        },
+        {
+          "word": " khách",
+          "start": 19.92,
+          "end": 20.08,
+          "probability": 0.9993753135204315
+        },
+        {
+          "word": " hàng",
+          "start": 20.08,
+          "end": 20.3,
+          "probability": 0.9998278617858887
+        },
+        {
+          "word": " nằm",
+          "start": 20.3,
+          "end": 20.52,
+          "probability": 0.999849259853363
+        },
+        {
+          "word": " trong",
+          "start": 20.52,
+          "end": 20.64,
+          "probability": 0.9996613264083862
+        },
+        {
+          "word": " máy",
+          "start": 20.64,
+          "end": 20.8,
+          "probability": 0.9991517961025238
+        },
+        {
+          "word": " văn",
+          "start": 20.8,
+          "end": 20.98,
+          "probability": 0.998771071434021
+        },
+        {
+          "word": " phòng,",
+          "start": 20.98,
+          "end": 21.24,
+          "probability": 0.9998809695243835
+        },
+        {
+          "word": " mở",
+          "start": 21.58,
+          "end": 21.84,
+          "probability": 0.9997173249721527
+        },
+        {
+          "word": " Rodead,",
+          "start": 21.84,
+          "end": 22.32,
+          "probability": 0.9817498524983724
+        },
+        {
+          "word": " vào",
+          "start": 22.7,
+          "end": 22.8,
+          "probability": 0.9998434782028198
+        },
+        {
+          "word": " đúng",
+          "start": 22.8,
+          "end": 23.02,
+          "probability": 0.995823472738266
+        },
+        {
+          "word": " máy",
+          "start": 23.02,
+          "end": 23.3,
+          "probability": 0.9998406767845154
+        },
+        {
+          "word": " và",
+          "start": 23.3,
+          "end": 23.46,
+          "probability": 0.9998571872711182
+        },
+        {
+          "word": " lấy",
+          "start": 23.46,
+          "end": 23.64,
+          "probability": 0.9999286532402039
+        },
+        {
+          "word": " file",
+          "start": 23.64,
+          "end": 23.92,
+          "probability": 0.9997299313545227
+        },
+        {
+          "word": " dù",
+          "start": 23.92,
+          "end": 24.2,
+          "probability": 0.999713659286499
+        },
+        {
+          "word": " bạn",
+          "start": 24.2,
+          "end": 24.38,
+          "probability": 0.9996449947357178
+        },
+        {
+          "word": " đang",
+          "start": 24.38,
+          "end": 24.52,
+          "probability": 0.9996716976165771
+        },
+        {
+          "word": " ở",
+          "start": 24.52,
+          "end": 24.66,
+          "probability": 0.9997890591621399
+        },
+        {
+          "word": " ngoài.",
+          "start": 24.66,
+          "end": 24.92,
+          "probability": 0.9999120831489563
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "seek": 0,
+      "start": 25.38,
+      "end": 26.66,
+      "text": " Hai máy ưu tiên nối trực tiếp.",
+      "tokens": [
+        51626,
+        24055,
+        12228,
+        88,
+        220,
+        4228,
+        84,
+        8757,
+        5050,
+        297,
+        24273,
+        504,
+        27951,
+        48667,
+        13,
+        51699
+      ],
+      "temperature": 0.0,
+      "avg_logprob": -0.0853331756591797,
+      "compression_ratio": 1.5194508009153318,
+      "no_speech_prob": 2.0013383311701105e-11,
+      "words": [
+        {
+          "word": " Hai",
+          "start": 25.38,
+          "end": 25.62,
+          "probability": 0.8819194436073303
+        },
+        {
+          "word": " máy",
+          "start": 25.62,
+          "end": 25.8,
+          "probability": 0.9998311996459961
+        },
+        {
+          "word": " ưu",
+          "start": 25.8,
+          "end": 26.0,
+          "probability": 0.9991599122683207
+        },
+        {
+          "word": " tiên",
+          "start": 26.0,
+          "end": 26.14,
+          "probability": 0.9995504915714264
+        },
+        {
+          "word": " nối",
+          "start": 26.14,
+          "end": 26.3,
+          "probability": 0.9937360882759094
+        },
+        {
+          "word": " trực",
+          "start": 26.3,
+          "end": 26.5,
+          "probability": 0.9997441172599792
+        },
+        {
+          "word": " tiếp.",
+          "start": 26.5,
+          "end": 26.66,
+          "probability": 0.999915361404419
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "seek": 2666,
+      "start": 26.66,
+      "end": 29.94,
+      "text": " Nếu mạng chặn, vẫn có đường dự phòng để phiên hỗ trợ tiếp tục.",
+      "tokens": [
+        50365,
+        426,
+        30568,
+        275,
+        5890,
+        872,
+        417,
+        19118,
+        77,
+        11,
+        49004,
+        6333,
+        2934,
+        24280,
+        274,
+        14522,
+        903,
+        36782,
+        20081,
+        13107,
+        5050,
+        276,
+        35857,
+        504,
+        27836,
+        48667,
+        256,
+        37664,
+        13,
+        50529
+      ],
+      "temperature": 0.0,
+      "avg_logprob": -0.05918589882228686,
+      "compression_ratio": 1.4567901234567902,
+      "no_speech_prob": 2.7580042416541772e-11,
+      "words": [
+        {
+          "word": " Nếu",
+          "start": 26.66,
+          "end": 27.28,
+          "probability": 0.9572079181671143
+        },
+        {
+          "word": " mạng",
+          "start": 27.28,
+          "end": 27.48,
+          "probability": 0.9956357479095459
+        },
+        {
+          "word": " chặn,",
+          "start": 27.48,
+          "end": 27.76,
+          "probability": 0.9941631952921549
+        },
+        {
+          "word": " vẫn",
+          "start": 27.88,
+          "end": 28.14,
+          "probability": 0.9998457431793213
+        },
+        {
+          "word": " có",
+          "start": 28.14,
+          "end": 28.28,
+          "probability": 0.9998950958251953
+        },
+        {
+          "word": " đường",
+          "start": 28.28,
+          "end": 28.42,
+          "probability": 0.9990987777709961
+        },
+        {
+          "word": " dự",
+          "start": 28.42,
+          "end": 28.6,
+          "probability": 0.7767888605594635
+        },
+        {
+          "word": " phòng",
+          "start": 28.6,
+          "end": 28.84,
+          "probability": 0.996813952922821
+        },
+        {
+          "word": " để",
+          "start": 28.84,
+          "end": 29.02,
+          "probability": 0.990263819694519
+        },
+        {
+          "word": " phiên",
+          "start": 29.02,
+          "end": 29.26,
+          "probability": 0.9945346117019653
+        },
+        {
+          "word": " hỗ",
+          "start": 29.26,
+          "end": 29.44,
+          "probability": 0.9997022747993469
+        },
+        {
+          "word": " trợ",
+          "start": 29.44,
+          "end": 29.6,
+          "probability": 0.9999015629291534
+        },
+        {
+          "word": " tiếp",
+          "start": 29.6,
+          "end": 29.74,
+          "probability": 0.9997307658195496
+        },
+        {
+          "word": " tục.",
+          "start": 29.74,
+          "end": 29.94,
+          "probability": 0.9999236464500427
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "seek": 2666,
+      "start": 30.22,
+      "end": 33.86,
+      "text": " Máy chủ riêng vẫn cần người cài đặt, cập nhật và trả chi phí máy chạy.",
+      "tokens": [
+        50554,
+        376,
+        842,
+        88,
+        23579,
+        100,
+        19739,
+        1307,
+        872,
+        49004,
+        47580,
+        15898,
+        269,
+        21971,
+        2934,
+        38248,
+        11,
+        269,
+        35148,
+        6245,
+        25296,
+        10274,
+        504,
+        7398,
+        13228,
+        903,
+        870,
+        12228,
+        88,
+        417,
+        5890,
+        88,
+        13,
+        50725
+      ],
+      "temperature": 0.0,
+      "avg_logprob": -0.05918589882228686,
+      "compression_ratio": 1.4567901234567902,
+      "no_speech_prob": 2.7580042416541772e-11,
+      "words": [
+        {
+          "word": " Máy",
+          "start": 30.22,
+          "end": 30.54,
+          "probability": 0.9960747559865316
+        },
+        {
+          "word": " chủ",
+          "start": 30.54,
+          "end": 30.7,
+          "probability": 0.9980510473251343
+        },
+        {
+          "word": " riêng",
+          "start": 30.7,
+          "end": 30.96,
+          "probability": 0.9996178944905599
+        },
+        {
+          "word": " vẫn",
+          "start": 30.96,
+          "end": 31.14,
+          "probability": 0.9996637105941772
+        },
+        {
+          "word": " cần",
+          "start": 31.14,
+          "end": 31.32,
+          "probability": 0.9995688796043396
+        },
+        {
+          "word": " người",
+          "start": 31.32,
+          "end": 31.48,
+          "probability": 0.9997596144676208
+        },
+        {
+          "word": " cài",
+          "start": 31.48,
+          "end": 31.7,
+          "probability": 0.9994000196456909
+        },
+        {
+          "word": " đặt,",
+          "start": 31.7,
+          "end": 31.9,
+          "probability": 0.9997496902942657
+        },
+        {
+          "word": " cập",
+          "start": 32.1,
+          "end": 32.32,
+          "probability": 0.9992904961109161
+        },
+        {
+          "word": " nhật",
+          "start": 32.32,
+          "end": 32.56,
+          "probability": 0.9956733286380768
+        },
+        {
+          "word": " và",
+          "start": 32.56,
+          "end": 32.82,
+          "probability": 0.9971126317977905
+        },
+        {
+          "word": " trả",
+          "start": 32.82,
+          "end": 33.1,
+          "probability": 0.999932050704956
+        },
+        {
+          "word": " chi",
+          "start": 33.1,
+          "end": 33.24,
+          "probability": 0.9992451667785645
+        },
+        {
+          "word": " phí",
+          "start": 33.24,
+          "end": 33.4,
+          "probability": 0.9998139441013336
+        },
+        {
+          "word": " máy",
+          "start": 33.4,
+          "end": 33.6,
+          "probability": 0.9993613958358765
+        },
+        {
+          "word": " chạy.",
+          "start": 33.6,
+          "end": 33.86,
+          "probability": 0.9994492530822754
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "seek": 2666,
+      "start": 34.02,
+      "end": 37.64,
+      "text": " Vì vậy, hãy thử Rodead trước, rồi chỉ tự dựng khi thực sự cần.",
+      "tokens": [
+        50747,
+        691,
+        4749,
+        29738,
+        11,
+        276,
+        49205,
+        258,
+        27801,
+        497,
+        1429,
+        345,
+        44860,
+        11,
+        19908,
+        33566,
+        256,
+        14522,
+        274,
+        14522,
+        872,
+        23526,
+        50183,
+        33602,
+        47580,
+        13,
+        50916
+      ],
+      "temperature": 0.0,
+      "avg_logprob": -0.05918589882228686,
+      "compression_ratio": 1.4567901234567902,
+      "no_speech_prob": 2.7580042416541772e-11,
+      "words": [
+        {
+          "word": " Vì",
+          "start": 34.02,
+          "end": 34.42,
+          "probability": 0.9991484582424164
+        },
+        {
+          "word": " vậy,",
+          "start": 34.42,
+          "end": 34.62,
+          "probability": 0.9999885559082031
+        },
+        {
+          "word": " hãy",
+          "start": 34.8,
+          "end": 34.98,
+          "probability": 0.999754935503006
+        },
+        {
+          "word": " thử",
+          "start": 34.98,
+          "end": 35.2,
+          "probability": 0.9996708631515503
+        },
+        {
+          "word": " Rodead",
+          "start": 35.2,
+          "end": 35.52,
+          "probability": 0.07239769274989764
+        },
+        {
+          "word": " trước,",
+          "start": 35.52,
+          "end": 35.72,
+          "probability": 0.9986571073532104
+        },
+        {
+          "word": " rồi",
+          "start": 36.12,
+          "end": 36.18,
+          "probability": 0.9975011944770813
+        },
+        {
+          "word": " chỉ",
+          "start": 36.18,
+          "end": 36.34,
+          "probability": 0.999705970287323
+        },
+        {
+          "word": " tự",
+          "start": 36.34,
+          "end": 36.64,
+          "probability": 0.9999216198921204
+        },
+        {
+          "word": " dựng",
+          "start": 36.64,
+          "end": 36.94,
+          "probability": 0.9892878731091818
+        },
+        {
+          "word": " khi",
+          "start": 36.94,
+          "end": 37.12,
+          "probability": 0.9999161958694458
+        },
+        {
+          "word": " thực",
+          "start": 37.12,
+          "end": 37.24,
+          "probability": 0.737278401851654
+        },
+        {
+          "word": " sự",
+          "start": 37.24,
+          "end": 37.44,
+          "probability": 0.9999532699584961
+        },
+        {
+          "word": " cần.",
+          "start": 37.44,
+          "end": 37.64,
+          "probability": 0.9999079704284668
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "seek": 2666,
+      "start": 38.0,
+      "end": 43.18,
+      "text": " Nếu bạn là người cả nhà gọi mỗi khi máy lỗi, hoặc thường xuyên cầm vào máy văn phòng, lưu Rodead lại.",
+      "tokens": [
+        50940,
+        426,
+        30568,
+        14647,
+        3684,
+        15898,
+        22227,
+        35398,
+        290,
+        34282,
+        275,
+        49572,
+        23526,
+        12228,
+        88,
+        287,
+        49572,
+        11,
+        1106,
+        38464,
+        258,
+        24280,
+        2031,
+        7493,
+        5050,
+        269,
+        11161,
+        76,
+        24995,
+        12228,
+        88,
+        371,
+        49214,
+        903,
+        36782,
+        11,
+        287,
+        4228,
+        84,
+        497,
+        1429,
+        345,
+        23017,
+        13,
+        51192
+      ],
+      "temperature": 0.0,
+      "avg_logprob": -0.05918589882228686,
+      "compression_ratio": 1.4567901234567902,
+      "no_speech_prob": 2.7580042416541772e-11,
+      "words": [
+        {
+          "word": " Nếu",
+          "start": 38.0,
+          "end": 38.32,
+          "probability": 0.999827653169632
+        },
+        {
+          "word": " bạn",
+          "start": 38.32,
+          "end": 38.46,
+          "probability": 0.9998682737350464
+        },
+        {
+          "word": " là",
+          "start": 38.46,
+          "end": 38.6,
+          "probability": 0.9997217059135437
+        },
+        {
+          "word": " người",
+          "start": 38.6,
+          "end": 38.78,
+          "probability": 0.9998787641525269
+        },
+        {
+          "word": " cả",
+          "start": 38.78,
+          "end": 38.96,
+          "probability": 0.9980641007423401
+        },
+        {
+          "word": " nhà",
+          "start": 38.96,
+          "end": 39.2,
+          "probability": 0.9999619722366333
+        },
+        {
+          "word": " gọi",
+          "start": 39.2,
+          "end": 39.54,
+          "probability": 0.9988653063774109
+        },
+        {
+          "word": " mỗi",
+          "start": 39.54,
+          "end": 39.74,
+          "probability": 0.9993453025817871
+        },
+        {
+          "word": " khi",
+          "start": 39.74,
+          "end": 39.88,
+          "probability": 0.9995272159576416
+        },
+        {
+          "word": " máy",
+          "start": 39.88,
+          "end": 40.04,
+          "probability": 0.9994087517261505
+        },
+        {
+          "word": " lỗi,",
+          "start": 40.04,
+          "end": 40.28,
+          "probability": 0.9954943954944611
+        },
+        {
+          "word": " hoặc",
+          "start": 40.46,
+          "end": 40.74,
+          "probability": 0.9991904199123383
+        },
+        {
+          "word": " thường",
+          "start": 40.74,
+          "end": 40.96,
+          "probability": 0.9997227191925049
+        },
+        {
+          "word": " xuyên",
+          "start": 40.96,
+          "end": 41.3,
+          "probability": 0.9997415542602539
+        },
+        {
+          "word": " cầm",
+          "start": 41.3,
+          "end": 41.52,
+          "probability": 0.9981240828831991
+        },
+        {
+          "word": " vào",
+          "start": 41.52,
+          "end": 41.62,
+          "probability": 0.999451220035553
+        },
+        {
+          "word": " máy",
+          "start": 41.62,
+          "end": 41.8,
+          "probability": 0.9998000264167786
+        },
+        {
+          "word": " văn",
+          "start": 41.8,
+          "end": 41.94,
+          "probability": 0.9994174838066101
+        },
+        {
+          "word": " phòng,",
+          "start": 41.94,
+          "end": 42.2,
+          "probability": 0.9999178647994995
+        },
+        {
+          "word": " lưu",
+          "start": 42.46,
+          "end": 42.7,
+          "probability": 0.9940372705459595
+        },
+        {
+          "word": " Rodead",
+          "start": 42.7,
+          "end": 42.96,
+          "probability": 0.9486727118492126
+        },
+        {
+          "word": " lại.",
+          "start": 42.96,
+          "end": 43.18,
+          "probability": 0.999619722366333
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "seek": 2666,
+      "start": 43.46,
+      "end": 46.42,
+      "text": " Khám phá thêm công cụ hữu dụng tại windystudio.app.",
+      "tokens": [
+        51215,
+        11681,
+        19524,
+        903,
+        842,
+        258,
+        13213,
+        35451,
+        9613,
+        98,
+        276,
+        12225,
+        84,
+        274,
+        17740,
+        872,
+        37773,
+        30330,
+        28349,
+        1004,
+        13,
+        1746,
+        13,
+        51353
+      ],
+      "temperature": 0.0,
+      "avg_logprob": -0.05918589882228686,
+      "compression_ratio": 1.4567901234567902,
+      "no_speech_prob": 2.7580042416541772e-11,
+      "words": [
+        {
+          "word": " Khám",
+          "start": 43.46,
+          "end": 43.84,
+          "probability": 0.990080714225769
+        },
+        {
+          "word": " phá",
+          "start": 43.84,
+          "end": 44.02,
+          "probability": 0.9998849630355835
+        },
+        {
+          "word": " thêm",
+          "start": 44.02,
+          "end": 44.22,
+          "probability": 0.9999366402626038
+        },
+        {
+          "word": " công",
+          "start": 44.22,
+          "end": 44.38,
+          "probability": 0.999765932559967
+        },
+        {
+          "word": " cụ",
+          "start": 44.38,
+          "end": 44.56,
+          "probability": 0.9989462792873383
+        },
+        {
+          "word": " hữu",
+          "start": 44.56,
+          "end": 44.76,
+          "probability": 0.9969556331634521
+        },
+        {
+          "word": " dụng",
+          "start": 44.76,
+          "end": 45.0,
+          "probability": 0.9996235966682434
+        },
+        {
+          "word": " tại",
+          "start": 45.0,
+          "end": 45.2,
+          "probability": 0.9981174468994141
+        },
+        {
+          "word": " windystudio",
+          "start": 45.2,
+          "end": 46.0,
+          "probability": 0.8229414920012156
+        },
+        {
+          "word": ".app.",
+          "start": 46.0,
+          "end": 46.42,
+          "probability": 0.8766788244247437
+        }
+      ]
+    }
+  ],
+  "language": "vi"
+}

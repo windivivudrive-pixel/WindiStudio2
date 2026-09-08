@@ -1,0 +1,9 @@
+{
+  "projectRef": "zpjphixcttehkkgxlmsn",
+  "snapshotDirectory": "/Users/win/Documents/WindiStudio2/.backups/windi/pre-creator100-2026-09-03T16-43-57-618Z",
+  "contentHash": "70246f4c4a2f7774b985a83b1046397afb219b4521ac7e2ac8ae08790ad028cf",
+  "run": "creator100-70246f4c4a2f7774b985a83b",
+  "archiveCount": 195,
+  "reused": 5,
+  "notice": "Apply 01–10 then 11-finalize, only after local tests. No schema, Auth, payment or Storage changes."
+}

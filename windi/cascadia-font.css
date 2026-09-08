@@ -1,0 +1,164 @@
+/* SVN-Calling Code Regular */
+@font-face {
+  font-family: "SVN-Calling Code";
+  src: url('/SVN-Calling%20Code%20Regular.otf') format('opentype'),
+       url('/SVN-Calling Code Regular.otf') format('opentype');
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "SVN-Calling Code";
+  src: url('/SVN-Calling%20Code%20Regular.otf') format('opentype'),
+       url('/SVN-Calling Code Regular.otf') format('opentype');
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+}
+
+/* SVN-Calling Code Bold */
+@font-face {
+  font-family: "SVN-Calling Code";
+  src: url('/SVN-Calling%20Code%20Bold.otf') format('opentype'),
+       url('/SVN-Calling Code Bold.otf') format('opentype');
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "SVN-Calling Code";
+  src: url('/SVN-Calling%20Code%20Bold.otf') format('opentype'),
+       url('/SVN-Calling Code Bold.otf') format('opentype');
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "SVN-Calling Code";
+  src: url('/SVN-Calling%20Code%20Bold.otf') format('opentype'),
+       url('/SVN-Calling Code Bold.otf') format('opentype');
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "SVN-Calling Code";
+  src: url('/SVN-Calling%20Code%20Bold.otf') format('opentype'),
+       url('/SVN-Calling Code Bold.otf') format('opentype');
+  font-style: normal;
+  font-weight: 900;
+  font-display: swap;
+}
+
+/* SVN-Calling Code Italic */
+@font-face {
+  font-family: "SVN-Calling Code";
+  src: url('/SVN-Calling%20Code%20Italic.otf') format('opentype'),
+       url('/SVN-Calling Code Italic.otf') format('opentype');
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "SVN-Calling Code";
+  src: url('/SVN-Calling%20Code%20Italic.otf') format('opentype'),
+       url('/SVN-Calling Code Italic.otf') format('opentype');
+  font-style: italic;
+  font-weight: 500;
+  font-display: swap;
+}
+
+/* SVN-Calling Code Bold Italic */
+@font-face {
+  font-family: "SVN-Calling Code";
+  src: url('/SVN-Calling%20Code%20Bold%20Italic.otf') format('opentype'),
+       url('/SVN-Calling Code Bold Italic.otf') format('opentype');
+  font-style: italic;
+  font-weight: 600;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "SVN-Calling Code";
+  src: url('/SVN-Calling%20Code%20Bold%20Italic.otf') format('opentype'),
+       url('/SVN-Calling Code Bold Italic.otf') format('opentype');
+  font-style: italic;
+  font-weight: 700;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "SVN-Calling Code";
+  src: url('/SVN-Calling%20Code%20Bold%20Italic.otf') format('opentype'),
+       url('/SVN-Calling Code Bold Italic.otf') format('opentype');
+  font-style: italic;
+  font-weight: 800;
+  font-display: swap;
+}
+
+/* Aliases for Calling Code and Cascadia Code backward compatibility */
+@font-face {
+  font-family: "Calling Code";
+  src: url('/SVN-Calling%20Code%20Regular.otf') format('opentype'),
+       url('/SVN-Calling Code Regular.otf') format('opentype');
+  font-style: normal;
+  font-weight: 400 500;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Calling Code";
+  src: url('/SVN-Calling%20Code%20Bold.otf') format('opentype'),
+       url('/SVN-Calling Code Bold.otf') format('opentype');
+  font-style: normal;
+  font-weight: 600 900;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Cascadia Code Windi";
+  src: url('/SVN-Calling%20Code%20Regular.otf') format('opentype'),
+       url('/SVN-Calling Code Regular.otf') format('opentype');
+  font-style: normal;
+  font-weight: 400 500;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Cascadia Code Windi";
+  src: url('/SVN-Calling%20Code%20Bold.otf') format('opentype'),
+       url('/SVN-Calling Code Bold.otf') format('opentype');
+  font-style: normal;
+  font-weight: 600 900;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Cascadia Code Windi";
+  src: url('/SVN-Calling%20Code%20Italic.otf') format('opentype'),
+       url('/SVN-Calling Code Italic.otf') format('opentype');
+  font-style: italic;
+  font-weight: 400 500;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Cascadia Code Windi";
+  src: url('/SVN-Calling%20Code%20Bold%20Italic.otf') format('opentype'),
+       url('/SVN-Calling Code Bold Italic.otf') format('opentype');
+  font-style: italic;
+  font-weight: 600 900;
+  font-display: swap;
+}
+
+:root {
+  --font-calling-code: "SVN-Calling Code", "Calling Code", "SVN-CallingCode", ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+  --font-geist: "SVN-Calling Code", "Calling Code", "SVN-CallingCode", ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+  --font-geist-mono: "SVN-Calling Code", "Calling Code", "SVN-CallingCode", ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+}
+

@@ -1,0 +1,13 @@
+{
+  "source": "https://github.com/trending?since=weekly",
+  "observed_date_local": "2026-09-06",
+  "timezone": "Asia/Ho_Chi_Minh",
+  "window_label": "This week",
+  "method": "Read GitHub Trending through web tool; values copied from the returned page, not calculated from API snapshots.",
+  "repositories": [
+    {"repo": "tt-a1i/archify", "stars_this_week": 19480, "stars_on_trending_page": 50071},
+    {"repo": "THU-MAIC/OpenMAIC", "stars_this_week": 10109, "stars_on_trending_page": 32179},
+    {"repo": "jingyaogong/minimind", "stars_this_week": 3649, "stars_on_trending_page": 58981}
+  ],
+  "caveat": "API snapshot was collected separately at a later time. Do not combine these totals or infer daily growth from them. Refresh before using numeric claims in a produced video."
+}

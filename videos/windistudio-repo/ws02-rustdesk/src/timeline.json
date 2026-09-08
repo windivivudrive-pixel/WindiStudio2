@@ -1,0 +1,13 @@
+{
+  "fps": 30,
+  "frames": 1429,
+  "scenes": [
+    {"id": "hook", "fromFrame": 0, "audioFrames": 158, "durationInFrames": 163, "start": 0, "end": 5.251},
+    {"id": "solution", "fromFrame": 163, "audioFrames": 249, "durationInFrames": 254, "start": 5.433, "end": 13.714},
+    {"id": "family", "fromFrame": 417, "audioFrames": 165, "durationInFrames": 170, "start": 13.9, "end": 19.386},
+    {"id": "office", "fromFrame": 587, "audioFrames": 170, "durationInFrames": 175, "start": 19.567, "end": 25.209},
+    {"id": "route", "fromFrame": 762, "audioFrames": 143, "durationInFrames": 148, "start": 25.4, "end": 30.154},
+    {"id": "tradeoff", "fromFrame": 910, "audioFrames": 229, "durationInFrames": 234, "start": 30.333, "end": 37.961},
+    {"id": "cta", "fromFrame": 1144, "audioFrames": 261, "durationInFrames": 285, "start": 38.133, "end": 46.806}
+  ]
+}

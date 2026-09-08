@@ -1,5 +1,6 @@
-import { GoogleGenAI, HarmCategory, HarmBlockThreshold } from "@google/genai";
-import { createClient } from '@supabase/supabase-js';
+import { GoogleGenAI, HarmCategory, HarmBlockThreshold } from "npm:@google/genai@^1.0.0";
+import { importPKCS8, SignJWT } from "npm:jose";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
@@ -84,6 +85,100 @@ const processImagePart = async (dataUriOrUrl: string) => {
     };
 };
 
+// --- JWT HELPER ---
+let cachedVertexToken: string | null = null;
+let tokenExpirationTime = 0;
+
+async function getVertexAccessToken(): Promise<string> {
+    const now = Math.floor(Date.now() / 1000);
+    if (cachedVertexToken && now < tokenExpirationTime - 60) {
+        return cachedVertexToken;
+    }
+
+    let clientEmail = Deno.env.get('VERTEX_CLIENT_EMAIL');
+    let privateKeyEnv = Deno.env.get('VERTEX_PRIVATE_KEY');
+    
+    if (!clientEmail || !privateKeyEnv) {
+        throw new Error("Missing Vertex AI credentials");
+    }
+
+    if (privateKeyEnv.includes('\\n')) {
+        privateKeyEnv = privateKeyEnv.replace(/\\n/g, '\n');
+    }
+    privateKeyEnv = privateKeyEnv.replace(/^"|"$/g, '');
+    clientEmail = clientEmail.replace(/^"|"$/g, '');
+
+    const privateKey = await importPKCS8(privateKeyEnv, 'RS256');
+    const jwt = await new SignJWT({
+        iss: clientEmail,
+        sub: clientEmail,
+        aud: 'https://oauth2.googleapis.com/token',
+        scope: 'https://www.googleapis.com/auth/cloud-platform',
+    })
+    .setProtectedHeader({ alg: 'RS256', typ: 'JWT' })
+    .setIssuedAt(now)
+    .setExpirationTime(now + 3600)
+    .sign(privateKey);
+
+    const params = new URLSearchParams();
+    params.append('grant_type', 'urn:ietf:params:oauth:grant-type:jwt-bearer');
+    params.append('assertion', jwt);
+
+    const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: params.toString()
+    });
+
+    if (!tokenResponse.ok) {
+        const err = await tokenResponse.text();
+        throw new Error(`Failed to exchange JWT for Google Access Token: ${err}`);
+    }
+
+    const json = await tokenResponse.json() as any;
+    cachedVertexToken = json.access_token;
+    tokenExpirationTime = now + json.expires_in;
+
+    return cachedVertexToken!;
+}
+
+async function callGenerateContent(reqModel: string, reqParts: any[], reqConfig: any) {
+    const vertexProjectId = Deno.env.get('VERTEX_PROJECT_ID');
+    if (vertexProjectId) {
+        console.log(`Using Vertex AI API (Project: ${vertexProjectId}, Model: ${reqModel})`);
+        const token = await getVertexAccessToken();
+        const location = Deno.env.get('VERTEX_LOCATION') || 'us-central1';
+        const url = `https://${location}-aiplatform.googleapis.com/v1/projects/${vertexProjectId}/locations/${location}/publishers/google/models/${reqModel}:generateContent`;
+
+        const payloadData: any = { contents: [{ role: 'user', parts: reqParts }], generationConfig: reqConfig };
+        if (reqConfig.safetySettings) {
+            payloadData.safetySettings = reqConfig.safetySettings;
+        }
+
+        const fetchRes = await fetch(url, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify(payloadData)
+        });
+
+        if (!fetchRes.ok) {
+            const text = await fetchRes.text();
+            throw new Error(`Vertex AI generation error: HTTP ${fetchRes.status} ${text}`);
+        }
+        return await fetchRes.json();
+    } else {
+        console.log(`Using Google AI Studio API (Model: ${reqModel})`);
+        const apiKey = Deno.env.get('GEMINI_API_KEY');
+        if (!apiKey) throw new Error("GEMINI_API_KEY is not set.");
+        const ai = new GoogleGenAI({ apiKey });
+        return await ai.models.generateContent({
+            model: reqModel,
+            contents: { parts: reqParts },
+            config: reqConfig
+        });
+    }
+}
+
 Deno.serve(async (req) => {
     // Handle CORS preflight request
     if (req.method === 'OPTIONS') {
@@ -115,11 +210,6 @@ Deno.serve(async (req) => {
             targetResolution = '2K' // Default to 2K
         } = await req.json();
 
-        const apiKey = Deno.env.get('GEMINI_API_KEY');
-        if (!apiKey) {
-            throw new Error("GEMINI_API_KEY is not set in environment variables.");
-        }
-
         const authHeader = req.headers.get('Authorization');
 
         if (authHeader) {
@@ -141,7 +231,6 @@ Deno.serve(async (req) => {
             }
         }
 
-        const ai = new GoogleGenAI({ apiKey });
         const results: string[] = [];
 
         // We now generate only 1 image per request to support progressive loading on frontend
@@ -194,28 +283,23 @@ Deno.serve(async (req) => {
             }
 
             // Use Gemini 3 Pro for High-Res Image-to-Image refinement
-            const response = await ai.models.generateContent({
-                model: 'gemini-3-pro-image-preview',
-                contents: {
-                    parts: [
-                        processedImage,
-                        { text: "Enhance and upscale this image. STRICT RULES: 1) PRESERVE the exact original art style and medium (if it is 3D, keep it 3D; if it is an illustration, keep it as an illustration; if photorealistic, keep it photorealistic). 2) KEEP the exact same identity, pose, outfit, colors, and composition. 3) Improve lighting, smooth shadow transitions, and clean up jagged edges. 4) Sharpen details WITHOUT altering the core aesthetic or flattening the image." }
-                    ]
+            const reqParts = [
+                processedImage,
+                { text: "Enhance and upscale this image. STRICT RULES: 1) PRESERVE the exact original art style and medium (if it is 3D, keep it 3D; if it is an illustration, keep it as an illustration; if photorealistic, keep it photorealistic). 2) KEEP the exact same identity, pose, outfit, colors, and composition. 3) Improve lighting, smooth shadow transitions, and clean up jagged edges. 4) Sharpen details WITHOUT altering the core aesthetic or flattening the image." }
+            ];
+            const reqConfig = {
+                imageConfig: {
+                    imageSize: targetResolution || '2K',
+                    aspectRatio: aspectRatio || '1:1'
                 },
-                config: {
-                    // @ts-ignore
-                    imageConfig: {
-                        imageSize: targetResolution || '2K',
-                        aspectRatio: aspectRatio || '1:1'
-                    },
-                    safetySettings: [
-                        { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
-                        { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_NONE },
-                        { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_NONE },
-                        { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_NONE },
-                    ]
-                }
-            });
+                safetySettings: [
+                    { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
+                    { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_NONE },
+                    { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_NONE },
+                    { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_NONE },
+                ]
+            };
+            const response = await callGenerateContent('gemini-3-pro-image-preview', reqParts, reqConfig);
 
             if (response.candidates?.[0]?.content?.parts) {
                 for (const part of response.candidates[0].content.parts) {
@@ -428,19 +512,16 @@ Deno.serve(async (req) => {
         console.log(promptText);
         console.log(`=========================`);
 
-        const response = await ai.models.generateContent({
-            model: modelName || activeModel,
-            contents: { parts },
-            config: {
-                imageConfig: imageConfig,
-                safetySettings: [
-                    { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
-                    { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_NONE },
-                    { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_NONE },
-                    { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_NONE },
-                ]
-            }
-        });
+        const reqConfig = {
+            imageConfig: imageConfig,
+            safetySettings: [
+                { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
+                { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_NONE },
+                { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_NONE },
+                { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_NONE },
+            ]
+        };
+        const response = await callGenerateContent(modelName || activeModel, parts, reqConfig);
 
         if (response.candidates?.[0]?.content?.parts) {
             for (const part of response.candidates[0].content.parts) {

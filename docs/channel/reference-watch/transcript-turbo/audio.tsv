@@ -1,0 +1,10 @@
+start	end	text
+0	4620	Tự trend một mô hình ngôn ngữ từ con số 0, chỉ mất 2 tiếng và chưa tới nửa đôi.
+5480	11880	Minimile cho bạn tự tay dựng một con LLM 64 triệu tham số, từ tokenizer tới khi nó biết trả lời.
+12700	17500	56.600 sao, 7.300 fork, giấy phép Apache mở hoàn toàn.
+18180	24060	Điểm đắt nhất, thật toán lõi viết tay bằng Pythorch thuần, bạn hiểu từng dòng, không gọi hàm rồi cầu may.
+24820	28520	64 triệu tham số, nhỏ hơn GPT-3 2700 lần.
+28520	31980	Một cạc, khoảng 2 tiếng, 3 tệ tiền thuê.
+32340	40200	Đủ cả quy trình, pre-train, SFT, LoRa, chưng cất, DPO, GRPO và huấn luyện agent.
+40820	44700	Clone repo, tải dataset, chạy trên pre-train là bắt đầu.
+45100	48180	Theo dõi ADF repo để không bỏ lỡ repo xịn mỗi ngày.

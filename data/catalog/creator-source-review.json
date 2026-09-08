@@ -1,0 +1,506 @@
+{
+  "edition": "creator-100-v1",
+  "reviewBasis": "Manual Vietnamese editorial review of primary source sections; not runtime testing",
+  "sources": {
+    "https://github.com/charlie947/social-media-skills": {
+      "url": "https://raw.githubusercontent.com/charlie947/social-media-skills/main/README.md",
+      "observedAt": "2026-09-03T16:09:18.501Z",
+      "sha256": "6145e1ca9ad0bf448d857b64009303a720fc9bc3e0fbf0ec3f6171ccf4b79bca"
+    },
+    "https://github.com/coreyhaines31/marketingskills": {
+      "url": "https://raw.githubusercontent.com/coreyhaines31/marketingskills/main/README.md",
+      "observedAt": "2026-09-03T16:09:21.519Z",
+      "sha256": "fb54b4593f40ad8ac83e556968c3af57d4e53c31d3d6fc06aae4f40ee5d42f6f"
+    },
+    "https://github.com/gitroomhq/postiz-app": {
+      "url": "https://raw.githubusercontent.com/gitroomhq/postiz-app/main/README.md",
+      "observedAt": "2026-09-03T16:09:14.516Z",
+      "sha256": "9f78ae6fb224f6375e26a26998b70c4e3484625ccdbca9674838546d637ef6d4"
+    },
+    "https://github.com/remotion-dev/remotion": {
+      "url": "https://raw.githubusercontent.com/remotion-dev/remotion/main/README.md",
+      "observedAt": "2026-09-03T16:09:43.014Z",
+      "sha256": "c0aa4732decbd340d28ed59c805605820c3a6ade67b34933d2fad1c8bc0a603d"
+    },
+    "https://github.com/harry0703/moneyprinterturbo": {
+      "url": "https://raw.githubusercontent.com/harry0703/MoneyPrinterTurbo/main/README.md",
+      "observedAt": "2026-09-03T16:09:42.287Z",
+      "sha256": "6a78488472c1c81736860eb1dca6540ce9cb924565ab752dc2615b5a5df4e91e"
+    },
+    "https://github.com/heygen-com/hyperframes": {
+      "url": "https://raw.githubusercontent.com/heygen-com/hyperframes/main/README.md",
+      "observedAt": "2026-09-03T16:09:43.797Z",
+      "sha256": "e497951f5e426ec15888f08d8698aa9365eccdca243e0e50a7cf30ccdacfe2c8"
+    },
+    "https://github.com/comfy-org/comfyui": {
+      "url": "https://raw.githubusercontent.com/Comfy-Org/ComfyUI/master/README.md",
+      "observedAt": "2026-09-03T16:10:23.185Z",
+      "sha256": "4ea2b6d7c84db2fd361ac1af754ab0c4ac401982bae2a8fcb298b8d9ea827ffe"
+    },
+    "https://github.com/openai/whisper": {
+      "url": "https://raw.githubusercontent.com/openai/whisper/main/README.md",
+      "observedAt": "2026-09-03T16:10:11.061Z",
+      "sha256": "38c180c2a8d8ba628a3e131ad42bf06c8a51bb681efb30fbe28d5a0f4b65f288"
+    },
+    "https://github.com/m-bain/whisperx": {
+      "url": "https://raw.githubusercontent.com/m-bain/whisperX/main/README.md",
+      "observedAt": "2026-09-03T16:10:13.067Z",
+      "sha256": "d68ee671da04b2f2c8a1242bb129f4ac72ab6e42f8eb6ba8ef3e53c6d2c03a11"
+    },
+    "https://github.com/n8n-io/n8n": {
+      "url": "https://raw.githubusercontent.com/n8n-io/n8n/master/README.md",
+      "observedAt": "2026-09-03T16:10:41.602Z",
+      "sha256": "75c64f04b8b1e7d435496f6ebd2dbf3ea5ff7d3ff3d944d7fcf98cf1a7df2242"
+    },
+    "https://github.com/agricidaniel/claude-seo": {
+      "url": "https://raw.githubusercontent.com/AgriciDaniel/claude-seo/main/README.md",
+      "observedAt": "2026-09-03T16:09:41.182Z",
+      "sha256": "1d35315c7c0af7bdefcd3d89d568f1f0df1eebe8fdc6bd095c54c574865a5afb"
+    },
+    "https://github.com/presenton/presenton": {
+      "url": "https://raw.githubusercontent.com/presenton/presenton/main/README.md",
+      "observedAt": "2026-09-03T16:10:47.069Z",
+      "sha256": "53dcc783675836849e9e8b42d59aa8a71085bef07d717cb8a852a6b834f2a6ef"
+    },
+    "https://github.com/knadh/listmonk": {
+      "url": "https://raw.githubusercontent.com/knadh/listmonk/master/README.md",
+      "observedAt": "2026-09-03T16:09:15.102Z",
+      "sha256": "e3592dcea72705901f2cfba4f674de81e96dc7aaded2343246cca9312a092cee"
+    },
+    "https://github.com/mautic/mautic": {
+      "url": "https://raw.githubusercontent.com/mautic/mautic/7.x/README.md",
+      "observedAt": "2026-09-03T16:09:16.016Z",
+      "sha256": "40c69df29d472584293e90818689009a2b01eca9e657e62a3a997d499d3c9ae3"
+    },
+    "https://github.com/useplunk/plunk": {
+      "url": "https://raw.githubusercontent.com/useplunk/plunk/next/README.md",
+      "observedAt": "2026-09-03T16:09:16.959Z",
+      "sha256": "1ccbbbbaaf051155b365a84ac72dbeb4c775a190ec06aec63a96f2867279fab7"
+    },
+    "https://github.com/inovector/mixpost": {
+      "url": "https://raw.githubusercontent.com/inovector/mixpost/main/README.md",
+      "observedAt": "2026-09-03T16:09:18.107Z",
+      "sha256": "d4ac37ca5d57e6bd09624312c52a576f53304d41194a779edd8a14672ab067c4"
+    },
+    "https://github.com/msitarzewski/agency-agents": {
+      "url": "https://raw.githubusercontent.com/msitarzewski/agency-agents/main/README.md",
+      "observedAt": "2026-09-03T16:09:21.259Z",
+      "sha256": "a43c12d79595116d76c1540dc4a12dec68de7ca10de7e56016c242caf514104a"
+    },
+    "https://github.com/appflowy-io/appflowy": {
+      "url": "https://raw.githubusercontent.com/AppFlowy-IO/AppFlowy/main/README.md",
+      "observedAt": "2026-09-03T16:09:27.378Z",
+      "sha256": "f59d3e49037d392f36d7ea13d25485c5d54317f9aee7c61c4c2a47f067aa996d"
+    },
+    "https://github.com/tryghost/ghost": {
+      "url": "https://raw.githubusercontent.com/TryGhost/Ghost/main/README.md",
+      "observedAt": "2026-09-03T16:09:28.071Z",
+      "sha256": "8c8ab5173564bf5c397711bff1219d047790a560bac537332c07da12b345a411"
+    },
+    "https://github.com/danielmiessler/fabric": {
+      "url": "https://raw.githubusercontent.com/danielmiessler/Fabric/main/README.md",
+      "observedAt": "2026-09-03T16:09:22.417Z",
+      "sha256": "3e37d389f23db2926d7842065b361aeaa3873f954974226d32f22b9eb59270af"
+    },
+    "https://github.com/danny-avila/librechat": {
+      "url": "https://raw.githubusercontent.com/danny-avila/LibreChat/main/README.md",
+      "observedAt": "2026-09-03T16:09:33.312Z",
+      "sha256": "6e2f238867eb045e76cd9aad5c6b9df42e32524617b808165c0d98f52b3d54bc"
+    },
+    "https://github.com/blader/humanizer": {
+      "url": "https://raw.githubusercontent.com/blader/humanizer/main/README.md",
+      "observedAt": "2026-09-03T16:09:22.872Z",
+      "sha256": "d45a4faae168c33c3bce155e9bda14eaafc86a2342d4a9ffac47d35dd7a8a8f0"
+    },
+    "https://github.com/yt-dlp/yt-dlp": {
+      "url": "https://raw.githubusercontent.com/yt-dlp/yt-dlp/master/README.md",
+      "observedAt": "2026-09-03T16:09:59.273Z",
+      "sha256": "45ad19ed646fe0f037632bfefafb777ba7e4cae26477f4013832055c9381a4bd"
+    },
+    "https://github.com/opencut-app/opencut": {
+      "url": "https://raw.githubusercontent.com/OpenCut-app/OpenCut/main/README.md",
+      "observedAt": "2026-09-03T16:09:48.678Z",
+      "sha256": "95ccfeb63ebca77afdde080e2923b5f29b680db6b42a9be8b9098ea7ba25c050"
+    },
+    "https://github.com/obsproject/obs-studio": {
+      "url": "https://raw.githubusercontent.com/obsproject/obs-studio/master/README.rst",
+      "observedAt": "2026-09-03T16:09:51.691Z",
+      "sha256": "be2dff0124620dcd9d8d83ef9084b12d1e61e896d3295232501cb3ebd3f6a318"
+    },
+    "https://github.com/mifi/lossless-cut": {
+      "url": "https://raw.githubusercontent.com/mifi/lossless-cut/master/README.md",
+      "observedAt": "2026-09-03T16:09:52.562Z",
+      "sha256": "aad0be61e3679dd9925f6b9725cba4ae49145192f531f14ef205bce9999e73b8"
+    },
+    "https://github.com/fujiwarachoki/moneyprinterv2": {
+      "url": "https://raw.githubusercontent.com/FujiwaraChoki/MoneyPrinterV2/main/README.md",
+      "observedAt": "2026-09-03T16:09:53.274Z",
+      "sha256": "9f916931c0a3d40de3e3ab11ca6ebbf0839b6786027f1f922dfa07b9a27b4862"
+    },
+    "https://github.com/facefusion/facefusion": {
+      "url": "https://raw.githubusercontent.com/facefusion/facefusion/master/README.md",
+      "observedAt": "2026-09-03T16:10:05.294Z",
+      "sha256": "43d29771629af8f25b60d14388cdc75a925ae92e74427b357282f69293f52b1a"
+    },
+    "https://github.com/handbrake/handbrake": {
+      "url": "https://raw.githubusercontent.com/HandBrake/HandBrake/master/README.markdown",
+      "observedAt": "2026-09-03T16:12:58.828Z",
+      "sha256": "6aaff320c3110f62703369797f24558c4ae9b92f6bf87e487e1d87782cae3e21"
+    },
+    "https://github.com/klingairesearch/liveportrait": {
+      "url": "https://raw.githubusercontent.com/KlingAIResearch/LivePortrait/main/readme.md",
+      "observedAt": "2026-09-03T16:13:01.482Z",
+      "sha256": "ba9144f3a57c4acdeae3e51cdaf379b41c32ffe27ec7ff4b279265995ad01878"
+    },
+    "https://github.com/jianchang512/pyvideotrans": {
+      "url": "https://raw.githubusercontent.com/jianchang512/pyvideotrans/main/README.md",
+      "observedAt": "2026-09-03T16:10:00.050Z",
+      "sha256": "c2821199f779fe3644f3d6528a1bc724c0252ae4a4eda38a866c6e7ef4abca62"
+    },
+    "https://github.com/huanshere/videolingo": {
+      "url": "https://raw.githubusercontent.com/Huanshere/VideoLingo/main/README.md",
+      "observedAt": "2026-09-03T16:10:00.806Z",
+      "sha256": "16f9d73cbeea9f29632c0ba7f9303f7175cdd6895249e2b287ba04fc3a912310"
+    },
+    "https://github.com/wan-video/wan2.2": {
+      "url": "https://raw.githubusercontent.com/Wan-Video/Wan2.2/main/README.md",
+      "observedAt": "2026-09-03T16:10:06.016Z",
+      "sha256": "c04923dc9c509fe56b7f08a958b815dc62eb741a3969ad9d7a7586460b504ab5"
+    },
+    "https://github.com/mltframework/shotcut": {
+      "url": "https://raw.githubusercontent.com/mltframework/shotcut/master/README.md",
+      "observedAt": "2026-09-03T16:09:57.008Z",
+      "sha256": "2a38840fc2fafa928b9b8cfa4082581b1a1a699b920e5b9168a23c62bd6a9df8"
+    },
+    "https://github.com/zulko/moviepy": {
+      "url": "https://raw.githubusercontent.com/Zulko/moviepy/master/README.md",
+      "observedAt": "2026-09-03T16:10:01.499Z",
+      "sha256": "34b932b6bb7320500bd1c1693ba615482f576672ea72a205eb017529cc714120"
+    },
+    "https://github.com/subtitleedit/subtitleedit": {
+      "url": "https://raw.githubusercontent.com/SubtitleEdit/subtitleedit/main/README.md",
+      "observedAt": "2026-09-03T16:10:02.393Z",
+      "sha256": "e1cfe572ba631d19974c0ac4ff475d798871bee3ef15ac75757a050ce16abbd9"
+    },
+    "https://github.com/tencent-hunyuan/hunyuanvideo": {
+      "url": "https://raw.githubusercontent.com/Tencent-Hunyuan/HunyuanVideo/main/README.md",
+      "observedAt": "2026-09-03T16:10:07.463Z",
+      "sha256": "fcc29022b5d80583e2f4b3b4f09145c4d65c4e7bf63bd4006ba367ea4d470427"
+    },
+    "https://github.com/krillinai/krillinai": {
+      "url": "https://raw.githubusercontent.com/krillinai/KrillinAI/master/README.md",
+      "observedAt": "2026-09-03T16:10:02.992Z",
+      "sha256": "96dace816638f3111561a1c80685749cd4fa73b05c53721b15b4c51750603b87"
+    },
+    "https://github.com/lipku/livetalking": {
+      "url": "https://raw.githubusercontent.com/lipku/LiveTalking/main/README.md",
+      "observedAt": "2026-09-03T16:10:10.015Z",
+      "sha256": "0230a38f572ba228f52d93248ca5381430455c4252730eb6a0815f9e8f690e12"
+    },
+    "https://github.com/lightricks/ltx-2": {
+      "url": "https://raw.githubusercontent.com/Lightricks/LTX-2/main/README.md",
+      "observedAt": "2026-09-03T16:10:10.535Z",
+      "sha256": "9c58c07e95872d9b810da302518e72795c3aec8d26256b7241438a204504f821"
+    },
+    "https://github.com/openshot/openshot-qt": {
+      "url": "https://raw.githubusercontent.com/OpenShot/openshot-qt/develop/README.md",
+      "observedAt": "2026-09-03T16:09:58.477Z",
+      "sha256": "ebc33ce9c6aea7d4b63cbd8f0e83dd5c52751252047c07fd0310ab56f4ef1513"
+    },
+    "https://github.com/kde/kdenlive": {
+      "url": "https://raw.githubusercontent.com/KDE/kdenlive/master/README.md",
+      "observedAt": "2026-09-03T16:10:03.733Z",
+      "sha256": "86f55bc195dc5ff81d82f52d1c4b10a17c411e6fc43a629be0c2a74708084f36"
+    },
+    "https://github.com/rvc-boss/gpt-sovits": {
+      "url": "https://raw.githubusercontent.com/RVC-Boss/GPT-SoVITS/main/README.md",
+      "observedAt": "2026-09-03T16:10:16.351Z",
+      "sha256": "f90972ccb8733da85e7e2258b262d5ac80a27f3213df5516c9987d808cb2f6c6"
+    },
+    "https://github.com/suno-ai/bark": {
+      "url": "https://raw.githubusercontent.com/suno-ai/bark/main/README.md",
+      "observedAt": "2026-09-03T16:10:17.188Z",
+      "sha256": "727acc4ec3d37ad8e20a8333fb779edece39271f3be9a813019d01849b256c72"
+    },
+    "https://github.com/rvc-project/retrieval-based-voice-conversion-webui": {
+      "url": "https://raw.githubusercontent.com/RVC-Project/Retrieval-based-Voice-Conversion-WebUI/main/README.md",
+      "observedAt": "2026-09-03T16:10:17.873Z",
+      "sha256": "6ae347c0cc60836f1e7fd2b73ee73327746e66c32a5dd4270d02a096810bca8b"
+    },
+    "https://github.com/myshell-ai/openvoice": {
+      "url": "https://raw.githubusercontent.com/myshell-ai/OpenVoice/main/README.md",
+      "observedAt": "2026-09-03T16:10:18.569Z",
+      "sha256": "3c6f5d24798763ebb9ca5fea8a1cbd21b935a140300ba531138b5518cd297dfc"
+    },
+    "https://github.com/fishaudio/fish-speech": {
+      "url": "https://raw.githubusercontent.com/fishaudio/fish-speech/main/README.md",
+      "observedAt": "2026-09-03T16:10:19.450Z",
+      "sha256": "23193581f6c9a0dd174cd1427e670d64a0aeda11394f627a124b78876a23d544"
+    },
+    "https://github.com/resemble-ai/chatterbox": {
+      "url": "https://raw.githubusercontent.com/resemble-ai/chatterbox/master/README.md",
+      "observedAt": "2026-09-03T16:10:20.066Z",
+      "sha256": "fd9315cc529c65d46ddd21ded05ba3372b6f6f39242bd015f770145bf5e0448f"
+    },
+    "https://github.com/anjok07/ultimatevocalremovergui": {
+      "url": "https://raw.githubusercontent.com/Anjok07/ultimatevocalremovergui/master/README.md",
+      "observedAt": "2026-09-03T16:10:26.071Z",
+      "sha256": "07c50db9c654342b1d1cc57448cf52ec1a6d73e45216d1cb0bb815c332042dbd"
+    },
+    "https://github.com/facebookresearch/audiocraft": {
+      "url": "https://raw.githubusercontent.com/facebookresearch/audiocraft/main/README.md",
+      "observedAt": "2026-09-03T16:10:26.997Z",
+      "sha256": "0240bd901c60c42508680e6beb580574836fd44b8476e721f811831fd2780638"
+    },
+    "https://github.com/qwenaudio/cosyvoice": {
+      "url": "https://raw.githubusercontent.com/QwenAudio/CosyVoice/main/README.md",
+      "observedAt": "2026-09-03T16:13:02.233Z",
+      "sha256": "66436370172c2830ed98aa643b31898c65e16eee14ade68f00828d21fae602e0"
+    },
+    "https://github.com/audacity/audacity": {
+      "url": "https://raw.githubusercontent.com/audacity/audacity/master/README.md",
+      "observedAt": "2026-09-03T16:10:27.838Z",
+      "sha256": "c84ab5991133706a2899c20539df624ecaa124b7be9d4aff6d2b20986978d121"
+    },
+    "https://github.com/swivid/f5-tts": {
+      "url": "https://raw.githubusercontent.com/SWivid/F5-TTS/main/README.md",
+      "observedAt": "2026-09-03T16:10:14.207Z",
+      "sha256": "3c74da9760857de03a0fe22d6124fd50000b986c6aeba6c23bb14635e20e4ae1"
+    },
+    "https://github.com/ace-step/ace-step-1.5": {
+      "url": "https://raw.githubusercontent.com/ace-step/ACE-Step-1.5/main/README.md",
+      "observedAt": "2026-09-03T16:10:28.457Z",
+      "sha256": "650c6ef98b70289886669895c4fd68aab3cc45bba74b3525d728a45a85cbcd66"
+    },
+    "https://github.com/hexgrad/kokoro": {
+      "url": "https://raw.githubusercontent.com/hexgrad/kokoro/main/README.md",
+      "observedAt": "2026-09-03T16:10:14.860Z",
+      "sha256": "b50b84220668f8247a2405b249c34c7083acc24114279ff1429fd79f46a2c04b"
+    },
+    "https://github.com/automatic1111/stable-diffusion-webui": {
+      "url": "https://raw.githubusercontent.com/AUTOMATIC1111/stable-diffusion-webui/master/README.md",
+      "observedAt": "2026-09-03T16:10:22.402Z",
+      "sha256": "bd853b26858ab8f5065d2e6b90b3552ff8f169977140f3b77a96ed1753bfe916"
+    },
+    "https://github.com/lllyasviel/fooocus": {
+      "url": "https://raw.githubusercontent.com/lllyasviel/Fooocus/main/readme.md",
+      "observedAt": "2026-09-03T16:10:24.751Z",
+      "sha256": "89e1efb0ef1245a6b2abc4db41d5b76e3179656f875db99675900dc477e067bf"
+    },
+    "https://github.com/upscayl/upscayl": {
+      "url": "https://raw.githubusercontent.com/upscayl/upscayl/main/README.md",
+      "observedAt": "2026-09-03T16:10:29.617Z",
+      "sha256": "4f3467e3748517bd6bf67d8c412e24a1de461e7642d2a4d83e6cd3e082ebb8d0"
+    },
+    "https://github.com/xinntao/real-esrgan": {
+      "url": "https://raw.githubusercontent.com/xinntao/Real-ESRGAN/master/README.md",
+      "observedAt": "2026-09-03T16:10:29.983Z",
+      "sha256": "d0a13607913ea94e65a91ac864b969683a41a45b0aec16e0ae64271649d0364d"
+    },
+    "https://github.com/invoke-ai/invokeai": {
+      "url": "https://raw.githubusercontent.com/invoke-ai/InvokeAI/main/README.md",
+      "observedAt": "2026-09-03T16:10:25.413Z",
+      "sha256": "48293a6dbe76e2980f0532b64ee8bd2e236d48ff00c8601bc35c9e0bdf80646a"
+    },
+    "https://github.com/black-forest-labs/flux": {
+      "url": "https://raw.githubusercontent.com/black-forest-labs/flux/main/README.md",
+      "observedAt": "2026-09-03T16:10:30.775Z",
+      "sha256": "d87b208a6a7b4669f08fa1882025c6fe825ee29605b0250d0b9f56b36ce27078"
+    },
+    "https://github.com/tencent-hunyuan/hunyuan3d-2": {
+      "url": "https://raw.githubusercontent.com/Tencent-Hunyuan/Hunyuan3D-2/main/README.md",
+      "observedAt": "2026-09-03T16:10:32.423Z",
+      "sha256": "edc4d006b977c8e28a0d3135ffc22b0dcad8e8dcb31fc9152c906eb21e29a886"
+    },
+    "https://github.com/microsoft/trellis": {
+      "url": "https://raw.githubusercontent.com/microsoft/TRELLIS/main/README.md",
+      "observedAt": "2026-09-03T16:10:32.980Z",
+      "sha256": "675a1bab7837d22972a776dec8e2a2eb01f9211bd40b4c57112a8335ccb9ec3e"
+    },
+    "https://github.com/lllyasviel/stable-diffusion-webui-forge": {
+      "url": "https://raw.githubusercontent.com/lllyasviel/stable-diffusion-webui-forge/main/README.md",
+      "observedAt": "2026-09-03T16:10:39.617Z",
+      "sha256": "e99a0cdc5711816a3da4edb1d70f41dcf3396a6e1fd524f9dd236ce6b1a76cc0"
+    },
+    "https://github.com/acly/krita-ai-diffusion": {
+      "url": "https://raw.githubusercontent.com/Acly/krita-ai-diffusion/main/README.md",
+      "observedAt": "2026-09-03T16:10:33.730Z",
+      "sha256": "abf4e65d970a420c192f20a01b6254cd6e8cc27b7d2dbe20647bb3330984d788"
+    },
+    "https://github.com/qwenlm/qwen-image": {
+      "url": "https://raw.githubusercontent.com/QwenLM/Qwen-Image/main/README.md",
+      "observedAt": "2026-09-03T16:10:34.490Z",
+      "sha256": "12878946f055f1e1bd5f58e90891b845ad178171a71154dbb6a841dcb1fed5c6"
+    },
+    "https://github.com/umami-software/umami": {
+      "url": "https://raw.githubusercontent.com/umami-software/umami/master/README.md",
+      "observedAt": "2026-09-03T16:09:45.222Z",
+      "sha256": "6643804843e56264f15bcbf38245e439cde4af5fea1d01441bef7e925105b82e"
+    },
+    "https://github.com/plausible/analytics": {
+      "url": "https://raw.githubusercontent.com/plausible/analytics/master/README.md",
+      "observedAt": "2026-09-03T16:09:45.984Z",
+      "sha256": "d8af8a2dea337d4e7a514a3e862f17f88c1509f74718a37794e811ecd1b435a6"
+    },
+    "https://github.com/matomo-org/matomo": {
+      "url": "https://raw.githubusercontent.com/matomo-org/matomo/6.x-dev/README.md",
+      "observedAt": "2026-09-03T16:09:46.765Z",
+      "sha256": "7b7bdc9b5b3de2521927a48c01754d457547c930507f9cc1c3040061cdaa4985"
+    },
+    "https://github.com/towfiqi/serpbear": {
+      "url": "https://raw.githubusercontent.com/towfiqi/serpbear/main/README.md",
+      "observedAt": "2026-09-03T16:09:48.398Z",
+      "sha256": "18e481e83580e809305ada741e4f24600ce8c66faea57a6fff590878fd2b62b1"
+    },
+    "https://github.com/excalidraw/excalidraw": {
+      "url": "https://raw.githubusercontent.com/excalidraw/excalidraw/master/README.md",
+      "observedAt": "2026-09-03T16:10:35.244Z",
+      "sha256": "011eea74cbbf38fd263ec93a221f379466c557dc7587acfe93797201193a7e7a"
+    },
+    "https://github.com/nextlevelbuilder/ui-ux-pro-max-skill": {
+      "url": "https://raw.githubusercontent.com/nextlevelbuilder/ui-ux-pro-max-skill/main/README.md",
+      "observedAt": "2026-09-03T16:10:42.350Z",
+      "sha256": "a2c3707e78aa0a0d86ec96ab35f8b606632dbd07f57c4c912ad8523129c04d87"
+    },
+    "https://github.com/shadcn-ui/ui": {
+      "url": "https://raw.githubusercontent.com/shadcn-ui/ui/main/README.md",
+      "observedAt": "2026-09-03T16:10:43.732Z",
+      "sha256": "bb0869848a2063e405b141aa6fae8b10f132ac45036f613459e2d778b7609619"
+    },
+    "https://github.com/leonxlnx/taste-skill": {
+      "url": "https://raw.githubusercontent.com/Leonxlnx/taste-skill/main/README.md",
+      "observedAt": "2026-09-03T16:10:44.093Z",
+      "sha256": "6e3c818b8c561e16a743cc68143d14dfa9f5da69f834c389f278657d60ca37be"
+    },
+    "https://github.com/pbakaus/impeccable": {
+      "url": "https://raw.githubusercontent.com/pbakaus/impeccable/main/README.md",
+      "observedAt": "2026-09-03T16:10:44.612Z",
+      "sha256": "9ed8c7a33e760ce7a43d1074fe630d957ccf9c0c56037b204ed79ac33a3ad467"
+    },
+    "https://github.com/penpot/penpot": {
+      "url": "https://raw.githubusercontent.com/penpot/penpot/develop/README.md",
+      "observedAt": "2026-09-03T16:10:36.751Z",
+      "sha256": "21c08b2e46c2a5febe92fce5357e2903bb61d8e0baa509e8e8b5d7ec7ff108d8"
+    },
+    "https://github.com/tldraw/tldraw": {
+      "url": "https://raw.githubusercontent.com/tldraw/tldraw/main/README.md",
+      "observedAt": "2026-09-03T16:10:37.417Z",
+      "sha256": "db3ce68f8c5f0652fe9724cfb5c64cb98898a64c4776e59e134c6e719296ea00"
+    },
+    "https://github.com/slidevjs/slidev": {
+      "url": "https://raw.githubusercontent.com/slidevjs/slidev/main/README.md",
+      "observedAt": "2026-09-03T16:10:39.271Z",
+      "sha256": "e1def8dcd916dc905b4a5f7d0ca7b10b6cc42a6d3664c6642e09d6933da80043"
+    },
+    "https://github.com/resend/react-email": {
+      "url": "https://raw.githubusercontent.com/resend/react-email/canary/README.md",
+      "observedAt": "2026-09-03T16:09:24.432Z",
+      "sha256": "c8a8772a6f9f9fdbf857968aea6f11c71b3a8e6c05c123626a6747ea39c0f358"
+    },
+    "https://github.com/mjmlio/mjml": {
+      "url": "https://raw.githubusercontent.com/mjmlio/mjml/master/README.md",
+      "observedAt": "2026-09-03T16:09:25.447Z",
+      "sha256": "f0aa11196ea6aa175ead8140a1cef08127b326534fff595e4b2dca9d3dcfaf84"
+    },
+    "https://github.com/marp-team/marp": {
+      "url": "https://raw.githubusercontent.com/marp-team/marp/main/README.md",
+      "observedAt": "2026-09-03T16:10:46.415Z",
+      "sha256": "ec27a30179e73ca21e9cd1848444f9b3077040187a2abc7a5e0d2a3e980d3273"
+    },
+    "https://github.com/microsoft/markitdown": {
+      "url": "https://raw.githubusercontent.com/microsoft/markitdown/main/README.md",
+      "observedAt": "2026-09-03T16:09:37.900Z",
+      "sha256": "1eee1ee277b03fb064bb08484d9a2decc9e84768baa5c5d82617f211eb162a12"
+    },
+    "https://github.com/firecrawl/firecrawl": {
+      "url": "https://raw.githubusercontent.com/firecrawl/firecrawl/main/README.md",
+      "observedAt": "2026-09-03T16:12:59.992Z",
+      "sha256": "7eca70ba6eefd407c4c9e783f33ca68950460cc752af5c5940c601c82409049b"
+    },
+    "https://github.com/paddlepaddle/paddleocr": {
+      "url": "https://raw.githubusercontent.com/PaddlePaddle/PaddleOCR/main/README.md",
+      "observedAt": "2026-09-03T16:10:35.982Z",
+      "sha256": "3ebb5bcfcffafd2bf593f5252b4fc8de21abdb841c013048fc205b76a5c216ff"
+    },
+    "https://github.com/bytedance/deer-flow": {
+      "url": "https://raw.githubusercontent.com/bytedance/deer-flow/main/README.md",
+      "observedAt": "2026-09-03T16:09:31.851Z",
+      "sha256": "b3090565c9e954cf7970ba23b046ff105db6130d5a98be49475f977add392cb2"
+    },
+    "https://github.com/unclecode/crawl4ai": {
+      "url": "https://raw.githubusercontent.com/unclecode/crawl4ai/main/README.md",
+      "observedAt": "2026-09-03T16:09:39.369Z",
+      "sha256": "3de808095d5cb8101f2467b9646a795a76e1d81d8cf7d953c171c66d7ae0d3dd"
+    },
+    "https://github.com/diygod/rsshub": {
+      "url": "https://raw.githubusercontent.com/DIYgod/RSSHub/master/README.md",
+      "observedAt": "2026-09-03T16:09:32.787Z",
+      "sha256": "80870efeb346786058ca9ede5a32b16c0c700b1e5664e24fbb84fc24aa9c4dba"
+    },
+    "https://github.com/khoj-ai/khoj": {
+      "url": "https://raw.githubusercontent.com/khoj-ai/khoj/master/README.md",
+      "observedAt": "2026-09-03T16:09:34.119Z",
+      "sha256": "f43b29f1ad9d5792d4a2b1d46454c26249212c5f93e59923adc718463a3ac1ba"
+    },
+    "https://github.com/itzcrazykns/vane": {
+      "url": "https://raw.githubusercontent.com/ItzCrazyKns/Vane/master/README.md",
+      "observedAt": "2026-09-03T16:09:34.987Z",
+      "sha256": "5d534fafeb1e3d1355751e82241b74ab6c5e3d89561e98178512a704dba28268"
+    },
+    "https://github.com/assafelovic/gpt-researcher": {
+      "url": "https://raw.githubusercontent.com/assafelovic/gpt-researcher/main/README.md",
+      "observedAt": "2026-09-03T16:09:35.555Z",
+      "sha256": "d79bbcd7196317af10b6cc84baf30bb84ad0fc67d16dd61552fc139461548507"
+    },
+    "https://github.com/karakeep-app/karakeep": {
+      "url": "https://raw.githubusercontent.com/karakeep-app/karakeep/main/README.md",
+      "observedAt": "2026-09-03T16:09:36.459Z",
+      "sha256": "ecc3cd2eb9a38a919bea7ccb71cd9e83c2dfc01d03601a70879433e0d3f326d9"
+    },
+    "https://github.com/freshrss/freshrss": {
+      "url": "https://raw.githubusercontent.com/FreshRSS/FreshRSS/edge/README.md",
+      "observedAt": "2026-09-03T16:09:37.104Z",
+      "sha256": "e7cf5f71bc5f5d9a19eb4b620dbdbd0c70d4cf9cd8425c350df7e28e348810c7"
+    },
+    "https://github.com/langgenius/dify": {
+      "url": "https://raw.githubusercontent.com/langgenius/dify/main/README.md",
+      "observedAt": "2026-09-03T16:10:47.764Z",
+      "sha256": "51647e1180794278e006c7e1925eec056d5b68a036893143849ef83ad695e7e2"
+    },
+    "https://github.com/browser-use/browser-use": {
+      "url": "https://raw.githubusercontent.com/browser-use/browser-use/main/README.md",
+      "observedAt": "2026-09-03T16:09:38.554Z",
+      "sha256": "d71c156c2358b71cd764ef3d752ed18a9718e8ffd3184872b49ff91c447c6241"
+    },
+    "https://github.com/simstudioai/sim": {
+      "url": "https://raw.githubusercontent.com/simstudioai/sim/main/README.md",
+      "observedAt": "2026-09-03T16:10:51.957Z",
+      "sha256": "923c11452288163cd65c3197b4f3af400030556ebcae2f03bc73a331f183ec08"
+    },
+    "https://github.com/activepieces/activepieces": {
+      "url": "https://raw.githubusercontent.com/activepieces/activepieces/main/README.md",
+      "observedAt": "2026-09-03T16:10:45.667Z",
+      "sha256": "cd713ed6ae78214e2a54266541df2b8c1de6163312dd499a83d59a930065ed1b"
+    },
+    "https://github.com/anthropics/claude-code": {
+      "url": "https://raw.githubusercontent.com/anthropics/claude-code/main/README.md",
+      "observedAt": "2026-09-03T16:10:48.542Z",
+      "sha256": "aa0d8b80ac083e1591be0789273f447058cc9187b4331634a5614155da27778d"
+    },
+    "https://github.com/openai/codex": {
+      "url": "https://raw.githubusercontent.com/openai/codex/main/README.md",
+      "observedAt": "2026-09-03T16:10:49.332Z",
+      "sha256": "ba4e1f69ff48386e72a9c5e1edaf76aad64a475c2d51af79ccba6d1128261ba7"
+    },
+    "https://github.com/google-gemini/gemini-cli": {
+      "url": "https://raw.githubusercontent.com/google-gemini/gemini-cli/main/README.md",
+      "observedAt": "2026-09-03T16:10:50.029Z",
+      "sha256": "bacf354f3f674d57679ebf7b42dd69311bb9ef14200e18ca703d82aba48bf833"
+    },
+    "https://github.com/bitwarden/clients": {
+      "url": "https://raw.githubusercontent.com/bitwarden/clients/main/README.md",
+      "observedAt": "2026-09-03T16:10:53.041Z",
+      "sha256": "c5ea2d6804adf6756a7960464af86cfcbcbf4e0218377a86797dcd9cf1fa6db8"
+    }
+  }
+}

@@ -1,0 +1,31 @@
+@import url('https://fonts.googleapis.com/css2?family=Comic+Neue:wght@700&display=swap');
+
+/* The footer is intentionally only ground and grass.  The game stays in the hero. */
+.site-footer { position: relative; isolation: isolate; min-height: 115px; margin-top: 58px; padding-top: 29px; padding-bottom: 29px; border-top: 4px solid #243418; background-color: #806d2f; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='48' viewBox='0 0 96 48'%3E%3Cpath fill='%23544520' d='M4 5h4v2H4zM28 29h3v3h-3zM65 9h3v2h-3zM84 35h5v2h-5zM47 44h3v2h-3z'/%3E%3Cpath fill='%23a08a42' d='M15 38h3v2h-3zM42 13h4v2h-4zM74 26h3v2h-3z'/%3E%3C/svg%3E"); color: #fff9ea; }
+.site-footer strong, .site-footer .footer-support { color: #fff9ea; }
+.site-footer .small-copy { color: #fff3d0; }
+.site-footer > div:not(.pixel-landscape), .site-footer > nav { position: relative; z-index: 1; }
+.site-footer nav a { padding: 10px 0; text-decoration-thickness: 2px; text-underline-offset: 5px; }
+.site-footer nav a:hover { text-decoration: underline; }
+.site-footer nav a:focus-visible { outline: 2px solid #fff9ea; outline-offset: 5px; }
+
+.pixel-landscape { position: absolute; right: 0; bottom: 100%; left: 0; height: 60px; overflow: hidden; pointer-events: none; }
+.pixel-grass { position: absolute; right: 0; bottom: 0; left: 0; height: 34px; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='34' viewBox='0 0 96 34'%3E%3Cpath fill='%23243418' d='M0 34V16h2V8h2v8h4V6h2v10h4v-4h4V2h2v10h2v8h4V8h2v6h4v8h4V10h2v6h4V4h2v14h4V8h2v10h4v6h4V12h2v8h4V6h2v12h4v-6h2V2h2v10h4v10h4V8h2v8h4v4h4V10h2v24z'/%3E%3Cpath fill='%2384c918' d='M0 34V20h4v-6h2v10h4V12h2v10h4v-6h4V8h2v16h6V14h2v10h8V16h2v6h4V10h2v14h4V14h2v12h8v-8h2v8h4V12h2v12h4v-8h2V8h2v16h8V14h2v10h8v-8h2v18z'/%3E%3Cpath fill='%235b9716' d='M8 28h2v6H8zM26 24h2v6h-2zM48 28h2v6h-2zM70 26h2v8h-2zM88 30h2v4h-2z'/%3E%3C/svg%3E") repeat-x bottom left; }
+.pixel-bush { position: absolute; bottom: 10px; width: 128px; height: 60px; }
+.bush-left { left: 6%; }
+.bush-right { right: 9%; width: 95px; height: 44px; transform: scaleX(-1); }
+
+.bmc-button-badge { display: inline-flex; align-items: center; gap: 7px; padding: 6px 13px; border: 2px solid #000; border-radius: 8px; background: #ffdd00; box-shadow: 2px 2px 0 #000; color: #000 !important; cursor: pointer; font-family: 'Comic Neue', cursive, var(--font-geist-mono), sans-serif; font-size: 13px; font-weight: 750; line-height: 1; text-decoration: none !important; transition: transform .12s ease, box-shadow .12s ease, filter .12s ease; white-space: nowrap; }
+.bmc-button-badge:hover { transform: translate(-1px, -1px); box-shadow: 3px 3px 0 #000; filter: brightness(1.05); }
+.bmc-button-badge:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0 #000; }
+.bmc-button-badge .bmc-btn-text { font-family: 'Comic Neue', cursive, sans-serif; font-weight: 700; letter-spacing: -.01em; }
+
+[data-theme='dark'] .site-footer { background-color: #53441f; }
+[data-theme='dark'] .pixel-landscape { filter: brightness(.82); }
+
+@media (max-width: 560px) {
+  .site-footer { gap: 12px; margin-top: 52px; padding-top: 22px; padding-bottom: 22px; }
+  .pixel-bush { width: 96px; height: 45px; }
+  .bush-right { right: 5%; width: 72px; height: 34px; }
+  .site-footer nav { gap: 22px; }
+}

@@ -1,0 +1,30 @@
+{
+  "id": "WS01",
+  "status": "APPROVED",
+  "repo": "https://github.com/tt-a1i/archify",
+  "angle": "Từ mô tả quy trình thành sơ đồ tương tác",
+  "ideaVersion": 1,
+  "candidates": [
+    "WS01",
+    "WS02",
+    "WS03"
+  ],
+  "approval": {
+    "message": "WS01",
+    "recordedAt": "2026-09-06T16:03:00.434316+00:00",
+    "idea": "WS01",
+    "ideaVersion": 1
+  },
+  "sourceCheckedAt": "2026-09-06T15:53:49Z",
+  "claimSources": [
+    "https://github.com/trending?since=weekly",
+    "repo-snapshot-2026-09-06.json"
+  ],
+  "artifacts": {
+    "ideas": "IDEAS-2026-09-06.md",
+    "watchReport": "reference-watch/report.md",
+    "transcript": "reference-watch/transcript-turbo/audio.srt"
+  },
+  "blockers": [],
+  "nextAction": "User selects and approves one idea; then write full script and produce video."
+}

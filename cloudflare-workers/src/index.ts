@@ -5,6 +5,7 @@
 
 import { GoogleGenAI, HarmCategory, HarmBlockThreshold } from "@google/genai";
 import { createClient } from '@supabase/supabase-js';
+import { SignJWT, importPKCS8 } from 'jose';
 
 // R2Bucket interface for Cloudflare Workers
 interface R2Bucket {
@@ -23,6 +24,10 @@ interface Env {
     SUPABASE_SERVICE_ROLE_KEY: string;
     R2_BUCKET: R2Bucket;
     R2_PUBLIC_DOMAIN: string;
+    VERTEX_PROJECT_ID?: string;
+    VERTEX_LOCATION?: string;
+    VERTEX_CLIENT_EMAIL?: string;
+    VERTEX_PRIVATE_KEY?: string;
 }
 
 const corsHeaders = {
@@ -138,6 +143,63 @@ interface ProxyImageRequest {
     imageUrl: string;
 }
 
+// Global token cache for Edge Worker efficiency
+let cachedVertexToken: string | null = null;
+let vertexTokenExpiry: number = 0;
+
+async function getVertexAccessToken(env: Env): Promise<string> {
+    if (cachedVertexToken && Date.now() < vertexTokenExpiry) {
+        return cachedVertexToken;
+    }
+
+    if (!env.VERTEX_CLIENT_EMAIL || !env.VERTEX_PRIVATE_KEY) {
+        throw new Error("Missing Vertex AI Credentials (VERTEX_CLIENT_EMAIL or VERTEX_PRIVATE_KEY).");
+    }
+
+    // Clean private key (replace literal \n with actual newlines if necessary)
+    let privateKeyEnv = env.VERTEX_PRIVATE_KEY;
+    if (privateKeyEnv.includes('\\n')) {
+        privateKeyEnv = privateKeyEnv.replace(/\\n/g, '\n');
+    }
+
+    const privateKey = await importPKCS8(privateKeyEnv, 'RS256');
+
+    const iat = Math.floor(Date.now() / 1000);
+    const exp = iat + 3600; // 1 hour token
+
+    const jwt = await new SignJWT({
+        iss: env.VERTEX_CLIENT_EMAIL,
+        sub: env.VERTEX_CLIENT_EMAIL,
+        aud: 'https://oauth2.googleapis.com/token',
+        scope: 'https://www.googleapis.com/auth/cloud-platform',
+    })
+        .setProtectedHeader({ alg: 'RS256', typ: 'JWT' })
+        .setIssuedAt(iat)
+        .setExpirationTime(exp)
+        .sign(privateKey);
+
+    const params = new URLSearchParams();
+    params.append('grant_type', 'urn:ietf:params:oauth:grant-type:jwt-bearer');
+    params.append('assertion', jwt);
+
+    const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: params.toString()
+    });
+
+    if (!tokenResponse.ok) {
+        const err = await tokenResponse.text();
+        throw new Error(`Failed to exchange JWT for Google Access Token: ${err}`);
+    }
+
+    const json = await tokenResponse.json() as any;
+    cachedVertexToken = json.access_token;
+    vertexTokenExpiry = Date.now() + (json.expires_in - 300) * 1000; // Cache refresh 5m before expiry
+
+    return cachedVertexToken!;
+}
+
 // ============ GENERATE IMAGE HANDLER ============
 async function handleGenerateImage(request: Request, env: Env): Promise<Response> {
     const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
@@ -189,7 +251,6 @@ async function handleGenerateImage(request: Request, env: Env): Promise<Response
             }
         }
 
-        const ai = new GoogleGenAI({ apiKey });
         const results: string[] = [];
 
         const i = variationIndex;
@@ -238,31 +299,52 @@ async function handleGenerateImage(request: Request, env: Env): Promise<Response
                 throw new Error("Failed to process input image for upscale.");
             }
 
-            const response = await ai.models.generateContent({
-                model: 'gemini-3-pro-image-preview',
-                contents: {
-                    parts: [
-                        processedImage,
-                        { text: "Enhance and upscale this image. STRICT RULES: 1) PRESERVE the exact original art style and medium (if it is 3D, keep it 3D; if it is an illustration, keep it as an illustration; if photorealistic, keep it photorealistic). 2) KEEP the exact same identity, pose, outfit, colors, and composition. 3) Improve lighting, smooth shadow transitions, and clean up jagged edges. 4) Sharpen details WITHOUT altering the core aesthetic or flattening the image." }
-                    ]
+            const reqModel = 'gemini-3-pro-image-preview';
+            const reqParts = [
+                processedImage,
+                { text: "Enhance and upscale this image. STRICT RULES: 1) PRESERVE the exact original art style and medium (if it is 3D, keep it 3D; if it is an illustration, keep it as an illustration; if photorealistic, keep it photorealistic). 2) KEEP the exact same identity, pose, outfit, colors, and composition. 3) Improve lighting, smooth shadow transitions, and clean up jagged edges. 4) Sharpen details WITHOUT altering the core aesthetic or flattening the image." }
+            ];
+            
+            const reqConfig = {
+                imageConfig: {
+                    imageSize: targetResolution || '2K',
+                    aspectRatio: aspectRatio || '1:1'
                 },
-                config: {
-                    // @ts-ignore
-                    imageConfig: {
-                        imageSize: targetResolution || '2K',
-                        aspectRatio: aspectRatio || '1:1'
-                    },
-                    safetySettings: [
-                        { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
-                        { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_NONE },
-                        { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_NONE },
-                        { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_NONE },
-                    ]
-                }
-            });
+                safetySettings: [
+                    { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
+                    { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_NONE },
+                    { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_NONE },
+                    { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_NONE },
+                ]
+            };
 
-            if (response.candidates?.[0]?.content?.parts) {
-                for (const part of response.candidates[0].content.parts) {
+            let responsePayload: any;
+            if (env.VERTEX_PROJECT_ID) {
+                const token = await getVertexAccessToken(env);
+                const location = env.VERTEX_LOCATION || 'us-central1';
+                const url = `https://${location}-aiplatform.googleapis.com/v1/projects/${env.VERTEX_PROJECT_ID}/locations/${location}/publishers/google/models/${reqModel}:generateContent`;
+                
+                const fetchRes = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contents: [{ role: 'user', parts: reqParts }], generationConfig: reqConfig })
+                });
+                if (!fetchRes.ok) {
+                    const text = await fetchRes.text();
+                    throw new Error(`Vertex AI API Error: ${fetchRes.status} ${text}`);
+                }
+                responsePayload = await fetchRes.json();
+            } else {
+                const ai = new GoogleGenAI({ apiKey });
+                responsePayload = await ai.models.generateContent({
+                    model: reqModel,
+                    contents: { parts: reqParts },
+                    config: reqConfig as any
+                });
+            }
+
+            if (responsePayload.candidates?.[0]?.content?.parts) {
+                for (const part of responsePayload.candidates[0].content.parts) {
                     if (part.inlineData && part.inlineData.data) {
                         const base64Str = part.inlineData.data;
                         const mimeType = part.inlineData.mimeType || 'image/png';
@@ -729,22 +811,47 @@ async function handleGenerateImage(request: Request, env: Env): Promise<Response
             }
         }
 
-        const response = await ai.models.generateContent({
-            model: modelName || activeModel,
-            contents: { parts },
-            config: {
-                imageConfig: imageConfig,
-                safetySettings: [
-                    { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
-                    { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_NONE },
-                    { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_NONE },
-                    { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_NONE },
-                ]
-            }
-        });
+        const resolvedModelName = modelName || activeModel;
+        const reqConfig = {
+            imageConfig: imageConfig,
+            safetySettings: [
+                { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
+                { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_NONE },
+                { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_NONE },
+                { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_NONE },
+            ]
+        };
 
-        if (response.candidates?.[0]?.content?.parts) {
-            for (const part of response.candidates[0].content.parts) {
+        let responsePayload: any;
+        if (env.VERTEX_PROJECT_ID) {
+            console.log(`Using Vertex AI API (Project: ${env.VERTEX_PROJECT_ID}, Model: ${resolvedModelName})`);
+            const token = await getVertexAccessToken(env);
+            const location = env.VERTEX_LOCATION || 'us-central1';
+            const url = `https://${location}-aiplatform.googleapis.com/v1/projects/${env.VERTEX_PROJECT_ID}/locations/${location}/publishers/google/models/${resolvedModelName}:generateContent`;
+            
+            const fetchRes = await fetch(url, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ contents: [{ role: 'user', parts: parts }], generationConfig: reqConfig })
+            });
+
+            if (!fetchRes.ok) {
+                const text = await fetchRes.text();
+                throw new Error(`Vertex AI generation error: ${fetchRes.status} ${text}`);
+            }
+            responsePayload = await fetchRes.json();
+        } else {
+            console.log(`Using Google AI Studio API (Model: ${resolvedModelName})`);
+            const ai = new GoogleGenAI({ apiKey: apiKey! });
+            responsePayload = await ai.models.generateContent({
+                model: resolvedModelName,
+                contents: { parts },
+                config: reqConfig as any
+            });
+        }
+
+        if (responsePayload.candidates?.[0]?.content?.parts) {
+            for (const part of responsePayload.candidates[0].content.parts) {
                 if (part.inlineData && part.inlineData.data) {
                     const base64Str = part.inlineData.data;
                     const mimeType = part.inlineData.mimeType || 'image/png';
@@ -761,9 +868,9 @@ async function handleGenerateImage(request: Request, env: Env): Promise<Response
         }
 
         if (results.length === 0) {
-            console.error("Gemini Response (Full):", JSON.stringify(response, null, 2));
-            if (response.candidates && response.candidates.length > 0) {
-                const candidate = response.candidates[0];
+            console.error("Model Response (Full):", JSON.stringify(responsePayload, null, 2));
+            if (responsePayload.candidates && responsePayload.candidates.length > 0) {
+                const candidate = responsePayload.candidates[0];
                 console.error("Candidate 0 Finish Reason:", candidate.finishReason);
                 console.error("Candidate 0 Safety Ratings:", JSON.stringify(candidate.safetyRatings, null, 2));
 
