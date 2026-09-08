@@ -45,11 +45,16 @@ const Pricing: React.FC<PricingProps> = ({ userProfile = null, bankConfig = DEFA
         if (userProfile) {
             const baseCoins = Math.floor(amount / 1000);
 
+            const transferCode = userProfile.payment_code?.startsWith('WINDI ')
+                ? userProfile.payment_code
+                : (userProfile.payment_code?.startsWith('WST ')
+                    ? `WINDI ${userProfile.payment_code.slice(4)}`
+                    : `WINDI ${userProfile.payment_code}`);
             const tx = await createTransaction(
                 userProfile.id,
                 amount,
                 baseCoins, // Base coins only, backend will add bonus
-                `Payment: WINDI ${userProfile.payment_code}`,
+                `Payment: ${transferCode}`,
                 'PENDING',
                 0 // No bonus percentage needed, backend handles it
             );
@@ -266,12 +271,20 @@ const Pricing: React.FC<PricingProps> = ({ userProfile = null, bankConfig = DEFA
                             </div>
 
                             <div className="bg-white p-4 rounded-2xl mb-6 shadow-inner mx-auto w-fit">
-                                {/* Placeholder for VietQR API */}
-                                <img
-                                    src={`https://img.vietqr.io/image/${bankConfig.BANK_ID}-${bankConfig.ACCOUNT_NO}-${bankConfig.TEMPLATE}.png?amount=${selectedAmount}&addInfo=WINDI ${userProfile?.payment_code}&accountName=${encodeURIComponent(bankConfig.ACCOUNT_NAME)}`}
-                                    alt="VietQR Payment"
-                                    className="w-48 h-48 md:w-56 md:h-56 object-contain"
-                                />
+                                {(() => {
+                                    const transferCode = userProfile?.payment_code?.startsWith('WINDI ')
+                                        ? userProfile.payment_code
+                                        : (userProfile?.payment_code?.startsWith('WST ')
+                                            ? `WINDI ${userProfile.payment_code.slice(4)}`
+                                            : (userProfile?.payment_code ? `WINDI ${userProfile.payment_code}` : 'WINDI'));
+                                    return (
+                                        <img
+                                            src={`https://img.vietqr.io/image/${bankConfig.BANK_ID}-${bankConfig.ACCOUNT_NO}-${bankConfig.TEMPLATE}.png?amount=${selectedAmount}&addInfo=${encodeURIComponent(transferCode)}&accountName=${encodeURIComponent(bankConfig.ACCOUNT_NAME)}`}
+                                            alt="VietQR Payment"
+                                            className="w-48 h-48 md:w-56 md:h-56 object-contain"
+                                        />
+                                    );
+                                })()}
                             </div>
 
                             <div className="space-y-3 bg-white/5 rounded-xl p-4 text-sm">
@@ -290,14 +303,22 @@ const Pricing: React.FC<PricingProps> = ({ userProfile = null, bankConfig = DEFA
                                         <Copy size={12} className="text-gray-500 group-hover:text-white" />
                                     </div>
                                 </div>
-                                <div className="flex justify-between items-center group cursor-pointer" onClick={() => copyToClipboard(`WINDI ${userProfile?.payment_code}`)}>
-                                    <span className="text-gray-400">Nội dung:</span>
-                                    <div className="flex items-center gap-1.5">
-                                        <span className="text-yellow-400 font-medium">WINDI {userProfile?.payment_code}</span>
-                                        <Copy size={12} className="text-gray-500 group-hover:text-yellow-400" />
-                                    </div>
-
-                                </div>
+                                {(() => {
+                                    const transferCode = userProfile?.payment_code?.startsWith('WINDI ')
+                                        ? userProfile.payment_code
+                                        : (userProfile?.payment_code?.startsWith('WST ')
+                                            ? `WINDI ${userProfile.payment_code.slice(4)}`
+                                            : (userProfile?.payment_code ? `WINDI ${userProfile.payment_code}` : 'WINDI'));
+                                    return (
+                                        <div className="flex justify-between items-center group cursor-pointer" onClick={() => copyToClipboard(transferCode)}>
+                                            <span className="text-gray-400">Nội dung:</span>
+                                            <div className="flex items-center gap-1.5">
+                                                <span className="text-yellow-400 font-medium">{transferCode}</span>
+                                                <Copy size={12} className="text-gray-500 group-hover:text-yellow-400" />
+                                            </div>
+                                        </div>
+                                    );
+                                })()}
                             </div>
 
                             <p className="text-[10px] text-gray-500 text-center mt-4">

@@ -11,9 +11,16 @@ export async function POST(request:Request) {
   const body=await (await boundedBody(request)).json();
   if(body.transferType!=='in'||String(body.accountNumber)!==paymentConfig()!.account) return Response.json({success:true,status:'ignored'});
   if(!Number.isSafeInteger(body.transferAmount)||body.transferAmount<=0||!body.id) throw new VoiceError('Invalid payment',400);
-  const codes=String(body.content||'').toUpperCase().match(/\bWV[A-F0-9]{16}\b/g);
-  if(!codes||codes.length!==1) return Response.json({success:true,status:'ignored'});
-  const {data,error}=await writer().rpc('windi_voice_pay',{p_code:codes[0],p_gateway:String(body.id),p_amount:body.transferAmount});
+  const raw=String(body.content||'').toUpperCase();
+  const windiMatches=[...raw.matchAll(/\bWINDI\s*([A-Z0-9]{8})\b/g)];
+  const wstMatches=[...raw.matchAll(/\bWST\s*([A-Z0-9]{8})\b/g)];
+  const wvMatches=[...raw.matchAll(/\bWV[A-F0-9]{16}\b/g)];
+  const totalMatches=windiMatches.length+wstMatches.length+wvMatches.length;
+  if(totalMatches!==1) return Response.json({success:true,status:'ignored'});
+  const p_code=windiMatches.length===1
+    ? `WINDI ${windiMatches[0][1]}`
+    : (wstMatches.length===1 ? `WST ${wstMatches[0][1]}` : wvMatches[0][0]);
+  const {data,error}=await writer().rpc('windi_voice_pay',{p_code,p_gateway:String(body.id),p_amount:body.transferAmount});
   if(error) throw error;
   return Response.json({success:true,status:data});
  }catch(error){return failure(error);}

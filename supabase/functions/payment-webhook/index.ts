@@ -53,11 +53,20 @@ Deno.serve(async (req) => {
         }
 
         // 3. Extract Order Code from Content
-        // Format CF + 6 or more alphanumeric characters
-        const match = content.match(/CF[A-Z0-9]{6,12}/i);
+        // Format WINDI + space + 8 alphanumeric characters (also backward compatible with WST and CF)
+        const windiMatch = content.match(/WINDI\s*([A-Z0-9]{8})/i);
+        const wstMatch = content.match(/WST\s*([A-Z0-9]{8})/i);
+        const cfMatch = content.match(/CF[A-Z0-9]{6,12}/i);
 
-        if (!match) {
-            console.log("No valid CreatorFlow order code found in content:", content);
+        let paymentCode = '';
+        if (windiMatch) {
+            paymentCode = `WINDI ${windiMatch[1].toUpperCase()}`;
+        } else if (wstMatch) {
+            paymentCode = `WST ${wstMatch[1].toUpperCase()}`;
+        } else if (cfMatch) {
+            paymentCode = cfMatch[0].toUpperCase();
+        } else {
+            console.log("No valid order code found in content:", content);
             // Return 200 to acknowledge SePay so it doesn't retry
             return new Response(
                 JSON.stringify({ message: "No order code found, ignored." }),
@@ -65,15 +74,37 @@ Deno.serve(async (req) => {
             );
         }
 
-        const paymentCode = match[0].toUpperCase();
         console.log("Extracted Payment Code:", paymentCode);
 
         // 4. Find Order by payment_code
-        const { data: order, error: orderError } = await supabaseClient
+        let { data: order, error: orderError } = await supabaseClient
             .from('orders')
             .select('id')
             .eq('payment_code', paymentCode)
-            .single();
+            .maybeSingle();
+
+        // If not found and it's WINDI or WST code, try alternative spacing/prefix formats
+        if (!order && (windiMatch || wstMatch)) {
+            const rawSuffix = (windiMatch || wstMatch)![1].toUpperCase();
+            const candidates = [
+                `WINDI ${rawSuffix}`,
+                `WINDI${rawSuffix}`,
+                `WST ${rawSuffix}`,
+                `WST${rawSuffix}`,
+            ];
+            for (const cand of candidates) {
+                if (cand === paymentCode) continue;
+                const res = await supabaseClient
+                    .from('orders')
+                    .select('id')
+                    .eq('payment_code', cand)
+                    .maybeSingle();
+                if (res.data) {
+                    order = res.data;
+                    break;
+                }
+            }
+        }
 
         if (orderError || !order) {
             console.error("Order not found for code:", paymentCode, orderError);

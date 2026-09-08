@@ -84,7 +84,16 @@ test('webhook rejects spoofed authentication and ignores outbound/wrong-account 
 test('only exact transfer code and integer amount reach the atomic payment function',async()=>{
  expect((await pay(webhook({...transaction,transferAmount:'69000'}))).status).toBe(400);
  expect(await (await pay(webhook({...transaction,content:'WV1234567890ABCDEFA'}))).json()).toMatchObject({status:'ignored'});
- await pay(webhook(transaction));expect(rpc).toHaveBeenCalledWith('windi_voice_pay',{p_code:transaction.content,p_gateway:'1',p_amount:69000});
+  await pay(webhook(transaction));expect(rpc).toHaveBeenCalledWith('windi_voice_pay',{p_code:transaction.content,p_gateway:'1',p_amount:69000});
+  rpc.mockClear();
+  await pay(webhook({...transaction,id:2,content:'Chuyen khoan WINDI A1B2C3D4 thanh toan'}));
+  expect(rpc).toHaveBeenCalledWith('windi_voice_pay',{p_code:'WINDI A1B2C3D4',p_gateway:'2',p_amount:69000});
+  rpc.mockClear();
+  await pay(webhook({...transaction,id:3,content:'WINDIA1B2C3D4'}));
+  expect(rpc).toHaveBeenCalledWith('windi_voice_pay',{p_code:'WINDI A1B2C3D4',p_gateway:'3',p_amount:69000});
+  rpc.mockClear();
+  await pay(webhook({...transaction,id:4,content:'WST A1B2C3D4'}));
+  expect(rpc).toHaveBeenCalledWith('windi_voice_pay',{p_code:'WST A1B2C3D4',p_gateway:'4',p_amount:69000});
 });
 test('oversized bodies are rejected even without Content-Length',async()=>{
  expect((await generate(request({...payload,text:'a'.repeat(100001)}))).status).toBe(413);expect(rpc).not.toHaveBeenCalled();

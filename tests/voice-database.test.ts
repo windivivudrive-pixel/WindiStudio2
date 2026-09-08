@@ -18,6 +18,7 @@ beforeAll(async()=>{
  await db.exec(await readFile('supabase/migrations/20260905181816_windi_voice_studio.sql','utf8'));
  await db.exec(await readFile('supabase/migrations/20260906093309_windi_voice_preview_cache.sql','utf8'));
  await db.exec(await readFile('supabase/migrations/20260907171404_voice_welcome_trial_offers.sql','utf8'));
+ await db.exec(await readFile('supabase/migrations/20260908170000_windi_voice_sepay_windi_code.sql','utf8'));
 },30000);
 afterAll(()=>db.close());
 test('five plans, private storage, and no client money/credit mutation',async()=>{

@@ -43,7 +43,12 @@ export const getProfile = async (userId: string): Promise<UserProfile | null> =>
 };
 
 const generatePaymentCode = () => {
-  return 'USER' + Math.floor(10000 + Math.random() * 90000).toString();
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let code = '';
+  for (let i = 0; i < 8; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return `WINDI ${code}`;
 };
 
 export const createProfileIfNotExists = async (user: any) => {
