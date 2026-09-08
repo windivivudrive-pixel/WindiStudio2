@@ -7,8 +7,8 @@ export class VoiceError extends Error { constructor(message:string, public statu
 export const bucket = 'windi-voice-audio';
 export const previewBucket = 'windi-voice-previews';
 export function writer() {
-  const url=process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.VITE_SUPABASE_URL;
-  const key=process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const url=process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
+  const key=process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY || process.env.SERVICE_ROLE_KEY;
   if(!url||!key) throw new VoiceError('Dịch vụ giọng nói chưa được cấu hình.',503);
   return createSupabaseClient(url,key,{auth:{persistSession:false,autoRefreshToken:false}});
 }
@@ -39,10 +39,11 @@ export function failure(error:unknown) {
   const code=Object.keys(messages).find(k=>message.includes(k));
   return Response.json({error:code?messages[code]:error instanceof VoiceError?error.message:'Chưa thể hoàn tất. Vui lòng thử lại sau.'},{status:error instanceof VoiceError?error.status:code==='INVALID_INPUT'?400:code?409:503,headers:{'Cache-Control':'no-store'}});
 }
-export function providerReady() {return !!process.env.CARTESIA_API_KEY;}
+export function providerReady() {return !!(process.env.CARTESIA_API_KEY || process.env.VITE_CARTESIA_API_KEY);}
 export async function cartesia(path:string, init:RequestInit={}) {
-  if(!providerReady()) throw new VoiceError('Voice Studio đang được kết nối với nhà cung cấp. Vui lòng quay lại sau.',503);
-  return fetch(`https://api.cartesia.ai${path}`,{...init,cache:'no-store',signal:AbortSignal.timeout(90000),headers:{Authorization:`Bearer ${process.env.CARTESIA_API_KEY}`,'Cartesia-Version':'2026-08-14',...init.headers}});
+  const apiKey = process.env.CARTESIA_API_KEY || process.env.VITE_CARTESIA_API_KEY;
+  if(!apiKey) throw new VoiceError('Voice Studio đang được kết nối với nhà cung cấp. Vui lòng quay lại sau.',503);
+  return fetch(`https://api.cartesia.ai${path}`,{...init,cache:'no-store',signal:AbortSignal.timeout(90000),headers:{Authorization:`Bearer ${apiKey}`,'Cartesia-Version':'2026-08-14',...init.headers}});
 }
 const PUBLIC_VOICE_TARGET = 36;
 const PRIORITY_CATALOG_LANGUAGES = ['vi','ko'];
@@ -183,8 +184,11 @@ export async function audioUrl(userId:string,jobId:string,download=false) {
   return data.signedUrl;
 }
 export function paymentConfig() {
-  const bank=process.env.VOICE_BANK_BIN,account=process.env.VOICE_BANK_ACCOUNT,name=process.env.VOICE_BANK_NAME;
-  return bank&&account&&name&&process.env.SEPAY_API_KEY?{bank,account,name}:null;
+  const bank=process.env.VOICE_BANK_BIN || process.env.VITE_VOICE_BANK_BIN;
+  const account=process.env.VOICE_BANK_ACCOUNT || process.env.VITE_VOICE_BANK_ACCOUNT;
+  const name=process.env.VOICE_BANK_NAME || process.env.VITE_VOICE_BANK_NAME;
+  const sepayKey=process.env.SEPAY_API_KEY || process.env.VITE_SEPAY_API_KEY;
+  return bank&&account&&name&&sepayKey?{bank,account,name}:null;
 }
 
 // Enforce actual streamed body size, including requests without Content-Length.
