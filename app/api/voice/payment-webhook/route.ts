@@ -3,7 +3,7 @@ import {boundedBody,failure,paymentConfig,VoiceError,writer} from '@/lib/voice/s
 export const runtime='nodejs';
 export async function POST(request:Request) {
  try {
-  const expected=process.env.SEPAY_API_KEY;
+  const expected=process.env.SEPAY_API_KEY || process.env.VITE_SEPAY_API_KEY;
   if(!expected||!paymentConfig()) throw new VoiceError('Payment unavailable',503);
   const supplied=request.headers.get('authorization')||'';
   const a=Buffer.from(supplied),b=Buffer.from(`Apikey ${expected}`);
