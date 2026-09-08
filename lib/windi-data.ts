@@ -28,6 +28,7 @@ export interface WindiResource {
   purposes?: string[];
   creatorBrief?: CreatorBrief | null;
   canonicalUrl: string;
+  repositoryUrl?: string;
   source: string;
   tags: string[];
   agents: string[];
