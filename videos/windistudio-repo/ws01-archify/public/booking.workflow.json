@@ -1,0 +1,37 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Lịch hẹn tiệm tóc",
+    "subtitle": "Từ tin nhắn đến lần hẹn tiếp theo",
+    "animation": "trace",
+    "visual_preset": "editorial",
+    "quality_profile": "showcase",
+    "viewBox": [1200, 560]
+  },
+  "lanes": [
+    {"id": "client", "label": "Khách"},
+    {"id": "shop", "label": "Tiệm"}
+  ],
+  "phases": [
+    {"id": "chat", "label": "Đặt lịch", "fromCol": 0, "toCol": 1},
+    {"id": "visit", "label": "Trải nghiệm", "fromCol": 2, "toCol": 4, "variant": "emphasis"},
+    {"id": "return", "label": "Quay lại", "fromCol": 5, "toCol": 5, "variant": "dashed"}
+  ],
+  "mainPath": ["message", "confirm", "remind", "visit", "service", "followup"],
+  "nodes": [
+    {"id": "message", "lane": "client", "col": 0, "type": "external", "label": "Nhắn lịch", "sublabel": "Muốn cắt tóc"},
+    {"id": "confirm", "lane": "shop", "col": 1, "type": "frontend", "label": "Chốt giờ", "sublabel": "Xác nhận slot"},
+    {"id": "remind", "lane": "shop", "col": 2, "type": "messagebus", "label": "Nhắc lịch", "sublabel": "Trước 1 ngày"},
+    {"id": "visit", "lane": "client", "col": 3, "type": "external", "label": "Đến tiệm", "sublabel": "Check-in"},
+    {"id": "service", "lane": "shop", "col": 4, "type": "backend", "label": "Làm dịch vụ", "sublabel": "Cập nhật hồ sơ"},
+    {"id": "followup", "lane": "shop", "col": 5, "type": "cloud", "label": "Chăm sóc", "sublabel": "Gợi ý lần hẹn sau"}
+  ],
+  "edges": [
+    {"from": "message", "to": "confirm", "variant": "emphasis"},
+    {"from": "confirm", "to": "remind"},
+    {"from": "remind", "to": "visit", "variant": "emphasis"},
+    {"from": "visit", "to": "service"},
+    {"from": "service", "to": "followup", "variant": "emphasis"}
+  ]
+}

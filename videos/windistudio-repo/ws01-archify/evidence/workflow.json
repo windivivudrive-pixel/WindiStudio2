@@ -1,0 +1,73 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Quy trình video WindiStudio",
+    "animation": "trace",
+    "quality_profile": "showcase"
+  },
+  "lanes": [
+    {
+      "id": "editor",
+      "label": "Biên tập"
+    },
+    {
+      "id": "studio",
+      "label": "Sản xuất"
+    }
+  ],
+  "mainPath": [
+    "idea",
+    "script",
+    "edit",
+    "qa"
+  ],
+  "nodes": [
+    {
+      "id": "idea",
+      "lane": "editor",
+      "col": 0,
+      "type": "frontend",
+      "label": "Idea",
+      "sublabel": "Chọn chủ đề"
+    },
+    {
+      "id": "script",
+      "lane": "editor",
+      "col": 1,
+      "type": "backend",
+      "label": "Kịch bản",
+      "sublabel": "Viết lời đọc"
+    },
+    {
+      "id": "edit",
+      "lane": "studio",
+      "col": 2,
+      "type": "backend",
+      "label": "Dựng",
+      "sublabel": "Hình và âm"
+    },
+    {
+      "id": "qa",
+      "lane": "studio",
+      "col": 3,
+      "type": "security",
+      "label": "Kiểm tra",
+      "sublabel": "Xem bản xuất"
+    }
+  ],
+  "edges": [
+    {
+      "from": "idea",
+      "to": "script"
+    },
+    {
+      "from": "script",
+      "to": "edit"
+    },
+    {
+      "from": "edit",
+      "to": "qa"
+    }
+  ]
+}

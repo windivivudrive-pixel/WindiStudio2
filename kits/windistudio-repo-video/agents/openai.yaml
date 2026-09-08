@@ -1,0 +1,4 @@
+interface:
+  display_name: "WindiStudio Repo Video"
+  short_description: "Tìm repo, duyệt idea và dựng video retro WindiStudio"
+  default_prompt: "Dùng $windistudio-repo-video tìm repo hot và trình idea để tôi duyệt trước khi viết kịch bản và dựng video."

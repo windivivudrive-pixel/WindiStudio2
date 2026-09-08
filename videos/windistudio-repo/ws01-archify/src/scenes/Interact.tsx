@@ -1,0 +1,2 @@
+import {useCurrentFrame} from 'remotion';import {Title,Window,Proof,Tag,C,pop} from '../ui';
+export const Interact=()=>{const f=useCurrentFrame();return <><Title a="Bấm một bước." b="Hiểu đường đi."/><Window title="Chọn: Kịch bản" tone={C.blue}><Proof file="workflow-selected.png" zoom={1.2}/></Window><div style={{display:'flex',gap:18,marginTop:40}}><Tag tone={C.green}>Chọn bước</Tag><Tag>Lần theo luồng</Tag></div><div style={{opacity:pop(f,95),marginTop:35,fontSize:47,borderBottom:`4px solid ${C.pink}`,paddingBottom:20}}>↗ Chia sẻ bằng một file HTML</div></>};

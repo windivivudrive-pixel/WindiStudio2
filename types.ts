@@ -1,4 +1,3 @@
-
 export enum AppMode {
   CREATIVE_POSE = 'CREATIVE_POSE',
   VIRTUAL_TRY_ON = 'VIRTUAL_TRY_ON',
@@ -21,13 +20,12 @@ export enum BackgroundMode {
   EXACT = 'EXACT',
 }
 
-// Map to 'generations' table
 export interface HistoryItem {
-  id: string; // BigInt converted to string
-  thumbnail: string; // image_url
-  images: string[]; // For UI compatibility (batch logic)
+  id: string;
+  thumbnail: string;
+  images: string[];
   prompt: string;
-  timestamp: number; // created_at converted to timestamp
+  timestamp: number;
   mode: AppMode;
   modelName?: string;
   cost?: number;
@@ -37,7 +35,6 @@ export interface HistoryItem {
   userEmail?: string;
 }
 
-// Map to 'profiles' table
 export interface UserProfile {
   id: string;
   email: string;
@@ -53,7 +50,6 @@ export interface UserProfile {
   role?: 'user' | 'admin';
 }
 
-// Map to 'transactions' table
 export interface Transaction {
   id: number;
   user_id: string;
@@ -82,18 +78,15 @@ export interface GenerationConfig {
 }
 
 export interface BrandingConfig {
-  layoutMode?: 'single' | 'loop'; // New: Single or Repeating Pattern
-  x?: number; // 0-100% position
-  y?: number; // 0-100% position
-  gap?: number; // Spacing for loop mode
-  applyToPreview?: boolean; // New: Toggle between "Always Visible" (true) vs "Download Only" (false)
-
-  // Deprecated/Legacy support (optional now)
+  layoutMode?: 'single' | 'loop';
+  x?: number;
+  y?: number;
+  gap?: number;
+  applyToPreview?: boolean;
   position?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
   margin?: number;
-
-  scale: number; // 0.1 to 0.5 (10% to 50% of image width)
-  opacity: number; // 0.1 to 1.0
+  scale: number;
+  opacity: number;
 }
 
 export interface GenerationResponse {
@@ -105,7 +98,7 @@ export interface Category {
   id: number;
   name: string;
   created_at: string;
-  section_type?: 'STUDIO' | 'CREATIVE'; // Which section this category belongs to
+  section_type?: 'STUDIO' | 'CREATIVE';
 }
 
 export interface LibraryImage {
@@ -116,4 +109,60 @@ export interface LibraryImage {
   prompt?: string;
   image_type?: string;
   user_id?: string;
+}
+
+// --- NEW COMMERCE TYPES ---
+export type ProductType = 'STUDIO_LICENSE' | 'VOICE_UNITS';
+export type OrderStatus = 'PENDING' | 'PAID' | 'EXPIRED' | 'UNDERPAID' | 'OVERPAID' | 'REVIEW_REQUIRED' | 'REFUNDED';
+export type LicenseStatus = 'ACTIVE' | 'REVOKED';
+
+export interface Product {
+    id: string;
+    name: string;
+    type: ProductType;
+    description: string;
+    price_vnd: number;
+    is_active: boolean;
+    metadata: Record<string, any>;
+}
+
+export interface Order {
+    id: string;
+    user_id: string;
+    total_amount_vnd: number;
+    status: OrderStatus;
+    payment_code: string;
+    created_at: string;
+    expires_at: string;
+}
+
+export interface OrderItem {
+    id: string;
+    order_id: string;
+    product_id: string;
+    quantity: number;
+    price_vnd: number;
+    created_at: string;
+}
+
+export interface CreatorFlowLicense {
+    id: string;
+    user_id: string;
+    status: LicenseStatus;
+    created_at: string;
+}
+
+export interface VoiceWallet {
+    user_id: string;
+    balance: number;
+    updated_at: string;
+}
+
+export interface CustomerVoice {
+    id: string;
+    user_id: string;
+    provider_voice_id: string;
+    name: string;
+    is_private: boolean;
+    consent_timestamp: string;
 }

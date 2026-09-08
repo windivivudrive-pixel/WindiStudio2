@@ -1,0 +1,29 @@
+WEBVTT
+
+00:00.000 --> 00:04.620
+Tự trend một mô hình ngôn ngữ từ con số 0, chỉ mất 2 tiếng và chưa tới nửa đôi.
+
+00:05.480 --> 00:11.880
+Minimile cho bạn tự tay dựng một con LLM 64 triệu tham số, từ tokenizer tới khi nó biết trả lời.
+
+00:12.700 --> 00:17.500
+56.600 sao, 7.300 fork, giấy phép Apache mở hoàn toàn.
+
+00:18.180 --> 00:24.060
+Điểm đắt nhất, thật toán lõi viết tay bằng Pythorch thuần, bạn hiểu từng dòng, không gọi hàm rồi cầu may.
+
+00:24.820 --> 00:28.520
+64 triệu tham số, nhỏ hơn GPT-3 2700 lần.
+
+00:28.520 --> 00:31.980
+Một cạc, khoảng 2 tiếng, 3 tệ tiền thuê.
+
+00:32.340 --> 00:40.200
+Đủ cả quy trình, pre-train, SFT, LoRa, chưng cất, DPO, GRPO và huấn luyện agent.
+
+00:40.820 --> 00:44.700
+Clone repo, tải dataset, chạy trên pre-train là bắt đầu.
+
+00:45.100 --> 00:48.180
+Theo dõi ADF repo để không bỏ lỡ repo xịn mỗi ngày.
+

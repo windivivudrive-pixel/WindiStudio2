@@ -1,0 +1,21 @@
+{
+  "projectRef": "zpjphixcttehkkgxlmsn",
+  "verifiedAt": "2026-09-03T21:52:17.981Z",
+  "contentHash": "33f6c02f327606cbe16cfae5720d4fc0d5757659cff4cf887e5cbfcfd2e61a72",
+  "selectedCount": 100,
+  "completeBriefs": 100,
+  "primarySourceCoverage": 100,
+  "metricCoverage": 100,
+  "techCount": 4,
+  "statuses": {
+    "CANDIDATE": 100,
+    "ARCHIVED": 195,
+    "PUBLISHED": 0
+  },
+  "sourceCount": 432,
+  "metricCount": 372,
+  "anonymousVisible": 0,
+  "allPreviousResourceIdsPreserved": true,
+  "previousSourceMetricEvidenceIdsPreserved": true,
+  "snapshotDirectory": "/Users/win/Documents/WindiStudio2/.backups/windi/pre-creator100-2026-09-03T16-43-57-618Z"
+}

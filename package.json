@@ -4,15 +4,32 @@
   "version": "2.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build",
-    "preview": "vite preview",
-    "start:server": "node server/index.js"
+    "dev": "NODE_OPTIONS='--max-http-header-size=65536' next dev",
+    "build": "next build",
+    "start": "NODE_OPTIONS='--max-http-header-size=65536' next start",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "catalog:collect": "node scripts/collect-creator-candidates.mjs",
+    "catalog:enqueue": "node scripts/collect-creator-candidates.mjs --fresh --enqueue",
+    "catalog:verify": "node scripts/collect-creator-candidates.mjs --verify",
+    "catalog:import": "node scripts/import-catalog.mjs",
+    "catalog:creator:build": "node scripts/build-creator-catalog.mjs",
+    "catalog:creator:research": "node scripts/research-creator-catalog.mjs --resolve-missing",
+    "catalog:easy-prompts": "node scripts/build-easy-prompts.mjs",
+    "catalog:easy-prompts:sync": "node scripts/sync-easy-prompts.mjs",
+    "supabase:snapshot": "node scripts/snapshot-live-supabase.mjs",
+    "legacy:dev": "vite",
+    "legacy:build": "tsc && vite build",
+    "start:legacy-server": "node server/index.js",
+    "catalog:collect:legacy": "node scripts/collect-candidates.mjs",
+    "catalog:verify:legacy": "node scripts/collect-candidates.mjs --verify",
+    "catalog:refresh": "node scripts/collect-creator-candidates.mjs --refresh-existing --limit=200"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.940.0",
     "@fingerprintjs/fingerprintjs": "^5.0.1",
     "@google/genai": "^1.30.0",
+    "@supabase/ssr": "^0.12.5",
     "@supabase/supabase-js": "^2.84.0",
     "body-parser": "^2.2.1",
     "cors": "^2.8.5",
@@ -20,12 +37,17 @@
     "express": "^5.1.0",
     "jszip": "^3.10.1",
     "lucide-react": "^0.554.0",
+    "next": "^16.3.4",
+    "next-themes": "^0.4.6",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-masonry-css": "^1.0.16",
+    "server-only": "0.0.1",
     "supabase": "^2.63.1"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "0.5.8",
+    "@types/node": "^26.4.1",
     "@types/react": "^18.2.43",
     "@types/react-dom": "^18.2.17",
     "@vitejs/plugin-react": "^4.2.1",
@@ -33,6 +55,7 @@
     "postcss": "^8.4.32",
     "tailwindcss": "^3.4.0",
     "typescript": "^5.3.3",
-    "vite": "^5.0.10"
+    "vite": "^5.0.10",
+    "vitest": "^4.1.11"
   }
 }

@@ -335,3 +335,114 @@ export const generateStudioImage = async (
     safetyErrorMessage
   };
 };
+
+/**
+ * Helper to convert raw PCM base64 string to a WAV Data URI
+ */
+const pcmBase64ToWavDataUri = async (pcmBase64: string, sampleRate: number = 24000): Promise<string> => {
+  const binaryStr = atob(pcmBase64);
+  const dataLen = binaryStr.length;
+  
+  const buffer = new ArrayBuffer(44 + dataLen);
+  const view = new DataView(buffer);
+  
+  const writeString = (offset: number, string: string) => {
+    for (let i = 0; i < string.length; i++) {
+      view.setUint8(offset + i, string.charCodeAt(i));
+    }
+  };
+  
+  writeString(0, 'RIFF');
+  view.setUint32(4, 36 + dataLen, true);
+  writeString(8, 'WAVE');
+  writeString(12, 'fmt ');
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true);
+  view.setUint16(22, 1, true);
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, sampleRate * 2, true);
+  view.setUint16(32, 2, true);
+  view.setUint16(34, 16, true);
+  writeString(36, 'data');
+  view.setUint32(40, dataLen, true);
+  
+  const pcmView = new Uint8Array(buffer, 44);
+  for (let i = 0; i < dataLen; i++) {
+    pcmView[i] = binaryStr.charCodeAt(i);
+  }
+  
+  const blob = new Blob([buffer], { type: 'audio/wav' });
+  
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+};
+
+/**
+ * Generates text-to-speech audio using Gemini API
+ */
+export const generateSpeech = async (
+  text: string,
+  language: 'vi' | 'en' = 'vi',
+  voice: string = 'iapetus',
+  styleInstruction: string = ''
+): Promise<string> => {
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+  if (!apiKey) throw new Error("Gemini API key is not configured.");
+  
+  // Using v1alpha for preview models as it often has the newest features
+  const response = await fetch(`https://generativelanguage.googleapis.com/v1alpha/models/gemini-3.1-flash-tts-preview:generateContent?key=${apiKey}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      contents: [{
+        role: "user",
+        parts: [{ 
+          text: `[Instructions: Read in ${language === 'vi' ? 'Vietnamese' : 'English'}. Voice preference: ${voice}. Style: ${styleInstruction}]\n\nText to read:\n${text}`
+        }]
+      }],
+      generationConfig: {
+        responseModalities: ["AUDIO"],
+        speechConfig: {
+          voiceConfig: {
+            prebuiltVoiceConfig: {
+              voiceName: voice
+            }
+          }
+        }
+      }
+    })
+  });
+  
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.error?.message || "Failed to generate speech");
+  }
+  
+  const parts = data.candidates?.[0]?.content?.parts || [];
+  const audioPart = parts.find((p: any) => p.inlineData && p.inlineData.mimeType.startsWith('audio/'));
+  
+  if (audioPart) {
+    const mimeType = audioPart.inlineData.mimeType;
+    let sampleRate = 24000;
+    const rateMatch = mimeType.match(/rate=(\d+)/);
+    if (rateMatch && rateMatch[1]) {
+      sampleRate = parseInt(rateMatch[1], 10);
+    }
+    
+    // Check if the API returned raw PCM audio. If so, convert it to WAV.
+    if (mimeType.includes('audio/l16') || mimeType.includes('audio/pcm')) {
+      return await pcmBase64ToWavDataUri(audioPart.inlineData.data, sampleRate);
+    }
+    
+    // Otherwise return the base64 as-is if it's already a playable format
+    return `data:${mimeType};base64,${audioPart.inlineData.data}`;
+  }
+  
+  throw new Error("No audio returned from the model");
+};

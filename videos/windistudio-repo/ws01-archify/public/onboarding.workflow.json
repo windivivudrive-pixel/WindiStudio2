@@ -1,0 +1,38 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Onboarding nhân sự mới",
+    "subtitle": "Ai làm gì trong tuần đầu",
+    "animation": "trace",
+    "visual_preset": "blueprint",
+    "quality_profile": "showcase",
+    "viewBox": [900, 700]
+  },
+  "lanes": [
+    {"id": "admin", "label": "Hành chính"},
+    {"id": "lead", "label": "Quản lý"},
+    {"id": "newhire", "label": "Người mới"}
+  ],
+  "phases": [
+    {"id": "before", "label": "Trước ngày đi làm", "fromCol": 0, "toCol": 1},
+    {"id": "dayone", "label": "Ngày đầu", "fromCol": 2, "toCol": 3, "variant": "emphasis"},
+    {"id": "weekone", "label": "Tuần đầu", "fromCol": 4, "toCol": 5, "variant": "dashed"}
+  ],
+  "mainPath": ["account", "welcome", "brief", "handover", "checklist", "checkin"],
+  "nodes": [
+    {"id": "account", "lane": "admin", "col": 0, "type": "security", "label": "Tạo tài khoản", "sublabel": "Email · quyền truy cập"},
+    {"id": "welcome", "lane": "lead", "col": 1, "type": "backend", "label": "Lịch ngày đầu", "sublabel": "Người hướng dẫn"},
+    {"id": "brief", "lane": "newhire", "col": 2, "type": "frontend", "label": "Đọc brief", "sublabel": "Vai trò · mục tiêu"},
+    {"id": "handover", "lane": "lead", "col": 3, "type": "messagebus", "label": "Bàn giao việc", "sublabel": "Task đầu tiên"},
+    {"id": "checklist", "lane": "newhire", "col": 4, "type": "database", "label": "Hoàn checklist", "sublabel": "Công cụ · quy định"},
+    {"id": "checkin", "lane": "lead", "col": 5, "type": "cloud", "label": "Check-in 7 ngày", "sublabel": "Gỡ vướng · phản hồi", "width": 118}
+  ],
+  "edges": [
+    {"from": "account", "to": "welcome", "variant": "emphasis"},
+    {"from": "welcome", "to": "brief"},
+    {"from": "brief", "to": "handover", "variant": "emphasis"},
+    {"from": "handover", "to": "checklist"},
+    {"from": "checklist", "to": "checkin", "variant": "emphasis"}
+  ]
+}

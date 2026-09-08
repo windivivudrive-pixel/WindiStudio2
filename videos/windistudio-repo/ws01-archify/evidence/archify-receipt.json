@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "deliver",
+  "type": "workflow",
+  "input": "/Users/win/Documents/WindiStudio2/videos/windistudio-repo/ws01-archify/evidence/workflow.json",
+  "output": "/Users/win/Documents/WindiStudio2/videos/windistudio-repo/ws01-archify/public/workflow.html",
+  "specification": {
+    "sha256": "242a38e75ab47ec43b648e40f22efb498e0c4d31adf5e4020cb5d395d192aba3",
+    "bytes": 1241
+  },
+  "artifact": {
+    "sha256": "e9a722ede10a9625b64a3a7c7398c271e8e029c81eafb1b39598c917b2005fd7",
+    "bytes": 700959
+  },
+  "validation": {
+    "checksPassed": 9,
+    "checkCount": 9,
+    "compositionProfile": "showcase",
+    "compositionStatus": "pass",
+    "errors": 0,
+    "warnings": 0
+  }
+}

@@ -1,0 +1,74 @@
+[
+  {
+    "repo":"charlie947/social-media-skills","name":"Social Media Skills","type":"SKILL","purposes":["social","content","video"],
+    "hook":"Đừng chỉ nhờ AI viết một bài. Hãy cho nó một bộ phận content có chung giọng thương hiệu.",
+    "summary":"Social Media Skills của Charlie Hills là bộ hướng dẫn giúp AI agent làm nội dung theo một hệ thống nhất quán: hiểu người viết trước, rồi mới viết bài, lên ý tưởng video và tạo hình. Nền tảng là voice-builder, tạo about-me.md và voice.md từ phỏng vấn cùng 3–5 bài mẫu. Các skill còn lại đọc chung hai tệp này, thay vì mỗi lần lại viết một giọng khác nhau.",
+    "highlights":["Voice Builder và Newsletter Voice xây hồ sơ tác giả, giọng văn và quy tắc newsletter.","Post Writer, Hook Generator, Content Matrix và Post Formatter hỗ trợ viết LinkedIn, tạo mở bài và phát triển ý tưởng theo nhiều khuôn nội dung.","Reels Scripting và YouTube Thumbnail chuyển đề tài thành kịch bản video hoặc prompt thumbnail; Gemini Carousel và Infographic hỗ trợ phần hình.","Niche Research tìm chuyện mới trong ngách; Post Scorer và Analytics Dashboard dùng dữ liệu bài viết để góp ý, không chỉ chấm theo cảm tính.","README hiện ghi tác giả có hơn 415K followers và 100 triệu lượt xem/năm. Đây là số liệu tác giả tự công bố, không phải hiệu quả Windi kiểm chứng hay cam kết cho người cài skill."],
+    "example":"Đưa 3–5 bài viết của bạn vào voice-builder, tạo một newsletter gốc rồi yêu cầu chuyển thành bài LinkedIn, kịch bản Reel và carousel. Đọc lại từng bản trước khi đăng.",
+    "setup":"Cài qua marketplace Claude Code hoặc tải riêng thư mục skill theo README. Chạy voice-builder trước; một số nhánh cần Claude for Chrome, Apify hoặc Gemini và tài khoản tương ứng.",
+    "limitations":"Skill không tự bảo đảm follower, lượt xem hay độ chính xác. Dữ liệu cá nhân và bài mẫu có thể đi tới dịch vụ AI bạn chọn. Chi phí agent, Apify/Gemini và khả năng dùng tiếng Việt cần kiểm tra riêng."
+  },
+  {
+    "repo":"gitroomhq/postiz-app","name":"Postiz","purposes":["social","automation"],
+    "hook":"Một lịch nội dung cho nhiều kênh, thay vì mỗi ngày mở từng mạng xã hội để đăng bài.",
+    "summary":"Postiz là nền tảng quản lý và lên lịch mạng xã hội có các tính năng AI, analytics và cộng tác. Điểm đáng chú ý với creator là tập trung khâu phân phối: soạn nội dung, chuẩn bị lịch đăng, phối hợp với cộng sự và theo dõi kết quả trong cùng hệ thống. Repo cũng dẫn tới API, tích hợp n8n và công cụ cho AI agent.",
+    "highlights":["Lên lịch bài và quản lý hoạt động social tập trung.","Cộng tác với thành viên nhóm, nhận xét và theo dõi hiệu quả qua analytics.","API cùng tích hợp n8n/Make giúp nối lịch đăng với quy trình tạo nội dung."],
+    "example":"Chuẩn bị loạt bài giới thiệu sản phẩm, điều chỉnh bản viết cho từng kênh rồi xếp lịch cả tuần; dùng số liệu sau đăng để chọn góc nội dung tiếp theo.",
+    "setup":"Chọn bản dịch vụ hoặc làm theo Quick Start tự triển khai của Postiz. Kết nối tài khoản qua luồng xác thực chính thức của từng nền tảng.",
+    "limitations":"Tự host vẫn cần máy chủ và cấu hình tích hợp. Quyền đăng, định dạng và analytics phụ thuộc API từng mạng xã hội; không được suy ra rằng mọi kênh đều hỗ trợ mọi tính năng. Không phải công cụ bảo đảm tăng trưởng."
+  },
+  {
+    "repo":"knadh/listmonk","name":"listmonk","purposes":["social","content"],
+    "hook":"Xây danh sách độc giả của riêng bạn, không chỉ phụ thuộc vào lượt tiếp cận từ thuật toán.",
+    "summary":"listmonk là phần mềm tự host để quản lý newsletter và mailing list. Ứng dụng được đóng gói gọn trong một tệp thực thi, dùng PostgreSQL để lưu dữ liệu và có giao diện web. Nó phù hợp khi bạn đã có nội dung và muốn vận hành kênh email riêng, thay vì tìm một AI viết bài thay mình.",
+    "highlights":["Quản lý newsletter và danh sách email trong hệ thống bạn tự vận hành.","Có bản Docker và bản thực thi độc lập, không buộc phải dựng cả môi trường phát triển.","Tác giả cung cấp demo trực tuyến để xem trước giao diện trước khi triển khai."],
+    "example":"Tổng hợp các video hay trong tuần thành bản tin email, gửi cho người đăng ký nhận tin và giữ lại danh sách độc giả do bạn quản lý.",
+    "setup":"Thử demo chính chủ trước. Khi dùng thật, triển khai Docker hoặc binary, cấu hình PostgreSQL và dịch vụ gửi email theo tài liệu.",
+    "limitations":"Đây không phải dịch vụ chuyển phát email miễn phí sẵn có. Cần cấu hình gửi thư, quản lý đồng ý nhận tin, hủy đăng ký và uy tín tên miền; không nhập danh sách mua ngoài."
+  },
+  {
+    "repo":"mautic/mautic","name":"Mautic","purposes":["social","automation"],
+    "hook":"Biến chuỗi email rời rạc thành một hành trình chăm sóc người quan tâm.",
+    "summary":"Mautic là nền tảng marketing automation mã nguồn mở, tập trung vào chiến dịch tích hợp, phân nhóm khách hàng và quyền kiểm soát dữ liệu. Công cụ phù hợp với đội content/marketing đã có nhiều điểm chạm cần phối hợp, hơn là người chỉ muốn đăng một bài social. Bạn tự quản lý hệ thống và có thể mở rộng theo cách vận hành của mình.",
+    "highlights":["Phân nhóm người liên hệ và thiết kế các bước tự động hóa marketing.","Hỗ trợ chiến dịch đa kênh cùng khả năng tùy biến và tích hợp.","Tự triển khai để kiểm soát dữ liệu, không khóa toàn bộ hoạt động trong một nhà cung cấp SaaS."],
+    "example":"Người xem tải tài liệu hướng dẫn làm video; bạn phân nhóm theo nhu cầu rồi gửi chuỗi bài học phù hợp, thay vì gửi cùng một nội dung cho mọi người.",
+    "setup":"Dùng bản phát hành và hướng dẫn production chính chủ. README khuyên không đưa bản mã đang phát triển từ GitHub vào vận hành thực tế.",
+    "limitations":"Cần vận hành máy chủ, cơ sở dữ liệu, email và cập nhật bảo mật. Không phải ứng dụng cài một chạm; phải có đồng ý nhận tin và quy trình bảo vệ dữ liệu người liên hệ."
+  },
+  {
+    "repo":"useplunk/plunk","name":"Plunk","purposes":["social","automation"],
+    "hook":"Email giao dịch, chiến dịch và tự động hóa có thể nằm trong cùng một chỗ.",
+    "summary":"Plunk là nền tảng email mã nguồn mở kết hợp quản lý người liên hệ, phân nhóm, chiến dịch và workflow. Điểm hữu ích cho người bán sản phẩm số hoặc làm newsletter là nối các email vận hành với hoạt động marketing, thay vì quản lý nhiều danh sách tách biệt. README cũng nêu analytics và hỗ trợ tên miền gửi riêng.",
+    "highlights":["Quản lý contact với trường thông tin tùy chỉnh và lịch sử hoạt động.","Tạo segment và workflow để gửi đúng nhóm, đúng tình huống.","Theo dõi mở thư, click, bounce và xác thực tên miền bằng DKIM/SPF."],
+    "example":"Sau khi người xem đăng ký nhận một bộ template, gửi email bàn giao rồi đưa họ vào nhóm nhận mẹo sử dụng phù hợp.",
+    "setup":"Làm theo hướng dẫn self-host chính chủ bằng Docker; cấu hình tên miền gửi và các dịch vụ email cần thiết trước khi gửi thật.",
+    "limitations":"Open source không đồng nghĩa gửi email không tốn phí. Deliverability còn phụ thuộc hạ tầng, uy tín tên miền và chất lượng danh sách. Số lượt mở không phản ánh hoàn toàn số người thực sự đọc."
+  },
+  {
+    "repo":"inovector/mixpost","name":"Mixpost Lite","purposes":["social","content"],
+    "hook":"Gom lịch đăng và tài nguyên social về một bàn làm việc do bạn quản lý.",
+    "summary":"Mixpost là hệ thống quản lý nội dung mạng xã hội, hướng tới thương hiệu, agency và người làm độc lập. Repo này là bản Lite của sản phẩm Mixpost, không phải toàn bộ tính năng Pro/Enterprise. Nó đáng xem khi bạn cần tổ chức công việc đăng bài, nội dung và tài khoản social một cách chủ động hơn.",
+    "highlights":["Quy trình soạn, tổ chức và lên lịch nội dung social.","Hệ sinh thái có quản lý media, lịch/queue và mẫu bài tái sử dụng.","README phân biệt rõ bản Lite nguồn mở với các phiên bản thương mại — cần đối chiếu tính năng trước khi chọn."],
+    "example":"Lập lịch đăng cho một thương hiệu nhỏ và tái sử dụng kho hình/video giữa các bài, sau khi xác nhận bản Lite hỗ trợ các kênh bạn cần.",
+    "setup":"Bắt đầu từ tài liệu Mixpost Lite được dẫn trong README, không dùng bảng tính năng toàn bộ sản phẩm để suy đoán khả năng bản miễn phí.",
+    "limitations":"Nhiều tính năng được giới thiệu cho hệ sinh thái Mixpost có thể thuộc Pro/Enterprise. Tích hợp social phụ thuộc API nền tảng; tự host cần cấu hình và bảo trì."
+  },
+  {
+    "repo":"resend/react-email","name":"React Email","purposes":["design","social"],
+    "hook":"Email đẹp trên web chưa chắc đẹp trong Outlook — React Email xử lý phần khó đó.",
+    "summary":"React Email cung cấp các thành phần để xây email bằng React và TypeScript, hỗ trợ responsive và giảm khác biệt giữa các ứng dụng đọc thư. Đây là công cụ dành cho người làm template hoặc creator có AI coding hỗ trợ, không phải ứng dụng tự viết và tự gửi newsletter. Template có thể xuất ra HTML để dùng với dịch vụ gửi email khác nhau.",
+    "highlights":["Các khối tiêu đề, ảnh, nút, cột và đoạn văn để tạo mẫu email có cấu trúc.","Có editor xuất HTML email và văn bản thuần.","Tài liệu đưa ví dụ tích hợp nhiều nhà cung cấp gửi thư, không chỉ Resend."],
+    "example":"Tạo một mẫu newsletter mang nhận diện thương hiệu rồi thay nội dung mỗi tuần mà giữ nguyên bố cục và nút kêu gọi hành động.",
+    "setup":"Cần môi trường Node/React hoặc người hỗ trợ kỹ thuật. Làm theo phần Getting Started và kiểm tra mẫu trong các ứng dụng email mục tiêu.",
+    "limitations":"Không phải phần mềm gửi email hay quản lý subscriber. Cần dịch vụ chuyển phát riêng; vẫn phải kiểm tra thực tế hình ảnh, font và dark mode."
+  },
+  {
+    "repo":"mjmlio/mjml","name":"MJML","purposes":["design","social"],
+    "hook":"Viết một mẫu newsletter gọn hơn, để hệ thống xử lý HTML email phức tạp phía sau.",
+    "summary":"MJML do Mailjet phát triển là ngôn ngữ đánh dấu giúp tạo email responsive. Thay vì tự xử lý từng bảng HTML khó bảo trì, bạn ghép những thành phần có ý nghĩa rồi biên dịch ra HTML. Công cụ phù hợp với đội làm template hoặc người dùng AI hỗ trợ viết cấu trúc email; nó không tạo nội dung hay tự chạy chiến dịch.",
+    "highlights":["Bộ thành phần chuẩn để dựng bố cục email có thể tái sử dụng.","Biên dịch MJML thành HTML responsive.","Có editor trực tuyến để thử mà chưa cần cài, cùng plugin cho trình soạn thảo và CLI."],
+    "example":"Dựng email giới thiệu một bộ video kit với ảnh bìa, ba lợi ích chính và nút tải; xuất HTML rồi đưa vào hệ thống newsletter.",
+    "setup":"Thử editor trực tuyến chính chủ trước. Khi cần tự động hóa, dùng gói npm hoặc plugin được README giới thiệu.",
+    "limitations":"Vẫn cần hiểu cấu trúc template và kiểm tra trên Gmail/Outlook. MJML không cung cấp danh sách người nhận, nội dung AI hay dịch vụ gửi email."
+  }
+]

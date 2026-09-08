@@ -43,7 +43,12 @@ export const getProfile = async (userId: string): Promise<UserProfile | null> =>
 };
 
 const generatePaymentCode = () => {
-  return 'USER' + Math.floor(10000 + Math.random() * 90000).toString();
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let code = '';
+  for (let i = 0; i < 8; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return `WINDI ${code}`;
 };
 
 export const createProfileIfNotExists = async (user: any) => {
@@ -686,4 +691,134 @@ export const createReferenceImage = async (input: ReferenceImageInput): Promise<
 
   console.log('Reference image created:', data);
   return true;
+};
+
+// --- CREATORFLOW COMMERCE API ---
+
+export const fetchProducts = async (): Promise<any[]> => {
+  const { data, error } = await supabase
+    .from('products')
+    .select('*')
+    .eq('is_active', true)
+    .order('price_vnd', { ascending: true });
+    
+  if (error) {
+    console.error('Error fetching products:', error);
+    return [];
+  }
+  return data || [];
+};
+
+export const createCommerceOrder = async (productIds: string[]) => {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) return null;
+
+  try {
+    const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-order`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session.access_token}`
+      },
+      body: JSON.stringify({ productIds })
+    });
+
+    if (!response.ok) throw new Error(await response.text());
+    
+    return await response.json();
+  } catch (error) {
+    console.error("Error creating order:", error);
+    return null;
+  }
+};
+
+export const fetchMyOrders = async () => {
+  const { data, error } = await supabase
+    .from('orders')
+    .select(`
+      *,
+      order_items (
+        id,
+        quantity,
+        price_vnd,
+        product:products (name, type)
+      )
+    `)
+    .order('created_at', { ascending: false });
+    
+  if (error) {
+    console.error('Error fetching orders:', error);
+    return [];
+  }
+  return data || [];
+};
+
+export const fetchMyLicenses = async () => {
+  const { data, error } = await supabase
+    .from('creatorflow_licenses')
+    .select('*')
+    .order('created_at', { ascending: false });
+    
+  if (error) {
+    console.error('Error fetching licenses:', error);
+    return [];
+  }
+  return data || [];
+};
+
+export const fetchMyVoiceWallet = async () => {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
+  
+  const { data, error } = await supabase
+    .from('voice_wallets')
+    .select('*')
+    .eq('user_id', user.id)
+    .single();
+    
+  if (error && error.code !== 'PGRST116') {
+    console.error('Error fetching voice wallet:', error);
+    return null;
+  }
+  return data;
+};
+
+export const fetchMyVoices = async () => {
+  const { data, error } = await supabase
+    .from('customer_voices')
+    .select('*')
+    .order('created_at', { ascending: false });
+    
+  if (error) {
+    console.error('Error fetching voices:', error);
+    return [];
+  }
+  return data || [];
+};
+
+export const cloneVoice = async (file: File, name: string) => {
+  return { success: false, message: 'Not implemented' };
+};
+
+export const generateTTS = async (voiceId: string, text: string) => {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) return null;
+
+  try {
+    const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/voice-provider`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session.access_token}`
+      },
+      body: JSON.stringify({ voiceId, text })
+    });
+
+    if (!response.ok) throw new Error(await response.text());
+    
+    return await response.json();
+  } catch (error) {
+    console.error("Error generating TTS:", error);
+    return { error: 'Failed to generate TTS' };
+  }
 };

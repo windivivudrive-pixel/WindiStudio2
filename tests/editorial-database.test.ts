@@ -1,0 +1,63 @@
+import {readFile} from 'node:fs/promises';
+import {PGlite} from '@electric-sql/pglite';
+import {beforeAll,afterAll,test,expect} from 'vitest';
+import {importRows} from '../scripts/import-catalog.mjs';
+import {safeDestination} from '../lib/auth-redirect';
+const db=new PGlite();
+const admin='00000000-0000-4000-8000-000000000001', user='00000000-0000-4000-8000-000000000002';
+let id:string;
+const content={name:'Reviewed tool',tagline:'An independently reviewed tool',description:'Verified description. '.repeat(8),long_description:'Installation, usage, requirements and limitations. '.repeat(4),license:'MIT',is_sponsored:true};
+const review=(actor=admin,revision:number|null=0,status='PUBLISHED',checked=true,body=content)=>db.query('select review_windi_resource($1,$2,$3,$4,$5::jsonb,$6,$7,$7)',[id,actor,revision,status,JSON.stringify(body),'',checked]);
+beforeAll(async()=>{
+  await db.exec(`create role anon; create role authenticated; create role service_role bypassrls;
+    create schema auth; create table auth.users(id uuid primary key);
+    create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid $$;
+    grant usage on schema public,auth to anon,authenticated,service_role;
+    create table profiles(id uuid primary key,role text);
+    insert into auth.users values('${admin}'),('${user}'); insert into profiles values('${admin}','admin'),('${user}','admin');
+    alter default privileges in schema public grant all on tables to anon,authenticated,service_role;`);
+  await db.exec(await readFile('supabase/migrations/20260903084313_windi_catalog_media_import.sql','utf8'));
+  await db.exec(await readFile('supabase/migrations/20260903131154_windi_editorial_review.sql','utf8'));
+  await db.exec(await readFile('supabase/migrations/20260903221133_simplify_editorial_publish.sql','utf8'));
+  expect((await db.query('select count(*)::int n from editorial_members')).rows).toEqual([{n:0}]);
+  await db.query('insert into editorial_members(user_id,role) values($1,$2)',[admin,'admin']);
+  const rows=importRows(JSON.parse(await readFile('data/catalog/candidates.json','utf8')),[]);
+  await db.query('select import_windi_catalog($1::jsonb,$2,$3)',[JSON.stringify(rows),'editorial-test','hash']);
+  id=(await db.query<{id:string}>('select id from resources limit 1')).rows[0].id;
+},30000);
+afterAll(()=>db.close());
+test('admin can review all 200 candidates; ordinary members and anonymous visitors cannot',async()=>{
+  await db.exec(`set role authenticated; set request.jwt.claim.sub='${admin}'`);
+  expect((await db.query('select count(*)::int n from resources')).rows).toEqual([{n:200}]);
+  await db.exec(`set request.jwt.claim.sub='${user}'`);
+  expect((await db.query('select count(*)::int n from resources')).rows).toEqual([{n:0}]);
+  await expect(review()).rejects.toThrow('permission denied');
+  await expect(db.exec(`insert into editorial_members(user_id,role) values('${user}','admin')`)).rejects.toThrow('permission denied');
+  await db.exec('reset role');
+});
+test('quick publication requires editor identity, an imported source and current revision',async()=>{
+  await db.exec('set role service_role');
+  await expect(review(user)).rejects.toThrow('Editor access');
+  await expect(review(admin,null)).rejects.toThrow('Resource changed');
+  await review(admin,0,'PUBLISHED',false,{...content,tagline:'',description:'Mô tả ngắn.',long_description:'',license:''});
+  await expect(review()).rejects.toThrow('Resource changed');
+  await db.exec('reset role');
+  expect((await db.query('select count(*)::int n from resource_editorial_actions')).rows).toEqual([{n:1}]);
+  expect((await db.query('select is_sponsored,editorial_revision,description,license from resources where id=$1',[id])).rows).toEqual([{is_sponsored:false,editorial_revision:1,description:'Mô tả ngắn.',license:''}]);
+});
+test('public reads only published resources, cannot read audit or change content',async()=>{
+  await db.exec('set role anon');
+  expect((await db.query('select count(*)::int n from resources')).rows).toEqual([{n:1}]);
+  await expect(db.exec('select * from resource_editorial_actions')).rejects.toThrow('permission denied');
+  await expect(db.exec("update resources set name='changed'")).rejects.toThrow('permission denied');
+  await db.exec('set role service_role');
+  await expect(db.exec("update resource_editorial_actions set reason='rewritten history'")).rejects.toThrow('permission denied');
+  await review(admin,1,'ARCHIVED');
+  await db.exec('set role anon');
+  expect((await db.query('select count(*)::int n from resources')).rows).toEqual([{n:0}]);
+  await db.exec('reset role');
+});
+test('OAuth return destinations cannot redirect off-site',()=>{
+  for(const url of ['https://evil.test','//evil.test','/\\evil.test','/\r\nevil.test']) expect(safeDestination(url)).toBe('/library');
+  expect(safeDestination('/admin?status=REVIEW')).toBe('/admin?status=REVIEW');
+});

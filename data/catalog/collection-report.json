@@ -1,0 +1,44 @@
+{
+  "startedAt": "2026-09-03T08:35:10.433Z",
+  "generatedAt": "2026-09-03T08:35:30.523Z",
+  "sources": [
+    {
+      "source": "skills_sh",
+      "status": "SUCCESS",
+      "count": 568
+    },
+    {
+      "source": "awesome_agent_skills",
+      "status": "SUCCESS",
+      "count": 639
+    },
+    {
+      "source": "trendshift",
+      "status": "SUCCESS",
+      "count": 17
+    },
+    {
+      "source": "mcp_registry",
+      "status": "SUCCESS",
+      "count": 287
+    },
+    {
+      "source": "github_search",
+      "status": "SUCCESS",
+      "count": 163
+    }
+  ],
+  "rawCount": 1674,
+  "uniqueCount": 1577,
+  "selectedCount": 200,
+  "countsByPrimarySource": {
+    "skills_sh": 64,
+    "awesome_agent_skills": 40,
+    "trendshift": 16,
+    "mcp_registry": 50,
+    "github_search": 30
+  },
+  "scheduled": false,
+  "databaseWritten": false,
+  "published": false
+}

@@ -1,0 +1,86 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Thêm bước duyệt trước kịch bản",
+    "animation": "trace",
+    "quality_profile": "showcase"
+  },
+  "lanes": [
+    {
+      "id": "editor",
+      "label": "Biên tập"
+    },
+    {
+      "id": "studio",
+      "label": "Sản xuất"
+    }
+  ],
+  "mainPath": [
+    "idea",
+    "approve",
+    "script",
+    "edit",
+    "qa"
+  ],
+  "nodes": [
+    {
+      "id": "idea",
+      "lane": "editor",
+      "col": 0,
+      "type": "frontend",
+      "label": "Idea",
+      "sublabel": "Chọn chủ đề"
+    },
+    {
+      "id": "approve",
+      "lane": "editor",
+      "col": 1,
+      "type": "security",
+      "label": "Duyệt",
+      "sublabel": "Chốt ý tưởng"
+    },
+    {
+      "id": "script",
+      "lane": "editor",
+      "col": 2,
+      "type": "backend",
+      "label": "Kịch bản",
+      "sublabel": "Viết lời đọc"
+    },
+    {
+      "id": "edit",
+      "lane": "studio",
+      "col": 3,
+      "type": "backend",
+      "label": "Dựng",
+      "sublabel": "Hình và âm"
+    },
+    {
+      "id": "qa",
+      "lane": "studio",
+      "col": 4,
+      "type": "security",
+      "label": "Kiểm tra",
+      "sublabel": "Xem bản xuất"
+    }
+  ],
+  "edges": [
+    {
+      "from": "idea",
+      "to": "approve"
+    },
+    {
+      "from": "approve",
+      "to": "script"
+    },
+    {
+      "from": "script",
+      "to": "edit"
+    },
+    {
+      "from": "edit",
+      "to": "qa"
+    }
+  ]
+}

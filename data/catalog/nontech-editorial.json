@@ -1,0 +1,239 @@
+{
+  "version": "nontech-benefits-v1",
+  "basis": "Reworded from existing reviewed dossiers; no new capability or popularity claims.",
+  "edits": [
+    {
+      "name": "Activepieces",
+      "hook": "Gom những việc lặp lại quanh nội dung thành một quy trình tự chạy.",
+      "description": "Activepieces giúp bạn nối bảng kế hoạch, nguồn tin, AI và thông báo bằng giao diện trực quan. Bạn có thể đặt bước chờ duyệt trước khi quy trình tiếp tục, để bớt thao tác tay mà vẫn kiểm soát được đầu ra.",
+      "highlights": [
+        "Nối các bước trên giao diện: dễ nhìn thấy dữ liệu đi đâu và việc nào làm trước.",
+        "Nhận yêu cầu từ form hoặc chat, rồi dừng ở bước cần bạn duyệt.",
+        "Cho quy trình rẽ nhánh, lặp lại hoặc thử lại khi một bước gặp lỗi."
+      ]
+    },
+    {
+      "name": "Agency Agents",
+      "hook": "Giao việc cho từng vai trò AI: người lên ý tưởng, người viết, người rà bài.",
+      "description": "Agency Agents mang đến bộ vai trò AI cho content, TikTok, Instagram, LinkedIn và cộng đồng. Mỗi vai trò có nhiệm vụ và cách làm riêng, giúp bạn chia một brief lớn thành những phần rõ ràng thay vì phải hướng dẫn lại mọi thứ trong một cuộc chat."
+    },
+    {
+      "name": "AppFlowy",
+      "hook": "Ý tưởng, brief và bản thảo của cả kênh, gom vào một nơi dễ tìm lại.",
+      "description": "AppFlowy là không gian làm việc mã nguồn mở để tổ chức tài liệu thương hiệu, ý tưởng và bản thảo trên nhiều thiết bị. Khi nội dung bắt đầu nằm rải rác khắp nơi, đây là cách xây một kho chung và chủ động hơn với dữ liệu của mình."
+    },
+    {
+      "name": "Browser Use",
+      "hook": "Mô tả việc cần làm trên web, để AI thao tác giúp bạn.",
+      "description": "Browser Use cho phép AI mở trang, bấm nút, nhập liệu và lấy thông tin theo yêu cầu bằng ngôn ngữ tự nhiên. Những việc như gom dữ liệu từ website hoặc điền biểu mẫu có thể trở thành một quy trình bạn giao cho agent, với bước kiểm tra trước các thao tác quan trọng."
+    },
+    {
+      "name": "Crawl4AI",
+      "hook": "Gom nội dung nhiều trang thành tài liệu AI đọc được, bớt cảnh copy từng đoạn.",
+      "description": "Crawl4AI chuyển website thành văn bản có cấu trúc, giữ những phần như tiêu đề và bảng để AI dễ tổng hợp. Với công việc research hoặc SEO, bạn có thể chuẩn bị một tập nguồn để so sánh và viết bài; phần thiết lập cần agent hoặc người có kỹ thuật hỗ trợ."
+    },
+    {
+      "name": "DeerFlow",
+      "hook": "Chia một đề tài lớn cho nhiều nhánh AI nghiên cứu, rồi gom lại thành tài liệu.",
+      "description": "DeerFlow của ByteDance phối hợp các agent, công cụ và bộ nhớ cho công việc nhiều bước. Bạn có thể dùng hướng tiếp cận này để nghiên cứu một chủ đề, tổ chức các phát hiện và chuẩn bị đầu ra, thay vì tự nối từng cuộc chat nghiên cứu rời rạc."
+    },
+    {
+      "name": "Dify",
+      "hook": "Biến tài liệu thương hiệu thành nền tảng cho một trợ lý AI của riêng team.",
+      "description": "Dify cho phép xây ứng dụng AI bằng giao diện nối các bước, prompt và tài liệu của bạn. Bạn có thể thử nhiều mô hình, theo dõi cách trợ lý xử lý yêu cầu và chỉnh quy trình, để việc dùng AI có cấu trúc hơn những cuộc chat riêng lẻ."
+    },
+    {
+      "name": "Excalidraw",
+      "hook": "Biến một ý tưởng khó giải thích thành sơ đồ phác tay dễ hiểu.",
+      "description": "Excalidraw là bảng vẽ để bạn nối ý tưởng bằng hình khối, mũi tên và ghi chú. Từ sơ đồ quy trình đến bố cục trang, bạn có thể chia sẻ trực quan, cộng tác trên bản web và xuất ảnh để đưa vào bài viết hoặc slide."
+    },
+    {
+      "name": "Firecrawl",
+      "hook": "Đưa cả tập nguồn web vào quy trình AI, thay vì chép từng trang.",
+      "description": "Firecrawl giúp tìm nguồn, đọc trang và gom nhiều URL thành dữ liệu có cấu trúc. Đây là khâu thu thập hữu ích cho quy trình nghiên cứu và sản xuất nội dung, khi bạn có agent hoặc người hỗ trợ kết nối công cụ."
+    },
+    {
+      "name": "GPT-SoVITS",
+      "hook": "Thử tạo giọng đọc riêng từ mẫu thu, trong cùng một giao diện chuẩn bị dữ liệu.",
+      "description": "GPT-SoVITS kết hợp tạo giọng từ mẫu với các bước tách giọng, chia bản thu và gắn văn bản. Bạn có thể thử nghiệm giọng riêng rồi tinh chỉnh bằng dữ liệu của mình; chất lượng còn tùy mẫu thu, ngôn ngữ và cấu hình."
+    },
+    {
+      "name": "HandBrake",
+      "hook": "Video xong rồi nhưng file quá nặng? Chuẩn bị lại trước khi gửi và đăng.",
+      "description": "HandBrake giúp chuyển video sang định dạng và cấu hình phù hợp nơi bạn muốn sử dụng. Có ứng dụng cho Windows, macOS và Linux, công cụ này giải quyết khâu đóng gói thành phẩm để bạn chủ động hơn về dung lượng và khả năng phát."
+    },
+    {
+      "name": "Humanizer",
+      "hook": "Nội dung sặc mùi AI khiến người đọc lướt qua? Biến văn robot thành giọng người thật tự nhiên chỉ trong 3 giây.",
+      "description": "Humanizer là skill mã nguồn mở giúp rà soát và viết lại câu từ tự nhiên, gần gũi như người thật trò chuyện mà vẫn bảo toàn 100% sự thật và số liệu. Tương thích trực tiếp với Claude Code, Codex, Gemini và hầu hết AI Agent."
+    },
+    {
+      "name": "Impeccable",
+      "hook": "Nói rõ website cần sửa gì, thay vì lặp lại “làm đẹp hơn”.",
+      "description": "Impeccable cho bạn và AI một cách làm chung để rà bố cục, chữ, khoảng cách và chuyển động. Các vòng nhận xét và hoàn thiện có mục tiêu giúp biến phản hồi thiết kế thành việc cụ thể mà agent có thể thực hiện."
+    },
+    {
+      "name": "Khoj",
+      "hook": "Hỏi kho tài liệu của mình, khỏi nhớ từng ý đã lưu ở đâu.",
+      "description": "Khoj giúp tìm và trả lời từ ghi chú, PDF, Word, Notion cùng nguồn web. Bạn có thể dùng kho research và tài liệu thương hiệu đã tích lũy làm nền cho một trợ lý riêng, để những gì từng đọc tiếp tục phục vụ bài viết tiếp theo."
+    },
+    {
+      "name": "LibreChat",
+      "hook": "Gom nhiều mô hình AI, hội thoại và tài liệu vào một bàn làm việc.",
+      "description": "LibreChat giúp bạn dùng nhiều nhà cung cấp AI trong một giao diện có thể tự triển khai. Các công việc viết, nghiên cứu và xử lý tệp có thể được tổ chức theo dự án, kết hợp agent và bước yêu cầu người dùng phê duyệt."
+    },
+    {
+      "name": "listmonk",
+      "hook": "Xây kênh newsletter riêng để giữ liên hệ với độc giả ngoài mạng xã hội.",
+      "description": "listmonk giúp quản lý danh sách email và newsletter trên hệ thống bạn tự vận hành. Khi đã có nội dung và người đăng ký, bạn có một nơi riêng để chăm sóc danh sách đó, với giao diện web và bản demo để xem trước."
+    },
+    {
+      "name": "LiveTalking",
+      "hook": "Cho avatar nói theo kịch bản hoặc audio bạn đã chuẩn bị.",
+      "description": "LiveTalking nối công cụ tạo giọng với mô hình khẩu hình để tạo nhân vật số nói. Bạn có thể dùng đầu ra trong quy trình trình bày hoặc phát video, chọn engine giọng và avatar phù hợp; hệ thống cần được thiết lập trước."
+    },
+    {
+      "name": "LosslessCut",
+      "hook": "Lấy đúng đoạn cần dùng mà không phải nén lại cả video.",
+      "description": "LosslessCut giúp cắt đầu đuôi, chọn đoạn và chuẩn bị tư liệu nhanh trong các định dạng được hỗ trợ. Bạn còn có thể tách âm thanh, phụ đề và rà khoảng lặng để đưa những phần hữu ích sang bước dựng tiếp theo."
+    },
+    {
+      "name": "Marketing Skills",
+      "hook": "Cho AI hiểu sản phẩm và người mua trước khi viết nội dung bán hàng.",
+      "description": "Marketing Skills dùng chung bối cảnh sản phẩm, khách hàng và định vị cho nhiều việc marketing. Từ viết quảng cáo, landing page đến SEO, social và email, các skill có thể tiếp nối nhau để nội dung bám cùng một nền tảng."
+    },
+    {
+      "name": "MarkItDown",
+      "hook": "Đưa PDF, slide và bảng tính vào AI mà bớt công chép lại nội dung.",
+      "description": "MarkItDown của Microsoft chuyển nhiều loại tài liệu thành văn bản có cấu trúc, giữ tiêu đề, danh sách, bảng và link khi có thể. Đây là bước chuẩn bị hữu ích để dùng báo cáo hay tài liệu sản phẩm làm nguồn cho bài viết."
+    },
+    {
+      "name": "Mautic",
+      "hook": "Nối các lần liên hệ rời rạc thành hành trình chăm sóc khách hàng.",
+      "description": "Mautic giúp phân nhóm người liên hệ và thiết kế chuỗi hoạt động marketing tự động. Khi đội của bạn có nhiều nội dung và điểm chạm cần phối hợp, công cụ này tạo một nơi để tổ chức chiến dịch và chủ động dữ liệu."
+    },
+    {
+      "name": "MoneyPrinterTurbo",
+      "hook": "Một chủ đề có thể đi qua kịch bản, voice, phụ đề và ghép video trong cùng quy trình.",
+      "description": "MoneyPrinterTurbo gom các bước sản xuất video ngắn vào một hệ thống có giao diện. Bạn có thể dùng phần tạo tự động hoặc đưa kịch bản, voice và tư liệu riêng vào, rồi thử nhiều khung hình và tạo theo lô."
+    },
+    {
+      "name": "OpenCut",
+      "hook": "Muốn thử trình dựng video mã nguồn mở? Bắt đầu đúng bản đang dùng được.",
+      "description": "OpenCut theo hướng xây trình dựng video mở cho nhiều nền tảng. Theo hồ sơ đã đối chiếu, bản mới đang được viết lại và tác giả hướng người cần sử dụng ngay về Classic; các tính năng agent và dựng theo lô của bản mới cần được kiểm tra theo bản phát hành."
+    },
+    {
+      "name": "PaddleOCR",
+      "hook": "Lấy chữ và bảng từ ảnh tài liệu để bắt đầu nghiên cứu, bớt nhập tay.",
+      "description": "PaddleOCR nhận dạng chữ và phân tích cấu trúc tài liệu để chuyển ảnh, PDF và bảng thành dữ liệu dễ xử lý hơn. Bạn có thể dùng kết quả làm nguồn cho công việc content, sau khi kiểm tra lại phần chữ và số được nhận dạng."
+    },
+    {
+      "name": "Penpot",
+      "hook": "Làm bộ thiết kế có thể tái sử dụng, để các trang giữ cùng một phong cách.",
+      "description": "Penpot giúp thiết kế và tạo bản mẫu tương tác trong trình duyệt, với màu, chữ và thành phần dùng chung. Team có thể giữ website và nhận diện nhất quán, rồi chuyển thông tin thiết kế sang bước xây sản phẩm."
+    },
+    {
+      "name": "Postiz",
+      "hook": "Chuẩn bị lịch đăng cho nhiều kênh ở cùng một nơi.",
+      "description": "Postiz gom soạn nội dung, lên lịch, phối hợp với cộng sự và theo dõi hiệu quả mạng xã hội. Bạn có thể nhìn cả kế hoạch phân phối thay vì mở từng kênh để xử lý từng bài, rồi kết nối lịch đăng với các bước tạo nội dung."
+    },
+    {
+      "name": "Presenton",
+      "hook": "Biến tài liệu thành bản nháp slide có thể chỉnh và xuất PowerPoint.",
+      "description": "Presenton tạo bài trình bày từ prompt, tài liệu hoặc template PowerPoint. Bạn có thể chỉnh bằng giao diện kéo thả, chọn mô hình phù hợp và xuất PPTX hoặc PDF để tiếp tục hoàn thiện theo thương hiệu."
+    },
+    {
+      "name": "pyVideoTrans",
+      "hook": "Gom làm phụ đề, dịch và lồng tiếng video vào một quy trình có thể sửa từng bước.",
+      "description": "pyVideoTrans nối nhận dạng lời nói, dịch phụ đề, gán giọng cho từng vai và ghép lại video. Bạn có thể xử lý theo lô, sửa ở từng giai đoạn và căn audio với hình, thay vì đổi qua nhiều công cụ rời rạc."
+    },
+    {
+      "name": "Remotion",
+      "hook": "Làm một bộ mẫu video rồi tái sử dụng cho cả series.",
+      "description": "Remotion cho phép tạo cảnh, chữ, âm thanh và chuyển động bằng code với sự hỗ trợ của AI agent. Khi đã có mẫu, bạn có thể thay nội dung và dữ liệu để làm nhiều video cùng nhận diện, với quyền kiểm soát chi tiết thời điểm xuất hiện."
+    },
+    {
+      "name": "RSSHub",
+      "hook": "Gom cập nhật từ các nguồn trong ngách vào một luồng tin để theo dõi.",
+      "description": "RSSHub chuyển nội dung từ các nguồn được hỗ trợ thành dòng tin RSS mà ứng dụng đọc tin có thể nhận. Bạn có thể xây đầu vào cho newsletter hoặc nghiên cứu đề tài, bớt việc nhớ mở lại từng website mỗi ngày."
+    },
+    {
+      "name": "SerpBear",
+      "hook": "Theo dõi bài SEO sau khi đăng: từ khóa nào đang lên, từ khóa nào cần xem lại?",
+      "description": "SerpBear giúp theo dõi vị trí từ khóa Google theo lịch và thông báo thay đổi. Kết nối Search Console cho phép xem thêm dữ liệu tìm kiếm và các trang có hiệu quả, để bạn có cơ sở chọn bài cần tối ưu."
+    },
+    {
+      "name": "shadcn/ui",
+      "hook": "Đưa cho AI những thành phần giao diện có thể chỉnh theo thương hiệu.",
+      "description": "shadcn/ui cung cấp mã các thành phần để người dựng hoặc AI agent dùng làm nền cho website. Bạn có thể sửa chúng theo nhu cầu và xây một thư viện riêng, giúp form, nút và giao diện nhất quán hơn."
+    },
+    {
+      "name": "Sim",
+      "hook": "Nhìn được AI đang làm đến bước nào trong quy trình của team.",
+      "description": "Sim gom quy trình AI, bảng dữ liệu, tệp và tri thức vào một không gian làm việc. Bạn có thể nối mô hình với dịch vụ ngoài, theo dõi các lần chạy và đặt lịch để công việc nhiều bước dễ quản lý hơn."
+    },
+    {
+      "name": "Slidev",
+      "hook": "Viết nội dung một lần, đưa vào slide để trình bày hoặc ghi hình.",
+      "description": "Slidev tạo slide từ văn bản Markdown, kết hợp chủ đề thiết kế, sơ đồ và chế độ thuyết trình. Với một mẫu được thiết lập sẵn, creator có thể tập trung vào nội dung workshop hoặc tutorial rồi xuất sang định dạng cần dùng."
+    },
+    {
+      "name": "Social Media Skills",
+      "hook": "Một bài gốc, nhiều kênh đăng, vẫn giữ giọng thương hiệu của bạn.",
+      "description": "Social Media Skills của Charlie Hills giúp AI học cách bạn viết, rồi dùng cùng nền tảng đó để làm bài LinkedIn, kịch bản Reels, newsletter và nội dung hình ảnh. Điểm đáng thử là bạn không phải mô tả lại mình từ đầu cho từng loại nội dung: các skill đọc chung hồ sơ tác giả và giọng văn.",
+      "highlights": [
+        "Voice Builder: dùng phỏng vấn và 3–5 bài mẫu để xây hồ sơ tác giả và giọng văn cho các bài tiếp theo.",
+        "Content Creation: tạo câu mở đầu, phát triển ý tưởng và viết bài LinkedIn theo nhiều cấu trúc nội dung.",
+        "Video: chuyển đề tài thành kịch bản Reels và prompt thumbnail YouTube.",
+        "Hình ảnh: dùng các skill Gemini để chuẩn bị carousel và infographic từ nội dung.",
+        "Research & Analytics: tìm đề tài trong ngách, đánh giá bài viết và dùng dữ liệu để góp ý cải thiện.",
+        "Giữ một giọng thương hiệu: các skill đọc chung about-me.md và voice.md, giúp các định dạng nội dung có cùng nền tảng."
+      ]
+    },
+    {
+      "name": "Taste Skill",
+      "hook": "Cho website do AI dựng một định hướng thẩm mỹ rõ ràng.",
+      "description": "Taste Skill hướng dẫn AI xử lý bố cục, chữ, khoảng cách và chuyển động theo một định hướng thiết kế. Bạn có thể chọn nhánh rà website đã có, xây giao diện hoặc tạo ảnh tham chiếu, tùy đầu ra cần làm."
+    },
+    {
+      "name": "tldraw",
+      "hook": "Biến bảng ý tưởng thành nền cho một công cụ riêng của team.",
+      "description": "tldraw cung cấp bộ nền canvas để xây ứng dụng với chữ, hình, mũi tên và media. Nếu có agent hoặc người hỗ trợ phát triển, bạn có thể tạo bảng làm việc tương tác và nối thêm các bước xử lý phù hợp quy trình của mình."
+    },
+    {
+      "name": "UI UX Pro Max",
+      "hook": "Đưa màu, chữ và cách tương tác vào brief trước khi AI dựng trang.",
+      "description": "UI UX Pro Max giúp agent chọn hệ thiết kế và kiểm tra giao diện theo nhu cầu dự án. Ngoài bố cục, công cụ đưa cả tương phản, thao tác bàn phím và hiển thị trên nhiều màn hình vào quá trình xây website."
+    },
+    {
+      "name": "Ultimate Vocal Remover",
+      "hook": "Tách giọng và nhạc để chủ động hơn khi xử lý bản thu.",
+      "description": "Ultimate Vocal Remover mang các mô hình tách âm thanh vào ứng dụng có giao diện. Bạn có thể chuẩn bị voice hoặc giảm ảnh hưởng nhạc nền trước bước nhận dạng, trên tư liệu mình có quyền xử lý."
+    },
+    {
+      "name": "Umami",
+      "hook": "Biết bài nào mang người đọc về website và họ làm gì tiếp theo.",
+      "description": "Umami gom dữ liệu truy cập, chiến dịch và chuyển đổi vào một giao diện theo hướng bảo vệ quyền riêng tư. Với người làm content, đây là cách nối bài đăng với kết quả trên web để quyết định nên tiếp tục đầu tư vào nội dung nào."
+    },
+    {
+      "name": "Upscayl",
+      "hook": "Phóng lớn cả nhóm ảnh bằng AI, ngay trong ứng dụng desktop.",
+      "description": "Upscayl giúp nâng độ phân giải ảnh bằng giao diện, có lựa chọn mô hình và xử lý theo lô. Bạn có thể thử cải thiện ảnh nhỏ trước khi đưa vào thiết kế; các chi tiết AI bổ sung vẫn cần được xem lại."
+    },
+    {
+      "name": "Whisper",
+      "hook": "Chuyển lời nói trong bản thu thành chữ để sửa nội dung và làm phụ đề.",
+      "description": "Whisper của OpenAI nhận dạng giọng nói đa ngôn ngữ với nhiều cỡ mô hình. Bạn có thể dùng transcript làm nền cho phụ đề, rà lại kịch bản hoặc xử lý nội dung từ audio, thay vì nghe và gõ lại từ đầu."
+    },
+    {
+      "name": "WhisperX",
+      "hook": "Căn chữ theo từng từ được nói, để phụ đề và chuyển động bám sát voice.",
+      "description": "WhisperX bổ sung mốc thời gian từng từ và phân biệt lượt người nói quanh quy trình Whisper. Với video kể chuyện hoặc phỏng vấn, đây là dữ liệu để làm phụ đề bật theo lời và căn các chi tiết hình ảnh sát bản thu hơn."
+    },
+    {
+      "name": "yt-dlp",
+      "hook": "Đưa video, audio và phụ đề được phép sử dụng vào quy trình riêng.",
+      "description": "yt-dlp giúp tải tư liệu từ các website được hỗ trợ, với lựa chọn định dạng, âm thanh và phụ đề. Bạn có thể dùng agent hỗ trợ để lấy lại video của mình hoặc chuẩn bị tư liệu đã được cấp quyền cho bước xử lý tiếp theo."
+    }
+  ]
+}

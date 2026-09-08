@@ -1,0 +1,4 @@
+#!/bin/sh
+BIN_DIR="/Users/win/Documents/WindiStudio2/videos/windistudio-repo/ws01-archify/node_modules/@remotion/compositor-darwin-arm64"
+export DYLD_LIBRARY_PATH="$BIN_DIR${DYLD_LIBRARY_PATH:+:$DYLD_LIBRARY_PATH}"
+exec "$BIN_DIR/ffmpeg" "$@"

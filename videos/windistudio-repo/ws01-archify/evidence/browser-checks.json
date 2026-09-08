@@ -1,0 +1,48 @@
+[
+  {
+    "name": "workflow",
+    "width": 1440,
+    "height": 900,
+    "scrollWidth": 1440,
+    "scrollHeight": 900
+  },
+  {
+    "name": "workflow",
+    "width": 1600,
+    "height": 1000,
+    "scrollWidth": 1600,
+    "scrollHeight": 1000
+  },
+  {
+    "name": "workflow",
+    "width": 1920,
+    "height": 1080,
+    "scrollWidth": 1920,
+    "scrollHeight": 1080
+  },
+  {
+    "name": "workflow-revised",
+    "width": 1440,
+    "height": 900,
+    "scrollWidth": 1440,
+    "scrollHeight": 900
+  },
+  {
+    "name": "workflow-revised",
+    "width": 1600,
+    "height": 1000,
+    "scrollWidth": 1600,
+    "scrollHeight": 1000
+  },
+  {
+    "name": "workflow-revised",
+    "width": 1920,
+    "height": 1080,
+    "scrollWidth": 1920,
+    "scrollHeight": 1080
+  },
+  {
+    "website": "https://windistudio.app/",
+    "title": "WinDiStudio"
+  }
+]

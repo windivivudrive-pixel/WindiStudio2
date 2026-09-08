@@ -1,0 +1,19 @@
+[
+  {"text":"SỬA MÁY CHO BỐ MẸ","startMs":0,"endMs":2100,"timestampMs":null,"confidence":null,"highlight":"BỐ MẸ"},
+  {"text":"CHƯA XONG ĐÃ BỊ ĐÁ RA?","startMs":2200,"endMs":3380,"timestampMs":null,"confidence":null,"highlight":"BỊ ĐÁ RA"},
+  {"text":"ĐÂY LÀ LÚC BIẾT RUSTDESK","startMs":3580,"endMs":4920,"timestampMs":null,"confidence":null,"highlight":"RUSTDESK"},
+  {"text":"NHÌN VÀ ĐIỀU KHIỂN TỪ XA","startMs":5520,"endMs":8280,"timestampMs":null,"confidence":null,"highlight":"TỪ XA"},
+  {"text":"MÁY CHỦ DO MÌNH QUẢN LÝ","startMs":8580,"endMs":11060,"timestampMs":null,"confidence":null,"highlight":"MÌNH QUẢN LÝ"},
+  {"text":"BỚT PHỤ THUỘC DỊCH VỤ KHÁC","startMs":11420,"endMs":13400,"timestampMs":null,"confidence":null,"highlight":"BỚT PHỤ THUỘC"},
+  {"text":"NHẬP MÃ KẾT NỐI","startMs":13780,"endMs":16100,"timestampMs":null,"confidence":null,"highlight":"MÃ KẾT NỐI"},
+  {"text":"XỬ LÝ, KHÔNG CẦN CHẠY QUA","startMs":16100,"endMs":19200,"timestampMs":null,"confidence":null,"highlight":"KHÔNG CẦN CHẠY QUA"},
+  {"text":"FILE NẰM Ở VĂN PHÒNG","startMs":19420,"endMs":21950,"timestampMs":null,"confidence":null,"highlight":"VĂN PHÒNG"},
+  {"text":"VÀO ĐÚNG MÁY VÀ LẤY FILE","startMs":21950,"endMs":24920,"timestampMs":null,"confidence":null,"highlight":"LẤY FILE"},
+  {"text":"ƯU TIÊN NỐI TRỰC TIẾP","startMs":25380,"endMs":26660,"timestampMs":null,"confidence":null,"highlight":"TRỰC TIẾP"},
+  {"text":"MẠNG CHẶN? CÓ ĐƯỜNG DỰ PHÒNG","startMs":26660,"endMs":29940,"timestampMs":null,"confidence":null,"highlight":"ĐƯỜNG DỰ PHÒNG"},
+  {"text":"CÀI ĐẶT · CẬP NHẬT · CHI PHÍ","startMs":30220,"endMs":33860,"timestampMs":null,"confidence":null,"highlight":"CHI PHÍ"},
+  {"text":"DÙNG THỬ TRƯỚC · TỰ DỰNG SAU","startMs":34020,"endMs":37640,"timestampMs":null,"confidence":null,"highlight":"TỰ DỰNG SAU"},
+  {"text":"CẢ NHÀ GỌI KHI MÁY LỖI","startMs":38000,"endMs":40800,"timestampMs":null,"confidence":null,"highlight":"MÁY LỖI"},
+  {"text":"HOẶC CẦN VÀO MÁY VĂN PHÒNG","startMs":40800,"endMs":43180,"timestampMs":null,"confidence":null,"highlight":"MÁY VĂN PHÒNG"},
+  {"text":"KHÁM PHÁ WINDISTUDIO.APP","startMs":43460,"endMs":46420,"timestampMs":null,"confidence":null,"highlight":"WINDISTUDIO.APP"}
+]
