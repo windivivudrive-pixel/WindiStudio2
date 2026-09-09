@@ -1,4 +1,4 @@
-import { failure, identity, paymentConfig, providerReady } from '@/lib/voice/server';
+import { ensureWindiPaymentCode, failure, identity, paymentConfig, providerReady } from '@/lib/voice/server';
 export async function GET() {
  try {
   const {client,user}=await identity();
@@ -9,6 +9,11 @@ export async function GET() {
     client.from('windi_voice_orders').select('id,plan_id,amount_vnd,payment_code,status,expires_at').eq('user_id',user.id).neq('plan_id','welcome').order('created_at',{ascending:false}).limit(10),
   ]);
   for(const r of [period,clones,jobs,orders]) if(r.error) throw r.error;
+  if(orders.data) {
+    for(const order of orders.data) {
+      await ensureWindiPaymentCode(order);
+    }
+  }
   return Response.json({period:period.data,clones:clones.data,jobs:jobs.data,orders:orders.data,available:providerReady(),paymentsAvailable:!!paymentConfig()},{headers:{'Cache-Control':'no-store'}});
  } catch(error) {return failure(error);}
 }

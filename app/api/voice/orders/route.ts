@@ -1,4 +1,4 @@
-import {boundedBody,failure,identity,paymentConfig,providerReady,VoiceError,writer} from '@/lib/voice/server';
+import {boundedBody,ensureWindiPaymentCode,failure,identity,paymentConfig,providerReady,VoiceError,writer} from '@/lib/voice/server';
 import {isUUID,VOICE_PLANS} from '@/lib/voice/shared';
 export async function POST(request:Request) {
  try {
@@ -8,7 +8,8 @@ export async function POST(request:Request) {
   if(!VOICE_PLANS.some(p=>p.id===planId&&p.purchasable)) throw new VoiceError('Gói không hợp lệ.');
   const {data,error}=await writer().rpc('windi_voice_order',{p_user:user.id,p_plan:planId});
   if(error) throw error;
-  return Response.json({order:data,bank:paymentConfig()});
+  const order = await ensureWindiPaymentCode(data);
+  return Response.json({order,bank:paymentConfig()});
  }catch(error){return failure(error);}
 }
 export async function GET(request:Request) {
@@ -18,7 +19,8 @@ export async function GET(request:Request) {
   const {data,error}=await client.from('windi_voice_orders').select('id,plan_id,amount_vnd,payment_code,status,expires_at').eq('user_id',user.id).eq('id',id).maybeSingle();
   if(error) throw error;
   if(!data) throw new VoiceError('Không tìm thấy đơn.',404);
-  return Response.json({order:{...data,status:data.status==='pending'&&Date.parse(data.expires_at)<=Date.now()?'expired':data.status},bank:paymentConfig()},{headers:{'Cache-Control':'no-store'}});
+  const order = await ensureWindiPaymentCode(data);
+  return Response.json({order:{...order,status:order?.status==='pending'&&Date.parse(order.expires_at)<=Date.now()?'expired':order?.status},bank:paymentConfig()},{headers:{'Cache-Control':'no-store'}});
  }catch(error){return failure(error);}
 }
 export async function DELETE(request:Request) {

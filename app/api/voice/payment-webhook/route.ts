@@ -20,7 +20,12 @@ export async function POST(request:Request) {
   const p_code=windiMatches.length===1
     ? `WINDI ${windiMatches[0][1]}`
     : (wstMatches.length===1 ? `WST ${wstMatches[0][1]}` : wvMatches[0][0]);
-  const {data,error}=await writer().rpc('windi_voice_pay',{p_code,p_gateway:String(body.id),p_amount:body.transferAmount});
+  let {data,error}=await writer().rpc('windi_voice_pay',{p_code,p_gateway:String(body.id),p_amount:body.transferAmount});
+  if(data==='ignored'&&p_code.includes(' ')) {
+    const altCode=p_code.replace(/\s+/g,'');
+    const retry=await writer().rpc('windi_voice_pay',{p_code:altCode,p_gateway:String(body.id),p_amount:body.transferAmount});
+    if(!retry.error&&retry.data&&retry.data!=='ignored') data=retry.data;
+  }
   if(error) throw error;
   return Response.json({success:true,status:data});
  }catch(error){return failure(error);}
