@@ -1,7 +1,7 @@
 import 'server-only';
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/server';
-import { STARTER_VOICES, type StudioVoice } from './shared';
+import { STARTER_VOICES, VOICE_LANGUAGES, VOICE_LIBRARY_LANGUAGES, isSampleLibraryLanguage, voiceLibraryLimit, voiceUseCases, type StudioVoice, type VoiceAccent } from './shared';
 
 export class VoiceError extends Error { constructor(message:string, public status=400) {super(message);} }
 export const bucket = 'windi-voice-audio';
@@ -45,13 +45,13 @@ export async function cartesia(path:string, init:RequestInit={}) {
   if(!apiKey) throw new VoiceError('Voice Studio đang được kết nối với nhà cung cấp. Vui lòng quay lại sau.',503);
   return fetch(`https://api.cartesia.ai${path}`,{...init,cache:'no-store',signal:AbortSignal.timeout(90000),headers:{Authorization:`Bearer ${apiKey}`,'Cartesia-Version':'2026-08-14',...init.headers}});
 }
-const PUBLIC_VOICE_TARGET = 36;
-const PRIORITY_CATALOG_LANGUAGES = ['vi','ko'];
+const PUBLIC_VOICE_TARGET_MAX = 12;
 const PREVIEW_CACHE_MS = 60 * 60 * 1000;
 const PREVIEW_WINDOW_MS = 60 * 1000;
 const PREVIEW_MAX_PER_WINDOW = 12;
 const PREVIEW_PATH_VERSION = 'v1';
 let catalog:{expires:number;voices:StudioVoice[]}|undefined;
+const accentCache = new Map<string,{expires:number;accents:VoiceAccent[]}>();
 const previewCache = new Map<string,{expires:number;audio:ArrayBuffer}>();
 const previewRequests = new Map<string,{startedAt:number;count:number}>();
 const previewBuilds = new Map<string,Promise<ArrayBuffer>>();
@@ -69,7 +69,8 @@ async function catalogPage(language?:string, cursor?:string):Promise<CartesiaCat
   return {
     voices:result.data
       .filter((voice:{access?:string;visibility?:string;is_owner?:boolean;status?:string})=>voice.access==='public'&&voice.visibility==='all'&&voice.is_owner===false&&voice.status==='active')
-      .map((voice:{id:string;name:string;description?:string;tagline?:string;language:string;gender?:string})=>({id:voice.id,name:voice.name,description:voice.description||voice.tagline||'',language:voice.language,gender:voice.gender,kind:'public'})),
+      .filter((voice:{language:string})=>isSampleLibraryLanguage(voice.language))
+      .map((voice:{id:string;name:string;description?:string;tagline?:string;language:string;gender?:string})=>({id:voice.id,name:voice.name,description:voice.description||voice.tagline||'',language:voice.language,gender:voice.gender,useCases:voiceUseCases(voice.tagline,voice.description),kind:'public'})),
     hasMore:result.has_more===true,
     nextPage:typeof result.next_page==='string'?result.next_page:null,
   };
@@ -78,31 +79,48 @@ async function catalogPage(language?:string, cursor?:string):Promise<CartesiaCat
 export async function publicVoices():Promise<{voices:StudioVoice[]; source:string}> {
   if(!providerReady()) return {voices:STARTER_VOICES,source:'documented'};
   if(catalog && catalog.expires>Date.now()) return {voices:catalog.voices,source:'live'};
-  const [priorityPages,allVoices]=await Promise.all([
-    Promise.all(PRIORITY_CATALOG_LANGUAGES.map(language=>catalogPage(language))),
-    catalogPage(),
-  ]);
+  const pages=await Promise.all(VOICE_LIBRARY_LANGUAGES.map(async language=>({language:language.id,page:await catalogPage(language.id)})));
   const seen=new Set<string>();
   const voices:StudioVoice[]=[];
-  const append=(items:StudioVoice[])=>{
-    for(const voice of items) {
-      if(!seen.has(voice.id)&&voices.length<PUBLIC_VOICE_TARGET) {seen.add(voice.id);voices.push(voice);}
+  for(let index=0;index<PUBLIC_VOICE_TARGET_MAX;index++) {
+    for(const {language,page} of pages) {
+      if(index>=voiceLibraryLimit(language)) continue;
+      const voice=page.voices[index];
+      if(voice&&!seen.has(voice.id)) {
+        seen.add(voice.id);voices.push(voice);
+      }
     }
-  };
-  // Vietnamese and Korean public voices are deliberately pinned into the compact sample catalog.
-  priorityPages.forEach(page=>append(page.voices));
-  append(allVoices.voices);
-  let cursor=allVoices.nextPage;
-  for(let page=0;cursor&&page<29&&voices.length<PUBLIC_VOICE_TARGET;page++) {
-    const next=await catalogPage(undefined,cursor);
-    append(next.voices);
-    cursor=next.nextPage;
   }
   catalog={expires:Date.now()+300000,voices};
   return {voices,source:'live'};
 }
 export async function publicVoice(id:string) {
   return (await publicVoices()).voices.find(voice=>voice.id===id) ?? null;
+}
+
+export async function voiceAccents(language:string):Promise<VoiceAccent[]> {
+  if(!VOICE_LANGUAGES.some(item=>item.id===language)) throw new VoiceError('Ngôn ngữ giọng không hợp lệ.');
+  const cached=accentCache.get(language);
+  if(cached&&cached.expires>Date.now()) return cached.accents;
+  const response=await cartesia(`/accents?${new URLSearchParams({language})}`);
+  if(!response.ok) throw new VoiceError('Chưa tải được danh sách accent. Vui lòng thử lại.',502);
+  const result=await response.json();
+  if(!Array.isArray(result.accents)) throw new VoiceError('Danh sách accent tạm thời không khả dụng.',502);
+  const accents=result.accents
+    .filter((accent:unknown):accent is {id:string;name:string;language:string;locale:string;is_locale_default?:boolean;is_localizable?:boolean}=>!!accent&&typeof accent==='object'&&typeof (accent as {id?:unknown}).id==='string'&&typeof (accent as {name?:unknown}).name==='string'&&typeof (accent as {language?:unknown}).language==='string'&&typeof (accent as {locale?:unknown}).locale==='string')
+    .filter(accent=>accent.language===language)
+    .map(accent=>({id:accent.id,name:accent.name,language:accent.language,locale:accent.locale,isLocaleDefault:accent.is_locale_default===true,isLocalizable:accent.is_localizable===true}));
+  accentCache.set(language,{expires:Date.now()+300000,accents});
+  return accents;
+}
+
+export async function resolveCloneAccent(language:string,value:unknown) {
+  const accent=typeof value==='string'?value.trim():'';
+  if(!accent) return null;
+  if(accent.length>100) throw new VoiceError('Accent được chọn không hợp lệ.');
+  const available=await voiceAccents(language);
+  if(!available.some(item=>item.id===accent)) throw new VoiceError('Accent này không phù hợp với ngôn ngữ mẫu đã chọn.');
+  return accent;
 }
 
 function previewTranscript(language:string) {

@@ -1,4 +1,4 @@
-import {boundedBody,cartesia,failure,identity,providerReady,VoiceError,writer} from '@/lib/voice/server';
+import {boundedBody,cartesia,failure,identity,providerReady,resolveCloneAccent,VoiceError,writer} from '@/lib/voice/server';
 import {isUUID,VOICE_LANGUAGES} from '@/lib/voice/shared';
 export const runtime='nodejs';
 export const maxDuration=120;
@@ -11,15 +11,16 @@ export async function POST(request:Request) {
   const clip=form.get('clip'),name=String(form.get('name')||'').trim(),language=String(form.get('language')||'vi'),key=form.get('requestKey');
   if(!(clip instanceof File)||!clip.size||clip.size>3*1024*1024||!isUUID(key)||!name||name.length>80||form.get('consent')!=='true'||!VOICE_LANGUAGES.some(l=>l.id===language)) throw new VoiceError('Kiểm tra tên giọng, file mẫu (tối đa 3 MB) và xác nhận quyền sử dụng.');
   if(!/\.(mp3|wav|flac|ogg|webm)$/i.test(clip.name)) throw new VoiceError('Chọn file MP3, WAV, FLAC, OGG hoặc WebM.');
+  const accent=await resolveCloneAccent(language,form.get('accent'));
   const db=writer();
-  const {data:clone,error}=await db.rpc('windi_voice_clone_reserve',{p_user:user.id,p_key:key,p_name:name,p_language:language});
+  const {data:clone,error}=await db.rpc('windi_voice_clone_reserve',{p_user:user.id,p_key:key,p_name:name,p_language:language,p_accent:accent});
   if(error) throw error;
   if(clone.status==='ready') return Response.json({id:clone.id});
   const claim=await db.from('windi_voice_clones').update({status:'pending'}).eq('id',clone.id).eq('status','reserved').select('id').maybeSingle();
   if(claim.error) throw claim.error;
   if(!claim.data) throw new VoiceError('Mẫu này đã được tiếp nhận. Kiểm tra danh sách giọng clone.',409);
   const upload=new FormData();
-  upload.set('clip',clip);upload.set('name',`WV ${clone.id}`);upload.set('description',name);upload.set('language',language);upload.set('access','private');
+  upload.set('clip',clip);upload.set('name',`WV ${clone.id}`);upload.set('description',name);upload.set('language',language);upload.set('access','private');if(accent) upload.set('accent',accent);
   let response:Response;
   try {response=await cartesia('/voices/clone',{method:'POST',body:upload});}
   catch {throw new VoiceError('Kết nối bị gián đoạn. Lượt clone đang được tạm giữ để đối soát. Vui lòng liên hệ hỗ trợ.',503);}

@@ -1,12 +1,13 @@
 import {beforeEach,expect,test,vi} from 'vitest';
 vi.mock('server-only',()=>({}));
-const state=vi.hoisted(()=>({identity:vi.fn(),writer:vi.fn(),cartesia:vi.fn(),providerReady:vi.fn(),resolveVoice:vi.fn(),audioUrl:vi.fn(),paymentConfig:vi.fn(),previewPublicVoice:vi.fn()}));
+const state=vi.hoisted(()=>({identity:vi.fn(),writer:vi.fn(),cartesia:vi.fn(),providerReady:vi.fn(),resolveVoice:vi.fn(),resolveCloneAccent:vi.fn(),voiceAccents:vi.fn(),audioUrl:vi.fn(),paymentConfig:vi.fn(),previewPublicVoice:vi.fn()}));
 vi.mock('../lib/voice/server',async(importOriginal)=>({...await importOriginal<typeof import('../lib/voice/server')>(),...state}));
 import {POST as generate} from '../app/api/voice/generate/route';
 import {POST as clone} from '../app/api/voice/clone/route';
 import {POST as createOrder} from '../app/api/voice/orders/route';
 import {POST as pay} from '../app/api/voice/payment-webhook/route';
 import {GET as preview} from '../app/api/voice/preview/route';
+import {GET as accents} from '../app/api/voice/accents/route';
 import {VoiceError} from '../lib/voice/server';
 const uid='00000000-0000-4000-8000-000000000011',id='00000000-0000-4000-8000-000000000022';
 const payload={text:'Xin chào',voiceId:id,requestKey:id,language:'vi',speed:1};
@@ -14,8 +15,8 @@ const request=(body:unknown)=>new Request('http://localhost/api/voice/generate',
 let rpc:ReturnType<typeof vi.fn>,upload:ReturnType<typeof vi.fn>,claim:ReturnType<typeof vi.fn>;
 beforeEach(()=>{
  vi.resetAllMocks();
- state.identity.mockResolvedValue({user:{id:uid}});state.providerReady.mockReturnValue(true);state.resolveVoice.mockResolvedValue({id,name:'Voice'});state.audioUrl.mockResolvedValue('https://example.test/signed');
- rpc=vi.fn().mockImplementation(async(name)=>({data:name==='windi_voice_reserve'?{id,status:'reserved'}:null,error:null}));
+ state.identity.mockResolvedValue({user:{id:uid}});state.providerReady.mockReturnValue(true);state.resolveVoice.mockResolvedValue({id,name:'Voice'});state.resolveCloneAccent.mockResolvedValue(null);state.voiceAccents.mockResolvedValue([]);state.audioUrl.mockResolvedValue('https://example.test/signed');
+ rpc=vi.fn().mockImplementation(async(name)=>({data:name==='windi_voice_reserve'||name==='windi_voice_clone_reserve'?{id,status:'reserved'}:null,error:null}));
  upload=vi.fn().mockResolvedValue({error:null});claim=vi.fn().mockResolvedValue({data:{id},error:null});
  const query={update:()=>query,eq:()=>query,select:()=>query,maybeSingle:claim};
  state.writer.mockReturnValue({rpc,from:()=>query,storage:{from:()=>({upload})}});
@@ -65,6 +66,21 @@ test('clone requires explicit voice rights confirmation before provider use',asy
  const form=new FormData();form.set('clip',new File(['test'],'voice.mp3',{type:'audio/mpeg'}));form.set('name','My voice');form.set('requestKey',id);form.set('language','vi');
  const response=await clone(new Request('http://localhost/api/voice/clone',{method:'POST',body:form}));
  expect(response.status).toBe(400);expect(rpc).not.toHaveBeenCalled();expect(state.cartesia).not.toHaveBeenCalled();
+});
+test('clone validates, persists, and forwards an optional Cartesia accent',async()=>{
+ const form=new FormData();form.set('clip',new File(['test'],'voice.mp3',{type:'audio/mpeg'}));form.set('name','My voice');form.set('requestKey',id);form.set('language','vi');form.set('accent','northern-vietnamese');form.set('consent','true');
+ state.resolveCloneAccent.mockResolvedValue('northern-vietnamese');state.cartesia.mockResolvedValue(new Response(JSON.stringify({id}),{headers:{'Content-Type':'application/json'}}));
+ const response=await clone(new Request('http://localhost/api/voice/clone',{method:'POST',body:form}));
+ expect(response.status).toBe(200);expect(state.resolveCloneAccent).toHaveBeenCalledWith('vi','northern-vietnamese');
+ expect(rpc).toHaveBeenCalledWith('windi_voice_clone_reserve',{p_user:uid,p_key:id,p_name:'My voice',p_language:'vi',p_accent:'northern-vietnamese'});
+ const upstream=state.cartesia.mock.calls[0][1].body as FormData;
+ expect(upstream.get('accent')).toBe('northern-vietnamese');
+});
+test('accent catalog is private to the signed-in studio user and language-scoped',async()=>{
+ state.voiceAccents.mockResolvedValue([{id:'northern-vietnamese',name:'Northern Vietnamese',language:'vi',locale:'vi-VN',isLocaleDefault:true,isLocalizable:false}]);
+ const response=await accents(new Request('http://localhost/api/voice/accents?language=vi'));
+ expect(response.status).toBe(200);expect(await response.json()).toEqual({accents:[expect.objectContaining({id:'northern-vietnamese',language:'vi'})]});
+ expect(state.voiceAccents).toHaveBeenCalledWith('vi');
 });
 function webhook(body:unknown,token='Apikey test-webhook-secret'){return new Request('http://localhost/api/voice/payment-webhook',{method:'POST',headers:{'Content-Type':'application/json',Authorization:token},body:JSON.stringify(body)});}
 function orderRequest(planId:string){return new Request('http://localhost/api/voice/orders',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({planId})});}
