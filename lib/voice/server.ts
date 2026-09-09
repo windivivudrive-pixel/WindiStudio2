@@ -209,16 +209,46 @@ export function generateVoicePaymentCode(): string {
   return `WINDI ${rand}`;
 }
 
-export async function ensureWindiPaymentCode<T extends { id: string; status: string; payment_code?: string }>(order: T | null | undefined): Promise<T | null | undefined> {
+export async function ensureOrderValid<T extends { id: string; status: string; payment_code?: string; expires_at?: string; created_at?: string }>(order: T | null | undefined): Promise<T | null | undefined> {
   if (!order) return order;
-  if (order.status === 'pending' && (!order.payment_code || !order.payment_code.startsWith('WINDI '))) {
-    const newCode = generateVoicePaymentCode();
-    try {
-      await writer().from('windi_voice_orders').update({ payment_code: newCode }).eq('id', order.id);
-      order.payment_code = newCode;
-    } catch {
-      // Ignore if DB update fails or table not accessible in test mocks
+  const now = Date.now();
+  if (order.status === 'pending') {
+    const isExpired = (order.expires_at && Date.parse(order.expires_at) <= now) ||
+      (order.created_at && Date.parse(order.created_at) <= now - 5 * 60 * 1000);
+    if (isExpired) {
+      order.status = 'expired';
+      try {
+        await writer().from('windi_voice_orders').update({ status: 'expired' }).eq('id', order.id);
+      } catch {
+        // Ignore in test mocks
+      }
+      return order;
+    }
+
+    const needsNewCode = !order.payment_code || !order.payment_code.startsWith('WINDI ');
+    const currentExpires = order.expires_at ? Date.parse(order.expires_at) : 0;
+    // Cap expiration to 5 minutes if it had the old 24h interval
+    const needsExpiresCap = !order.expires_at || currentExpires > now + 6 * 60 * 1000;
+
+    if (needsNewCode || needsExpiresCap) {
+      const updates: Record<string, unknown> = {};
+      if (needsNewCode) {
+        order.payment_code = generateVoicePaymentCode();
+        updates.payment_code = order.payment_code;
+      }
+      if (needsExpiresCap) {
+        const fiveMin = new Date(now + 5 * 60 * 1000).toISOString();
+        order.expires_at = fiveMin;
+        updates.expires_at = fiveMin;
+      }
+      try {
+        await writer().from('windi_voice_orders').update(updates).eq('id', order.id);
+      } catch {
+        // Ignore in test mocks
+      }
     }
   }
   return order;
 }
+
+export const ensureWindiPaymentCode = ensureOrderValid;

@@ -40,7 +40,10 @@ test('orders have authoritative prices, pending-order deduplication, and no free
  await expect(reserve(1)).rejects.toThrow('NO_SUBSCRIPTION');
  order=(await db.query<{id:string;payment_code:string}>('select * from windi_voice_order($1,$2)',[a,'starter'])).rows[0];
  expect((await db.query('select * from windi_voice_order($1,$2)',[a,'starter'])).rows[0]).toEqual(expect.objectContaining({id:order.id,amount_vnd:69000}));
- await expect(db.query('select windi_voice_order($1,$2)',[a,'studio'])).rejects.toThrow('PENDING_ORDER');
+ const studioOrder=(await db.query<{id:string;plan_id:string}>('select * from windi_voice_order($1,$2)',[a,'studio'])).rows[0];
+ expect(studioOrder.plan_id).toBe('studio');
+ expect((await db.query<{status:string}>('select status from windi_voice_orders where id=$1',[order.id])).rows[0].status).toBe('expired');
+ order=(await db.query<{id:string;payment_code:string}>('select * from windi_voice_order($1,$2)',[a,'starter'])).rows[0];
 });
 test('verified payment creates exactly one monthly grant, webhook retries do not reset credits',async()=>{
  await db.query('select windi_voice_pay($1,$2,$3)',[order.payment_code,'gateway-1',69000]);
