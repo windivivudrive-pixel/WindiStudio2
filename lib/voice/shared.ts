@@ -6,6 +6,24 @@ export const VOICE_PLANS = [
   { id: 'studio', name: 'Studio', price_vnd: 999000, credits: 600000, clone_limit: 20, duration_days: 30, billing: 'monthly', purchasable: true, description: 'Nhiều giọng kể. Nhiều câu chuyện hơn.' },
 ] as const;
 export const VOICE_LANGUAGES = [{id:'vi',name:'Tiếng Việt'},{id:'en',name:'English'},{id:'ko',name:'한국어'},{id:'ja',name:'日本語'},{id:'zh',name:'中文'},{id:'fr',name:'Français'},{id:'de',name:'Deutsch'},{id:'es',name:'Español'},{id:'th',name:'ไทย'},{id:'id',name:'Bahasa Indonesia'}];
+export const VOICE_LIBRARY_LANGUAGES = [{id:'en',name:'English'},{id:'fr',name:'Français'},{id:'es',name:'Español'},{id:'ko',name:'한국어'},{id:'th',name:'ไทย'},{id:'ja',name:'日本語'},{id:'zh',name:'中文'},{id:'vi',name:'Tiếng Việt'}] as const;
+export const VOICE_LIBRARY_VOICE_LIMITS = {default:5,en:12} as const;
+export type VoiceUseCase = 'advertising'|'conversation'|'entertainment';
+const SAMPLE_LANGUAGE_IDS = new Set<string>(VOICE_LIBRARY_LANGUAGES.map(language=>language.id));
+const USE_CASE_RULES:ReadonlyArray<{tag:VoiceUseCase;pattern:RegExp}> = [
+  {tag:'advertising',pattern:/\b(advertising|advertisement|commercial|marketing|promotional)\b/i},
+  {tag:'conversation',pattern:/\b(conversation(?:al)?|dialogue|dialog)\b/i},
+  {tag:'entertainment',pattern:/\b(entertainment|gaming|game character|character voice)\b/i},
+];
+export const isSampleLibraryLanguage = (language:string) => SAMPLE_LANGUAGE_IDS.has(language.split(/[-_]/)[0].toLowerCase());
+export const voiceLibraryLimit = (language:string) => {
+  const base=language.split(/[-_]/)[0].toLowerCase();
+  return base==='en'?VOICE_LIBRARY_VOICE_LIMITS.en:VOICE_LIBRARY_VOICE_LIMITS.default;
+};
+export function voiceUseCases(tagline?:string|null,description?:string|null):VoiceUseCase[] {
+  const source=[tagline,description].filter((value):value is string=>typeof value==='string').join(' ');
+  return USE_CASE_RULES.filter(rule=>rule.pattern.test(source)).map(rule=>rule.tag);
+}
 // Verified IDs published in Cartesia's Sonic 3.6 voice-selection documentation.
 export const STARTER_VOICES: StudioVoice[] = [
   {id:'db6b0ed5-d5d3-463d-ae85-518a07d3c2b4',name:'Skylar',description:'Giọng nữ Mỹ • thân thiện',language:'en',gender:'feminine',kind:'public'},
@@ -14,9 +32,10 @@ export const STARTER_VOICES: StudioVoice[] = [
   {id:'62ae83ad-4f6a-430b-af41-a9bede9286ca',name:'Gemma',description:'Giọng nữ Anh',language:'en',gender:'feminine',kind:'public'},
   {id:'ef191366-f52f-447a-a398-ed8c0f2943a1',name:'Archie',description:'Giọng nam Anh',language:'en',gender:'masculine',kind:'public'},
 ];
-export type StudioVoice = {id:string; name:string; description:string; language:string; gender?:string; kind:'public'|'clone'};
+export type StudioVoice = {id:string; name:string; description:string; language:string; gender?:string; useCases?:VoiceUseCase[]; kind:'public'|'clone'};
+export type VoiceAccent = {id:string;name:string;language:string;locale:string;isLocaleDefault:boolean;isLocalizable:boolean};
 export type VoicePeriod = {id:string; plan_id:string; credits:number; used_credits:number; clone_limit:number; clones_used:number; starts_at:string; ends_at:string};
-export type VoiceClone = {id:string; provider_id:string|null; name:string; language:string; status:string; created_at:string};
+export type VoiceClone = {id:string; provider_id:string|null; name:string; language:string; accent:string|null; status:string; created_at:string};
 export type VoiceJob = {id:string; voice_name:string; transcript:string; credits:number; status:string; created_at:string};
 export type VoiceOrder = {id:string; plan_id:string; amount_vnd:number; payment_code:string; status:string; expires_at:string};
 export type VoiceAccount = {period:VoicePeriod|null; clones:VoiceClone[]; jobs:VoiceJob[]; orders:VoiceOrder[]};

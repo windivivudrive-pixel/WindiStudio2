@@ -1,11 +1,11 @@
 import {readFile} from 'node:fs/promises';
 import {PGlite} from '@electric-sql/pglite';
 import {beforeAll,afterAll,test,expect} from 'vitest';
-import {countCredits,validateSpeech,VOICE_PLANS} from '../lib/voice/shared';
+import {countCredits,isSampleLibraryLanguage,validateSpeech,voiceLibraryLimit,voiceUseCases,VOICE_LIBRARY_LANGUAGES,VOICE_PLANS} from '../lib/voice/shared';
 const db=new PGlite();
 const a='00000000-0000-4000-8000-000000000011',b='00000000-0000-4000-8000-000000000012',c='00000000-0000-4000-8000-000000000013';
 const key=(i:number)=>`00000000-0000-4000-8000-${String(i).padStart(12,'0')}`;
-let order:{id:string;payment_code:string},job:{id:string},clone:{id:string};
+let order:{id:string;payment_code:string},job:{id:string},clone:{id:string;accent?:string};
 const reserve=(k:number,text='Xin chào 👋')=>db.query<{id:string}>("select * from windi_voice_reserve($1,$2,'voice','Skylar',$3,'vi',1)",[a,key(k),text]);
 beforeAll(async()=>{
  await db.exec(`create role anon; create role authenticated; create role service_role bypassrls;
@@ -19,6 +19,7 @@ beforeAll(async()=>{
  await db.exec(await readFile('supabase/migrations/20260906093309_windi_voice_preview_cache.sql','utf8'));
  await db.exec(await readFile('supabase/migrations/20260907171404_voice_welcome_trial_offers.sql','utf8'));
  await db.exec(await readFile('supabase/migrations/20260908170000_windi_voice_sepay_windi_code.sql','utf8'));
+ await db.exec(await readFile('supabase/migrations/20260909031102_add_voice_clone_accent.sql','utf8'));
 },30000);
 afterAll(()=>db.close());
 test('five plans, private storage, and no client money/credit mutation',async()=>{
@@ -81,7 +82,8 @@ test('clone allowance is atomic, idempotent, and restored only once on failure',
  await expect(db.query('select windi_voice_clone_reserve($1,$2,$3,$4)',[a,key(7),'Other','vi'])).rejects.toThrow('CLONE_LIMIT');
  await db.query('select windi_voice_clone_finish($1,null)',[clone.id]);await db.query('select windi_voice_clone_finish($1,null)',[clone.id]);
  expect((await db.query('select clones_used from windi_voice_periods where user_id=$1',[a])).rows).toEqual([{clones_used:0}]);
- clone=(await db.query<{id:string}>('select * from windi_voice_clone_reserve($1,$2,$3,$4)',[a,key(8),'My voice','vi'])).rows[0];
+ clone=(await db.query<{id:string;accent:string}>('select * from windi_voice_clone_reserve($1,$2,$3,$4,$5)',[a,key(8),'My voice','vi','northern-vietnamese'])).rows[0];
+ expect(clone.accent).toBe('northern-vietnamese');
  await db.query('select windi_voice_clone_finish($1,$2)',[clone.id,'provider-voice']);
  await db.query('select windi_voice_clone_finish($1,null)',[clone.id]);
  expect((await db.query('select clones_used from windi_voice_periods where user_id=$1',[a])).rows).toEqual([{clones_used:1}]);
@@ -126,6 +128,13 @@ test('Unicode billing matches Postgres code points and rejects malformed request
  expect(()=>validateSpeech({text:'a',voiceId:key(1),requestKey:key(2),speed:-1})).toThrow('INVALID_INPUT');
  expect(()=>validateSpeech({text:'a'.repeat(10001),voiceId:key(1),requestKey:key(2)})).toThrow('INVALID_INPUT');
  expect(()=>validateSpeech({text:'a',voiceId:'foreign',requestKey:key(2)})).toThrow('INVALID_INPUT');
+});
+test('public sample library only keeps the eight requested languages and explicit Cartesia use-case notes',()=>{
+ expect(VOICE_LIBRARY_LANGUAGES.map(language=>language.id)).toEqual(['en','fr','es','ko','th','ja','zh','vi']);
+ expect(isSampleLibraryLanguage('en-US')).toBe(true);expect(isSampleLibraryLanguage('de')).toBe(false);
+ expect(voiceLibraryLimit('en-US')).toBe(12);expect(voiceLibraryLimit('vi')).toBe(5);
+ expect(voiceUseCases('Conversational narrator','Commercial advertising and entertainment')).toEqual(['advertising','conversation','entertainment']);
+ expect(voiceUseCases('Friendly Guide','Approachable voice ideal for customer care and support.')).toEqual([]);
 });
 test('historical accounts receive one welcome grant without replacing an active paid period',async()=>{
  await db.exec(await readFile('supabase/migrations/20260907214817_backfill_voice_welcome_credits.sql','utf8'));
