@@ -24,7 +24,7 @@ export function voiceUseCases(tagline?:string|null,description?:string|null):Voi
   const source=[tagline,description].filter((value):value is string=>typeof value==='string').join(' ');
   return USE_CASE_RULES.filter(rule=>rule.pattern.test(source)).map(rule=>rule.tag);
 }
-// Verified IDs published in Cartesia's Sonic 3.6 voice-selection documentation.
+// Verified IDs used by the Clone Pro 2.1 public voice library.
 export const STARTER_VOICES: StudioVoice[] = [
   {id:'db6b0ed5-d5d3-463d-ae85-518a07d3c2b4',name:'Skylar',description:'Giọng nữ Mỹ • thân thiện',language:'en',gender:'feminine',kind:'public'},
   {id:'47c38ca4-5f35-497b-b1a3-415245fb35e1',name:'Daniel',description:'Giọng nam Mỹ',language:'en',gender:'masculine',kind:'public'},
@@ -38,7 +38,7 @@ export type VoicePeriod = {id:string; plan_id:string; credits:number; used_credi
 export type VoiceClone = {id:string; provider_id:string|null; name:string; language:string; accent:string|null; status:string; created_at:string};
 export type VoiceJob = {id:string; voice_name:string; transcript:string; credits:number; status:string; created_at:string};
 export type VoiceOrder = {id:string; plan_id:string; amount_vnd:number; payment_code:string; status:string; expires_at:string};
-export type VoiceAccount = {period:VoicePeriod|null; clones:VoiceClone[]; jobs:VoiceJob[]; orders:VoiceOrder[]};
+export type VoiceAccount = {period:VoicePeriod|null; clones:VoiceClone[]; jobs:VoiceJob[]; orders:VoiceOrder[]; trialEligible:boolean};
 export const countCredits = (text:string) => Array.from(text.normalize('NFC').trim()).length;
 export const formatNumber = (n:number) => new Intl.NumberFormat('vi-VN').format(n);
 export const isUUID = (value:unknown): value is string => typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);

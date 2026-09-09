@@ -28,6 +28,7 @@ const messages:Record<string,string>={
   INVALID_PLAN:'Gói này không còn khả dụng.',NO_SUBSCRIPTION:'Chọn gói dịch vụ để bắt đầu tạo giọng.',
   INSUFFICIENT_CREDITS:'Credit còn lại không đủ cho nội dung này.',CLONE_LIMIT:'Bạn đã dùng hết hạn mức clone hoặc số giọng được lưu của gói.',
   CLONE_REQUIRES_TRIAL:'Gói Chào mừng dùng được thư viện giọng. Chọn Clone thử đầu tiên để tạo giọng riêng.',
+  TRIAL_ALREADY_USED:'Gói Clone thử 29.000đ chỉ dành cho tài khoản chưa từng thanh toán gói clone.',
   CLONE_NOT_FOUND:'Không tìm thấy giọng có thể xóa.',
   ACTIVE_PERIOD:'Gói hiện tại còn hiệu lực. Bạn có thể mua chu kỳ tiếp theo khi gói hết hạn.',
   PENDING_ORDER:'Bạn đã có đơn chờ thanh toán. Kiểm tra đơn trong mục Gói dịch vụ.',
@@ -43,7 +44,7 @@ export function providerReady() {return !!(process.env.CARTESIA_API_KEY || proce
 export async function cartesia(path:string, init:RequestInit={}) {
   const apiKey = process.env.CARTESIA_API_KEY || process.env.VITE_CARTESIA_API_KEY;
   if(!apiKey) throw new VoiceError('Voice Studio đang được kết nối với nhà cung cấp. Vui lòng quay lại sau.',503);
-  return fetch(`https://api.cartesia.ai${path}`,{...init,cache:'no-store',signal:AbortSignal.timeout(90000),headers:{Authorization:`Bearer ${apiKey}`,'Cartesia-Version':'2026-08-14',...init.headers}});
+  return fetch(`https://api.cartesia.ai${path}`,{...init,cache:'no-store',signal:AbortSignal.timeout(90000),headers:{'X-API-Key':apiKey,'Cartesia-Version':process.env.CARTESIA_VERSION || '2026-08-14',...init.headers}});
 }
 const PUBLIC_VOICE_TARGET_MAX = 12;
 const PREVIEW_CACHE_MS = 60 * 60 * 1000;

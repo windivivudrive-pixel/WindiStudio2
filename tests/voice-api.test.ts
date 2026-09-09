@@ -67,14 +67,29 @@ test('clone requires explicit voice rights confirmation before provider use',asy
  const response=await clone(new Request('http://localhost/api/voice/clone',{method:'POST',body:form}));
  expect(response.status).toBe(400);expect(rpc).not.toHaveBeenCalled();expect(state.cartesia).not.toHaveBeenCalled();
 });
-test('clone validates, persists, and forwards an optional Cartesia accent',async()=>{
+test('clone validates, persists, and keeps accent private to Windi',async()=>{
  const form=new FormData();form.set('clip',new File(['test'],'voice.mp3',{type:'audio/mpeg'}));form.set('name','My voice');form.set('requestKey',id);form.set('language','vi');form.set('accent','northern-vietnamese');form.set('consent','true');
  state.resolveCloneAccent.mockResolvedValue('northern-vietnamese');state.cartesia.mockResolvedValue(new Response(JSON.stringify({id}),{headers:{'Content-Type':'application/json'}}));
  const response=await clone(new Request('http://localhost/api/voice/clone',{method:'POST',body:form}));
  expect(response.status).toBe(200);expect(state.resolveCloneAccent).toHaveBeenCalledWith('vi','northern-vietnamese');
- expect(rpc).toHaveBeenCalledWith('windi_voice_clone_reserve',{p_user:uid,p_key:id,p_name:'My voice',p_language:'vi',p_accent:'northern-vietnamese'});
- const upstream=state.cartesia.mock.calls[0][1].body as FormData;
- expect(upstream.get('accent')).toBe('northern-vietnamese');
+  expect(rpc).toHaveBeenCalledWith('windi_voice_clone_reserve',{p_user:uid,p_key:id,p_name:'My voice',p_language:'vi',p_accent:'northern-vietnamese'});
+  const upstream=state.cartesia.mock.calls[0][1].body as FormData;
+  expect(upstream.get('language')).toBe('vi');expect(upstream.get('enhance')).toBe('true');
+  expect(upstream.get('accent')).toBeNull();expect(upstream.get('access')).toBeNull();
+});
+test('clone failures release the reserved slot and return an actionable retry message',async()=>{
+ const form=new FormData();form.set('clip',new File(['test'],'voice.mp3',{type:'audio/mpeg'}));form.set('name','My voice');form.set('requestKey',id);form.set('language','vi');form.set('consent','true');
+ state.cartesia.mockRejectedValue(new Error('timeout'));
+ const response=await clone(new Request('http://localhost/api/voice/clone',{method:'POST',body:form}));
+ expect(response.status).toBe(503);expect(await response.json()).toEqual(expect.objectContaining({error:expect.stringContaining('Lượt clone đã được hoàn lại')}));
+ expect(rpc).toHaveBeenCalledWith('windi_voice_clone_finish',{p_clone:id,p_provider:null});
+});
+test('clone provider rejections refund before surfacing sample guidance',async()=>{
+ const form=new FormData();form.set('clip',new File(['test'],'voice.mp3',{type:'audio/mpeg'}));form.set('name','My voice');form.set('requestKey',id);form.set('language','vi');form.set('consent','true');
+ state.cartesia.mockResolvedValue(new Response(JSON.stringify({message:'invalid clip'}),{status:422,headers:{'Content-Type':'application/json'}}));
+ const response=await clone(new Request('http://localhost/api/voice/clone',{method:'POST',body:form}));
+ expect(response.status).toBe(502);expect(await response.json()).toEqual(expect.objectContaining({error:expect.stringContaining('Mẫu giọng chưa phù hợp')}));
+ expect(rpc).toHaveBeenCalledWith('windi_voice_clone_finish',{p_clone:id,p_provider:null});
 });
 test('accent catalog is private to the signed-in studio user and language-scoped',async()=>{
  state.voiceAccents.mockResolvedValue([{id:'northern-vietnamese',name:'Northern Vietnamese',language:'vi',locale:'vi-VN',isLocaleDefault:true,isLocalizable:false}]);
@@ -100,16 +115,20 @@ test('webhook rejects spoofed authentication and ignores outbound/wrong-account 
 test('only exact transfer code and integer amount reach the atomic payment function',async()=>{
  expect((await pay(webhook({...transaction,transferAmount:'69000'}))).status).toBe(400);
  expect(await (await pay(webhook({...transaction,content:'WV1234567890ABCDEFA'}))).json()).toMatchObject({status:'ignored'});
-  await pay(webhook(transaction));expect(rpc).toHaveBeenCalledWith('windi_voice_pay',{p_code:transaction.content,p_gateway:'1',p_amount:69000});
+  await pay(webhook(transaction));expect(rpc).toHaveBeenCalledWith('windi_voice_pay',{p_code:transaction.content,p_gateway:'1',p_amount:69000,p_paid_at:null});
   rpc.mockClear();
   await pay(webhook({...transaction,id:2,content:'Chuyen khoan WINDI A1B2C3D4 thanh toan'}));
-  expect(rpc).toHaveBeenCalledWith('windi_voice_pay',{p_code:'WINDI A1B2C3D4',p_gateway:'2',p_amount:69000});
+  expect(rpc).toHaveBeenCalledWith('windi_voice_pay',{p_code:'WINDI A1B2C3D4',p_gateway:'2',p_amount:69000,p_paid_at:null});
   rpc.mockClear();
   await pay(webhook({...transaction,id:3,content:'WINDIA1B2C3D4'}));
-  expect(rpc).toHaveBeenCalledWith('windi_voice_pay',{p_code:'WINDI A1B2C3D4',p_gateway:'3',p_amount:69000});
+  expect(rpc).toHaveBeenCalledWith('windi_voice_pay',{p_code:'WINDI A1B2C3D4',p_gateway:'3',p_amount:69000,p_paid_at:null});
   rpc.mockClear();
   await pay(webhook({...transaction,id:4,content:'WST A1B2C3D4'}));
-  expect(rpc).toHaveBeenCalledWith('windi_voice_pay',{p_code:'WST A1B2C3D4',p_gateway:'4',p_amount:69000});
+  expect(rpc).toHaveBeenCalledWith('windi_voice_pay',{p_code:'WST A1B2C3D4',p_gateway:'4',p_amount:69000,p_paid_at:null});
+});
+test('SePay Vietnam transaction time is preserved for delayed webhook settlement',async()=>{
+ await pay(webhook({...transaction,id:5,content:'WINDI A1B2C3D4',transactionDate:'2026-09-09 15:09:25'}));
+ expect(rpc).toHaveBeenCalledWith('windi_voice_pay',{p_code:'WINDI A1B2C3D4',p_gateway:'5',p_amount:69000,p_paid_at:'2026-09-09T08:09:25.000Z'});
 });
 test('oversized bodies are rejected even without Content-Length',async()=>{
  expect((await generate(request({...payload,text:'a'.repeat(100001)}))).status).toBe(413);expect(rpc).not.toHaveBeenCalled();
