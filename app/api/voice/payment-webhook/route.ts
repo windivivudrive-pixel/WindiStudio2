@@ -1,6 +1,19 @@
 import {timingSafeEqual} from 'node:crypto';
 import {boundedBody,failure,paymentConfig,VoiceError,writer} from '@/lib/voice/server';
 export const runtime='nodejs';
+
+function transactionTime(value:unknown) {
+  if(typeof value!=='string') return null;
+  const vietnam=value.trim().match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2}):(\d{2})$/);
+  const parsed=Date.parse(vietnam?`${vietnam[1]}-${vietnam[2]}-${vietnam[3]}T${vietnam[4]}:${vietnam[5]}:${vietnam[6]}+07:00`:value);
+  return Number.isFinite(parsed)?new Date(parsed).toISOString():null;
+}
+
+function missingTransactionTimeArgument(error:unknown) {
+  const detail=error as {code?:string;message?:string}|null;
+  return detail?.code==='PGRST202'&&String(detail.message||'').includes('p_paid_at');
+}
+
 export async function POST(request:Request) {
  try {
   const expected=process.env.SEPAY_API_KEY || process.env.VITE_SEPAY_API_KEY;
@@ -20,11 +33,20 @@ export async function POST(request:Request) {
   const p_code=windiMatches.length===1
     ? `WINDI ${windiMatches[0][1]}`
     : (wstMatches.length===1 ? `WST ${wstMatches[0][1]}` : wvMatches[0][0]);
-  let {data,error}=await writer().rpc('windi_voice_pay',{p_code,p_gateway:String(body.id),p_amount:body.transferAmount});
+  const db=writer();
+  const paidAt=transactionTime(body.transactionDate);
+  let {data,error}=await db.rpc('windi_voice_pay',{p_code,p_gateway:String(body.id),p_amount:body.transferAmount,p_paid_at:paidAt});
+  // Rolling-deploy compatibility until the transaction-time migration is live.
+  if(error&&missingTransactionTimeArgument(error)) {
+    const legacy=await db.rpc('windi_voice_pay',{p_code,p_gateway:String(body.id),p_amount:body.transferAmount});
+    data=legacy.data;error=legacy.error;
+  }
   if(data==='ignored'&&p_code.includes(' ')) {
     const altCode=p_code.replace(/\s+/g,'');
-    const retry=await writer().rpc('windi_voice_pay',{p_code:altCode,p_gateway:String(body.id),p_amount:body.transferAmount});
+    let retry=await db.rpc('windi_voice_pay',{p_code:altCode,p_gateway:String(body.id),p_amount:body.transferAmount,p_paid_at:paidAt});
+    if(retry.error&&missingTransactionTimeArgument(retry.error)) retry=await db.rpc('windi_voice_pay',{p_code:altCode,p_gateway:String(body.id),p_amount:body.transferAmount});
     if(!retry.error&&retry.data&&retry.data!=='ignored') data=retry.data;
+    if(retry.error) error=retry.error;
   }
   if(error) throw error;
   return Response.json({success:true,status:data});

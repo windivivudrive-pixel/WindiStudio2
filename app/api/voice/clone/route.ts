@@ -2,7 +2,32 @@ import {boundedBody,cartesia,failure,identity,providerReady,resolveCloneAccent,V
 import {isUUID,VOICE_LANGUAGES} from '@/lib/voice/shared';
 export const runtime='nodejs';
 export const maxDuration=120;
+
+function providerMessage(status:number) {
+  if(status===401||status===403) return 'Dịch vụ clone giọng chưa được cấp quyền. Vui lòng quay lại sau.';
+  if(status===413) return 'Mẫu giọng quá lớn. Hãy chọn file nhỏ hơn 3 MB.';
+  if(status===400||status===422) return 'Mẫu giọng chưa phù hợp để clone. Hãy dùng đoạn thu rõ tiếng, một người nói liên tục trong 10–20 giây.';
+  if(status===429) return 'Dịch vụ clone đang bận. Hãy thử lại sau ít phút.';
+  return 'Chưa clone được giọng lúc này. Hãy thử lại với mẫu thu rõ tiếng hơn.';
+}
+
+function missingAccentSchema(error: unknown) {
+ const detail=error as {code?:string;message?:string}|null;
+ const message=String(detail?.message||'').toLowerCase();
+ return detail?.code==='42703'||(detail?.code==='PGRST202'&&message.includes('p_accent'));
+}
+
 export async function POST(request:Request) {
+ let cloneId:string|undefined;
+ let reservationActive=false;
+ let providerVoiceId:string|undefined;
+ let db:ReturnType<typeof writer>|undefined;
+ const releaseReservation=async()=>{
+  if(!cloneId||!reservationActive||!db) return;
+  const {error}=await db.rpc('windi_voice_clone_finish',{p_clone:cloneId,p_provider:null});
+  if(error) throw error;
+  reservationActive=false;
+ };
  try {
   const {user}=await identity(request);
   if(!providerReady()) throw new VoiceError('Dịch vụ clone giọng chưa được kết nối.',503);
@@ -12,29 +37,47 @@ export async function POST(request:Request) {
   if(!(clip instanceof File)||!clip.size||clip.size>3*1024*1024||!isUUID(key)||!name||name.length>80||form.get('consent')!=='true'||!VOICE_LANGUAGES.some(l=>l.id===language)) throw new VoiceError('Kiểm tra tên giọng, file mẫu (tối đa 3 MB) và xác nhận quyền sử dụng.');
   if(!/\.(mp3|wav|flac|ogg|webm)$/i.test(clip.name)) throw new VoiceError('Chọn file MP3, WAV, FLAC, OGG hoặc WebM.');
   const accent=await resolveCloneAccent(language,form.get('accent'));
-  const db=writer();
-  const {data:clone,error}=await db.rpc('windi_voice_clone_reserve',{p_user:user.id,p_key:key,p_name:name,p_language:language,p_accent:accent});
+  db=writer();
+  let reservation=await db.rpc('windi_voice_clone_reserve',{p_user:user.id,p_key:key,p_name:name,p_language:language,p_accent:accent});
+  // Keep cloning available while a rolling deployment is still catching up
+  // with the optional accent column/function argument. The accent is omitted
+  // only for that legacy schema; it is stored normally once migrated.
+  if(reservation.error&&missingAccentSchema(reservation.error)) {
+    reservation=await db.rpc('windi_voice_clone_reserve',{p_user:user.id,p_key:key,p_name:name,p_language:language});
+  }
+  const {data:clone,error}=reservation;
   if(error) throw error;
   if(clone.status==='ready') return Response.json({id:clone.id});
   const claim=await db.from('windi_voice_clones').update({status:'pending'}).eq('id',clone.id).eq('status','reserved').select('id').maybeSingle();
   if(claim.error) throw claim.error;
   if(!claim.data) throw new VoiceError('Mẫu này đã được tiếp nhận. Kiểm tra danh sách giọng clone.',409);
+  cloneId=clone.id;
+  reservationActive=true;
   const upload=new FormData();
-  upload.set('clip',clip);upload.set('name',`WV ${clone.id}`);upload.set('description',name);upload.set('language',language);upload.set('access','private');if(accent) upload.set('accent',accent);
+  upload.set('clip',clip);upload.set('name',`WV ${clone.id}`);upload.set('description',name);upload.set('language',language);upload.set('enhance','true');
   let response:Response;
   try {response=await cartesia('/voices/clone',{method:'POST',body:upload});}
-  catch {throw new VoiceError('Kết nối bị gián đoạn. Lượt clone đang được tạm giữ để đối soát. Vui lòng liên hệ hỗ trợ.',503);}
+  catch {await releaseReservation();throw new VoiceError('Không kết nối được với dịch vụ clone. Lượt clone đã được hoàn lại; vui lòng thử lại.',503);}
   if(!response.ok) {
-    const refund=await db.rpc('windi_voice_clone_finish',{p_clone:clone.id,p_provider:null});
-    if(refund.error) throw refund.error;
-    throw new VoiceError('Chưa clone được giọng. Hãy dùng mẫu rõ tiếng hơn. Lượt clone đã được hoàn lại.',502);
+    const message=providerMessage(response.status);
+    await releaseReservation();
+    throw new VoiceError(`${message} Lượt clone đã được hoàn lại.`,502);
   }
-  const voice=await response.json();
-  if(!isUUID(voice.id)) throw new VoiceError('Giọng clone đang chờ đối soát. Vui lòng liên hệ hỗ trợ.',503);
-  const finish=await db.rpc('windi_voice_clone_finish',{p_clone:clone.id,p_provider:voice.id});
+  const voice=await response.json().catch(()=>null);
+  if(!voice||!isUUID(voice.id)) {await releaseReservation();throw new VoiceError('Dịch vụ clone trả về kết quả không hợp lệ. Lượt clone đã được hoàn lại; vui lòng thử lại.',502);}
+  providerVoiceId=voice.id;
+  const finish=await db.rpc('windi_voice_clone_finish',{p_clone:clone.id,p_provider:providerVoiceId});
   if(finish.error) throw finish.error;
+  reservationActive=false;
   return Response.json({id:clone.id});
- }catch(error){return failure(error);}
+ }catch(error){
+  if(reservationActive) {
+    if(providerVoiceId) await cartesia(`/voices/${encodeURIComponent(providerVoiceId)}`,{method:'DELETE'}).catch(()=>undefined);
+    try {await releaseReservation();}
+    catch {return failure(new VoiceError('Chưa thể hoàn tất yêu cầu clone. Lượt clone đang được đối soát; vui lòng liên hệ hỗ trợ.',503));}
+  }
+  return failure(error);
+ }
 }
 export async function DELETE(request:Request) {
  try {

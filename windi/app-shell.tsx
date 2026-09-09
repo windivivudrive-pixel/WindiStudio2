@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Heart, LogIn, LogOut, Menu, Plus, Sparkles, User as UserIcon, Wrench, X } from 'lucide-react';
+import { ChevronDown, Heart, LogIn, LogOut, Menu, Plus, Sparkles, User as UserIcon, Wrench, X } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { CommandPalette } from './command-palette';
 import { ThemeToggle } from './theme-toggle';
@@ -13,18 +13,21 @@ import { BuyMeACoffeeButton } from './buy-me-a-coffee';
 
 const nav = [
   { href: '/discover', label: 'Discover' },
-  { href: '/skills', label: 'Skills' },
-  { href: '/mcp', label: 'MCP' },
-  { href: '/stacks', label: 'Stacks' },
-  { href: '/video-kits', label: 'Video Kits' },
-  { href: '/voice-studio', label: 'Voice Studio' },
+  {
+    label: 'Studio',
+    items: [
+      { href: '/video-kits', label: 'Video Kits' },
+      { href: '/voice-studio', label: 'Voice Studio' },
+    ],
+  },
   { href: '/news', label: 'News' },
-  { href: '/community', label: 'Community' },
 ];
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
+  const [studioMenuOpen, setStudioMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const studioMenuRef = useRef<HTMLDivElement>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
   const { count } = useToolbox();
   const { user, signOut } = useAuth();
@@ -42,6 +45,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     }
   }, [userMenuOpen]);
 
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (studioMenuRef.current && !studioMenuRef.current.contains(event.target as Node)) {
+        setStudioMenuOpen(false);
+      }
+    }
+    if (studioMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [studioMenuOpen]);
+
   const avatarUrl = user?.user_metadata?.avatar_url || user?.user_metadata?.picture;
   const displayName = user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email?.split('@')[0] || 'User';
   const initial = displayName.charAt(0).toUpperCase();
@@ -58,15 +73,33 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </Link>
 
         <nav aria-label="Điều hướng chính">
-          {nav.map((item) => (
-            <Link
-              href={item.href}
-              key={item.href}
-              className={item.href === '/video-kits' ? 'nav-featured' : undefined}
-            >
-              {item.label}
-            </Link>
-          ))}
+          {nav.map((item) => {
+            if ('items' in item) {
+              return (
+                <div className="studio-nav-menu" key={item.label} ref={studioMenuRef}>
+                  <button
+                    type="button"
+                    className="nav-featured studio-nav-trigger"
+                    aria-expanded={studioMenuOpen}
+                    aria-haspopup="menu"
+                    onClick={() => setStudioMenuOpen((isOpen) => !isOpen)}
+                  >
+                    Studio <ChevronDown size={14} aria-hidden="true" />
+                  </button>
+                  {studioMenuOpen && (
+                    <div className="studio-nav-popover" role="menu">
+                      {item.items.map((studioItem) => (
+                        <Link href={studioItem.href} key={studioItem.href} role="menuitem" onClick={() => setStudioMenuOpen(false)}>
+                          {studioItem.label}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            }
+            return <Link href={item.href} key={item.href}>{item.label}</Link>;
+          })}
         </nav>
 
         <div className="header-actions">
@@ -167,16 +200,21 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <Wrench size={16} /> My Toolbox ({count} tools)
             </Link>
           )}
-          {nav.map((item) => (
-            <Link
-              onClick={() => setOpen(false)}
-              href={item.href}
-              key={item.href}
-              className={item.href === '/video-kits' ? 'nav-featured' : undefined}
-            >
-              {item.label}
-            </Link>
-          ))}
+          {nav.map((item) => {
+            if ('items' in item) {
+              return (
+                <div className="mobile-studio-nav" key={item.label}>
+                  <span>Studio</span>
+                  {item.items.map((studioItem) => (
+                    <Link key={studioItem.href} href={studioItem.href} onClick={() => setOpen(false)}>
+                      {studioItem.label}
+                    </Link>
+                  ))}
+                </div>
+              );
+            }
+            return <Link onClick={() => setOpen(false)} href={item.href} key={item.href}>{item.label}</Link>;
+          })}
           {user && (
             <Link onClick={() => setOpen(false)} href="/submit">
               Submit resource
