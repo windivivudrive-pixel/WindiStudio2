@@ -1,3 +1,4 @@
+import { isVoiceAdmin } from '@/lib/voice/admin';
 import { ensureOrderValid, failure, identity, paymentConfig, providerReady } from '@/lib/voice/server';
 
 function missingAccentSchema(error: unknown) {
@@ -20,19 +21,20 @@ export async function GET() {
     cloneError=legacy.error;
     cloneData=legacy.data?.map(clone=>({...clone,accent:null}));
   }
-  const [period,jobs,orders,paidClonePlan]=await Promise.all([
+  const [period,bonus,jobs,orders,paidClonePlan]=await Promise.all([
     client.from('windi_voice_periods').select('*').eq('user_id',user.id).lte('starts_at',new Date().toISOString()).gt('ends_at',new Date().toISOString()).order('ends_at',{ascending:false}).limit(1).maybeSingle(),
+    client.from('product_entitlements').select('voice_credits,voice_credits_used').eq('user_id',user.id).eq('kind','video_workflow_v1').eq('status','active').limit(1).maybeSingle(),
     client.from('windi_voice_jobs').select('id,voice_name,transcript,credits,status,created_at').eq('user_id',user.id).order('created_at',{ascending:false}).limit(50),
     client.from('windi_voice_orders').select('id,plan_id,amount_vnd,payment_code,status,expires_at,created_at').eq('user_id',user.id).neq('plan_id','welcome').order('created_at',{ascending:false}).limit(10),
     client.from('windi_voice_orders').select('id').eq('user_id',user.id).eq('status','paid').in('plan_id',['trial','starter','creator','studio']).limit(1),
   ]);
   if(cloneError) throw cloneError;
-  for(const r of [period,jobs,orders,paidClonePlan]) if(r.error) throw r.error;
+  for(const r of [period,bonus,jobs,orders,paidClonePlan]) if(r.error) throw r.error;
   if(orders.data) {
     for(const order of orders.data) {
       await ensureOrderValid(order);
     }
   }
-  return Response.json({period:period.data,clones:cloneData,jobs:jobs.data,orders:orders.data,trialEligible:!paidClonePlan.data?.length,available:providerReady(),paymentsAvailable:!!paymentConfig()},{headers:{'Cache-Control':'no-store'}});
+  return Response.json({isAdmin:await isVoiceAdmin(user.id),period:period.data,bonus:bonus.data,clones:cloneData,jobs:jobs.data,orders:orders.data,trialEligible:!paidClonePlan.data?.length,available:providerReady(),paymentsAvailable:!!paymentConfig()},{headers:{'Cache-Control':'no-store'}});
  } catch(error) {return failure(error);}
 }

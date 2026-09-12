@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import Link from 'next/link';
 import { ArrowRight, CircleHelp, ExternalLink, Search, TrendingUp, Star } from 'lucide-react';
 import { categories, resourceTypes, type ResourceType, type WindiResource } from '@/lib/windi-data';
@@ -7,8 +8,8 @@ import { RetroBadge, RetroButton, RetroInput, RetroProgress, RetroWindow } from 
 import { ResourceGrid } from './ui/resource-card';
 import { SubmitForm } from './submit-form';
 import { CommunityEvidenceSection } from './community-evidence';
-import { VideoKitFeature } from './video-kit-feature';
-import { AmbientMotion, FloatingDetails } from './ambient-motion';
+import { WorkflowHero, HomeVoiceFeature, HomeLayouts, HomeConnectFeature } from './workflow-hero';
+import { AmbientMotion } from './ambient-motion';
 import {matchesPurpose,normalizeSearch,purposeLabel,validPurpose} from '@/lib/creator-catalog';
 import {notFound} from 'next/navigation';
 import {CreatorEvidence} from './creator-evidence';
@@ -16,8 +17,6 @@ import {CreatorGuide} from './creator-guide';
 import {EasyPromptCard} from './easy-prompt';
 import { HeroNewsTicker } from './hero-news-ticker';
 
-import { IntentSearch } from './intent-search';
-import { DesktopShelf } from './desktop-shelf';
 import { InteractiveCatalog } from './interactive-catalog';
 import { ResourceDetailView } from './resource-detail-view';
 
@@ -27,76 +26,15 @@ export function SectionHeading({ eyebrow, title, copy, action }: { eyebrow?: str
 function CatalogNotice({ available }: { available: boolean }) {
   return <EmptyState title={available ? 'Công cụ mới sẽ sớm có mặt.' : 'Chưa tải được danh mục.'} copy={available ? 'Bạn có thể quay lại sau để khám phá thêm công cụ.' : 'Bạn thử tải lại sau một lát nhé.'} actionHref="/discover" actionLabel="Tải lại danh mục" />;
 }
-export async function HomePage() {
-  const catalog = await getCatalog();
-  const hotCount = Math.min(20, catalog.resources.filter(row => row.creatorBrief).length);
-  const trendingCount = catalog.resources.filter(row => row.creatorBrief?.trending).length;
-
-  return (
-    <div className="page home-page motion-page">
-      <section className="hero" aria-labelledby="home-title">
-        <HeroNewsTicker />
-        <div className="hero-copy">
-          <span className="eyebrow">GÓC LÀM VIỆC SÁNG TẠO CỦA BẠN</span>
-          <h1 id="home-title">Đúng công cụ.<br /><span>Nhẹ việc hơn.</span></h1>
-          <p>Tìm công cụ AI để viết bài, làm video và thiết kế. Có hướng dẫn để bạn biết bắt đầu từ đâu.</p>
-          <div className="home-hero-actions"><Link className="retro-button primary" href="#home-catalog">Khám phá công cụ <ArrowRight size={18} /></Link><Link className="home-secondary-link" href="/toolbox">Công cụ đã lưu</Link></div>
-          {catalog.resources.length > 0 && (
-            <div className="hero-status">
-              <span className="status-light" />
-              <strong>{catalog.resources.length}</strong> công cụ trong thư viện
-            </div>
-          )}
-        </div>
-        <IntentSearch />
-        <FloatingDetails />
-      </section>
-
-      <AmbientMotion />
-      <DesktopShelf resources={catalog.resources} />
-
-      <VideoKitFeature />
-
-      <section className="content-section home-catalog" id="home-catalog">
-        <SectionHeading
-          eyebrow="CHỌN THEO VIỆC BẠN CẦN"
-          title="Hôm nay, bạn muốn làm gì?"
-          copy="Chọn một nhu cầu để tìm công cụ phù hợp."
-          action={<Link className="text-link" href="/discover">Xem tất cả <ArrowRight size={15} /></Link>}
-        />
-        <nav className="filter-row" aria-label="Danh mục theo mục đích">
-          {categories.map(c => (
-            <Link href={`/discover?purpose=${c.slug}`} key={c.slug}>
-              {({social:"Mạng xã hội",content:"Viết nội dung",video:"Video & phụ đề",audio:"Giọng đọc & âm nhạc",image:"Tạo hình ảnh",seo:"Tối ưu tìm kiếm",design:"Thiết kế website",research:"Nghiên cứu & ý tưởng",automation:"Tự động hóa",tech:"Kỹ thuật & bảo mật"} as Record<string,string>)[c.slug] || c.name}
-            </Link>
-          ))}
-        </nav>
-        {(hotCount > 0 || trendingCount > 0) && (
-          <nav className="filter-row badge-filter" aria-label="Công cụ được quan tâm">
-            {hotCount > 0 && <Link href="/discover?badge=hot"><Star size={14} aria-hidden="true" /> Được cộng đồng yêu thích</Link>}
-            {trendingCount > 0 && <Link href="/discover?badge=trending"><TrendingUp size={14} aria-hidden="true" /> Đang được quan tâm · {trendingCount}</Link>}
-          </nav>
-        )}
-        {catalog.resources.length ? (
-          <InteractiveCatalog resources={catalog.resources.slice(0, 9)} />
-        ) : (
-          <CatalogNotice available={catalog.available} />
-        )}
-      </section>
-
-      <section className="content-section home-start">
-        <RetroWindow title="LẦN ĐẦU ĐẾN WINDI?" accent="green">
-          <h2>Bắt đầu từ một việc nhỏ.</h2>
-          <p>
-            Chọn công cụ, xem cách dùng, rồi lưu lại cho lần sau. Mọi thứ bắt đầu từ việc bạn muốn làm.
-          </p>
-          <Link className="retro-link" href="/discover">
-            Tìm công cụ của bạn <ArrowRight size={16} />
-          </Link>
-        </RetroWindow>
-      </section>
-    </div>
-  );
+export function HomePage() {
+  return <div className="page home-page motion-page">
+    <WorkflowHero />
+    <AmbientMotion />
+    <HomeVoiceFeature />
+    <HomeLayouts />
+    <HomeConnectFeature />
+    <section className="home-news-secondary"><Link href="/news">Tin mới cho người làm sáng tạo <ArrowRight size={16}/></Link><Suspense fallback={null}><HeroNewsTicker /></Suspense></section>
+  </div>;
 }
 
 export async function DiscoverPage({ query = '', type, purpose = '', badge = '' }: { query?: string; type?: ResourceType; purpose?: string; badge?: 'hot' | 'trending' | '' }) {

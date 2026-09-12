@@ -1,0 +1,87 @@
+{
+  "schemaVersion": 1,
+  "version": 1,
+  "ideaId": "idea-01-windi-workflow-that-su",
+  "id": "windi-web-dark",
+  "name": "WindiStudio Dark Interface",
+  "source": {
+    "kind": "builtin",
+    "preset": "dark-cinematic"
+  },
+  "basePreset": "dark-cinematic",
+  "summary": "Chuyển hệ giao diện dark mode chính của WindiStudio sang video dọc: nền charcoal có lưới mảnh, typography Calling Code màu kem, cửa sổ retro viền đen với title bar cam, card trạng thái xanh-vàng-hồng-lam và chuyển động gọn như một workflow đang chạy. Không dùng mascot để giữ bố cục rõ trên màn hình điện thoại.",
+  "pacing": {
+    "hookDurationMs": 1600,
+    "averageBeatDurationMs": 3000,
+    "cutRhythm": "Hai nhịp cắt nhanh ở hook, sau đó mỗi bước workflow hiện như một cửa sổ hoặc trạng thái hoàn tất; tăng tốc trở lại ở đoạn so sánh thời gian và chốt CTA."
+  },
+  "palette": {
+    "background": "#25272b",
+    "surface": "#313338",
+    "text": "#eeeae0",
+    "accent": "#c7815f",
+    "border": "#161719"
+  },
+  "captions": {
+    "position": "bottom",
+    "style": "boxed"
+  },
+  "sceneTypes": [
+    {
+      "id": "chaos-hook",
+      "role": "Hook đối lập lời hứa tự động với thực tế tốn credit, chờ lâu và giọng máy",
+      "composition": "comparison",
+      "textPosition": "top",
+      "imageFit": "cover"
+    },
+    {
+      "id": "problem-stack",
+      "role": "Xếp các vấn đề thành card hoặc cửa sổ lỗi để người xem nhận ra nỗi đau quen thuộc",
+      "composition": "framed",
+      "textPosition": "bottom",
+      "imageFit": "cover"
+    },
+    {
+      "id": "windi-reveal",
+      "role": "Reveal Windi như một hệ thống duy nhất gom các bước rời rạc",
+      "composition": "text-led",
+      "textPosition": "center",
+      "imageFit": "cover"
+    },
+    {
+      "id": "workflow-window",
+      "role": "Hiển thị chuỗi idea, duyệt, kịch bản, hình, voice và dựng trong một cửa sổ workflow",
+      "composition": "framed",
+      "textPosition": "bottom",
+      "imageFit": "contain"
+    },
+    {
+      "id": "feature-split",
+      "role": "Một nửa là hình hoặc công cụ, một nửa là lợi ích ngắn và dễ đọc",
+      "composition": "split",
+      "textPosition": "center",
+      "imageFit": "cover"
+    },
+    {
+      "id": "human-voice",
+      "role": "Nhấn mạnh voice gần gũi, có nhịp nghỉ và cảm xúc như lời nói thật",
+      "composition": "quote",
+      "textPosition": "center",
+      "imageFit": "cover"
+    },
+    {
+      "id": "time-proof",
+      "role": "So sánh workflow cũ nhiều vòng sửa với Windi rõ bước và ít thao tác lặp",
+      "composition": "comparison",
+      "textPosition": "top",
+      "imageFit": "cover"
+    },
+    {
+      "id": "fomo-cta",
+      "role": "Chốt lợi ích và lời mời thử bằng một cửa sổ CTA rõ, không phóng đại",
+      "composition": "cta",
+      "textPosition": "center",
+      "imageFit": "cover"
+    }
+  ]
+}

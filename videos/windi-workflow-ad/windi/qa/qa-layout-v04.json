@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "passed": true,
+  "checkedAt": "2026-09-12T03:32:52Z",
+  "checks": {
+    "video": "1080x1920 H.264",
+    "audio": "AAC present and decode passed",
+    "durationSeconds": 65.194667,
+    "sourceImages": "assets/windi/1.png through assets/windi/13.png",
+    "captionSafeInsets": {
+      "left": 76,
+      "right": 220,
+      "bottom": 390
+    },
+    "contentSafeInsets": {
+      "left": 60,
+      "right": 180,
+      "top": 170,
+      "bottom": 300
+    },
+    "removedSfx": "loadingLag",
+    "sfxDb": -8
+  },
+  "outputs": {
+    "render": "windi/renders/final-v07.mp4",
+    "cover": "windi/renders/cover-v07.png",
+    "props": "windi/renders/render-props-v04.json"
+  }
+}

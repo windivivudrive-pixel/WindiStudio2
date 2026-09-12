@@ -1,0 +1,125 @@
+{
+  "version": 1,
+  "workflowId": "c1d0ca16-f73d-4cf7-bd80-d79c8f35381a",
+  "scriptVersion": 2,
+  "project": "/Users/win/Documents/WindiStudio2/videos/windi-workflow-ad",
+  "jobs": [
+    {
+      "scene": "scene-01",
+      "provider": "flow",
+      "kind": "create",
+      "promptFile": "windi/prompts/scene-01.txt",
+      "references": [],
+      "output": "assets/windi/scene-01-v02",
+      "requestKey": "5d152f43f9dd3b6899cff3627fdcea04"
+    },
+    {
+      "scene": "scene-02",
+      "provider": "flow",
+      "kind": "create",
+      "promptFile": "windi/prompts/scene-02.txt",
+      "references": [],
+      "output": "assets/windi/scene-02-v02",
+      "requestKey": "042eb316abd782c8365c5a4f7427664d"
+    },
+    {
+      "scene": "scene-03",
+      "provider": "flow",
+      "kind": "create",
+      "promptFile": "windi/prompts/scene-03.txt",
+      "references": [],
+      "output": "assets/windi/scene-03-v02",
+      "requestKey": "5d79a1233d883fbb500b4c44dba17f11"
+    },
+    {
+      "scene": "scene-04",
+      "provider": "flow",
+      "kind": "create",
+      "promptFile": "windi/prompts/scene-04.txt",
+      "references": [],
+      "output": "assets/windi/scene-04-v02",
+      "requestKey": "6b051b0563ab53e3f64f2a05a834a7c6"
+    },
+    {
+      "scene": "scene-05",
+      "provider": "flow",
+      "kind": "create",
+      "promptFile": "windi/prompts/scene-05.txt",
+      "references": [],
+      "output": "assets/windi/scene-05-v02",
+      "requestKey": "00bb661d12bb3bf76cd7d86d08a4c65a"
+    },
+    {
+      "scene": "scene-06",
+      "provider": "flow",
+      "kind": "create",
+      "promptFile": "windi/prompts/scene-06.txt",
+      "references": [],
+      "output": "assets/windi/scene-06-v02",
+      "requestKey": "6f1dead9437aa5ae82a1805e7eac4a26"
+    },
+    {
+      "scene": "scene-07",
+      "provider": "flow",
+      "kind": "create",
+      "promptFile": "windi/prompts/scene-07.txt",
+      "references": [],
+      "output": "assets/windi/scene-07-v02",
+      "requestKey": "97b6e03dc782a7977e03c2ff96261cc7"
+    },
+    {
+      "scene": "scene-08",
+      "provider": "flow",
+      "kind": "create",
+      "promptFile": "windi/prompts/scene-08.txt",
+      "references": [],
+      "output": "assets/windi/scene-08-v02",
+      "requestKey": "6209783b71243837564433b0530f549c"
+    },
+    {
+      "scene": "scene-09",
+      "provider": "flow",
+      "kind": "create",
+      "promptFile": "windi/prompts/scene-09.txt",
+      "references": [],
+      "output": "assets/windi/scene-09-v02",
+      "requestKey": "0723a5cc3dd6bd3fb888784d4e58314b"
+    },
+    {
+      "scene": "scene-10",
+      "provider": "flow",
+      "kind": "create",
+      "promptFile": "windi/prompts/scene-10.txt",
+      "references": [],
+      "output": "assets/windi/scene-10-v02",
+      "requestKey": "ebc7fc6bc7369041400682e899e5f85d"
+    },
+    {
+      "scene": "scene-11",
+      "provider": "flow",
+      "kind": "create",
+      "promptFile": "windi/prompts/scene-11.txt",
+      "references": [],
+      "output": "assets/windi/scene-11-v02",
+      "requestKey": "f5bbca321358e09d6134ad7b8b1f1a03"
+    },
+    {
+      "scene": "scene-12",
+      "provider": "flow",
+      "kind": "create",
+      "promptFile": "windi/prompts/scene-12.txt",
+      "references": [],
+      "output": "assets/windi/scene-12-v02",
+      "requestKey": "10fec14b579d099ed149ec0617f8b0c5"
+    },
+    {
+      "scene": "scene-13",
+      "provider": "flow",
+      "kind": "create",
+      "promptFile": "windi/prompts/scene-13.txt",
+      "references": [],
+      "output": "assets/windi/scene-13-v02",
+      "requestKey": "514d9b98188903aab6016fc19e1f8ee4"
+    }
+  ]
+}

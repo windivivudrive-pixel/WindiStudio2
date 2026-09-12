@@ -1,7 +1,7 @@
 import 'server-only';
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/server';
-import { STARTER_VOICES, VOICE_LANGUAGES, VOICE_LIBRARY_LANGUAGES, isSampleLibraryLanguage, voiceLibraryLimit, voiceUseCases, type StudioVoice, type VoiceAccent } from './shared';
+import { DEFAULT_WORKFLOW_VOICE_ID, COMPARISON_VOICES, STARTER_VOICES, VOICE_LANGUAGES, VOICE_LIBRARY_LANGUAGES, isSampleLibraryLanguage, voiceLibraryLimit, voiceUseCases, type StudioVoice, type VoiceAccent } from './shared';
 
 export class VoiceError extends Error { constructor(message:string, public status=400) {super(message);} }
 export const bucket = 'windi-voice-audio';
@@ -34,17 +34,59 @@ const messages:Record<string,string>={
   PENDING_ORDER:'Bạn đã có đơn chờ thanh toán. Kiểm tra đơn trong mục Gói dịch vụ.',
   REQUEST_PENDING:'Một yêu cầu đang xử lý hoặc chờ đối soát. Xem lại trong Lịch sử.',
   REQUEST_CONFLICT:'Mã yêu cầu đã được sử dụng cho nội dung khác.',
+  VIDEO_KIT_NOT_RELEASED:'Windi Video Workflow đang hoàn tất kiểm chứng trước khi mở bán.',
+  VIDEO_KIT_ALREADY_OWNED:'Tài khoản đã sở hữu Windi Video Workflow V1.',
+  DEVICE_REPLACE_REQUIRED:'Giấy phép đang hoạt động trên máy khác. Xác nhận chuyển máy để tiếp tục.',
+  ENTITLEMENT_NOT_FOUND:'Không tìm thấy giấy phép đang hoạt động.',
 };
 export function failure(error:unknown) {
   const message=error instanceof Error?error.message:String((error as {message?:string})?.message||'');
   const code=Object.keys(messages).find(k=>message.includes(k));
   return Response.json({error:code?messages[code]:error instanceof VoiceError?error.message:'Chưa thể hoàn tất. Vui lòng thử lại sau.'},{status:error instanceof VoiceError?error.status:code==='INVALID_INPUT'?400:code?409:503,headers:{'Cache-Control':'no-store'}});
 }
-export function providerReady() {return !!(process.env.CARTESIA_API_KEY || process.env.VITE_CARTESIA_API_KEY);}
-export async function cartesia(path:string, init:RequestInit={}) {
-  const apiKey = process.env.CARTESIA_API_KEY || process.env.VITE_CARTESIA_API_KEY;
-  if(!apiKey) throw new VoiceError('Voice Studio đang được kết nối với nhà cung cấp. Vui lòng quay lại sau.',503);
-  return fetch(`https://api.cartesia.ai${path}`,{...init,cache:'no-store',signal:AbortSignal.timeout(90000),headers:{'X-API-Key':apiKey,'Cartesia-Version':process.env.CARTESIA_VERSION || '2026-08-14',...init.headers}});
+export type CartesiaPurpose = 'tts' | 'clone' | 'main';
+type CartesiaOptions = {userId?:string; purpose?:CartesiaPurpose};
+let freeKeyCursor = 0;
+
+export function mainCartesiaKey() {
+  const key = process.env.CARTESIA_API_KEY_MAIN || process.env.CARTESIA_API_KEY || process.env.VITE_CARTESIA_API_KEY;
+  if (!key) throw new VoiceError('Voice Studio chưa có API key Cartesia cho tài khoản trả phí.',503);
+  return key;
+}
+
+export function freeCartesiaKeys() {
+  const keys = [1,2,3,4,5].map(index => process.env[`CARTESIA_API_KEY_${index}`]).filter((key):key is string => !!key?.trim());
+  if (keys.length) return keys;
+  const legacy = process.env.CARTESIA_API_KEY || process.env.VITE_CARTESIA_API_KEY;
+  return legacy ? [legacy] : [];
+}
+
+function freeCartesiaKey(userId?:string) {
+  const keys = freeCartesiaKeys();
+  if (!keys.length) throw new VoiceError('Voice Studio chưa có API key Cartesia cho tài khoản miễn phí.',503);
+  if (userId) {
+    let hash = 0;
+    for (const char of userId) hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
+    return keys[hash % keys.length];
+  }
+  const key = keys[freeKeyCursor % keys.length];
+  freeKeyCursor += 1;
+  return key;
+}
+
+export function providerReady() {return !!(process.env.CARTESIA_API_KEY_MAIN || process.env.CARTESIA_API_KEY || process.env.VITE_CARTESIA_API_KEY || freeCartesiaKeys().length);}
+
+async function paidVoiceSubscription(userId:string) {
+  const {data,error}=await writer().from('windi_voice_periods').select('id').eq('user_id',userId).neq('plan_id','welcome').lte('starts_at',new Date().toISOString()).gt('ends_at',new Date().toISOString()).limit(1).maybeSingle();
+  if(error) throw error;
+  return !!data;
+}
+
+export async function cartesia(path:string, init:RequestInit={}, options:CartesiaOptions={}) {
+  const purpose=options.purpose||'tts';
+  const useMain=purpose==='main'||purpose==='clone'||(purpose==='tts'&&!!options.userId&&await paidVoiceSubscription(options.userId));
+  const apiKey=useMain?mainCartesiaKey():freeCartesiaKey(options.userId);
+  return fetch(`https://api.cartesia.ai${path}`,{...init,cache:'no-store',signal:AbortSignal.timeout(90000),headers:{Authorization:`Bearer ${apiKey}`,'Cartesia-Version':'2026-08-14',...init.headers}});
 }
 const PUBLIC_VOICE_TARGET_MAX = 12;
 const PREVIEW_CACHE_MS = 60 * 60 * 1000;
@@ -69,7 +111,11 @@ async function catalogPage(language?:string, cursor?:string):Promise<CartesiaCat
   if(!Array.isArray(result.data)) throw new VoiceError('Thư viện giọng tạm thời không khả dụng.',502);
   return {
     voices:result.data
-      .filter((voice:{access?:string;visibility?:string;is_owner?:boolean;status?:string})=>voice.access==='public'&&voice.visibility==='all'&&voice.is_owner===false&&voice.status==='active')
+      .filter((voice:{access?:string|{type?:string;visibility?:string};visibility?:string;is_public?:boolean;is_owner?:boolean;status?:string})=>{
+        const publicAccess=voice.access==='public'||(typeof voice.access==='object'&&voice.access?.type==='public')||voice.is_public===true;
+        const publicVisibility=voice.visibility==='all'||(typeof voice.access==='object'&&voice.access?.visibility==='all');
+        return publicAccess&&publicVisibility&&voice.is_owner===false&&voice.status==='active';
+      })
       .filter((voice:{language:string})=>isSampleLibraryLanguage(voice.language))
       .map((voice:{id:string;name:string;description?:string;tagline?:string;language:string;gender?:string})=>({id:voice.id,name:voice.name,description:voice.description||voice.tagline||'',language:voice.language,gender:voice.gender,useCases:voiceUseCases(voice.tagline,voice.description),kind:'public'})),
     hasMore:result.has_more===true,
@@ -96,6 +142,8 @@ export async function publicVoices():Promise<{voices:StudioVoice[]; source:strin
   return {voices,source:'live'};
 }
 export async function publicVoice(id:string) {
+  const comparison = COMPARISON_VOICES.find(voice => voice.id === id);
+  if (comparison) return comparison;
   return (await publicVoices()).voices.find(voice=>voice.id===id) ?? null;
 }
 
@@ -186,6 +234,15 @@ export async function previewPublicVoice(request:Request,id:string) {
   return {voice,audio};
 }
 export async function resolveVoice(userId:string,id:string) {
+  const { isVoiceAdmin, providerVoice } = await import('./admin');
+  if(await isVoiceAdmin(userId)) return providerVoice(id);
+  // A licensed Workflow can use the designated service voice. The provider
+  // voice remains private; arbitrary provider IDs still require ownership.
+  if(id===DEFAULT_WORKFLOW_VOICE_ID) {
+    const {data:license,error:licenseError}=await writer().from('product_entitlements').select('id').eq('user_id',userId).eq('kind','video_workflow_v1').eq('status','active').limit(1).maybeSingle();
+    if(licenseError) throw licenseError;
+    if(license) return providerVoice(id);
+  }
   const {data,error}=await writer().from('windi_voice_clones').select('provider_id,name').eq('user_id',userId).eq('provider_id',id).eq('status','ready').maybeSingle();
   if(error) throw error;
   if(data) return {id:data.provider_id,name:data.name};
@@ -225,7 +282,7 @@ export function generateVoicePaymentCode(): string {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   let rand = '';
   for (let i = 0; i < 8; i++) rand += chars.charAt(Math.floor(Math.random() * chars.length));
-  return `WINDI ${rand}`;
+  return `WINDI V${rand}`;
 }
 
 export async function ensureOrderValid<T extends { id: string; status: string; payment_code?: string; expires_at?: string; created_at?: string }>(order: T | null | undefined): Promise<T | null | undefined> {
@@ -244,7 +301,7 @@ export async function ensureOrderValid<T extends { id: string; status: string; p
       return order;
     }
 
-    const needsNewCode = !order.payment_code || !order.payment_code.startsWith('WINDI ');
+    const needsNewCode = !order.payment_code || !order.payment_code.startsWith('WINDI V');
     const currentExpires = order.expires_at ? Date.parse(order.expires_at) : 0;
     // Cap expiration to 5 minutes if it had the old 24h interval
     const needsExpiresCap = !order.expires_at || currentExpires > now + 6 * 60 * 1000;

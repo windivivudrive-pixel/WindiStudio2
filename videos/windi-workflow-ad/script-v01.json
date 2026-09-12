@@ -1,0 +1,152 @@
+{
+  "schemaVersion": 1,
+  "version": 1,
+  "ideaId": "idea-01-windi-workflow-that-su",
+  "title": "Ai cũng nói làm video tự động — nhưng làm thật mới biết",
+  "language": "vi",
+  "beats": [
+    {
+      "id": "beat-01-one-command-hook",
+      "voiceOver": "Một câu lệnh là ra cả video. Nghe quen không?",
+      "onScreenText": "1 CÂU LỆNH = 1 VIDEO?",
+      "visualDescription": "Màn hình chia đôi. Bên trái là lời hứa một câu lệnh cực đơn giản; bên phải là hàng loạt cửa sổ, thanh chờ và lỗi bắt đầu chồng lên nhau.",
+      "imagePrompt": "Vertical 9:16 cinematic editorial scene of a Vietnamese content creator at a desk, one side calm with a single clean command window, the other side overwhelmed by many floating creative app windows and loading indicators, dark charcoal studio, subtle green grid, cream and muted orange accents, realistic lighting, no readable text, no logos, no watermark",
+      "motion": "Hard split reveal trong 8 frame; push-in nhanh 4%; các cửa sổ phía phải bật lên lệch nhau 4–6 frame.",
+      "layout": "chaos-hook",
+      "spokenAnchor": "Nghe quen không?",
+      "estimatedDurationMs": 3200
+    },
+    {
+      "id": "beat-02-real-work",
+      "voiceOver": "Nhưng tới lúc làm thật... ảnh sai thì tạo lại, kịch bản sửa đi sửa lại, credit cứ trừ, còn mình thì ngồi chờ.",
+      "onScreenText": "TẠO LẠI · SỬA LẠI · CHỜ",
+      "visualDescription": "Ba card lỗi xuất hiện lần lượt trong một cửa sổ Windi dark: ảnh sai, kịch bản lệch và credit giảm; creator nhìn đồng hồ với vẻ sốt ruột.",
+      "imagePrompt": "Vertical realistic cinematic portrait of a tired Vietnamese creator waiting at a computer late at night, multiple failed image thumbnails, revision notes and loading spinners suggested visually without readable interface text, charcoal black workspace, warm monitor light, muted orange pink blue status accents, premium editorial photography, no logos, no watermark",
+      "motion": "Mỗi vấn đề trượt vào theo từng cụm lời; counter credit giảm nhẹ; dừng 10 frame ở hình creator nhìn đồng hồ.",
+      "layout": "problem-stack",
+      "spokenAnchor": "credit cứ trừ",
+      "estimatedDurationMs": 5600
+    },
+    {
+      "id": "beat-03-flat-voice",
+      "voiceOver": "Xong tới phần giọng đọc. Đúng chữ đấy... mà nghe vẫn đều đều, chẳng giống người đang kể chuyện.",
+      "onScreenText": "ĐÚNG CHỮ. SAI CẢM GIÁC.",
+      "visualDescription": "Một waveform phẳng chạy cạnh gương mặt creator thiếu cảm xúc; nhịp dừng rõ ở sau cụm 'Đúng chữ đấy'.",
+      "imagePrompt": "Vertical moody close-up of a Vietnamese narrator in a small recording corner, expression emotionally flat while a minimal nearly flat audio waveform glows beside them, dark charcoal background, cream light, muted pink and orange accents, intimate editorial photography, no text, no logos, no watermark",
+      "motion": "Waveform chạy đều rồi gần như phẳng; headline hiện hai nhịp theo dấu chấm; zoom rất chậm vào khuôn mặt.",
+      "layout": "human-voice",
+      "spokenAnchor": "Đúng chữ đấy",
+      "estimatedDurationMs": 4800
+    },
+    {
+      "id": "beat-04-windi-reveal",
+      "voiceOver": "Windi được làm ra... vì đúng cái cảnh đó.",
+      "onScreenText": "VẬY NÊN CÓ WINDI.",
+      "visualDescription": "Mọi cửa sổ hỗn loạn thu gọn vào một cửa sổ trung tâm. Tên Windi xuất hiện sạch, nền lưới dark mode giữ nguyên.",
+      "imagePrompt": "Vertical premium dark-tech editorial visual, many scattered creative workflow windows converging into one clean central workspace, charcoal grid background, cream surfaces, muted orange focus glow, calm organized feeling, no readable text, no external logos, no watermark",
+      "motion": "Ngắt 8 frame trước reveal; các cửa sổ co về tâm bằng spring mềm; underline cam quét dưới headline.",
+      "layout": "windi-reveal",
+      "spokenAnchor": "vì đúng cái cảnh đó",
+      "estimatedDurationMs": 3200
+    },
+    {
+      "id": "beat-05-idea-gate",
+      "voiceOver": "Bạn đưa một chủ đề. Windi lên idea trước. Thấy ổn, bạn mới duyệt để đi tiếp.",
+      "onScreenText": "CHỦ ĐỀ → IDEA → BẠN DUYỆT",
+      "visualDescription": "Cửa sổ workflow hiển thị ba bước đầu; trạng thái idea chuyển từ pending sang approved bằng accent xanh.",
+      "imagePrompt": "Vertical editorial scene of a focused Vietnamese creator reviewing three concise idea cards on a desktop workspace, one card selected with a green approval indicator, dark charcoal room, cream interface panels, subtle grid and muted orange accents, clean realistic photography, no readable text, no logos, no watermark",
+      "motion": "Ba node sáng lần lượt theo lời; dừng ở node duyệt; dấu check xanh pop-in nhỏ, không rung mạnh.",
+      "layout": "workflow-window",
+      "spokenAnchor": "bạn mới duyệt",
+      "estimatedDurationMs": 4400
+    },
+    {
+      "id": "beat-06-layout-choice",
+      "voiceOver": "Rồi chọn layout có sẵn. Hoặc đưa một video mẫu để Windi phân tích cách hook, chia beat và đặt hình.",
+      "onScreenText": "CHỌN MẪU · HOẶC ĐƯA VIDEO REF",
+      "visualDescription": "Hai nhánh rõ ràng: một bên là hai layout Windi, bên còn lại là video reference được tách thành hook, beat và vùng đặt hình.",
+      "imagePrompt": "Vertical split-screen editorial composition, left side shows two polished vertical video style boards, right side shows a reference video being analyzed into visual beats and scene frames, dark charcoal creative studio, cream cards, muted blue and orange accents, no readable text, no logos, no watermark",
+      "motion": "Split mở từ giữa; hai layout slide lên; video ref chạy ba thumbnail rồi nối thành timeline ngắn.",
+      "layout": "feature-split",
+      "spokenAnchor": "đưa một video mẫu",
+      "estimatedDurationMs": 5000
+    },
+    {
+      "id": "beat-07-beat-script",
+      "voiceOver": "Kịch bản không còn là một cục chữ. Mỗi beat có lời nói, hình cần tạo, chữ trên màn hình... và nhịp chuyển cảnh rõ ràng.",
+      "onScreenText": "MỖI BEAT ĐỀU BIẾT PHẢI LÀM GÌ",
+      "visualDescription": "Một đoạn chữ dài bị tách thành các beat gọn. Mỗi beat có bốn hàng: voice, visual, on-screen text và motion.",
+      "imagePrompt": "Vertical top-down editorial view of a video script transforming from one dense document into organized storyboard cards with voice, image, caption and motion symbols, dark charcoal desk, cream paper panels, muted yellow blue pink accents, premium tactile realism, no readable text, no logos, no watermark",
+      "motion": "Khối chữ ban đầu nén lại rồi tách thành bốn card; mỗi trường highlight đúng spoken anchor; camera pan dọc nhẹ.",
+      "layout": "workflow-window",
+      "spokenAnchor": "Mỗi beat",
+      "estimatedDurationMs": 5700
+    },
+    {
+      "id": "beat-08-images-after-approval",
+      "voiceOver": "Duyệt xong mới gọi Flow hoặc ChatGPT tạo ảnh. Sai ở cảnh nào, sửa đúng cảnh đó. Không phải quăng cả quy trình đi làm lại.",
+      "onScreenText": "DUYỆT TRƯỚC. TẠO SAU.",
+      "visualDescription": "Bên trái là cổng Approved; bên phải là hàng ảnh theo từng scene. Chỉ một scene lỗi được tạo phiên bản mới, các scene còn lại giữ nguyên.",
+      "imagePrompt": "Vertical cinematic creative workstation showing an approved storyboard feeding into a neat sequence of generated scene images, one image receives a small revision version while all other scenes remain locked and complete, dark charcoal workspace, cream cards, green approved state, muted orange focus, no readable text, no provider logos, no watermark",
+      "motion": "Dấu approved mở khóa hàng ảnh; từng thumbnail bật sáng; scene lỗi đổi từ v01 sang v02 trong khi các cảnh khác đứng yên.",
+      "layout": "feature-split",
+      "spokenAnchor": "Duyệt xong mới",
+      "estimatedDurationMs": 5600
+    },
+    {
+      "id": "beat-09-human-scripted-voice",
+      "voiceOver": "Voice cũng bám theo kịch bản đã duyệt. Câu ngắn. Có chỗ nghỉ. Có nhịp nhấn... nghe gần người hơn hẳn.",
+      "onScreenText": "CÂU NGẮN · CÓ NGHỈ · CÓ NHẤN",
+      "visualDescription": "Waveform có nhịp thở tự nhiên, các cụm từ sáng đúng lúc; cận cảnh narrator thoải mái như đang nói với một người bạn.",
+      "imagePrompt": "Vertical intimate cinematic portrait of a friendly Vietnamese narrator speaking naturally into a microphone as if talking to a friend, expressive but subtle face, organic audio waveform with visible pauses, dark charcoal studio, warm cream skin light, muted green and orange accents, no text, no logos, no watermark",
+      "motion": "Cắt theo ba câu ngắn; waveform nở theo trọng âm rồi nghỉ; push-in 3% ở câu cuối.",
+      "layout": "human-voice",
+      "spokenAnchor": "nghe gần người hơn hẳn",
+      "estimatedDurationMs": 4800
+    },
+    {
+      "id": "beat-10-timestamps",
+      "voiceOver": "Timestamp có sẵn. Nên hình, caption và lời nói khớp nhau ngay từ đầu.",
+      "onScreenText": "VOICE ↔ CAPTION ↔ HÌNH",
+      "visualDescription": "Ba lane voice, caption và hình nằm trên cùng timeline; playhead đi qua đâu cả ba cùng sáng tới đó.",
+      "imagePrompt": "Vertical close-up of a clean professional video timeline with three synchronized lanes represented by waveform, caption blocks and image thumbnails, all aligned under one playhead, dark charcoal interface, cream details, muted orange active marker and green completion state, no readable text, no logos, no watermark",
+      "motion": "Playhead quét một đoạn; ba lane sáng đồng thời; snap nhẹ khi các mốc khớp nhau.",
+      "layout": "workflow-window",
+      "spokenAnchor": "khớp nhau ngay từ đầu",
+      "estimatedDurationMs": 3600
+    },
+    {
+      "id": "beat-11-system-not-magic",
+      "voiceOver": "Cái hay không nằm ở một công cụ thần kỳ. Nó nằm ở việc mọi bước biết mình đang chờ gì... và tiếp tục đúng chỗ.",
+      "onScreenText": "KHÔNG PHẢI PHÉP MÀU. LÀ QUY TRÌNH.",
+      "visualDescription": "Các node workflow nối nhau rõ ràng, có hai cổng duyệt và mỗi bước giữ trạng thái; không dùng hình ảnh phép thuật hoặc AI sáo rỗng.",
+      "imagePrompt": "Vertical premium editorial visualization of a reliable creative production system, connected workflow stations with clear pause and approval gates, calm Vietnamese creator in control, no magic imagery, dark charcoal grid, cream panels, muted orange and green signals, no readable text, no logos, no watermark",
+      "motion": "Camera đi dọc theo đường nối; node đang chờ pulse vàng, node duyệt chuyển xanh; nhịp chậm hơn để câu nói có trọng lượng.",
+      "layout": "windi-reveal",
+      "spokenAnchor": "tiếp tục đúng chỗ",
+      "estimatedDurationMs": 5200
+    },
+    {
+      "id": "beat-12-time-contrast",
+      "voiceOver": "Trong lúc người khác vẫn nối từng tool, thử đi thử lại, rồi nhìn credit biến mất...",
+      "onScreenText": "NỐI TOOL + THỬ LẠI / QUY TRÌNH DÙNG LẠI",
+      "visualDescription": "Màn hình chia đôi: bên trái nhiều app rời rạc, mũi tên rối và counter credit giảm; bên phải một workflow sạch đã sẵn sàng tái sử dụng.",
+      "imagePrompt": "Vertical split-screen comparison, left side a chaotic creator workflow with many disconnected apps, tangled arrows and repeated failed attempts, right side a clean reusable production pipeline with completed stages, dark charcoal visual system, cream text areas, muted red-pink warning and green success accents, no readable text, no logos, no watermark",
+      "motion": "Bên trái giật cắt nhanh và counter giảm; bên phải tiến trình chạy đều; dừng nửa nhịp sau cụm 'biến mất'.",
+      "layout": "time-proof",
+      "spokenAnchor": "credit biến mất",
+      "estimatedDurationMs": 4000
+    },
+    {
+      "id": "beat-13-fomo-cta",
+      "voiceOver": "Bạn có thể dành thời gian đó cho video tiếp theo. Windi Video Workflow: hai trăm chín mươi chín nghìn cho một trăm tài khoản đầu, kèm hai mươi nghìn credit voice. Muốn làm nhanh hơn mà vẫn tự duyệt từng bước? Bắt đầu với Windi.",
+      "onScreenText": "299K · 100 TÀI KHOẢN ĐẦU\n+ 20K VOICE CREDIT",
+      "visualDescription": "Cửa sổ CTA Windi dark hiện giá mở bán, số lượng giới hạn và credit voice; nút cam nổi bật, phía sau là workflow hoàn tất chuyển sang video kế tiếp.",
+      "imagePrompt": "Vertical premium product launch scene for a creator workflow, one confident Vietnamese creator moving from a completed video to the next project, central dark retro software window, charcoal grid background, cream typography space, muted orange call-to-action glow, green completion indicator, energetic but trustworthy, no readable text, no logos, no watermark",
+      "motion": "Giá và giới hạn xuất hiện theo hai nhịp; card voice credit slide vào; nút CTA nhấn xuống một lần; kết bằng progress chuyển từ COMPLETE sang NEW PROJECT.",
+      "layout": "fomo-cta",
+      "spokenAnchor": "Bắt đầu với Windi",
+      "estimatedDurationMs": 9000
+    }
+  ]
+}

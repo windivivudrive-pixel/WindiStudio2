@@ -53,3 +53,7 @@ Sau duyệt, bàn giao `final.mp4`, `cover.png`, `captions.srt`, `script.md`, so
 - `$windistudio-repo-video https://github.com/owner/repo` → kiểm tra repo và trình góc kể để duyệt.
 - `Duyệt idea 1, làm video hoàn chỉnh` → chạy hết từ kịch bản đến MP4.
 - `Sửa hook tập đang làm mạnh hơn` → sửa trong idea đã duyệt, cập nhật voice/timing/render có liên quan.
+
+## Dung lượng sau bàn giao
+
+Không nhân bản runtime cho từng tập mới khi có renderer dùng chung. Với tập Remotion độc lập đã hoàn tất, có thể dọn node_modules khi giữ package.json và package-lock.json; kèm hướng dẫn npm ci để mở lại. Giữ source, ảnh/voice gốc, manifest, QA và video cuối. Chỉ bỏ MP4 trùng khi SHA-256 giống nhau và cập nhật tham chiếu; không xóa bản khác nội dung chỉ vì cùng dung lượng. Gói source cho khách không chứa node_modules, cache hay secrets; bộ cài runtime được bàn giao riêng.

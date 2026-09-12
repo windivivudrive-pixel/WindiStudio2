@@ -1,0 +1,21 @@
+{
+  "name": "@windistudio/connect",
+  "version": "0.5.6",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24.11.1"
+  },
+  "scripts": {
+    "build:extensions": "node scripts/build-extensions.mjs",
+    "install:local": "node scripts/install.mjs",
+    "package:installer": "node scripts/package-installer.mjs",
+    "start": "node src/daemon.ts",
+    "test": "node --test tests/*.test.ts",
+    "typecheck": "../../node_modules/.bin/tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@pilio/gemini-watermark-remover": "1.0.41",
+    "sharp": "0.35.4"
+  }
+}

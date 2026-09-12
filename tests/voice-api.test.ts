@@ -67,15 +67,15 @@ test('clone requires explicit voice rights confirmation before provider use',asy
  const response=await clone(new Request('http://localhost/api/voice/clone',{method:'POST',body:form}));
  expect(response.status).toBe(400);expect(rpc).not.toHaveBeenCalled();expect(state.cartesia).not.toHaveBeenCalled();
 });
-test('clone validates, persists, and keeps accent private to Windi',async()=>{
+test('clone validates, persists, and sends current private-voice metadata to Cartesia',async()=>{
  const form=new FormData();form.set('clip',new File(['test'],'voice.mp3',{type:'audio/mpeg'}));form.set('name','My voice');form.set('requestKey',id);form.set('language','vi');form.set('accent','northern-vietnamese');form.set('consent','true');
  state.resolveCloneAccent.mockResolvedValue('northern-vietnamese');state.cartesia.mockResolvedValue(new Response(JSON.stringify({id}),{headers:{'Content-Type':'application/json'}}));
  const response=await clone(new Request('http://localhost/api/voice/clone',{method:'POST',body:form}));
- expect(response.status).toBe(200);expect(state.resolveCloneAccent).toHaveBeenCalledWith('vi','northern-vietnamese');
+  expect(response.status).toBe(200);expect(state.resolveCloneAccent).toHaveBeenCalledWith('vi','northern-vietnamese');
   expect(rpc).toHaveBeenCalledWith('windi_voice_clone_reserve',{p_user:uid,p_key:id,p_name:'My voice',p_language:'vi',p_accent:'northern-vietnamese'});
   const upstream=state.cartesia.mock.calls[0][1].body as FormData;
-  expect(upstream.get('language')).toBe('vi');expect(upstream.get('enhance')).toBe('true');
-  expect(upstream.get('accent')).toBeNull();expect(upstream.get('access')).toBeNull();
+  expect(upstream.get('language')).toBe('vi');expect(upstream.get('enhance')).toBeNull();
+  expect(upstream.get('accent')).toBe('northern-vietnamese');expect(upstream.get('access')).toBe('private');
 });
 test('clone failures release the reserved slot and return an actionable retry message',async()=>{
  const form=new FormData();form.set('clip',new File(['test'],'voice.mp3',{type:'audio/mpeg'}));form.set('name','My voice');form.set('requestKey',id);form.set('language','vi');form.set('consent','true');
@@ -89,6 +89,13 @@ test('clone provider rejections refund before surfacing sample guidance',async()
  state.cartesia.mockResolvedValue(new Response(JSON.stringify({message:'invalid clip'}),{status:422,headers:{'Content-Type':'application/json'}}));
  const response=await clone(new Request('http://localhost/api/voice/clone',{method:'POST',body:form}));
  expect(response.status).toBe(502);expect(await response.json()).toEqual(expect.objectContaining({error:expect.stringContaining('Mẫu giọng chưa phù hợp')}));
+ expect(rpc).toHaveBeenCalledWith('windi_voice_clone_finish',{p_clone:id,p_provider:null});
+});
+test('Cartesia plan restriction is reported accurately and refunds the clone slot',async()=>{
+ const form=new FormData();form.set('clip',new File(['test'],'voice.mp3',{type:'audio/mpeg'}));form.set('name','My voice');form.set('requestKey',id);form.set('language','vi');form.set('consent','true');
+ state.cartesia.mockResolvedValue(new Response(JSON.stringify({error_code:'plan_upgrade_required',message:'upgrade',request_id:'provider-request'}),{status:402,headers:{'Content-Type':'application/json'}}));
+ const response=await clone(new Request('http://localhost/api/voice/clone',{method:'POST',body:form}));
+ expect(response.status).toBe(502);expect(await response.json()).toEqual(expect.objectContaining({error:expect.stringContaining('gói API hiện tại')}));
  expect(rpc).toHaveBeenCalledWith('windi_voice_clone_finish',{p_clone:id,p_provider:null});
 });
 test('accent catalog is private to the signed-in studio user and language-scoped',async()=>{

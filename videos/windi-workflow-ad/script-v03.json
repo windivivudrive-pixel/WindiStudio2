@@ -1,0 +1,152 @@
+{
+  "schemaVersion": 1,
+  "version": 3,
+  "ideaId": "idea-01-windi-workflow-that-su",
+  "title": "Làm video AI mà không loạn quy trình",
+  "language": "vi",
+  "beats": [
+    {
+      "id": "beat-01-thumbnail-hook",
+      "voiceOver": "Một câu lệnh là ra cả video. Nghe quen không?",
+      "onScreenText": "MỘT LỆNH.\nMỘT VIDEO?",
+      "visualDescription": "Hook thumbnail: editor nam Việt đeo kính nhìn thẳng qua laptop, bên cạnh là một command window gọn đối lập với lớp cửa sổ hỗn loạn phía sau.",
+      "imagePrompt": "Landscape 16:9 premium cinematic editorial still. A Vietnamese male video editor in his mid twenties wearing thin round glasses and a black overshirt sits at a desk facing a silver laptop. One clean minimal terminal-like window is calm in front of him while a restrained cluster of blurred creative windows and loading shapes builds behind him. Dark WindiStudio charcoal workspace, retro computer mood, subtle olive grid, warm cream monitor light, muted gold and burgundy accents, realistic photography, composition keeps clean negative space at upper left for added typography. No readable text, no logos, no watermark, no mascot.",
+      "motion": "Thumbnail punch-in 5% trong 12 frame; một lớp card hỗn loạn bật sau lưng editor, giữ vùng headline ở trên trái sạch.",
+      "layout": "thumbnail-hook",
+      "spokenAnchor": "Nghe quen không?",
+      "estimatedDurationMs": 3200
+    },
+    {
+      "id": "beat-02-real-work",
+      "voiceOver": "Nhưng tới lúc làm thật... ảnh sai thì tạo lại, kịch bản sửa đi sửa lại, credit cứ trừ, còn mình thì ngồi chờ.",
+      "onScreenText": "TẠO LẠI · CHỜ",
+      "visualDescription": "Editor nam Việt đeo kính ngồi mệt trước desktop; ba visual error card không chữ đại diện cho ảnh sai, note sửa và thời gian chờ.",
+      "imagePrompt": "Landscape 16:9 realistic editorial still of the same Vietnamese male video editor with thin round glasses, waiting at a dark desk late at night. Three clean unlabeled visual cards suggest a wrong image, a revised script and a slow loading state; he glances at a small clock. WindiStudio dark charcoal room, warm monitor light, muted gold, dusty pink and pale blue status accents, tactile high-end photography. No readable text, no logo, no watermark.",
+      "motion": "Ba card lỗi trượt vào theo từng nhịp lời; camera pan ngang ngắn qua gương mặt đang chờ.",
+      "layout": "editorial-frame",
+      "spokenAnchor": "credit cứ trừ",
+      "estimatedDurationMs": 5600
+    },
+    {
+      "id": "beat-03-flat-voice",
+      "voiceOver": "Xong tới phần giọng đọc. Đúng chữ đấy... mà nghe vẫn đều đều, chẳng giống người đang kể chuyện.",
+      "onScreenText": "ĐÚNG CHỮ.\nSAI CẢM GIÁC.",
+      "visualDescription": "Cận cảnh editor đeo kính tại microphone, waveform phẳng và ánh nhìn thiếu cảm xúc.",
+      "imagePrompt": "Landscape 16:9 intimate cinematic close-up of the same Vietnamese male editor with thin round glasses at a compact microphone, his expression slightly flat and tired. A minimal abstract waveform appears almost flat as a soft light element, not readable UI. Dark charcoal recording corner, warm cream key light, muted burgundy and gold accents, premium editorial photograph. No words, no logos, no watermark.",
+      "motion": "Waveform phẳng chạy nhẹ rồi dừng; push-in 3% đúng sau cụm Đúng chữ đấy.",
+      "layout": "voice-frame",
+      "spokenAnchor": "Đúng chữ đấy",
+      "estimatedDurationMs": 4800
+    },
+    {
+      "id": "beat-04-windi-reveal",
+      "voiceOver": "Windi được làm ra... vì đúng cái cảnh đó.",
+      "onScreenText": "VÌ CÁI CẢNH ĐÓ.",
+      "visualDescription": "Các lớp card rời rạc thu về một retro workflow window sạch trên bàn của editor.",
+      "imagePrompt": "Landscape 16:9 premium dark-tech editorial still. The same Vietnamese male editor with thin round glasses watches scattered creative cards converge into one calm retro software window on a charcoal desk. Olive grid background, cream panels, muted gold focus glow, grounded and organized feeling, realistic studio photography. No readable interface text, no external logos, no watermark.",
+      "motion": "Ngắt 8 frame rồi các card hút vào giữa; đường accent vàng quét ngắn dưới headline.",
+      "layout": "thumbnail-hook",
+      "spokenAnchor": "đúng cái cảnh đó",
+      "estimatedDurationMs": 3200
+    },
+    {
+      "id": "beat-05-idea-gate",
+      "voiceOver": "Bạn đưa một chủ đề. Windi lên idea trước. Thấy ổn, bạn mới duyệt để đi tiếp.",
+      "onScreenText": "IDEA.\nRỒI MỚI DUYỆT.",
+      "visualDescription": "Editor nam Việt đeo kính xem ba idea card trong một khung ngang, một card có dấu duyệt xanh nhưng không chữ.",
+      "imagePrompt": "Landscape 16:9 editorial workstation scene of the same Vietnamese male editor with thin round glasses reviewing three concise blank concept cards in a horizontal retro software frame. One card has a small green approval mark, dark WindiStudio room, cream panels, subtle grid and muted gold accents, clean photorealistic lighting. No readable text, no logos, no watermark.",
+      "motion": "Ba idea card sáng lần lượt; check xanh pop nhỏ ở card cuối.",
+      "layout": "workflow-frame",
+      "spokenAnchor": "bạn mới duyệt",
+      "estimatedDurationMs": 4400
+    },
+    {
+      "id": "beat-06-layout-choice",
+      "voiceOver": "Rồi chọn layout có sẵn. Hoặc đưa một video mẫu để Windi phân tích cách hook, chia beat và đặt hình.",
+      "onScreenText": "CHỌN MẪU\nHOẶC VIDEO REF",
+      "visualDescription": "Khung ngang chia đôi giữa hai layout board và một video ref phân rã thành hook, beat, hình.",
+      "imagePrompt": "Landscape 16:9 cinematic split editorial scene. The same Vietnamese male editor with thin round glasses views two tasteful video style boards on the left and a reference clip becoming visual beat frames on the right. Dark charcoal WindiStudio desk, cream interface cards, muted blue and gold accents, realistic premium lighting. No readable text, no provider logos, no watermark.",
+      "motion": "Split mở từ giữa, hai board slide lên và ref clip chuyển thành ba thumbnail beat.",
+      "layout": "feature-frame",
+      "spokenAnchor": "đưa một video mẫu",
+      "estimatedDurationMs": 5000
+    },
+    {
+      "id": "beat-07-beat-script",
+      "voiceOver": "Kịch bản không còn là một cục chữ. Mỗi beat có lời nói, hình cần tạo, chữ trên màn hình... và nhịp chuyển cảnh rõ ràng.",
+      "onScreenText": "MỖI BEAT\nCÓ VIỆC RIÊNG.",
+      "visualDescription": "Từ trang giấy dài, editor tạo thành các storyboard card ngang có icon voice, image, text và motion.",
+      "imagePrompt": "Landscape 16:9 top-down editorial still of the same Vietnamese male editor with thin round glasses organizing a dense blank document into four clean horizontal storyboard cards with abstract voice, image, caption and motion symbols. Dark charcoal desk, tactile cream paper panels, muted yellow, blue and burgundy accents, premium realism. No legible text, no logos, no watermark.",
+      "motion": "Trang dài nén lại rồi tách thành card theo nhịp; pan dọc rất nhẹ để giữ khung ngang thoáng.",
+      "layout": "workflow-frame",
+      "spokenAnchor": "Mỗi beat",
+      "estimatedDurationMs": 5700
+    },
+    {
+      "id": "beat-08-images-after-approval",
+      "voiceOver": "Duyệt xong mới gọi Flow hoặc ChatGPT tạo ảnh. Sai ở cảnh nào, sửa đúng cảnh đó. Không phải quăng cả quy trình đi làm lại.",
+      "onScreenText": "DUYỆT TRƯỚC.\nTẠO SAU.",
+      "visualDescription": "Storyboard approved mở khóa hàng asset ngang; chỉ một cảnh được thay version mới, phần còn lại giữ nguyên.",
+      "imagePrompt": "Landscape 16:9 cinematic creative workstation. The same Vietnamese male editor with thin round glasses sees an approved storyboard unlock a tidy row of horizontal generated scene thumbnails. Only one selected thumbnail receives a small revised version marker while all others stay complete. Dark charcoal WindiStudio workspace, cream cards, green approved signal, muted gold focus, no readable text, no provider logos, no watermark.",
+      "motion": "Cổng duyệt mở, thumbnail bật sáng; chỉ một scene thay phiên bản, các scene khác đứng yên.",
+      "layout": "feature-frame",
+      "spokenAnchor": "Duyệt xong mới",
+      "estimatedDurationMs": 5600
+    },
+    {
+      "id": "beat-09-human-scripted-voice",
+      "voiceOver": "Voice cũng bám theo kịch bản đã duyệt. Câu ngắn. Có chỗ nghỉ. Có nhịp nhấn... nghe gần người hơn hẳn.",
+      "onScreenText": "CÓ NGHỈ.\nCÓ NHẤN.",
+      "visualDescription": "Editor nói gần microphone với waveform có nhịp thở, thoải mái hơn cảnh voice trước.",
+      "imagePrompt": "Landscape 16:9 intimate cinematic portrait of the same Vietnamese male editor with thin round glasses speaking naturally into a microphone, relaxed expression and subtle hand gesture. An organic abstract waveform has visible pauses and accents. Dark charcoal studio, warm cream skin light, muted olive and gold accents, premium editorial photography. No words, no logos, no watermark.",
+      "motion": "Waveform nở theo ba nhịp rồi có khoảng nghỉ; push-in 3% ở câu chốt.",
+      "layout": "voice-frame",
+      "spokenAnchor": "nghe gần người hơn hẳn",
+      "estimatedDurationMs": 4800
+    },
+    {
+      "id": "beat-10-timestamps",
+      "voiceOver": "Timestamp có sẵn. Nên hình, caption và lời nói khớp nhau ngay từ đầu.",
+      "onScreenText": "MỌI THỨ\nKHỚP NGAY.",
+      "visualDescription": "Một timeline ngang tối giản có waveform, caption block, thumbnails thẳng hàng dưới playhead.",
+      "imagePrompt": "Landscape 16:9 close-up of a clean horizontal professional video timeline on a charcoal retro monitor. Three aligned abstract lanes represent waveform, caption blocks and image thumbnails under one gold playhead. The same Vietnamese male editor with thin round glasses is softly visible in reflection. Cream details, muted green completion signal, no readable text, no logos, no watermark.",
+      "motion": "Playhead quét ngang qua ba lane đồng bộ; snap nhẹ ở điểm khớp.",
+      "layout": "workflow-frame",
+      "spokenAnchor": "khớp nhau ngay từ đầu",
+      "estimatedDurationMs": 3600
+    },
+    {
+      "id": "beat-11-system-not-magic",
+      "voiceOver": "Cái hay không nằm ở một công cụ thần kỳ. Nó nằm ở việc mọi bước biết mình đang chờ gì... và tiếp tục đúng chỗ.",
+      "onScreenText": "KHÔNG PHÉP MÀU.\nCÓ QUY TRÌNH.",
+      "visualDescription": "Editor kiểm soát một hệ workflow ngang gồm station liên kết, node chờ và approval gate rõ ràng.",
+      "imagePrompt": "Landscape 16:9 premium editorial visualization of the same Vietnamese male editor with thin round glasses in control of a reliable horizontal creative production system. Connected workflow stations show clear waiting and approval gates, no magic imagery. Dark charcoal grid, cream panels, muted gold and green signals, cinematic realistic lighting. No readable text, no logos, no watermark.",
+      "motion": "Camera đi ngang theo đường nối; node đang chờ pulse vàng rồi chuyển xanh.",
+      "layout": "workflow-frame",
+      "spokenAnchor": "tiếp tục đúng chỗ",
+      "estimatedDurationMs": 5200
+    },
+    {
+      "id": "beat-12-time-contrast",
+      "voiceOver": "Trong lúc người khác vẫn nối từng tool, thử đi thử lại, rồi nhìn credit biến mất...",
+      "onScreenText": "LẶP LẠI\nHAY DÙNG LẠI?",
+      "visualDescription": "Một visual ngang so sánh bên trái app rời rạc và bên phải pipeline sạch, editor đứng giữa chọn phương án rõ ràng.",
+      "imagePrompt": "Landscape 16:9 split comparison editorial still. The same Vietnamese male editor with thin round glasses stands between a left side of disconnected creative tools and tangled arrows and a right side of a calm reusable production pipeline. Dark charcoal visual system, cream surfaces, dusty pink warning and muted green success accents, high-end realism. No readable text, no logos, no watermark.",
+      "motion": "Bên trái cắt nhanh, bên phải tiến đều; dừng nửa nhịp ở biến mất.",
+      "layout": "comparison-frame",
+      "spokenAnchor": "credit biến mất",
+      "estimatedDurationMs": 4000
+    },
+    {
+      "id": "beat-13-fomo-cta",
+      "voiceOver": "Bạn có thể dành thời gian đó cho video tiếp theo. Muốn làm nhanh hơn mà vẫn tự duyệt từng bước? Bắt đầu với Windi.",
+      "onScreenText": "VIDEO TIẾP THEO.\nBẮT ĐẦU SỚM HƠN.",
+      "visualDescription": "Cover CTA: editor nam Việt đeo kính chuyển từ workflow hoàn tất sang project mới, tạo khoảng trống rõ để Remotion đặt offer thật.",
+      "imagePrompt": "Landscape 16:9 premium creator workflow launch visual. The same confident Vietnamese male editor with thin round glasses moves from one completed video storyboard to a new project on a dark retro software desk. Charcoal grid background, cream visual space, muted gold call-to-action glow, green completion indicator, energetic but trustworthy. Keep the upper left and lower third clean for added typography. No readable text, no logos, no watermark.",
+      "motion": "Card offer hiện hai nhịp; CTA pulse một lần; progress chuyển từ complete sang new project.",
+      "layout": "cta-thumbnail",
+      "spokenAnchor": "Bắt đầu với Windi",
+      "estimatedDurationMs": 9000
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Windi Video Workflow"
+  short_description: "Làm video dọc theo hai cổng duyệt Windi"
+  default_prompt: "Dùng Windi làm video này từ ý tưởng đến MP4."

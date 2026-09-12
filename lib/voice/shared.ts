@@ -1,3 +1,4 @@
+export const DEFAULT_WORKFLOW_VOICE_ID = '60cf30cf-dcad-4cb1-b2e9-b6c08a23569e';
 export const VOICE_PLANS = [
   { id: 'welcome', name: 'Chào mừng', price_vnd: 0, credits: 1500, clone_limit: 0, duration_days: 7, billing: 'one_time', purchasable: false, description: '1.500 credit miễn phí khi bạn đăng ký.' },
   { id: 'trial', name: 'Clone thử đầu tiên', price_vnd: 29000, credits: 10000, clone_limit: 1, duration_days: 14, billing: 'one_time', purchasable: true, description: 'Tạo giọng riêng đầu tiên và dùng thử trong 14 ngày.' },
@@ -32,13 +33,20 @@ export const STARTER_VOICES: StudioVoice[] = [
   {id:'62ae83ad-4f6a-430b-af41-a9bede9286ca',name:'Gemma',description:'Giọng nữ Anh',language:'en',gender:'feminine',kind:'public'},
   {id:'ef191366-f52f-447a-a398-ed8c0f2943a1',name:'Archie',description:'Giọng nam Anh',language:'en',gender:'masculine',kind:'public'},
 ];
+export const COMPARISON_VOICES: StudioVoice[] = [
+  {id:'6aee11c6-bef9-4fd0-9f45-1a1c25dcdcde',name:'Chữa Lành',description:'Voice Podcast Chữa Lành · Ấm áp, chậm rãi, giàu khoảng lặng',language:'vi',gender:'feminine',useCases:['conversation'],kind:'public'},
+  {id:'f2a05c6a-fc36-4d1a-b5c4-dd2e5af15af7',name:'Khoa',description:'Giọng Nam Vlog (Khoa) · Tự nhiên, gần gũi, giàu năng lượng',language:'vi',gender:'masculine',useCases:['entertainment'],kind:'public'},
+  {id:'c61ed9bd-944a-40db-b302-410985821200',name:'T Min',description:'Nữ Podcast (T.Min) · Chín chắn, rõ ý, đúng nhịp trò chuyện',language:'vi',gender:'feminine',useCases:['conversation'],kind:'public'},
+  {id:'b30f58c7-3a20-4144-a8b2-ee64cf5ae28e',name:'T Nhi',description:'Nữ Vlog (T.Nhi) · Tươi sáng, linh hoạt, bắt nhịp nhanh',language:'vi',gender:'feminine',useCases:['advertising','entertainment'],kind:'public'},
+  {id:'293e81de-ef7a-40ec-bdbc-3e641e76256c',name:'Truyện Ma',description:'Truyện Ma (Loc Thanh) · Kịch tính, kéo nhịp, tạo không khí',language:'vi',gender:'masculine',useCases:['entertainment'],kind:'public'},
+];
 export type StudioVoice = {id:string; name:string; description:string; language:string; gender?:string; useCases?:VoiceUseCase[]; kind:'public'|'clone'};
 export type VoiceAccent = {id:string;name:string;language:string;locale:string;isLocaleDefault:boolean;isLocalizable:boolean};
 export type VoicePeriod = {id:string; plan_id:string; credits:number; used_credits:number; clone_limit:number; clones_used:number; starts_at:string; ends_at:string};
 export type VoiceClone = {id:string; provider_id:string|null; name:string; language:string; accent:string|null; status:string; created_at:string};
 export type VoiceJob = {id:string; voice_name:string; transcript:string; credits:number; status:string; created_at:string};
-export type VoiceOrder = {id:string; plan_id:string; amount_vnd:number; payment_code:string; status:string; expires_at:string};
-export type VoiceAccount = {period:VoicePeriod|null; clones:VoiceClone[]; jobs:VoiceJob[]; orders:VoiceOrder[]; trialEligible:boolean};
+export type VoiceOrder = {id:string; plan_id:string; amount_vnd:number; payment_code:string; status:string; expires_at:string;created_at?:string;paid_at?:string|null};
+export type VoiceAccount = {isAdmin?:boolean;period:VoicePeriod|null; bonus?:{voice_credits:number;voice_credits_used:number}|null; clones:VoiceClone[]; jobs:VoiceJob[]; orders:VoiceOrder[]; trialEligible:boolean};
 export const countCredits = (text:string) => Array.from(text.normalize('NFC').trim()).length;
 export const formatNumber = (n:number) => new Intl.NumberFormat('vi-VN').format(n);
 export const isUUID = (value:unknown): value is string => typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);

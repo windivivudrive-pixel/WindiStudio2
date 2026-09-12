@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "version": 2,
+  "ideas": [
+    {
+      "id": "idea-01-windi-workflow-that-su",
+      "title": "Ai cũng nói làm video tự động — nhưng làm thật mới biết",
+      "hook": "Lướt đâu cũng thấy: một câu lệnh là có video. Nhưng đến lúc làm thật, credit cứ trừ, chờ mãi chưa xong, kịch bản vẫn phải sửa… còn giọng đọc thì đều đều như máy.",
+      "angle": "Mở bằng sự tương phản giữa lời quảng cáo làm video tự động và trải nghiệm thực tế của creator: nhiều bước rời rạc, thử sai tốn credit, đợi lâu, kịch bản thiếu nhịp và voice thiếu cảm xúc. Sau đó giới thiệu Windi như một workflow hoàn chỉnh chứ không phải thêm một công cụ: giúp lên idea nhanh, dừng để duyệt trước khi tiêu quota, chọn layout hoặc học cấu trúc từ video mẫu, viết kịch bản thành từng beat rõ lời–hình–nhịp, tạo ảnh đúng cảnh và tạo voice bám theo nhịp kịch bản với timestamp có sẵn. Cao trào là cảm giác mọi công đoạn cuối cùng đã nói chuyện được với nhau. FOMO đến từ thông điệp: trong khi nhiều người vẫn mất hàng giờ nối các công cụ và trả tiền cho những lần thử sai, người dùng Windi đang biến cùng khoảng thời gian đó thành một quy trình có thể lặp lại cho video tiếp theo.",
+      "audience": "Creator TikTok, người làm video faceless và người đã thử các quy trình AI tự động nhưng thấy tốn credit, chờ lâu, kịch bản rời rạc hoặc voice thiếu tự nhiên"
+    }
+  ]
+}

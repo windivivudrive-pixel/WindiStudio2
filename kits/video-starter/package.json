@@ -10,6 +10,7 @@
     "@remotion/cli": "4.0.520",
     "@remotion/install-whisper-cpp": "4.0.520",
     "@remotion/media": "4.0.520",
+    "@remotion/sfx": "4.0.520",
     "@remotion/tailwind-v4": "4.0.520",
     "@remotion/transitions": "4.0.520",
     "react": "19.2.3",

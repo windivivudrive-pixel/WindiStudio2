@@ -1,0 +1,22 @@
+{
+  "jobId": "45d807e5-4889-4ce6-af82-afbd3b11335b",
+  "download": {
+    "bytes": 182490,
+    "endTime": "2026-09-11T07:40:25.538Z",
+    "filename": "/Users/win/Downloads/ac9ac516-d8d9-45cc-b29d-d41d788ee96e.jpeg",
+    "id": 94,
+    "jobId": "45d807e5-4889-4ce6-af82-afbd3b11335b",
+    "mime": "image/jpeg",
+    "provider": "flow",
+    "referrer": "",
+    "source": "flow-direct-api",
+    "startTime": "2026-09-11T07:40:25.466Z",
+    "state": "complete"
+  },
+  "downloadStillExists": false,
+  "tabReuse": true,
+  "tabId": 301109597,
+  "referenceCache": {
+    "mediaId": "e89f67e1-ccbb-4693-95b9-40591da27a05"
+  }
+}
