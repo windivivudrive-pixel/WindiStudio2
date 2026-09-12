@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "passed": true,
+  "checkedAt": "2026-09-11T14:14:44.807Z",
+  "checks": {
+    "videoBytes": 29396033,
+    "coverBytes": 960672,
+    "captionCount": 276,
+    "sceneCount": 13,
+    "audio": true
+  },
+  "outputs": {
+    "render": "/Users/win/Documents/WindiStudio2/videos/windi-workflow-ad/windi/renders/final-v05.mp4",
+    "cover": "/Users/win/Documents/WindiStudio2/videos/windi-workflow-ad/windi/renders/cover-v05.png",
+    "captionsSrt": "/Users/win/Documents/WindiStudio2/videos/windi-workflow-ad/windi/timing/captions.srt"
+  }
+}

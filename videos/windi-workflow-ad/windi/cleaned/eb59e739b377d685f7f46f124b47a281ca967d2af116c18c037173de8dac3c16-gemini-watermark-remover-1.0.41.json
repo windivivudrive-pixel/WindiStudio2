@@ -1,0 +1,82 @@
+{
+  "engine": "gemini-watermark-remover@1.0.41",
+  "source": "assets/windi/scene-06.jpg",
+  "sourceHash": "eb59e739b377d685f7f46f124b47a281ca967d2af116c18c037173de8dac3c16",
+  "outputHash": "4300ef960836314f1f7075bffad8cbad92e9ee021e56c82dba60cfeb1d01acfd",
+  "meta": {
+    "applied": false,
+    "skipReason": "no-watermark-detected",
+    "size": null,
+    "position": null,
+    "config": null,
+    "detection": {
+      "adaptiveConfidence": 0.22404101998935982,
+      "originalSpatialScore": 0.27574911308772637,
+      "originalGradientScore": 0.03314451733996618,
+      "processedSpatialScore": 0.27574911308772637,
+      "processedGradientScore": 0.03314451733996618,
+      "suppressionGain": 0,
+      "residualVisibility": null
+    },
+    "templateWarp": null,
+    "alphaGain": 1,
+    "passCount": 0,
+    "attemptedPassCount": 0,
+    "passStopReason": null,
+    "passes": null,
+    "source": "skipped",
+    "decisionTier": "direct-match",
+    "subpixelShift": null,
+    "selectionDebug": null,
+    "alphaAdjustmentStages": null,
+    "alphaMapSource": null,
+    "decisionPath": {
+      "version": 1,
+      "decision": "reject",
+      "detectionSource": "skipped",
+      "alphaSource": null,
+      "repairSource": null,
+      "evaluationDecision": "rejected",
+      "blockedGate": "no-watermark-detected",
+      "riskFlags": [],
+      "detectionCandidate": {
+        "id": "det:rejected:no-watermark-detected",
+        "source": "skipped",
+        "decisionTier": "direct-match",
+        "config": null,
+        "position": null,
+        "alphaMapHint": null,
+        "polarityHint": null,
+        "evidence": {
+          "spatialScore": 0.27574911308772637,
+          "gradientScore": 0.03314451733996618,
+          "confidence": 0.22404101998935982,
+          "productionEvidence": false,
+          "originalEvidenceTier": null
+        },
+        "provenance": null
+      },
+      "alphaTrial": null,
+      "repairTrial": null,
+      "evaluation": {
+        "pathId": "det:rejected:no-watermark-detected->reject",
+        "detectionId": "det:rejected:no-watermark-detected",
+        "alphaTrialId": null,
+        "repairTrialId": null,
+        "eligible": false,
+        "decision": "reject",
+        "blockedGate": "no-watermark-detected",
+        "riskFlags": [],
+        "evidenceClass": "insufficient-production-evidence",
+        "explanation": "no-watermark-detected"
+      }
+    },
+    "bestEffort": false,
+    "retryRecommended": null,
+    "qualityStatus": null,
+    "selectionConfidence": null,
+    "selectedCandidate": null,
+    "qualitySignals": null,
+    "candidateSummaries": null
+  }
+}

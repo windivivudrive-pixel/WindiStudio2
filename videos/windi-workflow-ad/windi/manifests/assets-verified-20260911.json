@@ -1,0 +1,145 @@
+{
+  "verifiedAt": "2026-09-11T02:35:32Z",
+  "manifestConsumed": true,
+  "workflowStage": "voice",
+  "assets": [
+    {
+      "scene": "scene-01",
+      "jobId": "b3b7d0f8-d9f2-4f83-afc0-27270bd8b04f",
+      "status": "complete",
+      "path": "/Users/win/Documents/WindiStudio2/videos/windi-workflow-ad/assets/windi/scene-01.jpg",
+      "mime": "image/jpeg",
+      "width": 768,
+      "height": 1376,
+      "sha256": "4338ec46be3c629d1369fd9e8a7a19a655f9377ef0a7479b0ce189743e56e673",
+      "imported": true,
+      "quarantined": "/Users/win/Documents/WindiStudio2/videos/windi-workflow-ad/.windi/quarantine/scene-01-replaced-1789084679460.jpg"
+    },
+    {
+      "scene": "scene-02",
+      "jobId": "699bde07-2f7b-4112-a521-9aca1a4c74cf",
+      "status": "complete",
+      "path": "/Users/win/Documents/WindiStudio2/videos/windi-workflow-ad/assets/windi/scene-02.jpg",
+      "mime": "image/jpeg",
+      "width": 768,
+      "height": 1376,
+      "sha256": "401efdf2955a841a7eafc3c460470091c55699d4a889afec11d625f92e009229",
+      "imported": true,
+      "quarantined": "/Users/win/Documents/WindiStudio2/videos/windi-workflow-ad/.windi/quarantine/scene-02-replaced-1789084678244.jpg"
+    },
+    {
+      "scene": "scene-03",
+      "jobId": "9f9d8e6e-c0c2-48fd-840d-879bf4050736",
+      "status": "complete",
+      "path": "/Users/win/Documents/WindiStudio2/videos/windi-workflow-ad/assets/windi/scene-03.jpg",
+      "mime": "image/jpeg",
+      "width": 768,
+      "height": 1376,
+      "sha256": "dbdab3cf3baff3334773b1a7c4f79efa3fedd5a3dc5fd7a9af5f8f3b43931aa7",
+      "imported": true,
+      "quarantined": null
+    },
+    {
+      "scene": "scene-04",
+      "jobId": "4b09d8f4-776c-4739-adee-cd0fb69abed4",
+      "status": "complete",
+      "path": "/Users/win/Documents/WindiStudio2/videos/windi-workflow-ad/assets/windi/scene-04.jpg",
+      "mime": "image/jpeg",
+      "width": 768,
+      "height": 1376,
+      "sha256": "5d93871e6ecfc68b0a31f78ce2aa061fea6f068dab74277a9bf45f9ba660e63c",
+      "imported": true,
+      "quarantined": null
+    },
+    {
+      "scene": "scene-05",
+      "jobId": "bcbbb5af-6118-45e5-99c4-a682890fab60",
+      "status": "complete",
+      "path": "/Users/win/Documents/WindiStudio2/videos/windi-workflow-ad/assets/windi/scene-05.jpg",
+      "mime": "image/jpeg",
+      "width": 768,
+      "height": 1376,
+      "sha256": "6e680339912622e375a83e7183b0086ae0a577ca1139901701043e26a66c28e0"
+    },
+    {
+      "scene": "scene-06",
+      "jobId": "f21d05c6-8891-4aa3-bafe-ff668dda40dd",
+      "status": "complete",
+      "path": "/Users/win/Documents/WindiStudio2/videos/windi-workflow-ad/assets/windi/scene-06.jpg",
+      "mime": "image/jpeg",
+      "width": 768,
+      "height": 1376,
+      "sha256": "eb59e739b377d685f7f46f124b47a281ca967d2af116c18c037173de8dac3c16"
+    },
+    {
+      "scene": "scene-07",
+      "jobId": "c00d6496-95df-4b17-aa69-08823359925e",
+      "status": "complete",
+      "path": "/Users/win/Documents/WindiStudio2/videos/windi-workflow-ad/assets/windi/scene-07.jpg",
+      "mime": "image/jpeg",
+      "width": 768,
+      "height": 1376,
+      "sha256": "908a6b46167f4b0aab242aacc4339bb2f9dbb5c7f8f063047bb7ce42fd01839a"
+    },
+    {
+      "scene": "scene-08",
+      "jobId": "72bef307-6d15-480c-98f1-f3055d7b3ed5",
+      "status": "complete",
+      "path": "/Users/win/Documents/WindiStudio2/videos/windi-workflow-ad/assets/windi/scene-08.jpg",
+      "mime": "image/jpeg",
+      "width": 768,
+      "height": 1376,
+      "sha256": "16a47ad9e328c0e93cf865e5bd722325670cb0d722ec74b5efa47d641784db05"
+    },
+    {
+      "scene": "scene-09",
+      "jobId": "4971cb7e-3d47-4f3f-b144-5ff660447fef",
+      "status": "complete",
+      "path": "/Users/win/Documents/WindiStudio2/videos/windi-workflow-ad/assets/windi/scene-09.jpg",
+      "mime": "image/jpeg",
+      "width": 768,
+      "height": 1376,
+      "sha256": "ea148a2dcba59460fb22fef4c5acdb7d02237dd02ff1dd946016a0b4ad4ea5ac"
+    },
+    {
+      "scene": "scene-10",
+      "jobId": "2f48c0e4-2ac9-4c75-a8c0-da838c27ebe6",
+      "status": "complete",
+      "path": "/Users/win/Documents/WindiStudio2/videos/windi-workflow-ad/assets/windi/scene-10.jpg",
+      "mime": "image/jpeg",
+      "width": 768,
+      "height": 1376,
+      "sha256": "defee39ce814ee9071ed4987cfe9d1b64a945f76a1242f7f9ac48deec6044f5a"
+    },
+    {
+      "scene": "scene-11",
+      "jobId": "7b36537d-62da-413c-89af-5da0c9936f9f",
+      "status": "complete",
+      "path": "/Users/win/Documents/WindiStudio2/videos/windi-workflow-ad/assets/windi/scene-11.jpg",
+      "mime": "image/jpeg",
+      "width": 768,
+      "height": 1376,
+      "sha256": "f430338997d9a25b749a208f96caf0e4d9ec7b287781a90bc0d699b0653de169"
+    },
+    {
+      "scene": "scene-12",
+      "jobId": "0c8515bd-22c8-483d-8e38-501f07225d37",
+      "status": "complete",
+      "path": "/Users/win/Documents/WindiStudio2/videos/windi-workflow-ad/assets/windi/scene-12.jpg",
+      "mime": "image/jpeg",
+      "width": 768,
+      "height": 1376,
+      "sha256": "1c0d2c4ca2c87c1661b7340cec8a534de79dc064384a6e9e69afbe058000f877"
+    },
+    {
+      "scene": "scene-13",
+      "jobId": "5fe7910b-f877-4f9e-9bb4-a10433258fe9",
+      "status": "complete",
+      "path": "/Users/win/Documents/WindiStudio2/videos/windi-workflow-ad/assets/windi/scene-13.jpg",
+      "mime": "image/jpeg",
+      "width": 768,
+      "height": 1376,
+      "sha256": "6cc55669cc4faefe19417af2300cc1c3f8880bff9cc5c0442f73519244f90792"
+    }
+  ]
+}

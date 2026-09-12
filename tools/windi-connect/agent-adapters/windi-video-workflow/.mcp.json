@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "windi-video-workflow": {
+      "command": "windi",
+      "args": ["mcp", "serve"]
+    }
+  }
+}

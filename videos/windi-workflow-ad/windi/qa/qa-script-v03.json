@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "passed": true,
+  "checkedAt": "2026-09-11T15:23:09.777123+00:00",
+  "checks": {
+    "decode": true,
+    "video": true,
+    "audio": true,
+    "durationSeconds": 65.194667,
+    "captionPhraseMin": 3,
+    "captionPhraseMax": 7,
+    "speed": 1.15,
+    "sfxDb": -8,
+    "sceneCount": 13,
+    "visualFrames": [
+      "cover-v06.png",
+      "map-check-v03.png",
+      "check-flow-v06.png",
+      "check-cta-v06.png"
+    ]
+  },
+  "outputs": {
+    "render": "/Users/win/Documents/WindiStudio2/videos/windi-workflow-ad/windi/renders/final-v06.mp4",
+    "cover": "/Users/win/Documents/WindiStudio2/videos/windi-workflow-ad/windi/renders/cover-v06.png",
+    "captionsSrt": "/Users/win/Documents/WindiStudio2/videos/windi-workflow-ad/windi/timing/captions-v03.srt",
+    "source": "/Users/win/Documents/WindiStudio2/videos/windi-workflow-ad/windi/renders/render-props-v03.json"
+  }
+}

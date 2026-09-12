@@ -20,7 +20,9 @@ Trang `/voice-studio` tích hợp với Next.js App Router và tài khoản Supa
 
 Điền trong môi trường máy chủ, không đặt trong biến `NEXT_PUBLIC_` hoặc `VITE_`:
 
-- `CARTESIA_API_KEY`: khóa của workspace Cartesia có quyền TTS và instant voice cloning.
+- `CARTESIA_API_KEY_MAIN`: khóa Cartesia server-only cho tài khoản đã trả phí; dùng cho TTS của tài khoản trả phí và toàn bộ endpoint clone (`/voices/clone`). Tài khoản Cartesia phải được cấp quyền clone; gói Playground Free không tự cấp quyền API này.
+- `CARTESIA_API_KEY_1` đến `CARTESIA_API_KEY_5`: pool khóa Cartesia server-only cho tài khoản Free được tặng 1.500 credit. Windi chọn ổn định một key theo user để retry không nhảy tài khoản; không đưa các khóa này ra browser.
+- Nếu đang chuyển từ bản cũ, `CARTESIA_API_KEY` chỉ được giữ làm fallback tương thích, không nên dùng trong cấu hình mới.
 - `SUPABASE_SERVICE_ROLE_KEY`: dùng cấu hình máy chủ hiện có.
 - `SEPAY_API_KEY`: khóa xác thực webhook.
 - `VOICE_BANK_BIN`: mã BIN hoặc mã ngân hàng VietQR của tài khoản nhận tiền.
@@ -29,7 +31,9 @@ Trang `/voice-studio` tích hợp với Next.js App Router và tài khoản Supa
 
 Biến Supabase public dùng cấu hình website hiện có. Không tái sử dụng tài khoản ngân hàng hardcode trong giao diện CreatorFlow cũ khi chưa kiểm chứng.
 
-Trong SePay, tạo webhook POST đến `https://windistudio.app/api/voice/payment-webhook`, chọn JSON, sự kiện tiền vào, xác thực API Key: `Authorization: Apikey <SEPAY_API_KEY>`. Không dùng Supabase Edge Function `/functions/v1/payment-webhook`; đó là luồng thương mại cũ và không xử lý bảng `windi_voice_orders`. Gửi toàn bộ giao dịch tiền vào để server lọc. Server chỉ nhận nội dung chứa đúng một mã `WINDI` + 8 ký tự chữ/số (vẫn tương thích mã `WST`/`WV` cũ), đúng tài khoản và đúng số tiền. Giao dịch thiếu/thừa tiền hoặc thực sự phát sinh sau hạn được đưa sang `review`, không cấp gói. Webhook retry dùng cùng ID không cấp thêm credit; thời gian `transactionDate` của SePay được hiểu là giờ Việt Nam để một giao dịch phát sinh trong hạn vẫn có thể hoàn tất khi callback tới chậm.
+Trong SePay, tạo một webhook POST đến `https://windistudio.app/api/payment-webhook`, chọn JSON, sự kiện tiền vào, xác thực API Key: `Authorization: Apikey <SEPAY_API_KEY>`. Đây là endpoint thống nhất cho Voice và Video Workflow. Mã mới có namespace `WINDI Vxxxxxxxx` và `WINDI Kxxxxxxxx`; mã Voice `WINDI`/`WST`/`WV` cũ vẫn được xử lý tương thích. Không dùng Supabase Edge Function `/functions/v1/payment-webhook`. Gửi toàn bộ giao dịch tiền vào để server lọc theo đúng tài khoản, loại tiền vào, số tiền nguyên và mã đơn. Giao dịch thiếu/thừa tiền hoặc thực sự phát sinh sau hạn được đưa sang đối soát, không tự cấp quyền. Webhook retry dùng cùng transaction ID không cấp thêm credit hoặc entitlement.
+
+Automation dùng bốn endpoint `/api/v1/voice/voices`, `/api/v1/voice/generations`, `/api/v1/voice/generations/:id` và `/api/v1/voice/generations/:id/audio`. Token tạo trên web chỉ hiển thị secret một lần, database chỉ lưu SHA-256. Mọi lệnh tạo bắt buộc `Idempotency-Key`; cùng key với nội dung khác bị từ chối. Clone giọng vẫn chỉ thực hiện trên Voice Studio để giữ bước kiểm tra file, consent và quyền sử dụng.
 
 UI khóa thanh toán khi thiếu khóa Cartesia hoặc cấu hình nhận tiền. Việc có đủ biến môi trường chỉ là điều kiện cấu hình, không phải chứng nhận tài khoản provider/SePay hoạt động. Cần kiểm tra TTS/clone bằng tài khoản thử nghiệm đã cấp hạn mức, và thanh toán ở SePay Test Mode trước khi mở bán công khai. Không tạo đơn khách hàng hoặc chuyển tiền thật chỉ để kiểm tra.
 
@@ -47,7 +51,7 @@ Migration `20260905181816_windi_voice_studio.sql` đã được áp dụng vào 
 
 Mọi bảng bật RLS. Client chỉ đọc dữ liệu của mình; không được ghi giá, đơn, hạn mức, credit hoặc gọi RPC cấp tiền. Các RPC `SECURITY INVOKER` chỉ `service_role` được gọi. Không dùng metadata do user tự sửa để phân quyền.
 
-Các giọng công khai lấy qua `/voices`, phân trang và lọc `access=public`, `visibility=all`, `is_owner=false`, `status=active`. Khi kết nối Cartesia, UI nạp thư viện đa ngôn ngữ theo giới hạn đã cấu hình. Khi chưa có API key, UI hiển thị 5 ID giọng thật được tài liệu Cartesia công bố và báo chưa kết nối.
+Các giọng công khai lấy qua `/voices`, phân trang và lọc cả schema access cũ (`access=public`, `visibility=all`) lẫn schema hiện hành (`access.type=public`, `access.visibility=all`), cùng `is_owner=false`, `status=active`. Khi kết nối Cartesia, UI nạp thư viện đa ngôn ngữ theo giới hạn đã cấu hình. Khi chưa có API key, UI hiển thị 5 ID giọng thật được tài liệu Cartesia công bố và báo chưa kết nối.
 
 Mỗi giọng công khai có nút **Nghe thử**. Lần nghe thử đầu tiên của một giọng tạo một câu Sonic 3.6 ngắn bằng chính ngôn ngữ của giọng, sau đó MP3 được lưu bền vững trong private bucket `windi-voice-previews` theo ID giọng. Các lần nghe sau, kể cả khi server khởi động lại, phát lại file đã lưu và không gọi Cartesia. Luồng này không tạo job và không trừ credit của tài khoản. Cache bộ nhớ một giờ chỉ để giảm lượt đọc Storage; các lượt tạo mới bị giới hạn 12 lượt/IP/phút. Chỉ giọng công khai trong catalog mới có bản nghe thử. Mẫu clone gửi trực tiếp từ server đến Cartesia bằng các trường endpoint hỗ trợ; ứng dụng không lưu file gốc vào bucket công khai hoặc phát công khai giọng clone.
 
@@ -77,4 +81,4 @@ Xem lưu lượng và giới hạn đồng thời trên tài khoản Cartesia kh
 - [SePay webhook](https://docs.sepay.vn/tich-hop-webhooks.html)
 - [Supabase RLS](https://supabase.com/docs/guides/database/postgres/row-level-security)
 
-Tích hợp hiện dùng `model_id=sonic-3.6`, API version `2026-08-14`, `voice` là ID chuỗi, đầu ra MP3 44.1 kHz / 128 kbps.
+Tích hợp hiện dùng `model_id=sonic-3.6`, API version `2026-08-14`, xác thực `Authorization: Bearer`, `voice` là ID chuỗi, đầu ra MP3 44.1 kHz / 128 kbps. Request clone gửi `clip`, `name`, `description`, `language`, `access=private` và accent hợp lệ khi người dùng đã chọn, đúng schema endpoint hiện hành.

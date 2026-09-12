@@ -1,5 +1,5 @@
 import {boundedBody,audioUrl,bucket,cartesia,failure,identity,providerReady,resolveVoice,VoiceError,writer} from '@/lib/voice/server';
-import {validateSpeech} from '@/lib/voice/shared';
+import {DEFAULT_WORKFLOW_VOICE_ID,validateSpeech} from '@/lib/voice/shared';
 export const runtime='nodejs';
 export const maxDuration=120;
 export async function POST(request:Request) {
@@ -19,7 +19,7 @@ export async function POST(request:Request) {
   if(!claim.data) throw new VoiceError('Yêu cầu này đã được tiếp nhận. Kiểm tra Lịch sử trước khi tạo lại.',409);
   let response:Response;
   try {
-    response=await cartesia('/tts/bytes',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model_id:'sonic-3.6',transcript:input.text,voice:voice.id,language:input.language,output_format:{container:'mp3',sample_rate:44100,bit_rate:128000},generation_config:{speed:input.speed}})});
+    response=await cartesia('/tts/bytes',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model_id:'sonic-3.6',transcript:input.text,voice:voice.id,language:input.language,output_format:{container:'mp3',sample_rate:44100,bit_rate:128000},generation_config:{speed:input.speed}})},{userId:user.id,purpose:voice.id===DEFAULT_WORKFLOW_VOICE_ID?'main':'tts'});
   } catch {
     // Timeout is ambiguous: preserve the reservation for manual reconciliation.
     throw new VoiceError('Kết nối bị gián đoạn. Yêu cầu đang chờ đối soát; credit được tạm giữ. Xem Lịch sử hoặc liên hệ hỗ trợ.',503);

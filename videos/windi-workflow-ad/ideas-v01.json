@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "version": 1,
+  "ideas": [
+    {
+      "id": "idea-01-day-chuyen-khong-phai-tool",
+      "title": "Bạn không thiếu AI — bạn thiếu một dây chuyền làm video",
+      "hook": "Bạn có ChatGPT, Flow, giọng AI và cả Remotion… nhưng vì sao một video vẫn mất cả buổi?",
+      "angle": "Mở bằng nỗi đau phải chuyển qua lại giữa nhiều công cụ, đặt tên file và canh timestamp thủ công. Sau đó reveal Windi như một workflow nối toàn bộ quá trình: duyệt idea, chọn hoặc phân tích layout mẫu, duyệt kịch bản, tạo hình đúng thư mục, tạo voice có timestamp và render tại máy. FOMO đến từ khoảng cách giữa người đang sưu tầm công cụ và người đã sở hữu một hệ thống sản xuất lặp lại được.",
+      "audience": "Nhà sáng tạo TikTok, người làm faceless video và người đã dùng nhiều công cụ AI nhưng quy trình vẫn rời rạc"
+    },
+    {
+      "id": "idea-02-tu-video-mau-den-video-cua-ban",
+      "title": "Đừng chỉ lưu video hay — biến cấu trúc của nó thành workflow của bạn",
+      "hook": "Video này cuốn ở đâu? Hook mấy giây, đổi cảnh lúc nào, chữ nằm ở đâu — Windi đọc hết trước khi viết kịch bản.",
+      "angle": "Tập trung vào tính năng hấp dẫn nhất: khách đưa URL hoặc file video mẫu; Windi phân tích frame, transcript, nhịp cắt và bố cục, tạo layout có cấu trúc rồi chờ duyệt. Sau đó kịch bản và từng beat được viết theo layout đã duyệt nhưng dùng nội dung, hình ảnh và thương hiệu riêng của khách. FOMO dựa trên khả năng biến thư mục video tham khảo thành một hệ thống có thể tái sử dụng thay vì chỉ để đó xem lại.",
+      "audience": "Người làm TikTok thường xuyên lưu video viral, editor và chủ kênh muốn tái tạo cấu trúc hiệu quả mà không sao chép nội dung"
+    },
+    {
+      "id": "idea-03-mot-cau-lenh-nhung-ban-van-kiem-soat",
+      "title": "Một câu yêu cầu, ba lần bạn giữ quyền quyết định",
+      "hook": "AI làm nhanh là chưa đủ. Nếu idea sai, layout sai hoặc kịch bản sai, bạn chỉ đang đốt quota nhanh hơn.",
+      "angle": "Định vị Windi khác với lời hứa một-click thiếu kiểm soát. Người dùng chỉ mô tả chủ đề; workflow tự tổ chức công việc nhưng dừng đúng ba cổng duyệt: idea, layout và kịch bản. Sau khi chốt mới dùng quota để tạo hình, voice và render. Nhấn mạnh state lưu theo project, chống tạo trùng, file nằm trên máy và có thể tiếp tục ở lần sau. FOMO đến từ cảm giác đây là một hệ thống sản xuất nghiêm túc, không phải prompt pack.",
+      "audience": "Creator đã từng tốn quota vì prompt sai, agency nhỏ và người muốn tự động hóa nhưng vẫn kiểm soát chất lượng"
+    }
+  ]
+}

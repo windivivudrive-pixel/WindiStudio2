@@ -1,0 +1,18 @@
+{
+  "removed": [
+    {
+      "episode": "ws01-archify",
+      "removed": "node_modules",
+      "logicalBytesRemoved": 313518790
+    },
+    {
+      "episode": "ws02-rustdesk",
+      "removed": "node_modules",
+      "logicalBytesRemoved": 287388274
+    }
+  ],
+  "retainedDistinctExports": [
+    "ws01-archify/Archify.mp4",
+    "ws01-archify/render.mp4"
+  ]
+}

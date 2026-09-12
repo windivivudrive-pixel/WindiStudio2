@@ -25,6 +25,22 @@ next-env.d.ts.bak
 .cache/
 .turbo/
 .backups/
+.next/
+
+# Local Windi workflow state and generated media. Source components under
+# windi/ remain tracked; these folders are regenerated per production run.
+.windi/
+windi/renders/
+windi/qa/
+windi/timing/
+windi/voice/
+windi/cleaned/
+windi/ideas/
+windi/layouts/
+windi/manifests/
+windi/prompts/
+windi/scripts/
+visual-checks/
 
 # Environment files & Secrets
 .env
@@ -54,6 +70,7 @@ __pycache__/
 
 # Video renders & heavy media outputs
 *.mp4
+*.MP3
 *.mov
 *.webm
 *.avi

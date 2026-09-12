@@ -1,0 +1,2 @@
+import type {WindiVideoProps} from './types';
+export const defaultData:WindiVideoProps={title:'Windi Video Workflow',layout:'paper-editorial',audio:'sample/audio.mp3',brand:'WINDI STUDIO',beats:[{id:'scene-01',startMs:0,endMs:4000,voiceOver:'Từ một ý tưởng đã duyệt đến video hoàn chỉnh.',onScreenText:'Ý TƯỞNG → VIDEO',visualDescription:'Sample',image:'sample/scene-01.png',motion:'slow push in',layout:'full-frame',spokenAnchor:'Từ một ý tưởng'}],captions:[{text:'Từ một ý tưởng đã duyệt đến video hoàn chỉnh.',startMs:0,endMs:4000,timestampMs:0,confidence:1}]};

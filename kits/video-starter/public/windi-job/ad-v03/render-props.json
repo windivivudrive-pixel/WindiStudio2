@@ -1,0 +1,2057 @@
+{
+  "title": "Làm video AI mà không loạn quy trình",
+  "layout": "dark-cinematic",
+  "layoutProfile": {
+    "schemaVersion": 1,
+    "version": 2,
+    "ideaId": "idea-01-windi-workflow-that-su",
+    "id": "windi-workflow-map-v03",
+    "name": "Windi Dark Thumbnail Editorial",
+    "source": {
+      "kind": "builtin",
+      "preset": "dark-cinematic"
+    },
+    "basePreset": "dark-cinematic",
+    "summary": "Video 9:16 giữ dark mode retro của WindiStudio nhưng chuyển sang bố cục thumbnail/editorial: hook như cover mạnh ở đầu, headline kem nhỏ gọn tối đa hai dòng, một khung visual ngang 16:9 lớn ở giữa, module thông tin ngắn bên dưới và caption từng từ pop-up ở vùng đáy. Mọi visual Flow dùng cùng một editor nam Việt đeo kính để tạo tính liên tục.",
+    "pacing": {
+      "hookDurationMs": 1800,
+      "averageBeatDurationMs": 3000,
+      "cutRhythm": "Hook dùng cover thumbnail, thumbnail card và accent vàng; sau đó mỗi beat giữ một khung 16:9 ngang lớn, text chuyển thành nhãn nhỏ và caption pop theo từng từ ở đáy. Cắt nhanh ở pain points, chậm hơn ở approval/voice, tăng nhịp ở CTA."
+    },
+    "palette": {
+      "background": "#101214",
+      "surface": "#191b1f",
+      "text": "#f6f0e4",
+      "accent": "#f0c96a",
+      "border": "#45423d"
+    },
+    "captions": {
+      "position": "bottom",
+      "style": "pill"
+    },
+    "sceneTypes": [
+      {
+        "id": "thumbnail-hook",
+        "role": "Cover hook như thumbnail: nhãn nhỏ, headline hai dòng và visual 16:9",
+        "composition": "text-led",
+        "textPosition": "top",
+        "imageFit": "cover"
+      },
+      {
+        "id": "editorial-frame",
+        "role": "Khung visual 16:9 lớn, nội dung có nhãn và headline nhỏ",
+        "composition": "framed",
+        "textPosition": "bottom",
+        "imageFit": "cover"
+      },
+      {
+        "id": "workflow-frame",
+        "role": "Quy trình được minh họa trong một card ngang dễ quét",
+        "composition": "framed",
+        "textPosition": "bottom",
+        "imageFit": "cover"
+      },
+      {
+        "id": "feature-frame",
+        "role": "Lợi ích được kể bằng visual ngang và module text cực ngắn",
+        "composition": "split",
+        "textPosition": "bottom",
+        "imageFit": "cover"
+      },
+      {
+        "id": "voice-frame",
+        "role": "Cận cảnh narrator/editor và waveform tự nhiên",
+        "composition": "quote",
+        "textPosition": "center",
+        "imageFit": "cover"
+      },
+      {
+        "id": "comparison-frame",
+        "role": "So sánh cũ/mới, vẫn dùng một visual ngang làm nền",
+        "composition": "comparison",
+        "textPosition": "top",
+        "imageFit": "cover"
+      },
+      {
+        "id": "cta-thumbnail",
+        "role": "Cover CTA, giá trị đọc nhanh và khung visual 16:9",
+        "composition": "cta",
+        "textPosition": "center",
+        "imageFit": "cover"
+      }
+    ]
+  },
+  "audio": "windi-job/ad-v03/voice-115.wav",
+  "beats": [
+    {
+      "id": "beat-01-thumbnail-hook",
+      "voiceOver": "Một câu lệnh là ra cả video. Nghe quen không?",
+      "onScreenText": "MỘT LỆNH.\nMỘT VIDEO?",
+      "visualDescription": "Hook thumbnail: editor nam Việt đeo kính nhìn thẳng qua laptop, bên cạnh là một command window gọn đối lập với lớp cửa sổ hỗn loạn phía sau.",
+      "imagePrompt": "Landscape 16:9 premium cinematic editorial still. A Vietnamese male video editor in his mid twenties wearing thin round glasses and a black overshirt sits at a desk facing a silver laptop. One clean minimal terminal-like window is calm in front of him while a restrained cluster of blurred creative windows and loading shapes builds behind him. Dark WindiStudio charcoal workspace, retro computer mood, subtle olive grid, warm cream monitor light, muted gold and burgundy accents, realistic photography, composition keeps clean negative space at upper left for added typography. No readable text, no logos, no watermark, no mascot.",
+      "motion": "Thumbnail punch-in 5% trong 12 frame; một lớp card hỗn loạn bật sau lưng editor, giữ vùng headline ở trên trái sạch.",
+      "layout": "thumbnail-hook",
+      "spokenAnchor": "Nghe quen không?",
+      "estimatedDurationMs": 3200,
+      "startMs": 0.0,
+      "endMs": 2654.783,
+      "image": "windi-job/ad-v03/scene-01.png"
+    },
+    {
+      "id": "beat-02-real-work",
+      "voiceOver": "Nhưng tới lúc làm thật... ảnh sai thì tạo lại, kịch bản sửa đi sửa lại, credit cứ trừ, còn mình thì ngồi chờ.",
+      "onScreenText": "TẠO LẠI · CHỜ",
+      "visualDescription": "Editor nam Việt đeo kính ngồi mệt trước desktop; ba visual error card không chữ đại diện cho ảnh sai, note sửa và thời gian chờ.",
+      "imagePrompt": "Landscape 16:9 realistic editorial still of the same Vietnamese male video editor with thin round glasses, waiting at a dark desk late at night. Three clean unlabeled visual cards suggest a wrong image, a revised script and a slow loading state; he glances at a small clock. WindiStudio dark charcoal room, warm monitor light, muted gold, dusty pink and pale blue status accents, tactile high-end photography. No readable text, no logo, no watermark.",
+      "motion": "Ba card lỗi trượt vào theo từng nhịp lời; camera pan ngang ngắn qua gương mặt đang chờ.",
+      "layout": "editorial-frame",
+      "spokenAnchor": "credit cứ trừ",
+      "estimatedDurationMs": 5600,
+      "startMs": 2654.783,
+      "endMs": 8793.913,
+      "image": "windi-job/ad-v03/scene-02.png"
+    },
+    {
+      "id": "beat-03-flat-voice",
+      "voiceOver": "Xong tới phần giọng đọc. Đúng chữ đấy... mà nghe vẫn đều đều, chẳng giống người đang kể chuyện.",
+      "onScreenText": "ĐÚNG CHỮ.\nSAI CẢM GIÁC.",
+      "visualDescription": "Cận cảnh editor đeo kính tại microphone, waveform phẳng và ánh nhìn thiếu cảm xúc.",
+      "imagePrompt": "Landscape 16:9 intimate cinematic close-up of the same Vietnamese male editor with thin round glasses at a compact microphone, his expression slightly flat and tired. A minimal abstract waveform appears almost flat as a soft light element, not readable UI. Dark charcoal recording corner, warm cream key light, muted burgundy and gold accents, premium editorial photograph. No words, no logos, no watermark.",
+      "motion": "Waveform phẳng chạy nhẹ rồi dừng; push-in 3% đúng sau cụm Đúng chữ đấy.",
+      "layout": "voice-frame",
+      "spokenAnchor": "Đúng chữ đấy",
+      "estimatedDurationMs": 4800,
+      "startMs": 8793.913,
+      "endMs": 13461.739,
+      "image": "windi-job/ad-v03/scene-03.png"
+    },
+    {
+      "id": "beat-04-windi-reveal",
+      "voiceOver": "Windi được làm ra... vì đúng cái cảnh đó.",
+      "onScreenText": "VÌ CÁI CẢNH ĐÓ.",
+      "visualDescription": "Các lớp card rời rạc thu về một retro workflow window sạch trên bàn của editor.",
+      "imagePrompt": "Landscape 16:9 premium dark-tech editorial still. The same Vietnamese male editor with thin round glasses watches scattered creative cards converge into one calm retro software window on a charcoal desk. Olive grid background, cream panels, muted gold focus glow, grounded and organized feeling, realistic studio photography. No readable interface text, no external logos, no watermark.",
+      "motion": "Ngắt 8 frame rồi các card hút vào giữa; đường accent vàng quét ngắn dưới headline.",
+      "layout": "thumbnail-hook",
+      "spokenAnchor": "đúng cái cảnh đó",
+      "estimatedDurationMs": 3200,
+      "startMs": 13461.739,
+      "endMs": 15632.174,
+      "image": "windi-job/ad-v03/scene-04.png"
+    },
+    {
+      "id": "beat-05-idea-gate",
+      "voiceOver": "Bạn đưa một chủ đề. Windi lên idea trước. Thấy ổn, bạn mới duyệt để đi tiếp.",
+      "onScreenText": "IDEA.\nRỒI MỚI DUYỆT.",
+      "visualDescription": "Editor nam Việt đeo kính xem ba idea card trong một khung ngang, một card có dấu duyệt xanh nhưng không chữ.",
+      "imagePrompt": "Landscape 16:9 editorial workstation scene of the same Vietnamese male editor with thin round glasses reviewing three concise blank concept cards in a horizontal retro software frame. One card has a small green approval mark, dark WindiStudio room, cream panels, subtle grid and muted gold accents, clean photorealistic lighting. No readable text, no logos, no watermark.",
+      "motion": "Ba idea card sáng lần lượt; check xanh pop nhỏ ở card cuối.",
+      "layout": "workflow-frame",
+      "spokenAnchor": "bạn mới duyệt",
+      "estimatedDurationMs": 4400,
+      "startMs": 15632.174,
+      "endMs": 20066.957,
+      "image": "windi-job/ad-v03/scene-05.png"
+    },
+    {
+      "id": "beat-06-layout-choice",
+      "voiceOver": "Rồi chọn layout có sẵn. Hoặc đưa một video mẫu để Windi phân tích cách hook, chia beat và đặt hình.",
+      "onScreenText": "CHỌN MẪU\nHOẶC VIDEO REF",
+      "visualDescription": "Khung ngang chia đôi giữa hai layout board và một video ref phân rã thành hook, beat, hình.",
+      "imagePrompt": "Landscape 16:9 cinematic split editorial scene. The same Vietnamese male editor with thin round glasses views two tasteful video style boards on the left and a reference clip becoming visual beat frames on the right. Dark charcoal WindiStudio desk, cream interface cards, muted blue and gold accents, realistic premium lighting. No readable text, no provider logos, no watermark.",
+      "motion": "Split mở từ giữa, hai board slide lên và ref clip chuyển thành ba thumbnail beat.",
+      "layout": "feature-frame",
+      "spokenAnchor": "đưa một video mẫu",
+      "estimatedDurationMs": 5000,
+      "startMs": 20066.957,
+      "endMs": 25276.522,
+      "image": "windi-job/ad-v03/scene-06.png"
+    },
+    {
+      "id": "beat-07-beat-script",
+      "voiceOver": "Kịch bản không còn là một cục chữ. Mỗi beat có lời nói, hình cần tạo, chữ trên màn hình... và nhịp chuyển cảnh rõ ràng.",
+      "onScreenText": "MỖI BEAT\nCÓ VIỆC RIÊNG.",
+      "visualDescription": "Từ trang giấy dài, editor tạo thành các storyboard card ngang có icon voice, image, text và motion.",
+      "imagePrompt": "Landscape 16:9 top-down editorial still of the same Vietnamese male editor with thin round glasses organizing a dense blank document into four clean horizontal storyboard cards with abstract voice, image, caption and motion symbols. Dark charcoal desk, tactile cream paper panels, muted yellow, blue and burgundy accents, premium realism. No legible text, no logos, no watermark.",
+      "motion": "Trang dài nén lại rồi tách thành card theo nhịp; pan dọc rất nhẹ để giữ khung ngang thoáng.",
+      "layout": "workflow-frame",
+      "spokenAnchor": "Mỗi beat",
+      "estimatedDurationMs": 5700,
+      "startMs": 25276.522,
+      "endMs": 32100.87,
+      "image": "windi-job/ad-v03/scene-07.png"
+    },
+    {
+      "id": "beat-08-images-after-approval",
+      "voiceOver": "Duyệt xong mới gọi Flow hoặc ChatGPT tạo ảnh. Sai ở cảnh nào, sửa đúng cảnh đó. Không phải quăng cả quy trình đi làm lại.",
+      "onScreenText": "DUYỆT TRƯỚC.\nTẠO SAU.",
+      "visualDescription": "Storyboard approved mở khóa hàng asset ngang; chỉ một cảnh được thay version mới, phần còn lại giữ nguyên.",
+      "imagePrompt": "Landscape 16:9 cinematic creative workstation. The same Vietnamese male editor with thin round glasses sees an approved storyboard unlock a tidy row of horizontal generated scene thumbnails. Only one selected thumbnail receives a small revised version marker while all others stay complete. Dark charcoal WindiStudio workspace, cream cards, green approved signal, muted gold focus, no readable text, no provider logos, no watermark.",
+      "motion": "Cổng duyệt mở, thumbnail bật sáng; chỉ một scene thay phiên bản, các scene khác đứng yên.",
+      "layout": "feature-frame",
+      "spokenAnchor": "Duyệt xong mới",
+      "estimatedDurationMs": 5600,
+      "startMs": 32100.87,
+      "endMs": 38780.0,
+      "image": "windi-job/ad-v03/scene-08.png"
+    },
+    {
+      "id": "beat-09-human-scripted-voice",
+      "voiceOver": "Voice cũng bám theo kịch bản đã duyệt. Câu ngắn. Có chỗ nghỉ. Có nhịp nhấn... nghe gần người hơn hẳn.",
+      "onScreenText": "CÓ NGHỈ.\nCÓ NHẤN.",
+      "visualDescription": "Editor nói gần microphone với waveform có nhịp thở, thoải mái hơn cảnh voice trước.",
+      "imagePrompt": "Landscape 16:9 intimate cinematic portrait of the same Vietnamese male editor with thin round glasses speaking naturally into a microphone, relaxed expression and subtle hand gesture. An organic abstract waveform has visible pauses and accents. Dark charcoal studio, warm cream skin light, muted olive and gold accents, premium editorial photography. No words, no logos, no watermark.",
+      "motion": "Waveform nở theo ba nhịp rồi có khoảng nghỉ; push-in 3% ở câu chốt.",
+      "layout": "voice-frame",
+      "spokenAnchor": "nghe gần người hơn hẳn",
+      "estimatedDurationMs": 4800,
+      "startMs": 38780.0,
+      "endMs": 44886.087,
+      "image": "windi-job/ad-v03/scene-09.png"
+    },
+    {
+      "id": "beat-10-timestamps",
+      "voiceOver": "Timestamp có sẵn. Nên hình, caption và lời nói khớp nhau ngay từ đầu.",
+      "onScreenText": "MỌI THỨ\nKHỚP NGAY.",
+      "visualDescription": "Một timeline ngang tối giản có waveform, caption block, thumbnails thẳng hàng dưới playhead.",
+      "imagePrompt": "Landscape 16:9 close-up of a clean horizontal professional video timeline on a charcoal retro monitor. Three aligned abstract lanes represent waveform, caption blocks and image thumbnails under one gold playhead. The same Vietnamese male editor with thin round glasses is softly visible in reflection. Cream details, muted green completion signal, no readable text, no logos, no watermark.",
+      "motion": "Playhead quét ngang qua ba lane đồng bộ; snap nhẹ ở điểm khớp.",
+      "layout": "workflow-frame",
+      "spokenAnchor": "khớp nhau ngay từ đầu",
+      "estimatedDurationMs": 3600,
+      "startMs": 44886.087,
+      "endMs": 49422.609,
+      "image": "windi-job/ad-v03/scene-10.png"
+    },
+    {
+      "id": "beat-11-system-not-magic",
+      "voiceOver": "Cái hay không nằm ở một công cụ thần kỳ. Nó nằm ở việc mọi bước biết mình đang chờ gì... và tiếp tục đúng chỗ.",
+      "onScreenText": "KHÔNG PHÉP MÀU.\nCÓ QUY TRÌNH.",
+      "visualDescription": "Editor kiểm soát một hệ workflow ngang gồm station liên kết, node chờ và approval gate rõ ràng.",
+      "imagePrompt": "Landscape 16:9 premium editorial visualization of the same Vietnamese male editor with thin round glasses in control of a reliable horizontal creative production system. Connected workflow stations show clear waiting and approval gates, no magic imagery. Dark charcoal grid, cream panels, muted gold and green signals, cinematic realistic lighting. No readable text, no logos, no watermark.",
+      "motion": "Camera đi ngang theo đường nối; node đang chờ pulse vàng rồi chuyển xanh.",
+      "layout": "workflow-frame",
+      "spokenAnchor": "tiếp tục đúng chỗ",
+      "estimatedDurationMs": 5200,
+      "startMs": 49422.609,
+      "endMs": 55546.957,
+      "image": "windi-job/ad-v03/scene-11.png"
+    },
+    {
+      "id": "beat-12-time-contrast",
+      "voiceOver": "Trong lúc người khác vẫn nối từng tool, thử đi thử lại, rồi nhìn credit biến mất...",
+      "onScreenText": "LẶP LẠI\nHAY DÙNG LẠI?",
+      "visualDescription": "Một visual ngang so sánh bên trái app rời rạc và bên phải pipeline sạch, editor đứng giữa chọn phương án rõ ràng.",
+      "imagePrompt": "Landscape 16:9 split comparison editorial still. The same Vietnamese male editor with thin round glasses stands between a left side of disconnected creative tools and tangled arrows and a right side of a calm reusable production pipeline. Dark charcoal visual system, cream surfaces, dusty pink warning and muted green success accents, high-end realism. No readable text, no logos, no watermark.",
+      "motion": "Bên trái cắt nhanh, bên phải tiến đều; dừng nửa nhịp ở biến mất.",
+      "layout": "comparison-frame",
+      "spokenAnchor": "credit biến mất",
+      "estimatedDurationMs": 4000,
+      "startMs": 55546.957,
+      "endMs": 59799.13,
+      "image": "windi-job/ad-v03/scene-12.png"
+    },
+    {
+      "id": "beat-13-fomo-cta",
+      "voiceOver": "Bạn có thể dành thời gian đó cho video tiếp theo. Muốn làm nhanh hơn mà vẫn tự duyệt từng bước? Bắt đầu với Windi.",
+      "onScreenText": "VIDEO TIẾP THEO.\nBẮT ĐẦU SỚM HƠN.",
+      "visualDescription": "Cover CTA: editor nam Việt đeo kính chuyển từ workflow hoàn tất sang project mới, tạo khoảng trống rõ để Remotion đặt offer thật.",
+      "imagePrompt": "Landscape 16:9 premium creator workflow launch visual. The same confident Vietnamese male editor with thin round glasses moves from one completed video storyboard to a new project on a dark retro software desk. Charcoal grid background, cream visual space, muted gold call-to-action glow, green completion indicator, energetic but trustworthy. Keep the upper left and lower third clean for added typography. No readable text, no logos, no watermark.",
+      "motion": "Card offer hiện hai nhịp; CTA pulse một lần; progress chuyển từ complete sang new project.",
+      "layout": "cta-thumbnail",
+      "spokenAnchor": "Bắt đầu với Windi",
+      "estimatedDurationMs": 9000,
+      "startMs": 59799.13,
+      "endMs": 65113.043,
+      "image": "windi-job/ad-v03/scene-13.png"
+    }
+  ],
+  "captions": [
+    {
+      "text": "Một",
+      "startMs": 98.261,
+      "endMs": 313.043,
+      "timestampMs": 98.261,
+      "confidence": null
+    },
+    {
+      "text": "câu",
+      "startMs": 382.609,
+      "endMs": 452.174,
+      "timestampMs": 382.609,
+      "confidence": null
+    },
+    {
+      "text": "lệnh",
+      "startMs": 521.739,
+      "endMs": 591.304,
+      "timestampMs": 521.739,
+      "confidence": null
+    },
+    {
+      "text": "là",
+      "startMs": 591.304,
+      "endMs": 869.565,
+      "timestampMs": 591.304,
+      "confidence": null
+    },
+    {
+      "text": "ra",
+      "startMs": 939.13,
+      "endMs": 956.522,
+      "timestampMs": 939.13,
+      "confidence": null
+    },
+    {
+      "text": "cả",
+      "startMs": 1008.696,
+      "endMs": 1147.826,
+      "timestampMs": 1008.696,
+      "confidence": null
+    },
+    {
+      "text": "video.",
+      "startMs": 1147.826,
+      "endMs": 1704.348,
+      "timestampMs": 1147.826,
+      "confidence": null
+    },
+    {
+      "text": "Nghe",
+      "startMs": 1991.304,
+      "endMs": 2052.174,
+      "timestampMs": 1991.304,
+      "confidence": null
+    },
+    {
+      "text": "quen",
+      "startMs": 2052.174,
+      "endMs": 2330.435,
+      "timestampMs": 2052.174,
+      "confidence": null
+    },
+    {
+      "text": "không?",
+      "startMs": 2400.0,
+      "endMs": 2539.13,
+      "timestampMs": 2400.0,
+      "confidence": null
+    },
+    {
+      "text": "Nhưng",
+      "startMs": 2654.783,
+      "endMs": 2817.391,
+      "timestampMs": 2654.783,
+      "confidence": null
+    },
+    {
+      "text": "tới",
+      "startMs": 2886.957,
+      "endMs": 2904.348,
+      "timestampMs": 2886.957,
+      "confidence": null
+    },
+    {
+      "text": "lúc",
+      "startMs": 2956.522,
+      "endMs": 3095.652,
+      "timestampMs": 2956.522,
+      "confidence": null
+    },
+    {
+      "text": "làm",
+      "startMs": 3165.217,
+      "endMs": 3234.783,
+      "timestampMs": 3165.217,
+      "confidence": null
+    },
+    {
+      "text": "thật...",
+      "startMs": 3234.783,
+      "endMs": 3513.043,
+      "timestampMs": 3234.783,
+      "confidence": null
+    },
+    {
+      "text": "ảnh",
+      "startMs": 3715.652,
+      "endMs": 3860.87,
+      "timestampMs": 3715.652,
+      "confidence": null
+    },
+    {
+      "text": "sai",
+      "startMs": 3930.435,
+      "endMs": 4139.13,
+      "timestampMs": 3930.435,
+      "confidence": null
+    },
+    {
+      "text": "thì",
+      "startMs": 4139.13,
+      "endMs": 4278.261,
+      "timestampMs": 4139.13,
+      "confidence": null
+    },
+    {
+      "text": "tạo",
+      "startMs": 4347.826,
+      "endMs": 4486.957,
+      "timestampMs": 4347.826,
+      "confidence": null
+    },
+    {
+      "text": "lại,",
+      "startMs": 4556.522,
+      "endMs": 4834.783,
+      "timestampMs": 4556.522,
+      "confidence": null
+    },
+    {
+      "text": "kịch",
+      "startMs": 5041.739,
+      "endMs": 5252.174,
+      "timestampMs": 5041.739,
+      "confidence": null
+    },
+    {
+      "text": "bản",
+      "startMs": 5321.739,
+      "endMs": 5460.87,
+      "timestampMs": 5321.739,
+      "confidence": null
+    },
+    {
+      "text": "sửa",
+      "startMs": 5460.87,
+      "endMs": 5739.13,
+      "timestampMs": 5460.87,
+      "confidence": null
+    },
+    {
+      "text": "đi",
+      "startMs": 5808.696,
+      "endMs": 5878.261,
+      "timestampMs": 5808.696,
+      "confidence": null
+    },
+    {
+      "text": "sửa",
+      "startMs": 5947.826,
+      "endMs": 6086.957,
+      "timestampMs": 5947.826,
+      "confidence": null
+    },
+    {
+      "text": "lại,",
+      "startMs": 6086.957,
+      "endMs": 6434.783,
+      "timestampMs": 6086.957,
+      "confidence": null
+    },
+    {
+      "text": "credit",
+      "startMs": 6695.652,
+      "endMs": 6921.739,
+      "timestampMs": 6695.652,
+      "confidence": null
+    },
+    {
+      "text": "cứ",
+      "startMs": 6921.739,
+      "endMs": 7060.87,
+      "timestampMs": 6921.739,
+      "confidence": null
+    },
+    {
+      "text": "trừ,",
+      "startMs": 7130.435,
+      "endMs": 7339.13,
+      "timestampMs": 7130.435,
+      "confidence": null
+    },
+    {
+      "text": "còn",
+      "startMs": 7478.261,
+      "endMs": 7686.957,
+      "timestampMs": 7478.261,
+      "confidence": null
+    },
+    {
+      "text": "mình",
+      "startMs": 7756.522,
+      "endMs": 7826.087,
+      "timestampMs": 7756.522,
+      "confidence": null
+    },
+    {
+      "text": "thì",
+      "startMs": 7895.652,
+      "endMs": 7913.043,
+      "timestampMs": 7895.652,
+      "confidence": null
+    },
+    {
+      "text": "ngồi",
+      "startMs": 7965.217,
+      "endMs": 8243.478,
+      "timestampMs": 7965.217,
+      "confidence": null
+    },
+    {
+      "text": "chờ.",
+      "startMs": 8243.478,
+      "endMs": 8452.174,
+      "timestampMs": 8243.478,
+      "confidence": null
+    },
+    {
+      "text": "Xong",
+      "startMs": 8793.913,
+      "endMs": 9147.826,
+      "timestampMs": 8793.913,
+      "confidence": null
+    },
+    {
+      "text": "tới",
+      "startMs": 9217.391,
+      "endMs": 9234.783,
+      "timestampMs": 9217.391,
+      "confidence": null
+    },
+    {
+      "text": "phần",
+      "startMs": 9286.957,
+      "endMs": 9426.087,
+      "timestampMs": 9286.957,
+      "confidence": null
+    },
+    {
+      "text": "giọng",
+      "startMs": 9495.652,
+      "endMs": 9565.217,
+      "timestampMs": 9495.652,
+      "confidence": null
+    },
+    {
+      "text": "đọc.",
+      "startMs": 9565.217,
+      "endMs": 9843.478,
+      "timestampMs": 9565.217,
+      "confidence": null
+    },
+    {
+      "text": "Đúng",
+      "startMs": 10120.0,
+      "endMs": 10330.435,
+      "timestampMs": 10120.0,
+      "confidence": null
+    },
+    {
+      "text": "chữ",
+      "startMs": 10330.435,
+      "endMs": 10469.565,
+      "timestampMs": 10330.435,
+      "confidence": null
+    },
+    {
+      "text": "đấy...",
+      "startMs": 10539.13,
+      "endMs": 10747.826,
+      "timestampMs": 10539.13,
+      "confidence": null
+    },
+    {
+      "text": "mà",
+      "startMs": 10930.435,
+      "endMs": 11026.087,
+      "timestampMs": 10930.435,
+      "confidence": null
+    },
+    {
+      "text": "nghe",
+      "startMs": 11026.087,
+      "endMs": 11234.783,
+      "timestampMs": 11026.087,
+      "confidence": null
+    },
+    {
+      "text": "vẫn",
+      "startMs": 11304.348,
+      "endMs": 11443.478,
+      "timestampMs": 11304.348,
+      "confidence": null
+    },
+    {
+      "text": "đều",
+      "startMs": 11513.043,
+      "endMs": 11582.609,
+      "timestampMs": 11513.043,
+      "confidence": null
+    },
+    {
+      "text": "đều,",
+      "startMs": 11582.609,
+      "endMs": 12000.0,
+      "timestampMs": 11582.609,
+      "confidence": null
+    },
+    {
+      "text": "chẳng",
+      "startMs": 12162.609,
+      "endMs": 12347.826,
+      "timestampMs": 12162.609,
+      "confidence": null
+    },
+    {
+      "text": "giống",
+      "startMs": 12417.391,
+      "endMs": 12486.957,
+      "timestampMs": 12417.391,
+      "confidence": null
+    },
+    {
+      "text": "người",
+      "startMs": 12486.957,
+      "endMs": 12626.087,
+      "timestampMs": 12486.957,
+      "confidence": null
+    },
+    {
+      "text": "đang",
+      "startMs": 12695.652,
+      "endMs": 12765.217,
+      "timestampMs": 12695.652,
+      "confidence": null
+    },
+    {
+      "text": "kể",
+      "startMs": 12834.783,
+      "endMs": 12904.348,
+      "timestampMs": 12834.783,
+      "confidence": null
+    },
+    {
+      "text": "chuyện.",
+      "startMs": 12904.348,
+      "endMs": 13252.174,
+      "timestampMs": 12904.348,
+      "confidence": null
+    },
+    {
+      "text": "Windi",
+      "startMs": 13461.739,
+      "endMs": 13669.565,
+      "timestampMs": 13461.739,
+      "confidence": null
+    },
+    {
+      "text": "được",
+      "startMs": 13739.13,
+      "endMs": 13808.696,
+      "timestampMs": 13739.13,
+      "confidence": null
+    },
+    {
+      "text": "làm",
+      "startMs": 13808.696,
+      "endMs": 13947.826,
+      "timestampMs": 13808.696,
+      "confidence": null
+    },
+    {
+      "text": "ra...",
+      "startMs": 14017.391,
+      "endMs": 14034.783,
+      "timestampMs": 14017.391,
+      "confidence": null
+    },
+    {
+      "text": "vì",
+      "startMs": 14494.783,
+      "endMs": 14643.478,
+      "timestampMs": 14494.783,
+      "confidence": null
+    },
+    {
+      "text": "đúng",
+      "startMs": 14713.043,
+      "endMs": 14852.174,
+      "timestampMs": 14713.043,
+      "confidence": null
+    },
+    {
+      "text": "cái",
+      "startMs": 14921.739,
+      "endMs": 14991.304,
+      "timestampMs": 14921.739,
+      "confidence": null
+    },
+    {
+      "text": "cảnh",
+      "startMs": 15060.87,
+      "endMs": 15130.435,
+      "timestampMs": 15060.87,
+      "confidence": null
+    },
+    {
+      "text": "đó.",
+      "startMs": 15130.435,
+      "endMs": 15408.696,
+      "timestampMs": 15130.435,
+      "confidence": null
+    },
+    {
+      "text": "Bạn",
+      "startMs": 15632.174,
+      "endMs": 15756.522,
+      "timestampMs": 15632.174,
+      "confidence": null
+    },
+    {
+      "text": "đưa",
+      "startMs": 15826.087,
+      "endMs": 15895.652,
+      "timestampMs": 15826.087,
+      "confidence": null
+    },
+    {
+      "text": "một",
+      "startMs": 15895.652,
+      "endMs": 16034.783,
+      "timestampMs": 15895.652,
+      "confidence": null
+    },
+    {
+      "text": "chủ",
+      "startMs": 16104.348,
+      "endMs": 16173.913,
+      "timestampMs": 16104.348,
+      "confidence": null
+    },
+    {
+      "text": "đề.",
+      "startMs": 16243.478,
+      "endMs": 16591.304,
+      "timestampMs": 16243.478,
+      "confidence": null
+    },
+    {
+      "text": "Windi",
+      "startMs": 16716.522,
+      "endMs": 17008.696,
+      "timestampMs": 16716.522,
+      "confidence": null
+    },
+    {
+      "text": "lên",
+      "startMs": 17078.261,
+      "endMs": 17147.826,
+      "timestampMs": 17078.261,
+      "confidence": null
+    },
+    {
+      "text": "idea",
+      "startMs": 17147.826,
+      "endMs": 17426.087,
+      "timestampMs": 17147.826,
+      "confidence": null
+    },
+    {
+      "text": "trước.",
+      "startMs": 17495.652,
+      "endMs": 17704.348,
+      "timestampMs": 17495.652,
+      "confidence": null
+    },
+    {
+      "text": "Thấy",
+      "startMs": 18051.304,
+      "endMs": 18260.87,
+      "timestampMs": 18051.304,
+      "confidence": null
+    },
+    {
+      "text": "ổn,",
+      "startMs": 18330.435,
+      "endMs": 18539.13,
+      "timestampMs": 18330.435,
+      "confidence": null
+    },
+    {
+      "text": "bạn",
+      "startMs": 18623.478,
+      "endMs": 18817.391,
+      "timestampMs": 18623.478,
+      "confidence": null
+    },
+    {
+      "text": "mới",
+      "startMs": 18886.957,
+      "endMs": 19026.087,
+      "timestampMs": 18886.957,
+      "confidence": null
+    },
+    {
+      "text": "duyệt",
+      "startMs": 19095.652,
+      "endMs": 19234.783,
+      "timestampMs": 19095.652,
+      "confidence": null
+    },
+    {
+      "text": "để",
+      "startMs": 19304.348,
+      "endMs": 19321.739,
+      "timestampMs": 19304.348,
+      "confidence": null
+    },
+    {
+      "text": "đi",
+      "startMs": 19373.913,
+      "endMs": 19443.478,
+      "timestampMs": 19373.913,
+      "confidence": null
+    },
+    {
+      "text": "tiếp.",
+      "startMs": 19443.478,
+      "endMs": 19721.739,
+      "timestampMs": 19443.478,
+      "confidence": null
+    },
+    {
+      "text": "Rồi",
+      "startMs": 20066.957,
+      "endMs": 20278.261,
+      "timestampMs": 20066.957,
+      "confidence": null
+    },
+    {
+      "text": "chọn",
+      "startMs": 20347.826,
+      "endMs": 20365.217,
+      "timestampMs": 20347.826,
+      "confidence": null
+    },
+    {
+      "text": "layout",
+      "startMs": 20417.391,
+      "endMs": 20626.087,
+      "timestampMs": 20417.391,
+      "confidence": null
+    },
+    {
+      "text": "có",
+      "startMs": 20695.652,
+      "endMs": 20713.043,
+      "timestampMs": 20695.652,
+      "confidence": null
+    },
+    {
+      "text": "sẵn.",
+      "startMs": 20695.652,
+      "endMs": 20973.913,
+      "timestampMs": 20695.652,
+      "confidence": null
+    },
+    {
+      "text": "Hoặc",
+      "startMs": 21310.435,
+      "endMs": 21530.435,
+      "timestampMs": 21310.435,
+      "confidence": null
+    },
+    {
+      "text": "đưa",
+      "startMs": 21600.0,
+      "endMs": 21669.565,
+      "timestampMs": 21600.0,
+      "confidence": null
+    },
+    {
+      "text": "một",
+      "startMs": 21739.13,
+      "endMs": 21808.696,
+      "timestampMs": 21739.13,
+      "confidence": null
+    },
+    {
+      "text": "video",
+      "startMs": 21808.696,
+      "endMs": 22086.957,
+      "timestampMs": 21808.696,
+      "confidence": null
+    },
+    {
+      "text": "mẫu",
+      "startMs": 22156.522,
+      "endMs": 22434.783,
+      "timestampMs": 22156.522,
+      "confidence": null
+    },
+    {
+      "text": "để",
+      "startMs": 22504.348,
+      "endMs": 22573.913,
+      "timestampMs": 22504.348,
+      "confidence": null
+    },
+    {
+      "text": "Windi",
+      "startMs": 22573.913,
+      "endMs": 22991.304,
+      "timestampMs": 22573.913,
+      "confidence": null
+    },
+    {
+      "text": "phân",
+      "startMs": 23060.87,
+      "endMs": 23200.0,
+      "timestampMs": 23060.87,
+      "confidence": null
+    },
+    {
+      "text": "tích",
+      "startMs": 23200.0,
+      "endMs": 23339.13,
+      "timestampMs": 23200.0,
+      "confidence": null
+    },
+    {
+      "text": "cách",
+      "startMs": 23408.696,
+      "endMs": 23478.261,
+      "timestampMs": 23408.696,
+      "confidence": null
+    },
+    {
+      "text": "hook,",
+      "startMs": 23547.826,
+      "endMs": 23826.087,
+      "timestampMs": 23547.826,
+      "confidence": null
+    },
+    {
+      "text": "chia",
+      "startMs": 23953.913,
+      "endMs": 24173.913,
+      "timestampMs": 23953.913,
+      "confidence": null
+    },
+    {
+      "text": "beat",
+      "startMs": 24243.478,
+      "endMs": 24521.739,
+      "timestampMs": 24243.478,
+      "confidence": null
+    },
+    {
+      "text": "và",
+      "startMs": 24610.435,
+      "endMs": 24730.435,
+      "timestampMs": 24610.435,
+      "confidence": null
+    },
+    {
+      "text": "đặt",
+      "startMs": 24730.435,
+      "endMs": 24869.565,
+      "timestampMs": 24730.435,
+      "confidence": null
+    },
+    {
+      "text": "hình.",
+      "startMs": 24939.13,
+      "endMs": 25078.261,
+      "timestampMs": 24939.13,
+      "confidence": null
+    },
+    {
+      "text": "Kịch",
+      "startMs": 25276.522,
+      "endMs": 25495.652,
+      "timestampMs": 25276.522,
+      "confidence": null
+    },
+    {
+      "text": "bản",
+      "startMs": 25565.217,
+      "endMs": 25773.913,
+      "timestampMs": 25565.217,
+      "confidence": null
+    },
+    {
+      "text": "không",
+      "startMs": 25843.478,
+      "endMs": 25982.609,
+      "timestampMs": 25843.478,
+      "confidence": null
+    },
+    {
+      "text": "còn",
+      "startMs": 25982.609,
+      "endMs": 26121.739,
+      "timestampMs": 25982.609,
+      "confidence": null
+    },
+    {
+      "text": "là",
+      "startMs": 26191.304,
+      "endMs": 26260.87,
+      "timestampMs": 26191.304,
+      "confidence": null
+    },
+    {
+      "text": "một",
+      "startMs": 26330.435,
+      "endMs": 26400.0,
+      "timestampMs": 26330.435,
+      "confidence": null
+    },
+    {
+      "text": "cục",
+      "startMs": 26469.565,
+      "endMs": 26539.13,
+      "timestampMs": 26469.565,
+      "confidence": null
+    },
+    {
+      "text": "chữ.",
+      "startMs": 26539.13,
+      "endMs": 26956.522,
+      "timestampMs": 26539.13,
+      "confidence": null
+    },
+    {
+      "text": "Mỗi",
+      "startMs": 27150.435,
+      "endMs": 27373.913,
+      "timestampMs": 27150.435,
+      "confidence": null
+    },
+    {
+      "text": "beat",
+      "startMs": 27443.478,
+      "endMs": 27582.609,
+      "timestampMs": 27443.478,
+      "confidence": null
+    },
+    {
+      "text": "có",
+      "startMs": 27652.174,
+      "endMs": 27669.565,
+      "timestampMs": 27652.174,
+      "confidence": null
+    },
+    {
+      "text": "lời",
+      "startMs": 27721.739,
+      "endMs": 27860.87,
+      "timestampMs": 27721.739,
+      "confidence": null
+    },
+    {
+      "text": "nói,",
+      "startMs": 27860.87,
+      "endMs": 28278.261,
+      "timestampMs": 27860.87,
+      "confidence": null
+    },
+    {
+      "text": "hình",
+      "startMs": 28358.261,
+      "endMs": 28556.522,
+      "timestampMs": 28358.261,
+      "confidence": null
+    },
+    {
+      "text": "cần",
+      "startMs": 28626.087,
+      "endMs": 28765.217,
+      "timestampMs": 28626.087,
+      "confidence": null
+    },
+    {
+      "text": "tạo,",
+      "startMs": 28765.217,
+      "endMs": 29252.174,
+      "timestampMs": 28765.217,
+      "confidence": null
+    },
+    {
+      "text": "chữ",
+      "startMs": 29460.87,
+      "endMs": 29600.0,
+      "timestampMs": 29460.87,
+      "confidence": null
+    },
+    {
+      "text": "trên",
+      "startMs": 29669.565,
+      "endMs": 29808.696,
+      "timestampMs": 29669.565,
+      "confidence": null
+    },
+    {
+      "text": "màn",
+      "startMs": 29808.696,
+      "endMs": 30017.391,
+      "timestampMs": 29808.696,
+      "confidence": null
+    },
+    {
+      "text": "hình...",
+      "startMs": 30086.957,
+      "endMs": 30295.652,
+      "timestampMs": 30086.957,
+      "confidence": null
+    },
+    {
+      "text": "và",
+      "startMs": 30578.261,
+      "endMs": 30852.174,
+      "timestampMs": 30578.261,
+      "confidence": null
+    },
+    {
+      "text": "nhịp",
+      "startMs": 30921.739,
+      "endMs": 30939.13,
+      "timestampMs": 30921.739,
+      "confidence": null
+    },
+    {
+      "text": "chuyển",
+      "startMs": 30991.304,
+      "endMs": 31130.435,
+      "timestampMs": 30991.304,
+      "confidence": null
+    },
+    {
+      "text": "cảnh",
+      "startMs": 31130.435,
+      "endMs": 31339.13,
+      "timestampMs": 31130.435,
+      "confidence": null
+    },
+    {
+      "text": "rõ",
+      "startMs": 31408.696,
+      "endMs": 31478.261,
+      "timestampMs": 31408.696,
+      "confidence": null
+    },
+    {
+      "text": "ràng.",
+      "startMs": 31547.826,
+      "endMs": 31756.522,
+      "timestampMs": 31547.826,
+      "confidence": null
+    },
+    {
+      "text": "Duyệt",
+      "startMs": 32100.87,
+      "endMs": 32313.043,
+      "timestampMs": 32100.87,
+      "confidence": null
+    },
+    {
+      "text": "xong",
+      "startMs": 32382.609,
+      "endMs": 32591.304,
+      "timestampMs": 32382.609,
+      "confidence": null
+    },
+    {
+      "text": "mới",
+      "startMs": 32591.304,
+      "endMs": 32730.435,
+      "timestampMs": 32591.304,
+      "confidence": null
+    },
+    {
+      "text": "gọi",
+      "startMs": 32800.0,
+      "endMs": 32869.565,
+      "timestampMs": 32800.0,
+      "confidence": null
+    },
+    {
+      "text": "Flow",
+      "startMs": 32939.13,
+      "endMs": 33217.391,
+      "timestampMs": 32939.13,
+      "confidence": null
+    },
+    {
+      "text": "hoặc",
+      "startMs": 33286.957,
+      "endMs": 33356.522,
+      "timestampMs": 33286.957,
+      "confidence": null
+    },
+    {
+      "text": "ChatGPT",
+      "startMs": 33357.391,
+      "endMs": 33982.609,
+      "timestampMs": 33357.391,
+      "confidence": null
+    },
+    {
+      "text": "tạo",
+      "startMs": 33982.609,
+      "endMs": 34121.739,
+      "timestampMs": 33982.609,
+      "confidence": null
+    },
+    {
+      "text": "ảnh.",
+      "startMs": 34191.304,
+      "endMs": 34469.565,
+      "timestampMs": 34191.304,
+      "confidence": null
+    },
+    {
+      "text": "Sai",
+      "startMs": 34695.652,
+      "endMs": 35095.652,
+      "timestampMs": 34695.652,
+      "confidence": null
+    },
+    {
+      "text": "ở",
+      "startMs": 35165.217,
+      "endMs": 35182.609,
+      "timestampMs": 35165.217,
+      "confidence": null
+    },
+    {
+      "text": "cảnh",
+      "startMs": 35234.783,
+      "endMs": 35304.348,
+      "timestampMs": 35234.783,
+      "confidence": null
+    },
+    {
+      "text": "nào,",
+      "startMs": 35304.348,
+      "endMs": 35652.174,
+      "timestampMs": 35304.348,
+      "confidence": null
+    },
+    {
+      "text": "sửa",
+      "startMs": 35800.0,
+      "endMs": 36000.0,
+      "timestampMs": 35800.0,
+      "confidence": null
+    },
+    {
+      "text": "đúng",
+      "startMs": 36069.565,
+      "endMs": 36139.13,
+      "timestampMs": 36069.565,
+      "confidence": null
+    },
+    {
+      "text": "cảnh",
+      "startMs": 36139.13,
+      "endMs": 36347.826,
+      "timestampMs": 36139.13,
+      "confidence": null
+    },
+    {
+      "text": "đó.",
+      "startMs": 36417.391,
+      "endMs": 36626.087,
+      "timestampMs": 36417.391,
+      "confidence": null
+    },
+    {
+      "text": "Không",
+      "startMs": 36833.043,
+      "endMs": 37043.478,
+      "timestampMs": 36833.043,
+      "confidence": null
+    },
+    {
+      "text": "phải",
+      "startMs": 37113.043,
+      "endMs": 37182.609,
+      "timestampMs": 37113.043,
+      "confidence": null
+    },
+    {
+      "text": "quăng",
+      "startMs": 37252.174,
+      "endMs": 37460.87,
+      "timestampMs": 37252.174,
+      "confidence": null
+    },
+    {
+      "text": "cả",
+      "startMs": 37530.435,
+      "endMs": 37547.826,
+      "timestampMs": 37530.435,
+      "confidence": null
+    },
+    {
+      "text": "quy",
+      "startMs": 37533.043,
+      "endMs": 37669.565,
+      "timestampMs": 37533.043,
+      "confidence": null
+    },
+    {
+      "text": "trình",
+      "startMs": 37739.13,
+      "endMs": 37878.261,
+      "timestampMs": 37739.13,
+      "confidence": null
+    },
+    {
+      "text": "đi",
+      "startMs": 37947.826,
+      "endMs": 38017.391,
+      "timestampMs": 37947.826,
+      "confidence": null
+    },
+    {
+      "text": "làm",
+      "startMs": 38086.957,
+      "endMs": 38156.522,
+      "timestampMs": 38086.957,
+      "confidence": null
+    },
+    {
+      "text": "lại.",
+      "startMs": 38156.522,
+      "endMs": 38504.348,
+      "timestampMs": 38156.522,
+      "confidence": null
+    },
+    {
+      "text": "Voice",
+      "startMs": 38780.0,
+      "endMs": 39130.435,
+      "timestampMs": 38780.0,
+      "confidence": null
+    },
+    {
+      "text": "cũng",
+      "startMs": 39200.0,
+      "endMs": 39339.13,
+      "timestampMs": 39200.0,
+      "confidence": null
+    },
+    {
+      "text": "bám",
+      "startMs": 39408.696,
+      "endMs": 39547.826,
+      "timestampMs": 39408.696,
+      "confidence": null
+    },
+    {
+      "text": "theo",
+      "startMs": 39547.826,
+      "endMs": 39686.957,
+      "timestampMs": 39547.826,
+      "confidence": null
+    },
+    {
+      "text": "kịch",
+      "startMs": 39756.522,
+      "endMs": 39773.913,
+      "timestampMs": 39756.522,
+      "confidence": null
+    },
+    {
+      "text": "bản",
+      "startMs": 39826.087,
+      "endMs": 39965.217,
+      "timestampMs": 39826.087,
+      "confidence": null
+    },
+    {
+      "text": "đã",
+      "startMs": 40034.783,
+      "endMs": 40104.348,
+      "timestampMs": 40034.783,
+      "confidence": null
+    },
+    {
+      "text": "duyệt.",
+      "startMs": 40173.913,
+      "endMs": 40313.043,
+      "timestampMs": 40173.913,
+      "confidence": null
+    },
+    {
+      "text": "Câu",
+      "startMs": 40644.348,
+      "endMs": 40800.0,
+      "timestampMs": 40644.348,
+      "confidence": null
+    },
+    {
+      "text": "ngắn.",
+      "startMs": 40800.0,
+      "endMs": 41147.826,
+      "timestampMs": 40800.0,
+      "confidence": null
+    },
+    {
+      "text": "Có",
+      "startMs": 41549.565,
+      "endMs": 41634.783,
+      "timestampMs": 41549.565,
+      "confidence": null
+    },
+    {
+      "text": "chỗ",
+      "startMs": 41634.783,
+      "endMs": 41773.913,
+      "timestampMs": 41634.783,
+      "confidence": null
+    },
+    {
+      "text": "nghỉ.",
+      "startMs": 41843.478,
+      "endMs": 42191.304,
+      "timestampMs": 41843.478,
+      "confidence": null
+    },
+    {
+      "text": "Có",
+      "startMs": 42506.087,
+      "endMs": 42678.261,
+      "timestampMs": 42506.087,
+      "confidence": null
+    },
+    {
+      "text": "nhịp",
+      "startMs": 42747.826,
+      "endMs": 42817.391,
+      "timestampMs": 42747.826,
+      "confidence": null
+    },
+    {
+      "text": "nhấn...",
+      "startMs": 42817.391,
+      "endMs": 43165.217,
+      "timestampMs": 42817.391,
+      "confidence": null
+    },
+    {
+      "text": "nghe",
+      "startMs": 43511.304,
+      "endMs": 43721.739,
+      "timestampMs": 43511.304,
+      "confidence": null
+    },
+    {
+      "text": "gần",
+      "startMs": 43721.739,
+      "endMs": 44000.0,
+      "timestampMs": 43721.739,
+      "confidence": null
+    },
+    {
+      "text": "người",
+      "startMs": 44069.565,
+      "endMs": 44208.696,
+      "timestampMs": 44069.565,
+      "confidence": null
+    },
+    {
+      "text": "hơn",
+      "startMs": 44278.261,
+      "endMs": 44295.652,
+      "timestampMs": 44278.261,
+      "confidence": null
+    },
+    {
+      "text": "hẳn.",
+      "startMs": 44278.261,
+      "endMs": 44695.652,
+      "timestampMs": 44278.261,
+      "confidence": null
+    },
+    {
+      "text": "Timestamp",
+      "startMs": 44886.087,
+      "endMs": 45391.304,
+      "timestampMs": 44886.087,
+      "confidence": null
+    },
+    {
+      "text": "có",
+      "startMs": 45460.87,
+      "endMs": 45478.261,
+      "timestampMs": 45460.87,
+      "confidence": null
+    },
+    {
+      "text": "sẵn.",
+      "startMs": 45530.435,
+      "endMs": 45808.696,
+      "timestampMs": 45530.435,
+      "confidence": null
+    },
+    {
+      "text": "Nên",
+      "startMs": 46152.174,
+      "endMs": 46365.217,
+      "timestampMs": 46152.174,
+      "confidence": null
+    },
+    {
+      "text": "hình,",
+      "startMs": 46365.217,
+      "endMs": 46713.043,
+      "timestampMs": 46365.217,
+      "confidence": null
+    },
+    {
+      "text": "caption",
+      "startMs": 46802.609,
+      "endMs": 47408.696,
+      "timestampMs": 46802.609,
+      "confidence": null
+    },
+    {
+      "text": "và",
+      "startMs": 47478.261,
+      "endMs": 47495.652,
+      "timestampMs": 47478.261,
+      "confidence": null
+    },
+    {
+      "text": "lời",
+      "startMs": 47547.826,
+      "endMs": 47617.391,
+      "timestampMs": 47547.826,
+      "confidence": null
+    },
+    {
+      "text": "nói",
+      "startMs": 47617.391,
+      "endMs": 47965.217,
+      "timestampMs": 47617.391,
+      "confidence": null
+    },
+    {
+      "text": "khớp",
+      "startMs": 48034.783,
+      "endMs": 48104.348,
+      "timestampMs": 48034.783,
+      "confidence": null
+    },
+    {
+      "text": "nhau",
+      "startMs": 48173.913,
+      "endMs": 48313.043,
+      "timestampMs": 48173.913,
+      "confidence": null
+    },
+    {
+      "text": "ngay",
+      "startMs": 48313.043,
+      "endMs": 48591.304,
+      "timestampMs": 48313.043,
+      "confidence": null
+    },
+    {
+      "text": "từ",
+      "startMs": 48660.87,
+      "endMs": 48730.435,
+      "timestampMs": 48660.87,
+      "confidence": null
+    },
+    {
+      "text": "đầu.",
+      "startMs": 48730.435,
+      "endMs": 49008.696,
+      "timestampMs": 48730.435,
+      "confidence": null
+    },
+    {
+      "text": "Cái",
+      "startMs": 49422.609,
+      "endMs": 49704.348,
+      "timestampMs": 49422.609,
+      "confidence": null
+    },
+    {
+      "text": "hay",
+      "startMs": 49704.348,
+      "endMs": 49843.478,
+      "timestampMs": 49704.348,
+      "confidence": null
+    },
+    {
+      "text": "không",
+      "startMs": 49913.043,
+      "endMs": 49982.609,
+      "timestampMs": 49913.043,
+      "confidence": null
+    },
+    {
+      "text": "nằm",
+      "startMs": 50052.174,
+      "endMs": 50191.304,
+      "timestampMs": 50052.174,
+      "confidence": null
+    },
+    {
+      "text": "ở",
+      "startMs": 50260.87,
+      "endMs": 50278.261,
+      "timestampMs": 50260.87,
+      "confidence": null
+    },
+    {
+      "text": "một",
+      "startMs": 50260.87,
+      "endMs": 50400.0,
+      "timestampMs": 50260.87,
+      "confidence": null
+    },
+    {
+      "text": "công",
+      "startMs": 50469.565,
+      "endMs": 50539.13,
+      "timestampMs": 50469.565,
+      "confidence": null
+    },
+    {
+      "text": "cụ",
+      "startMs": 50608.696,
+      "endMs": 50747.826,
+      "timestampMs": 50608.696,
+      "confidence": null
+    },
+    {
+      "text": "thần",
+      "startMs": 50817.391,
+      "endMs": 50956.522,
+      "timestampMs": 50817.391,
+      "confidence": null
+    },
+    {
+      "text": "kỳ.",
+      "startMs": 50956.522,
+      "endMs": 51373.913,
+      "timestampMs": 50956.522,
+      "confidence": null
+    },
+    {
+      "text": "Nó",
+      "startMs": 51584.348,
+      "endMs": 51721.739,
+      "timestampMs": 51584.348,
+      "confidence": null
+    },
+    {
+      "text": "nằm",
+      "startMs": 51791.304,
+      "endMs": 51930.435,
+      "timestampMs": 51791.304,
+      "confidence": null
+    },
+    {
+      "text": "ở",
+      "startMs": 52000.0,
+      "endMs": 52017.391,
+      "timestampMs": 52000.0,
+      "confidence": null
+    },
+    {
+      "text": "việc",
+      "startMs": 52069.565,
+      "endMs": 52208.696,
+      "timestampMs": 52069.565,
+      "confidence": null
+    },
+    {
+      "text": "mọi",
+      "startMs": 52208.696,
+      "endMs": 52556.522,
+      "timestampMs": 52208.696,
+      "confidence": null
+    },
+    {
+      "text": "bước",
+      "startMs": 52626.087,
+      "endMs": 52765.217,
+      "timestampMs": 52626.087,
+      "confidence": null
+    },
+    {
+      "text": "biết",
+      "startMs": 52835.652,
+      "endMs": 52973.913,
+      "timestampMs": 52835.652,
+      "confidence": null
+    },
+    {
+      "text": "mình",
+      "startMs": 52973.913,
+      "endMs": 53113.043,
+      "timestampMs": 52973.913,
+      "confidence": null
+    },
+    {
+      "text": "đang",
+      "startMs": 53182.609,
+      "endMs": 53321.739,
+      "timestampMs": 53182.609,
+      "confidence": null
+    },
+    {
+      "text": "chờ",
+      "startMs": 53391.304,
+      "endMs": 53530.435,
+      "timestampMs": 53391.304,
+      "confidence": null
+    },
+    {
+      "text": "gì...",
+      "startMs": 53530.435,
+      "endMs": 54017.391,
+      "timestampMs": 53530.435,
+      "confidence": null
+    },
+    {
+      "text": "và",
+      "startMs": 54165.217,
+      "endMs": 54226.087,
+      "timestampMs": 54165.217,
+      "confidence": null
+    },
+    {
+      "text": "tiếp",
+      "startMs": 54226.087,
+      "endMs": 54434.783,
+      "timestampMs": 54226.087,
+      "confidence": null
+    },
+    {
+      "text": "tục",
+      "startMs": 54504.348,
+      "endMs": 54573.913,
+      "timestampMs": 54504.348,
+      "confidence": null
+    },
+    {
+      "text": "đúng",
+      "startMs": 54643.478,
+      "endMs": 54713.043,
+      "timestampMs": 54643.478,
+      "confidence": null
+    },
+    {
+      "text": "chỗ.",
+      "startMs": 54713.043,
+      "endMs": 55130.435,
+      "timestampMs": 54713.043,
+      "confidence": null
+    },
+    {
+      "text": "Trong",
+      "startMs": 55546.957,
+      "endMs": 55617.391,
+      "timestampMs": 55546.957,
+      "confidence": null
+    },
+    {
+      "text": "lúc",
+      "startMs": 55617.391,
+      "endMs": 55826.087,
+      "timestampMs": 55617.391,
+      "confidence": null
+    },
+    {
+      "text": "người",
+      "startMs": 55895.652,
+      "endMs": 55913.043,
+      "timestampMs": 55895.652,
+      "confidence": null
+    },
+    {
+      "text": "khác",
+      "startMs": 55965.217,
+      "endMs": 56104.348,
+      "timestampMs": 55965.217,
+      "confidence": null
+    },
+    {
+      "text": "vẫn",
+      "startMs": 56173.913,
+      "endMs": 56191.304,
+      "timestampMs": 56173.913,
+      "confidence": null
+    },
+    {
+      "text": "nối",
+      "startMs": 56173.913,
+      "endMs": 56452.174,
+      "timestampMs": 56173.913,
+      "confidence": null
+    },
+    {
+      "text": "từng",
+      "startMs": 56521.739,
+      "endMs": 56660.87,
+      "timestampMs": 56521.739,
+      "confidence": null
+    },
+    {
+      "text": "tool,",
+      "startMs": 56660.87,
+      "endMs": 57147.826,
+      "timestampMs": 56660.87,
+      "confidence": null
+    },
+    {
+      "text": "thử",
+      "startMs": 57301.739,
+      "endMs": 57495.652,
+      "timestampMs": 57301.739,
+      "confidence": null
+    },
+    {
+      "text": "đi",
+      "startMs": 57565.217,
+      "endMs": 57704.348,
+      "timestampMs": 57565.217,
+      "confidence": null
+    },
+    {
+      "text": "thử",
+      "startMs": 57704.348,
+      "endMs": 57843.478,
+      "timestampMs": 57704.348,
+      "confidence": null
+    },
+    {
+      "text": "lại,",
+      "startMs": 57913.043,
+      "endMs": 58260.87,
+      "timestampMs": 57913.043,
+      "confidence": null
+    },
+    {
+      "text": "rồi",
+      "startMs": 58469.565,
+      "endMs": 58608.696,
+      "timestampMs": 58469.565,
+      "confidence": null
+    },
+    {
+      "text": "nhìn",
+      "startMs": 58678.261,
+      "endMs": 58747.826,
+      "timestampMs": 58678.261,
+      "confidence": null
+    },
+    {
+      "text": "credit",
+      "startMs": 58817.391,
+      "endMs": 59026.087,
+      "timestampMs": 58817.391,
+      "confidence": null
+    },
+    {
+      "text": "biến",
+      "startMs": 59026.087,
+      "endMs": 59234.783,
+      "timestampMs": 59026.087,
+      "confidence": null
+    },
+    {
+      "text": "mất...",
+      "startMs": 59304.348,
+      "endMs": 59513.043,
+      "timestampMs": 59304.348,
+      "confidence": null
+    },
+    {
+      "text": "Bạn",
+      "startMs": 59799.13,
+      "endMs": 60000.0,
+      "timestampMs": 59799.13,
+      "confidence": null
+    },
+    {
+      "text": "có",
+      "startMs": 60069.565,
+      "endMs": 60086.957,
+      "timestampMs": 60069.565,
+      "confidence": null
+    },
+    {
+      "text": "thể",
+      "startMs": 60139.13,
+      "endMs": 60156.522,
+      "timestampMs": 60139.13,
+      "confidence": null
+    },
+    {
+      "text": "dành",
+      "startMs": 60208.696,
+      "endMs": 60347.826,
+      "timestampMs": 60208.696,
+      "confidence": null
+    },
+    {
+      "text": "thời",
+      "startMs": 60347.826,
+      "endMs": 60486.957,
+      "timestampMs": 60347.826,
+      "confidence": null
+    },
+    {
+      "text": "gian",
+      "startMs": 60486.957,
+      "endMs": 60626.087,
+      "timestampMs": 60486.957,
+      "confidence": null
+    },
+    {
+      "text": "đó",
+      "startMs": 60695.652,
+      "endMs": 60834.783,
+      "timestampMs": 60695.652,
+      "confidence": null
+    },
+    {
+      "text": "cho",
+      "startMs": 60904.348,
+      "endMs": 61043.478,
+      "timestampMs": 60904.348,
+      "confidence": null
+    },
+    {
+      "text": "video",
+      "startMs": 61043.478,
+      "endMs": 61321.739,
+      "timestampMs": 61043.478,
+      "confidence": null
+    },
+    {
+      "text": "tiếp",
+      "startMs": 61391.304,
+      "endMs": 61460.87,
+      "timestampMs": 61391.304,
+      "confidence": null
+    },
+    {
+      "text": "theo.",
+      "startMs": 61530.435,
+      "endMs": 61808.696,
+      "timestampMs": 61530.435,
+      "confidence": null
+    },
+    {
+      "text": "Muốn",
+      "startMs": 62033.043,
+      "endMs": 62243.478,
+      "timestampMs": 62033.043,
+      "confidence": null
+    },
+    {
+      "text": "làm",
+      "startMs": 62313.043,
+      "endMs": 62382.609,
+      "timestampMs": 62313.043,
+      "confidence": null
+    },
+    {
+      "text": "nhanh",
+      "startMs": 62382.609,
+      "endMs": 62591.304,
+      "timestampMs": 62382.609,
+      "confidence": null
+    },
+    {
+      "text": "hơn",
+      "startMs": 62660.87,
+      "endMs": 62800.0,
+      "timestampMs": 62660.87,
+      "confidence": null
+    },
+    {
+      "text": "mà",
+      "startMs": 62869.565,
+      "endMs": 62886.957,
+      "timestampMs": 62869.565,
+      "confidence": null
+    },
+    {
+      "text": "vẫn",
+      "startMs": 62939.13,
+      "endMs": 63008.696,
+      "timestampMs": 62939.13,
+      "confidence": null
+    },
+    {
+      "text": "tự",
+      "startMs": 63008.696,
+      "endMs": 63217.391,
+      "timestampMs": 63008.696,
+      "confidence": null
+    },
+    {
+      "text": "duyệt",
+      "startMs": 63286.957,
+      "endMs": 63426.087,
+      "timestampMs": 63286.957,
+      "confidence": null
+    },
+    {
+      "text": "từng",
+      "startMs": 63426.087,
+      "endMs": 63565.217,
+      "timestampMs": 63426.087,
+      "confidence": null
+    },
+    {
+      "text": "bước?",
+      "startMs": 63634.783,
+      "endMs": 63913.043,
+      "timestampMs": 63634.783,
+      "confidence": null
+    },
+    {
+      "text": "Bắt",
+      "startMs": 64111.304,
+      "endMs": 64191.304,
+      "timestampMs": 64111.304,
+      "confidence": null
+    },
+    {
+      "text": "đầu",
+      "startMs": 64191.304,
+      "endMs": 64400.0,
+      "timestampMs": 64191.304,
+      "confidence": null
+    },
+    {
+      "text": "với",
+      "startMs": 64469.565,
+      "endMs": 64486.957,
+      "timestampMs": 64469.565,
+      "confidence": null
+    },
+    {
+      "text": "Windi.",
+      "startMs": 64469.565,
+      "endMs": 64956.522,
+      "timestampMs": 64469.565,
+      "confidence": null
+    }
+  ],
+  "brand": "WINDI STUDIO"
+}

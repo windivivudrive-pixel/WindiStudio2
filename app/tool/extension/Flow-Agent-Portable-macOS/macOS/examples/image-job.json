@@ -1,0 +1,10 @@
+{
+  "kind": "image",
+  "prompt": "A cheerful educational illustration for children, no text",
+  "output": "output/example.png",
+  "aspect": "square",
+  "model": "gem_pix_2",
+  "ref": [],
+  "idempotency_key": "change-this-key-for-each-new-image"
+}
+

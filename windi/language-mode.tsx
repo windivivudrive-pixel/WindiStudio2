@@ -702,6 +702,8 @@ export function translateText(value: string, language: WindiLanguage): string {
 
 type OriginalText = Text & { __windiOriginal?: string; __windiCurrent?: string };
 
+const originalAttributes = new WeakMap<HTMLElement, Record<string, string>>();
+
 function translateTree(root: Node, language: WindiLanguage) {
   if (root.nodeType === Node.TEXT_NODE) {
     const text = root as OriginalText;
@@ -754,9 +756,13 @@ function translateTree(root: Node, language: WindiLanguage) {
     if (element.closest('[data-windi-no-translate]')) continue;
     for (const name of ['aria-label', 'title', 'placeholder']) {
       const key = `windi${name.replace(/-([a-z])/g, (_, char: string) => char.toUpperCase())}Original`;
-      const original = element.dataset[key];
+      const attributes = originalAttributes.get(element) ?? {};
+      const original = attributes[key];
       const current = element.getAttribute(name);
-      if (!original && current) element.dataset[key] = current;
+      if (!original && current && language !== 'vi') {
+        attributes[key] = current;
+        originalAttributes.set(element, attributes);
+      }
       if (language === 'vi') {
         if (original && current !== original) element.setAttribute(name, original);
       } else {

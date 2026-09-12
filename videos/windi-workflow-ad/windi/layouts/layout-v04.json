@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 1,
+  "version": 4,
+  "ideaId": "idea-01-windi-workflow-that-su",
+  "id": "windi-workflow-map-v04",
+  "name": "Windi TikTok Safe Workflow Map",
+  "source": {
+    "kind": "builtin",
+    "preset": "dark-cinematic"
+  },
+  "basePreset": "dark-cinematic",
+  "summary": "Ảnh ngang phía trên dùng lại bộ assets/windi, sơ đồ 6 bước zoom vào bước đang được nói tới và chú thích lợi ích. Mọi text, caption và visual chính nằm trong safe zone TikTok, tránh dải thao tác bên phải và vùng mô tả dưới. Voice 1.15x; bỏ đoạn giá và credit.",
+  "pacing": {
+    "hookDurationMs": 1800,
+    "averageBeatDurationMs": 3000,
+      "cutRhythm": "Hook dùng cover thumbnail và accent vàng; sau đó mỗi beat giữ một khung 16:9 ngang lớn cùng sơ đồ workflow. Caption pop theo từng từ nằm cao hơn vùng mô tả TikTok. Cắt nhanh ở pain points, chậm hơn ở approval/voice, tăng nhịp ở CTA."
+  },
+  "palette": {
+    "background": "#101214",
+    "surface": "#191b1f",
+    "text": "#f6f0e4",
+    "accent": "#f0c96a",
+    "border": "#45423d"
+  },
+  "captions": {
+    "position": "bottom",
+    "style": "pill"
+  },
+  "sceneTypes": [
+    {
+      "id": "thumbnail-hook",
+      "role": "Cover hook như thumbnail: nhãn nhỏ, headline hai dòng và visual 16:9",
+      "composition": "text-led",
+      "textPosition": "top",
+      "imageFit": "cover"
+    },
+    {
+      "id": "editorial-frame",
+      "role": "Khung visual 16:9 lớn, nội dung có nhãn và headline nhỏ",
+      "composition": "framed",
+      "textPosition": "bottom",
+      "imageFit": "cover"
+    },
+    {
+      "id": "workflow-frame",
+      "role": "Quy trình được minh họa trong một card ngang dễ quét",
+      "composition": "framed",
+      "textPosition": "bottom",
+      "imageFit": "cover"
+    },
+    {
+      "id": "feature-frame",
+      "role": "Lợi ích được kể bằng visual ngang và module text cực ngắn",
+      "composition": "split",
+      "textPosition": "bottom",
+      "imageFit": "cover"
+    },
+    {
+      "id": "voice-frame",
+      "role": "Cận cảnh narrator/editor và waveform tự nhiên",
+      "composition": "quote",
+      "textPosition": "center",
+      "imageFit": "cover"
+    },
+    {
+      "id": "comparison-frame",
+      "role": "So sánh cũ/mới, vẫn dùng một visual ngang làm nền",
+      "composition": "comparison",
+      "textPosition": "top",
+      "imageFit": "cover"
+    },
+    {
+      "id": "cta-thumbnail",
+      "role": "Cover CTA, giá trị đọc nhanh và khung visual 16:9",
+      "composition": "cta",
+      "textPosition": "center",
+      "imageFit": "cover"
+    }
+  ]
+}

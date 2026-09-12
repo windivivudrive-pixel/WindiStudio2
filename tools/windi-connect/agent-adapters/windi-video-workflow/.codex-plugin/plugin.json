@@ -1,0 +1,19 @@
+{
+  "name": "windi-video-workflow",
+  "version": "0.3.0",
+  "description": "Approval-gated local video production with Windi Connect, Windi Voice and Remotion.",
+  "author": {
+    "name": "WindiStudio"
+  },
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Windi Video Workflow",
+    "shortDescription": "Từ ý tưởng đã duyệt đến video dọc hoàn chỉnh.",
+    "longDescription": "Điều phối workflow video Windi trên máy: hai cổng duyệt, ảnh qua Windi Connect, voice, timestamp và render Remotion.",
+    "developerName": "WindiStudio",
+    "category": "Creativity",
+    "capabilities": ["Local workflow", "Image generation", "Video rendering"],
+    "defaultPrompt": ["Dùng Windi làm video này từ ý tưởng đến MP4."]
+  },
+  "mcpServers": "./.mcp.json"
+}

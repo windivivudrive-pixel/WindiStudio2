@@ -7,13 +7,14 @@ import '@/windi/pixel-landscape.css';
 import '@/windi/news.css';
 import '@/windi/creator-catalog.css';
 import '@/windi/home.css';
+import '@/windi/workflow-arcade.css';
 import { AppShell } from '@/windi/app-shell';
 import { Providers } from '@/windi/providers';
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://windistudio.app'),
-  title: { default: 'WindiStudio — Curated AI toolbox', template: '%s · WindiStudio' },
-  description: 'Skills, MCPs, workflows và AI tools thực sự đáng dùng — được Windi biên tập.',
+  title: { default: 'WindiStudio — Video Kits & Voice Studio', template: '%s · WindiStudio' },
+  description: 'Bạn duyệt. Windi làm video. Video Kits, giọng đọc tiếng Việt và công cụ hỗ trợ sáng tạo.',
   openGraph: { type: 'website', siteName: 'WindiStudio' },
   icons: {
     icon: '/favicon.png',

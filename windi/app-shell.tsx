@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import {usePathname} from 'next/navigation';
 import { ChevronDown, Heart, LogIn, LogOut, Menu, Plus, Sparkles, User as UserIcon, Wrench, X } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { CommandPalette } from './command-palette';
@@ -11,19 +12,15 @@ import { useToolbox } from './toolbox-context';
 import { useAuth } from './auth-context';
 import { BuyMeACoffeeButton } from './buy-me-a-coffee';
 
-const nav = [
-  { href: '/discover', label: 'Discover' },
-  {
-    label: 'Studio',
-    items: [
-      { href: '/video-kits', label: 'Video Kits' },
-      { href: '/voice-studio', label: 'Voice Studio' },
-    ],
-  },
-  { href: '/news', label: 'News' },
+const nav: {href:string;label:string;items?:{href:string;label:string}[]}[] = [
+  { href: '/video-kits', label: 'Video Kits' },
+  { href: '/voice-studio', label: 'Voice Studio' },
+  { href: '/discover', label: 'Công cụ' },
+  { href: '/news', label: 'Tin tức' },
 ];
 
 export function AppShell({ children }: { children: React.ReactNode }) {
+  const pathname=usePathname();
   const [open, setOpen] = useState(false);
   const [studioMenuOpen, setStudioMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -64,7 +61,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <>
       <header className="site-header">
-        <Link href="/" className="wordmark header-logo-link" aria-label="Windi Studio - The Curated Toolbox for AI Power Users">
+        <Link href="/" className="wordmark header-logo-link" aria-label="Windi Studio - Video Kits và Voice Studio">
           <img
             src="/logo-text.png"
             alt="Windi Studio"
@@ -74,7 +71,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
         <nav aria-label="Điều hướng chính">
           {nav.map((item) => {
-            if ('items' in item) {
+            if (item.items) {
               return (
                 <div className="studio-nav-menu" key={item.label} ref={studioMenuRef}>
                   <button
@@ -98,7 +95,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 </div>
               );
             }
-            return <Link href={item.href} key={item.href}>{item.label}</Link>;
+            return <Link href={item.href} key={item.href} aria-current={pathname===item.href?'page':undefined}>{item.label}</Link>;
           })}
         </nav>
 
@@ -145,6 +142,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                       <small>{user.email}</small>
                     </div>
                     <div className="dropdown-divider" />
+                    <Link href="/account" className="dropdown-menu-item" onClick={() => setUserMenuOpen(false)}><UserIcon size={14}/> Hồ sơ của tôi</Link>
                     <Link
                       href="/toolbox"
                       className="dropdown-menu-item"
@@ -201,7 +199,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </Link>
           )}
           {nav.map((item) => {
-            if ('items' in item) {
+            if (item.items) {
               return (
                 <div className="mobile-studio-nav" key={item.label}>
                   <span>Studio</span>
@@ -213,7 +211,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 </div>
               );
             }
-            return <Link onClick={() => setOpen(false)} href={item.href} key={item.href}>{item.label}</Link>;
+            return <Link onClick={() => setOpen(false)} href={item.href} key={item.href} aria-current={pathname===item.href?'page':undefined}>{item.label}</Link>;
           })}
           {user && (
             <Link onClick={() => setOpen(false)} href="/submit">
@@ -222,6 +220,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           )}
           {user ? (
             <div className="mobile-user-box">
+              <Link href="/account" onClick={() => setOpen(false)}><UserIcon size={14}/> Hồ sơ của tôi</Link>
               <span className="mobile-user-email">👤 {user.email}</span>
               <button
                 type="button"
@@ -248,7 +247,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <PixelLandscape />
         <div>
           <p>
-            <strong>WINDI STUDIO</strong> · The curated toolbox for AI power users.
+            <strong>WINDI STUDIO</strong> · Video Kits · Voice Studio · Công cụ sáng tạo.
           </p>
         </div>
         <nav aria-label="Liên kết cuối trang">

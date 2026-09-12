@@ -6,7 +6,7 @@ export default function Loading() {
       <RetroWindow title="ĐANG TẢI" accent="blue">
         <div className="loading-state">
           <span className="loading-pixel" aria-hidden="true" />
-          <p>Đang tìm công cụ cho bạn…</p>
+          <p>Đang mở Windi Studio…</p>
         </div>
       </RetroWindow>
     </div>

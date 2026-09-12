@@ -1,0 +1,1362 @@
+{
+  "engine": "gemini-watermark-remover@1.0.41",
+  "source": "assets/windi/scene-10.jpg",
+  "sourceHash": "defee39ce814ee9071ed4987cfe9d1b64a945f76a1242f7f9ac48deec6044f5a",
+  "outputHash": "f4e380a538f79ec6c6735ed6d39ea70502b0f315c7a78eb14f03e1bc547fec90",
+  "meta": {
+    "applied": true,
+    "skipReason": null,
+    "size": 48,
+    "position": {
+      "x": 624,
+      "y": 1232,
+      "width": 48,
+      "height": 48
+    },
+    "config": {
+      "logoSize": 48,
+      "marginRight": 96,
+      "marginBottom": 96
+    },
+    "detection": {
+      "adaptiveConfidence": null,
+      "originalSpatialScore": -0.24140395721019672,
+      "originalGradientScore": 0.0766298928663614,
+      "processedSpatialScore": -0.49485178986617273,
+      "processedGradientScore": 0.20432549871700742,
+      "suppressionGain": 0.25344783265597604,
+      "residualVisibility": {
+        "visible": true,
+        "positiveHaloLum": 0,
+        "darkPolarityHaloLum": 0,
+        "darkPolarityHaloThreshold": 1.75,
+        "haloVisibility": -0.9615873483471308,
+        "spatialResidual": 0.49485178986617273,
+        "gradientResidual": 0.20432549871700742,
+        "visiblePositiveHalo": false,
+        "visibleDarkPolarityHalo": false,
+        "visibleGradientResidual": false,
+        "visibleSpatialResidual": true,
+        "halo": {
+          "bandCount": 36,
+          "outerCount": 2253,
+          "bandMeanLum": 12.43226666666667,
+          "outerMeanLum": 37.25275730137573,
+          "bandStdLum": 4.2562504944036155,
+          "outerStdLum": 25.811997919245627,
+          "deltaLum": -24.82049063470906,
+          "positiveDeltaLum": 0,
+          "visibility": -0.9615873483471308
+        },
+        "rawVisible": true,
+        "calibratedVisible": true,
+        "metricRisk": null,
+        "nearBlackRatio": 0.041666666666666664,
+        "newlyClippedRatio": 0.03819444444444445,
+        "spatialProminence": null,
+        "spatialLocalization": null,
+        "rawSpatialScore": -0.49485178986617273,
+        "rawGradientScore": 0.20432549871700742
+      }
+    },
+    "templateWarp": null,
+    "alphaGain": 0.85,
+    "passCount": 2,
+    "attemptedPassCount": 2,
+    "passStopReason": "located-aggressive-edge-cleanup",
+    "passes": [
+      {
+        "index": 1,
+        "beforeSpatialScore": -0.24140395721019672,
+        "beforeGradientScore": 0.0766298928663614,
+        "afterSpatialScore": -0.6403199370782986,
+        "afterGradientScore": 0.5420373040889395,
+        "improvement": -0.3989159798681019,
+        "gradientDelta": 0.46540741122257806,
+        "nearBlackRatio": 0.3667534722222222
+      },
+      {
+        "index": 2,
+        "beforeSpatialScore": -0.6403199370782986,
+        "beforeGradientScore": 0.5420373040889395,
+        "afterSpatialScore": -0.49485178986617273,
+        "afterGradientScore": 0.20432549871700742,
+        "improvement": 0.14546814721212586,
+        "gradientDelta": -0.337711805371932,
+        "nearBlackRatio": 0.041666666666666664
+      }
+    ],
+    "source": "standard+catalog+located-aggressive",
+    "decisionTier": "validated-match",
+    "subpixelShift": null,
+    "selectionDebug": {
+      "candidateSource": "standard+catalog",
+      "initialConfig": {
+        "logoSize": 48,
+        "marginRight": 32,
+        "marginBottom": 32
+      },
+      "initialPosition": {
+        "x": 688,
+        "y": 1296,
+        "width": 48,
+        "height": 48
+      },
+      "finalConfig": {
+        "logoSize": 48,
+        "marginRight": 96,
+        "marginBottom": 96
+      },
+      "finalPosition": {
+        "x": 624,
+        "y": 1232,
+        "width": 48,
+        "height": 48
+      },
+      "sourcePriority": 1,
+      "alphaPriorityIndex": 1,
+      "rankingKey": [
+        1,
+        -1,
+        1,
+        0.965542,
+        1,
+        1.18102
+      ],
+      "earlyAccept": false,
+      "originalEvidence": {
+        "tier": "weak",
+        "spatial": -0.24140395721019672,
+        "gradient": 0.0766298928663614,
+        "score": -0.1801000429171076
+      },
+      "residual": {
+        "cleared": false,
+        "spatialResidual": 0.6403199370782986,
+        "gradientResidual": 0.5420373040889395,
+        "suppressionGain": 0.3989159798681019,
+        "artifactCost": 0,
+        "score": 0.9655423195316623
+      },
+      "damage": {
+        "safe": false,
+        "penalty": 1.181019691271032,
+        "reason": "near-black",
+        "nearBlackIncrease": 0.3667534722222222,
+        "texturePenalty": 0.08075927460436559,
+        "newlyClippedRatio": 0,
+        "halo": null
+      },
+      "texturePenalty": 0.08075927460436559,
+      "tooDark": true,
+      "tooFlat": false,
+      "hardReject": false,
+      "usedCatalogVariant": true,
+      "usedSizeJitter": false,
+      "usedLocalShift": false,
+      "usedAdaptive": false,
+      "usedPreviewAnchor": false
+    },
+    "alphaAdjustmentStages": [
+      {
+        "stage": "located-aggressive-removal",
+        "fromAlphaGain": 1,
+        "toAlphaGain": 0.85,
+        "beforeSpatialScore": -0.6403199370782986,
+        "beforeGradientScore": 0.5420373040889395,
+        "afterSpatialScore": -0.49485178986617273,
+        "afterGradientScore": 0.20432549871700742,
+        "suppressionGain": 0.25344783265597604,
+        "cost": 1.2718248455803431,
+        "profileExponent": null,
+        "alphaStrategy": "located-aggressive-alpha",
+        "repairStrategy": null
+      }
+    ],
+    "alphaMapSource": null,
+    "decisionPath": {
+      "version": 1,
+      "decision": "accept",
+      "detectionSource": "standard+catalog",
+      "alphaSource": "standard+catalog+located-aggressive",
+      "repairSource": null,
+      "evaluationDecision": "accepted",
+      "blockedGate": null,
+      "riskFlags": [],
+      "detectionCandidate": {
+        "id": "det:48/96/96:624,1232,48,48:standard+catalog",
+        "source": "standard+catalog",
+        "decisionTier": "validated-match",
+        "config": {
+          "logoSize": 48,
+          "marginRight": 96,
+          "marginBottom": 96
+        },
+        "position": {
+          "x": 624,
+          "y": 1232,
+          "width": 48,
+          "height": 48
+        },
+        "alphaMapHint": 48,
+        "polarityHint": "white",
+        "evidence": {
+          "spatialScore": -0.24140395721019672,
+          "gradientScore": 0.0766298928663614,
+          "confidence": null,
+          "productionEvidence": false,
+          "originalEvidenceTier": "weak"
+        },
+        "provenance": {
+          "catalogVariant": true,
+          "catalogFamily": "known-current-variant",
+          "catalogSourcePriority": 1,
+          "catalogEvidenceGate": "required"
+        }
+      },
+      "alphaTrial": {
+        "id": "alpha:48/96/96:624,1232,48,48:standard+catalog+located-aggressive:0.85",
+        "detectionId": "det:48/96/96:624,1232,48,48:standard+catalog",
+        "source": "standard+catalog+located-aggressive",
+        "config": {
+          "logoSize": 48,
+          "marginRight": 96,
+          "marginBottom": 96
+        },
+        "position": {
+          "x": 624,
+          "y": 1232,
+          "width": 48,
+          "height": 48
+        },
+        "alphaMapSource": null,
+        "alphaGain": 0.85,
+        "strategy": "located-aggressive-alpha",
+        "migrationStage": "phase1-adapter",
+        "alphaShape": {
+          "profileStages": [],
+          "stages": []
+        },
+        "acceptedStrategies": [
+          {
+            "strategy": "located-aggressive-alpha",
+            "decision": "accept",
+            "alphaGain": 0.85,
+            "repeatCount": 1,
+            "edgeCleanup": true,
+            "beforeSpatialScore": -0.6403199370782986,
+            "beforeGradientScore": 0.5420373040889395,
+            "afterSpatialScore": -0.49485178986617273,
+            "afterGradientScore": 0.20432549871700742,
+            "suppressionGain": 0.25344783265597604,
+            "cost": 1.2718248455803431
+          }
+        ],
+        "rejectedStrategies": [],
+        "scores": {
+          "originalSpatial": -0.24140395721019672,
+          "originalGradient": 0.0766298928663614,
+          "processedSpatial": -0.49485178986617273,
+          "processedGradient": 0.20432549871700742,
+          "suppressionGain": 0.25344783265597604
+        },
+        "gates": {
+          "originalEvidenceAllowed": false,
+          "catalogEvidenceAllowed": true,
+          "darkPolarityCatalogEvidenceAllowed": true,
+          "darkPolarityNearWhiteIncreaseAllowed": true,
+          "outlineLightEvidenceAllowed": true,
+          "outlineDarkEvidenceAllowed": true,
+          "baseValidationAccepted": false,
+          "highRiskNewMarginEvidenceAllowed": true
+        },
+        "damage": {
+          "safe": false,
+          "penalty": 0.4305555555555556,
+          "reason": "clipping",
+          "nearBlackIncrease": 0.041666666666666664,
+          "texturePenalty": 0,
+          "newlyClippedRatio": 0.03819444444444445,
+          "halo": {
+            "bandCount": 36,
+            "outerCount": 2253,
+            "bandMeanLum": 12.43226666666667,
+            "outerMeanLum": 37.25275730137573,
+            "bandStdLum": 4.2562504944036155,
+            "outerStdLum": 25.811997919245627,
+            "deltaLum": -24.82049063470906,
+            "positiveDeltaLum": 0,
+            "visibility": -0.9615873483471308
+          }
+        },
+        "residual": {
+          "cleared": false,
+          "spatial": -0.49485178986617273,
+          "gradient": 0.20432549871700742,
+          "spatialResidual": 0.49485178986617273,
+          "gradientResidual": 0.20432549871700742,
+          "suppressionGain": 0.25344783265597604,
+          "artifactCost": 0.4460883202425061,
+          "score": 0.7289691691570037
+        },
+        "provenance": {
+          "catalogVariant": true,
+          "catalogFamily": "known-current-variant",
+          "catalogSourcePriority": 1,
+          "catalogEvidenceGate": "required"
+        },
+        "artifacts": {
+          "spatialScore": -0.49485178986617273,
+          "gradientScore": 0.20432549871700742,
+          "recomposeError": 0.1235146856949453,
+          "weightedRecomposeError": 0.050929146007635366,
+          "diffTemplateCorrelation": 0.8088246961626541,
+          "signedDiffTemplateCorrelation": 0.7758239386614215,
+          "diffGradientCorrelation": 0.5305121434944124,
+          "candidateGradientCorrelation": 0.2043255012461756,
+          "negativeDiffRatio": 0.016927083333333332,
+          "oppositeDirectionDiffRatio": 0.016927083333333332,
+          "newlyClippedRatio": 0.03819444444444445,
+          "newlyBlackClippedRatio": 0.03819444444444445,
+          "newlyWhiteClippedRatio": 0,
+          "alphaPolarity": 1,
+          "oppositeDirectionHaloLum": 24.738162959183324,
+          "halo": {
+            "bandCount": 56,
+            "outerCount": 1960,
+            "bandMeanLum": 12.607614285714288,
+            "outerMeanLum": 37.34577724489761,
+            "bandStdLum": 12.01301354703408,
+            "outerStdLum": 25.963505515616454,
+            "deltaLum": -24.738162959183324,
+            "positiveDeltaLum": 0,
+            "visibility": -0.9528051959048398
+          },
+          "visualArtifactCost": 0.4460883202425061
+        }
+      },
+      "repairTrial": {
+        "id": "alpha:48/96/96:624,1232,48,48:standard+catalog+located-aggressive:0.85:repair:none",
+        "alphaTrialId": "alpha:48/96/96:624,1232,48,48:standard+catalog+located-aggressive:0.85",
+        "source": null,
+        "repairType": "none",
+        "applied": false,
+        "params": null,
+        "scores": null,
+        "artifacts": null,
+        "gates": null,
+        "provenance": null
+      },
+      "evaluation": {
+        "pathType": "standard",
+        "eligible": false,
+        "blockedGate": null,
+        "gates": {
+          "originalEvidenceAllowed": false,
+          "catalogEvidenceAllowed": true,
+          "darkPolarityCatalogEvidenceAllowed": true,
+          "darkPolarityNearWhiteIncreaseAllowed": true,
+          "outlineLightEvidenceAllowed": true,
+          "outlineDarkEvidenceAllowed": true,
+          "baseValidationAccepted": false,
+          "highRiskNewMarginEvidenceAllowed": true
+        },
+        "riskFlags": [],
+        "baseline": {
+          "spatialResidual": 0.24140395721019672,
+          "gradientResidual": 0.0766298928663614
+        },
+        "candidate": {
+          "spatialResidual": 0.6403199370782986,
+          "gradientResidual": 0.5420373040889395,
+          "improvement": 0.3989159798681019
+        },
+        "postResidual": {
+          "cleared": false,
+          "safeDefaultAlphaNewMargin": false
+        },
+        "damage": {
+          "safe": false,
+          "penalty": 1.181019691271032
+        },
+        "pathId": "det:48/96/96:624,1232,48,48:standard+catalog->alpha:48/96/96:624,1232,48,48:standard+catalog+located-aggressive:0.85->alpha:48/96/96:624,1232,48,48:standard+catalog+located-aggressive:0.85:repair:none",
+        "detectionId": "det:48/96/96:624,1232,48,48:standard+catalog",
+        "alphaTrialId": "alpha:48/96/96:624,1232,48,48:standard+catalog+located-aggressive:0.85",
+        "repairTrialId": "alpha:48/96/96:624,1232,48,48:standard+catalog+located-aggressive:0.85:repair:none",
+        "decision": "accept",
+        "finalScores": {
+          "originalSpatial": -0.24140395721019672,
+          "originalGradient": 0.0766298928663614,
+          "processedSpatial": -0.49485178986617273,
+          "processedGradient": 0.20432549871700742,
+          "suppressionGain": 0.25344783265597604
+        },
+        "explanation": "selected trial accepted by current production path"
+      }
+    },
+    "bestEffort": true,
+    "retryRecommended": false,
+    "qualityStatus": "mixed",
+    "selectionConfidence": 0.003936728815603156,
+    "selectedCandidate": {
+      "id": "candidate-1-624-1232-48-1",
+      "family": "standard",
+      "rank": 1,
+      "source": "standard+catalog+located-aggressive",
+      "config": {
+        "logoSize": 48,
+        "marginRight": 96,
+        "marginBottom": 96
+      },
+      "position": {
+        "x": 624,
+        "y": 1232,
+        "width": 48,
+        "height": 48
+      },
+      "alphaProfile": "default",
+      "polarity": "light"
+    },
+    "qualitySignals": {
+      "evidenceLoss": 0.9616850535668193,
+      "residualLoss": 0.6543254987170074,
+      "damageLoss": 0.4583333333333333,
+      "rawDamageLoss": 0.4583333333333333,
+      "residualVisible": true,
+      "damageWarning": true,
+      "rawDamageWarning": true,
+      "damageRiskResolution": null,
+      "darkBackgroundSupportConvergence": null,
+      "qualityStatus": "mixed",
+      "imperfections": {
+        "detected": true,
+        "severity": "high",
+        "score": 2.7491766103676265,
+        "types": [
+          "spatial-residual",
+          "gradient-residual"
+        ],
+        "components": {
+          "spatial-residual": {
+            "value": 0.49485178986617273,
+            "threshold": 0.18,
+            "ratio": 2.7491766103676265
+          },
+          "gradient-residual": {
+            "value": 0.20432549871700742,
+            "threshold": 0.22,
+            "ratio": 0.9287522668954883
+          },
+          "positive-halo": {
+            "value": 0,
+            "threshold": 6,
+            "ratio": 0
+          },
+          "dark-polarity-halo": {
+            "value": 0,
+            "threshold": 1.75,
+            "ratio": 0
+          }
+        }
+      },
+      "original": {
+        "spatialScore": -0.24140395721019672,
+        "gradientScore": 0.0766298928663614
+      },
+      "final": {
+        "spatialScore": -0.49485178986617273,
+        "gradientScore": 0.20432549871700742
+      },
+      "visibility": {
+        "visible": true,
+        "positiveHaloLum": 0,
+        "darkPolarityHaloLum": 0,
+        "darkPolarityHaloThreshold": 1.75,
+        "haloVisibility": -0.9615873483471308,
+        "spatialResidual": 0.49485178986617273,
+        "gradientResidual": 0.20432549871700742,
+        "visiblePositiveHalo": false,
+        "visibleDarkPolarityHalo": false,
+        "visibleGradientResidual": false,
+        "visibleSpatialResidual": true,
+        "halo": {
+          "bandCount": 36,
+          "outerCount": 2253,
+          "bandMeanLum": 12.43226666666667,
+          "outerMeanLum": 37.25275730137573,
+          "bandStdLum": 4.2562504944036155,
+          "outerStdLum": 25.811997919245627,
+          "deltaLum": -24.82049063470906,
+          "positiveDeltaLum": 0,
+          "visibility": -0.9615873483471308
+        },
+        "rawVisible": true,
+        "calibratedVisible": true,
+        "metricRisk": null,
+        "nearBlackRatio": 0.041666666666666664,
+        "newlyClippedRatio": 0.03819444444444445,
+        "spatialProminence": null,
+        "spatialLocalization": null,
+        "rawSpatialScore": -0.49485178986617273,
+        "rawGradientScore": 0.20432549871700742
+      },
+      "referenceVisibility": null,
+      "artifacts": {
+        "spatialScore": -0.49485178986617273,
+        "gradientScore": 0.20432549871700742,
+        "recomposeError": 0.1235146856949453,
+        "weightedRecomposeError": 0.050929146007635366,
+        "diffTemplateCorrelation": 0.8088246961626541,
+        "signedDiffTemplateCorrelation": 0.7758239386614215,
+        "diffGradientCorrelation": 0.5305121434944124,
+        "candidateGradientCorrelation": 0.2043255012461756,
+        "negativeDiffRatio": 0.016927083333333332,
+        "oppositeDirectionDiffRatio": 0.016927083333333332,
+        "newlyClippedRatio": 0.03819444444444445,
+        "newlyBlackClippedRatio": 0.03819444444444445,
+        "newlyWhiteClippedRatio": 0,
+        "alphaPolarity": 1,
+        "oppositeDirectionHaloLum": 24.738162959183324,
+        "halo": {
+          "bandCount": 56,
+          "outerCount": 1960,
+          "bandMeanLum": 12.607614285714288,
+          "outerMeanLum": 37.34577724489761,
+          "bandStdLum": 12.01301354703408,
+          "outerStdLum": 25.963505515616454,
+          "deltaLum": -24.738162959183324,
+          "positiveDeltaLum": 0,
+          "visibility": -0.9528051959048398
+        },
+        "visualArtifactCost": 0.4460883202425061
+      },
+      "texture": {
+        "referenceTextureStats": {
+          "meanLum": 24.90028333333252,
+          "stdLum": 0.4309795480973378
+        },
+        "candidateTextureStats": {
+          "meanLum": 27.025739322916266,
+          "stdLum": 24.129595503985122
+        },
+        "darknessPenalty": 0,
+        "flatnessPenalty": 0,
+        "darknessVisibility": 0,
+        "texturePenalty": 0,
+        "tooDark": false,
+        "tooFlat": false,
+        "visibleDarkHole": false,
+        "hardReject": false
+      },
+      "originalNearBlackRatio": 0,
+      "candidateNearBlackRatio": 0.041666666666666664,
+      "nearBlackIncrease": 0.041666666666666664,
+      "originalNearWhiteRatio": 0,
+      "candidateNearWhiteRatio": 0,
+      "nearWhiteIncrease": 0,
+      "residualComponents": {
+        "spatial": 1,
+        "gradient": 0.5837871391914498,
+        "halo": 0
+      },
+      "damageComponents": {
+        "nearBlack": 0.8333333333333333,
+        "nearWhite": 0,
+        "texture": 0,
+        "clipped": 1
+      }
+    },
+    "candidateSummaries": [
+      {
+        "id": "candidate-1-624-1232-48-1",
+        "family": "standard",
+        "rank": 1,
+        "valid": true,
+        "finalScore": 1.042903301568523,
+        "qualityStatus": "mixed",
+        "qualitySignals": {
+          "evidenceLoss": 0.9616850535668193,
+          "residualLoss": 0.6543254987170074,
+          "damageLoss": 0.4583333333333333,
+          "rawDamageLoss": 0.4583333333333333,
+          "residualVisible": true,
+          "damageWarning": true,
+          "rawDamageWarning": true,
+          "damageRiskResolution": null,
+          "darkBackgroundSupportConvergence": null,
+          "qualityStatus": "mixed",
+          "imperfections": {
+            "detected": true,
+            "severity": "high",
+            "score": 2.7491766103676265,
+            "types": [
+              "spatial-residual",
+              "gradient-residual"
+            ],
+            "components": {
+              "spatial-residual": {
+                "value": 0.49485178986617273,
+                "threshold": 0.18,
+                "ratio": 2.7491766103676265
+              },
+              "gradient-residual": {
+                "value": 0.20432549871700742,
+                "threshold": 0.22,
+                "ratio": 0.9287522668954883
+              },
+              "positive-halo": {
+                "value": 0,
+                "threshold": 6,
+                "ratio": 0
+              },
+              "dark-polarity-halo": {
+                "value": 0,
+                "threshold": 1.75,
+                "ratio": 0
+              }
+            }
+          },
+          "original": {
+            "spatialScore": -0.24140395721019672,
+            "gradientScore": 0.0766298928663614
+          },
+          "final": {
+            "spatialScore": -0.49485178986617273,
+            "gradientScore": 0.20432549871700742
+          },
+          "visibility": {
+            "visible": true,
+            "positiveHaloLum": 0,
+            "darkPolarityHaloLum": 0,
+            "darkPolarityHaloThreshold": 1.75,
+            "haloVisibility": -0.9615873483471308,
+            "spatialResidual": 0.49485178986617273,
+            "gradientResidual": 0.20432549871700742,
+            "visiblePositiveHalo": false,
+            "visibleDarkPolarityHalo": false,
+            "visibleGradientResidual": false,
+            "visibleSpatialResidual": true,
+            "halo": {
+              "bandCount": 36,
+              "outerCount": 2253,
+              "bandMeanLum": 12.43226666666667,
+              "outerMeanLum": 37.25275730137573,
+              "bandStdLum": 4.2562504944036155,
+              "outerStdLum": 25.811997919245627,
+              "deltaLum": -24.82049063470906,
+              "positiveDeltaLum": 0,
+              "visibility": -0.9615873483471308
+            },
+            "rawVisible": true,
+            "calibratedVisible": true,
+            "metricRisk": null,
+            "nearBlackRatio": 0.041666666666666664,
+            "newlyClippedRatio": 0.03819444444444445,
+            "spatialProminence": null,
+            "spatialLocalization": null,
+            "rawSpatialScore": -0.49485178986617273,
+            "rawGradientScore": 0.20432549871700742
+          },
+          "referenceVisibility": null,
+          "artifacts": {
+            "spatialScore": -0.49485178986617273,
+            "gradientScore": 0.20432549871700742,
+            "recomposeError": 0.1235146856949453,
+            "weightedRecomposeError": 0.050929146007635366,
+            "diffTemplateCorrelation": 0.8088246961626541,
+            "signedDiffTemplateCorrelation": 0.7758239386614215,
+            "diffGradientCorrelation": 0.5305121434944124,
+            "candidateGradientCorrelation": 0.2043255012461756,
+            "negativeDiffRatio": 0.016927083333333332,
+            "oppositeDirectionDiffRatio": 0.016927083333333332,
+            "newlyClippedRatio": 0.03819444444444445,
+            "newlyBlackClippedRatio": 0.03819444444444445,
+            "newlyWhiteClippedRatio": 0,
+            "alphaPolarity": 1,
+            "oppositeDirectionHaloLum": 24.738162959183324,
+            "halo": {
+              "bandCount": 56,
+              "outerCount": 1960,
+              "bandMeanLum": 12.607614285714288,
+              "outerMeanLum": 37.34577724489761,
+              "bandStdLum": 12.01301354703408,
+              "outerStdLum": 25.963505515616454,
+              "deltaLum": -24.738162959183324,
+              "positiveDeltaLum": 0,
+              "visibility": -0.9528051959048398
+            },
+            "visualArtifactCost": 0.4460883202425061
+          },
+          "texture": {
+            "referenceTextureStats": {
+              "meanLum": 24.90028333333252,
+              "stdLum": 0.4309795480973378
+            },
+            "candidateTextureStats": {
+              "meanLum": 27.025739322916266,
+              "stdLum": 24.129595503985122
+            },
+            "darknessPenalty": 0,
+            "flatnessPenalty": 0,
+            "darknessVisibility": 0,
+            "texturePenalty": 0,
+            "tooDark": false,
+            "tooFlat": false,
+            "visibleDarkHole": false,
+            "hardReject": false
+          },
+          "originalNearBlackRatio": 0,
+          "candidateNearBlackRatio": 0.041666666666666664,
+          "nearBlackIncrease": 0.041666666666666664,
+          "originalNearWhiteRatio": 0,
+          "candidateNearWhiteRatio": 0,
+          "nearWhiteIncrease": 0,
+          "residualComponents": {
+            "spatial": 1,
+            "gradient": 0.5837871391914498,
+            "halo": 0
+          },
+          "damageComponents": {
+            "nearBlack": 0.8333333333333333,
+            "nearWhite": 0,
+            "texture": 0,
+            "clipped": 1
+          }
+        },
+        "error": null
+      },
+      {
+        "id": "candidate-2-636-1244-36-1",
+        "family": "alpha",
+        "rank": 2,
+        "valid": true,
+        "finalScore": 1.0470251556695085,
+        "qualityStatus": "mixed",
+        "qualitySignals": {
+          "evidenceLoss": 0.8937821908017707,
+          "residualLoss": 0.8,
+          "damageLoss": 0.3368055555555556,
+          "rawDamageLoss": 0.3368055555555556,
+          "residualVisible": true,
+          "damageWarning": true,
+          "rawDamageWarning": true,
+          "damageRiskResolution": null,
+          "darkBackgroundSupportConvergence": null,
+          "qualityStatus": "mixed",
+          "imperfections": {
+            "detected": true,
+            "severity": "high",
+            "score": 2.80950390651277,
+            "types": [
+              "spatial-residual",
+              "gradient-residual"
+            ],
+            "components": {
+              "spatial-residual": {
+                "value": 0.5057107031722986,
+                "threshold": 0.18,
+                "ratio": 2.80950390651277
+              },
+              "gradient-residual": {
+                "value": 0.45647884420331797,
+                "threshold": 0.22,
+                "ratio": 2.074903837287809
+              },
+              "positive-halo": {
+                "value": 0,
+                "threshold": 6,
+                "ratio": 0
+              },
+              "dark-polarity-halo": {
+                "value": 0,
+                "threshold": 1.75,
+                "ratio": 0
+              }
+            }
+          },
+          "original": {
+            "spatialScore": -0.2756444749927508,
+            "gradientScore": 0.21243561839645866
+          },
+          "final": {
+            "spatialScore": -0.5057107031722986,
+            "gradientScore": 0.45647884420331797
+          },
+          "visibility": {
+            "visible": true,
+            "positiveHaloLum": 0,
+            "darkPolarityHaloLum": 0,
+            "darkPolarityHaloThreshold": 1.75,
+            "haloVisibility": -1.0452591296410856,
+            "spatialResidual": 0.5057107031722986,
+            "gradientResidual": 0.45647884420331797,
+            "visiblePositiveHalo": false,
+            "visibleDarkPolarityHalo": false,
+            "visibleGradientResidual": true,
+            "visibleSpatialResidual": true,
+            "halo": {
+              "bandCount": 448,
+              "outerCount": 1427,
+              "bandMeanLum": 12.105304464285686,
+              "outerMeanLum": 43.156193412753844,
+              "bandStdLum": 12.734219978459715,
+              "outerStdLum": 29.706403003751053,
+              "deltaLum": -31.050888948468156,
+              "positiveDeltaLum": 0,
+              "visibility": -1.0452591296410856
+            },
+            "rawVisible": true,
+            "calibratedVisible": true,
+            "metricRisk": null,
+            "nearBlackRatio": 0.08333333333333333,
+            "newlyClippedRatio": 0.006944444444444444,
+            "spatialProminence": null,
+            "spatialLocalization": null,
+            "rawSpatialScore": -0.5057107031722986,
+            "rawGradientScore": 0.45647884420331797
+          },
+          "referenceVisibility": null,
+          "artifacts": {
+            "spatialScore": -0.5057107031722986,
+            "gradientScore": 0.45647884420331797,
+            "recomposeError": 0.06513284711910099,
+            "weightedRecomposeError": 0.015968945149256984,
+            "diffTemplateCorrelation": 0.8249340164175974,
+            "signedDiffTemplateCorrelation": 0.7938964159201916,
+            "diffGradientCorrelation": 0.6786364980317704,
+            "candidateGradientCorrelation": 0.45647883896368197,
+            "negativeDiffRatio": 0.02854938271604938,
+            "oppositeDirectionDiffRatio": 0.02854938271604938,
+            "newlyClippedRatio": 0.006944444444444444,
+            "newlyBlackClippedRatio": 0.006944444444444444,
+            "newlyWhiteClippedRatio": 0,
+            "alphaPolarity": 1,
+            "oppositeDirectionHaloLum": 31.116622790758516,
+            "halo": {
+              "bandCount": 460,
+              "outerCount": 1163,
+              "bandMeanLum": 12.080799565217358,
+              "outerMeanLum": 43.197422355975874,
+              "bandStdLum": 12.710570983463061,
+              "outerStdLum": 29.843316918661472,
+              "deltaLum": -31.116622790758516,
+              "positiveDeltaLum": 0,
+              "visibility": -1.0426663656579283
+            },
+            "visualArtifactCost": 0.710845233381649
+          },
+          "texture": {
+            "referenceTextureStats": {
+              "meanLum": 24.976559259259734,
+              "stdLum": 0.39024021004695825
+            },
+            "candidateTextureStats": {
+              "meanLum": 32.04780694444442,
+              "stdLum": 29.770472258765405
+            },
+            "darknessPenalty": 0,
+            "flatnessPenalty": 0,
+            "darknessVisibility": 0,
+            "texturePenalty": 0,
+            "tooDark": false,
+            "tooFlat": false,
+            "visibleDarkHole": false,
+            "hardReject": false
+          },
+          "originalNearBlackRatio": 0,
+          "candidateNearBlackRatio": 0.08333333333333333,
+          "nearBlackIncrease": 0.08333333333333333,
+          "originalNearWhiteRatio": 0,
+          "candidateNearWhiteRatio": 0,
+          "nearWhiteIncrease": 0,
+          "residualComponents": {
+            "spatial": 1,
+            "gradient": 1,
+            "halo": 0
+          },
+          "damageComponents": {
+            "nearBlack": 1,
+            "nearWhite": 0,
+            "texture": 0,
+            "clipped": 0.3472222222222222
+          }
+        },
+        "error": null
+      },
+      {
+        "id": "candidate-0-688-1296-48-1",
+        "family": "standard",
+        "rank": 3,
+        "valid": true,
+        "finalScore": 1.1498326466432665,
+        "qualityStatus": "mixed",
+        "qualitySignals": {
+          "evidenceLoss": 0.966908324890958,
+          "residualLoss": 0.8,
+          "damageLoss": 0.6456589317257253,
+          "rawDamageLoss": 0.6456589317257253,
+          "residualVisible": true,
+          "damageWarning": true,
+          "rawDamageWarning": true,
+          "damageRiskResolution": null,
+          "darkBackgroundSupportConvergence": null,
+          "qualityStatus": "mixed",
+          "imperfections": {
+            "detected": true,
+            "severity": "high",
+            "score": 3.5601642303305385,
+            "types": [
+              "spatial-residual",
+              "gradient-residual"
+            ],
+            "components": {
+              "spatial-residual": {
+                "value": 0.6408295614594969,
+                "threshold": 0.18,
+                "ratio": 3.5601642303305385
+              },
+              "gradient-residual": {
+                "value": 0.5292164885729455,
+                "threshold": 0.22,
+                "ratio": 2.4055294935133884
+              },
+              "positive-halo": {
+                "value": 0,
+                "threshold": 6,
+                "ratio": 0
+              },
+              "dark-polarity-halo": {
+                "value": 0,
+                "threshold": 1.75,
+                "ratio": 0
+              }
+            }
+          },
+          "original": {
+            "spatialScore": 0.030602255145662123,
+            "gradientScore": 0.035581095072421805
+          },
+          "final": {
+            "spatialScore": -0.6408295614594969,
+            "gradientScore": 0.5292164885729455
+          },
+          "visibility": {
+            "visible": true,
+            "positiveHaloLum": 0,
+            "darkPolarityHaloLum": 0,
+            "darkPolarityHaloThreshold": 1.75,
+            "haloVisibility": -1.6370680359717469,
+            "spatialResidual": 0.6408295614594969,
+            "gradientResidual": 0.5292164885729455,
+            "visiblePositiveHalo": false,
+            "visibleDarkPolarityHalo": false,
+            "visibleGradientResidual": true,
+            "visibleSpatialResidual": true,
+            "halo": {
+              "bandCount": 36,
+              "outerCount": 2253,
+              "bandMeanLum": 9.731316666666665,
+              "outerMeanLum": 23.137561473590925,
+              "bandStdLum": 3.5909135827267002,
+              "outerStdLum": 8.189179992734053,
+              "deltaLum": -13.40624480692426,
+              "positiveDeltaLum": 0,
+              "visibility": -1.6370680359717469
+            },
+            "rawVisible": true,
+            "calibratedVisible": true,
+            "metricRisk": null,
+            "nearBlackRatio": 0.0842013888888889,
+            "newlyClippedRatio": 0.041666666666666664,
+            "spatialProminence": null,
+            "spatialLocalization": null,
+            "rawSpatialScore": -0.6408295614594969,
+            "rawGradientScore": 0.5292164885729455
+          },
+          "referenceVisibility": null,
+          "artifacts": {
+            "spatialScore": -0.6408295614594969,
+            "gradientScore": 0.5292164885729455,
+            "recomposeError": 0.15148184496433903,
+            "weightedRecomposeError": 0.0733073030518649,
+            "diffTemplateCorrelation": 0.7785828971426497,
+            "signedDiffTemplateCorrelation": 0.7697221575111897,
+            "diffGradientCorrelation": 0.46217350687435105,
+            "candidateGradientCorrelation": 0.5292164885729455,
+            "negativeDiffRatio": 0.009982638888888888,
+            "oppositeDirectionDiffRatio": 0.009982638888888888,
+            "newlyClippedRatio": 0.041666666666666664,
+            "newlyBlackClippedRatio": 0.041666666666666664,
+            "newlyWhiteClippedRatio": 0,
+            "alphaPolarity": 1,
+            "oppositeDirectionHaloLum": 15.218427448979842,
+            "halo": {
+              "bandCount": 56,
+              "outerCount": 1960,
+              "bandMeanLum": 7.941482142857141,
+              "outerMeanLum": 23.159909591836982,
+              "bandStdLum": 3.878878497485141,
+              "outerStdLum": 8.2089432403445,
+              "deltaLum": -15.218427448979842,
+              "positiveDeltaLum": 0,
+              "visibility": -1.8538838682896266
+            },
+            "visualArtifactCost": 0.7711309220670723
+          },
+          "texture": {
+            "referenceTextureStats": {
+              "meanLum": 26.43296675347127,
+              "stdLum": 8.258117173877292
+            },
+            "candidateTextureStats": {
+              "meanLum": 17.732571354166794,
+              "stdLum": 10.213380900679107
+            },
+            "darknessPenalty": 0.29131786345145055,
+            "flatnessPenalty": 0,
+            "darknessVisibility": 0.9324638095064763,
+            "texturePenalty": 0.5826357269029011,
+            "tooDark": true,
+            "tooFlat": false,
+            "visibleDarkHole": false,
+            "hardReject": false
+          },
+          "originalNearBlackRatio": 0,
+          "candidateNearBlackRatio": 0.0842013888888889,
+          "nearBlackIncrease": 0.0842013888888889,
+          "originalNearWhiteRatio": 0,
+          "candidateNearWhiteRatio": 0,
+          "nearWhiteIncrease": 0,
+          "residualComponents": {
+            "spatial": 1,
+            "gradient": 1,
+            "halo": 0
+          },
+          "damageComponents": {
+            "nearBlack": 1,
+            "nearWhite": 0,
+            "texture": 0.5826357269029011,
+            "clipped": 1
+          }
+        },
+        "error": null
+      },
+      {
+        "id": "candidate-1001-645-1253-53-1",
+        "family": "geometry",
+        "rank": 4,
+        "valid": true,
+        "finalScore": 0.6239324627842987,
+        "qualityStatus": "mixed",
+        "qualitySignals": {
+          "evidenceLoss": 0.2847994025255205,
+          "residualLoss": 0.6351643087280621,
+          "damageLoss": 0.6407477936365666,
+          "rawDamageLoss": 0.6407477936365666,
+          "residualVisible": true,
+          "damageWarning": true,
+          "rawDamageWarning": true,
+          "damageRiskResolution": null,
+          "darkBackgroundSupportConvergence": null,
+          "qualityStatus": "mixed",
+          "imperfections": {
+            "detected": true,
+            "severity": "high",
+            "score": 3.800626368145185,
+            "types": [
+              "spatial-residual",
+              "gradient-residual"
+            ],
+            "components": {
+              "spatial-residual": {
+                "value": 0.6841127462661333,
+                "threshold": 0.18,
+                "ratio": 3.800626368145185
+              },
+              "gradient-residual": {
+                "value": 0.18516430872806208,
+                "threshold": 0.22,
+                "ratio": 0.8416559487639186
+              },
+              "positive-halo": {
+                "value": 0,
+                "threshold": 6,
+                "ratio": 0
+              },
+              "dark-polarity-halo": {
+                "value": 0,
+                "threshold": 1.75,
+                "ratio": 0
+              }
+            }
+          },
+          "original": {
+            "spatialScore": 0.8959725191672353,
+            "gradientScore": 0.5344286757817236
+          },
+          "final": {
+            "spatialScore": -0.6841127462661333,
+            "gradientScore": 0.18516430872806208
+          },
+          "visibility": {
+            "visible": true,
+            "positiveHaloLum": 0,
+            "darkPolarityHaloLum": 0,
+            "darkPolarityHaloThreshold": 1.75,
+            "haloVisibility": -4.250895230506633,
+            "spatialResidual": 0.6841127462661333,
+            "gradientResidual": 0.18516430872806208,
+            "visiblePositiveHalo": false,
+            "visibleDarkPolarityHalo": false,
+            "visibleGradientResidual": false,
+            "visibleSpatialResidual": true,
+            "halo": {
+              "bandCount": 48,
+              "outerCount": 2121,
+              "bandMeanLum": 7.5057083333333345,
+              "outerMeanLum": 27.015076284770718,
+              "bandStdLum": 1.618923581148037,
+              "outerStdLum": 4.589472780093008,
+              "deltaLum": -19.509367951437383,
+              "positiveDeltaLum": 0,
+              "visibility": -4.250895230506633
+            },
+            "rawVisible": true,
+            "calibratedVisible": true,
+            "metricRisk": null,
+            "nearBlackRatio": 0.09825560697757209,
+            "newlyClippedRatio": 0.09291562833748665,
+            "spatialProminence": null,
+            "spatialLocalization": null,
+            "rawSpatialScore": -0.6841127462661333,
+            "rawGradientScore": 0.18516430872806208
+          },
+          "referenceVisibility": null,
+          "artifacts": {
+            "spatialScore": -0.6841127462661333,
+            "gradientScore": 0.18516430872806208,
+            "recomposeError": 0.24859999181806697,
+            "weightedRecomposeError": 0.22769577727648338,
+            "diffTemplateCorrelation": 0.905780609174311,
+            "signedDiffTemplateCorrelation": 0.9056000946064299,
+            "diffGradientCorrelation": 0.5156311725463167,
+            "candidateGradientCorrelation": 0.21607117172459703,
+            "negativeDiffRatio": 0.000355998576005696,
+            "oppositeDirectionDiffRatio": 0.000355998576005696,
+            "newlyClippedRatio": 0.09291562833748665,
+            "newlyBlackClippedRatio": 0.09291562833748665,
+            "newlyWhiteClippedRatio": 0,
+            "alphaPolarity": 1,
+            "oppositeDirectionHaloLum": 19.932520713837146,
+            "halo": {
+              "bandCount": 68,
+              "outerCount": 1405,
+              "bandMeanLum": 6.945408823529412,
+              "outerMeanLum": 26.87792953736656,
+              "bandStdLum": 1.686716744738416,
+              "outerStdLum": 4.412050582108653,
+              "deltaLum": -19.932520713837146,
+              "positiveDeltaLum": 0,
+              "visibility": -4.517745284849112
+            },
+            "visualArtifactCost": 0.48238039231868735
+          },
+          "texture": {
+            "referenceTextureStats": {
+              "meanLum": 24.92230608757471,
+              "stdLum": 0.5564256870892854
+            },
+            "candidateTextureStats": {
+              "meanLum": 16.906786899252083,
+              "stdLum": 10.58159967016412
+            },
+            "darknessPenalty": 0.2814955872731333,
+            "flatnessPenalty": 0,
+            "darknessVisibility": 7.015519188322628,
+            "texturePenalty": 0.5629911745462666,
+            "tooDark": true,
+            "tooFlat": false,
+            "visibleDarkHole": true,
+            "hardReject": true
+          },
+          "originalNearBlackRatio": 0,
+          "candidateNearBlackRatio": 0.09825560697757209,
+          "nearBlackIncrease": 0.09825560697757209,
+          "originalNearWhiteRatio": 0,
+          "candidateNearWhiteRatio": 0,
+          "nearWhiteIncrease": 0,
+          "residualComponents": {
+            "spatial": 1,
+            "gradient": 0.5290408820801774,
+            "halo": 0
+          },
+          "damageComponents": {
+            "nearBlack": 1,
+            "nearWhite": 0,
+            "texture": 0.5629911745462666,
+            "clipped": 1
+          }
+        },
+        "error": null
+      },
+      {
+        "id": "candidate-3-608-1216-96-1",
+        "family": "standard",
+        "rank": 5,
+        "valid": true,
+        "finalScore": 1.0592676289341156,
+        "qualityStatus": "mixed",
+        "qualitySignals": {
+          "evidenceLoss": 0.9120484019943054,
+          "residualLoss": 0.6775279572958497,
+          "damageLoss": 0.5561580212710764,
+          "rawDamageLoss": 0.5561580212710764,
+          "residualVisible": true,
+          "damageWarning": true,
+          "rawDamageWarning": true,
+          "damageRiskResolution": null,
+          "darkBackgroundSupportConvergence": null,
+          "qualityStatus": "mixed",
+          "imperfections": {
+            "detected": true,
+            "severity": "high",
+            "score": 3.2814340892946534,
+            "types": [
+              "spatial-residual",
+              "gradient-residual"
+            ],
+            "components": {
+              "spatial-residual": {
+                "value": 0.5906581360730376,
+                "threshold": 0.18,
+                "ratio": 3.2814340892946534
+              },
+              "gradient-residual": {
+                "value": 0.22752795729584965,
+                "threshold": 0.22,
+                "ratio": 1.0342179877084074
+              },
+              "positive-halo": {
+                "value": 0,
+                "threshold": 6,
+                "ratio": 0
+              },
+              "dark-polarity-halo": {
+                "value": 0,
+                "threshold": 1.75,
+                "ratio": 0
+              }
+            }
+          },
+          "original": {
+            "spatialScore": 0.17590319601138935,
+            "gradientScore": -0.03142168960662747
+          },
+          "final": {
+            "spatialScore": -0.5906581360730376,
+            "gradientScore": 0.22752795729584965
+          },
+          "visibility": {
+            "visible": true,
+            "positiveHaloLum": 0,
+            "darkPolarityHaloLum": 0,
+            "darkPolarityHaloThreshold": 1.75,
+            "haloVisibility": -1.2193610011050933,
+            "spatialResidual": 0.5906581360730376,
+            "gradientResidual": 0.22752795729584965,
+            "visiblePositiveHalo": false,
+            "visibleDarkPolarityHalo": false,
+            "visibleGradientResidual": true,
+            "visibleSpatialResidual": true,
+            "halo": {
+              "bandCount": 87,
+              "outerCount": 6182,
+              "bandMeanLum": 13.788760919540232,
+              "outerMeanLum": 28.517746133936818,
+              "bandStdLum": 11.771463707299343,
+              "outerStdLum": 12.079265452190016,
+              "deltaLum": -14.728985214396586,
+              "positiveDeltaLum": 0,
+              "visibility": -1.2193610011050933
+            },
+            "rawVisible": true,
+            "calibratedVisible": true,
+            "metricRisk": null,
+            "nearBlackRatio": 0.1567925347222222,
+            "newlyClippedRatio": 0.15104166666666666,
+            "spatialProminence": null,
+            "spatialLocalization": null,
+            "rawSpatialScore": -0.5906581360730376,
+            "rawGradientScore": 0.22752795729584965
+          },
+          "referenceVisibility": null,
+          "artifacts": {
+            "spatialScore": -0.5906581360730376,
+            "gradientScore": 0.22752795729584965,
+            "recomposeError": 0.13504123890797695,
+            "weightedRecomposeError": 0.0654236306495631,
+            "diffTemplateCorrelation": 0.6795566117428224,
+            "signedDiffTemplateCorrelation": 0.6774538577854797,
+            "diffGradientCorrelation": 0.1892762475448423,
+            "candidateGradientCorrelation": 0.22752795729584965,
+            "negativeDiffRatio": 0.003146701388888889,
+            "oppositeDirectionDiffRatio": 0.003146701388888889,
+            "newlyClippedRatio": 0.15104166666666666,
+            "newlyBlackClippedRatio": 0.15104166666666666,
+            "newlyWhiteClippedRatio": 0,
+            "alphaPolarity": 1,
+            "oppositeDirectionHaloLum": 14.551114267330739,
+            "halo": {
+              "bandCount": 127,
+              "outerCount": 3598,
+              "bandMeanLum": 12.81700157480315,
+              "outerMeanLum": 27.36811584213389,
+              "bandStdLum": 13.911390352982993,
+              "outerStdLum": 8.938440128349184,
+              "deltaLum": -14.551114267330739,
+              "positiveDeltaLum": 0,
+              "visibility": -1.6279254610858085
+            },
+            "visualArtifactCost": 0.5089177817167654
+          },
+          "texture": {
+            "referenceTextureStats": {
+              "meanLum": 24.81695937499831,
+              "stdLum": 0.47548052799821694
+            },
+            "candidateTextureStats": {
+              "meanLum": 21.02961671006912,
+              "stdLum": 16.612432918242828
+            },
+            "darknessPenalty": 0.1123160425421528,
+            "flatnessPenalty": 0,
+            "darknessVisibility": 2.787342664929188,
+            "texturePenalty": 0.2246320850843056,
+            "tooDark": true,
+            "tooFlat": false,
+            "visibleDarkHole": true,
+            "hardReject": true
+          },
+          "originalNearBlackRatio": 0,
+          "candidateNearBlackRatio": 0.1567925347222222,
+          "nearBlackIncrease": 0.1567925347222222,
+          "originalNearWhiteRatio": 0,
+          "candidateNearWhiteRatio": 0,
+          "nearWhiteIncrease": 0,
+          "residualComponents": {
+            "spatial": 1,
+            "gradient": 0.6500798779881419,
+            "halo": 0
+          },
+          "damageComponents": {
+            "nearBlack": 1,
+            "nearWhite": 0,
+            "texture": 0.2246320850843056,
+            "clipped": 1
+          }
+        },
+        "error": null
+      }
+    ]
+  }
+}
