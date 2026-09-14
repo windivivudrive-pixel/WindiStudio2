@@ -50,6 +50,7 @@ import {
   type VoiceOrder,
 } from "@/lib/voice/shared";
 import { VoiceApiTokens } from "./voice-api-tokens";
+import { FeedbackToast } from "./feedback-toast";
 
 type Tab = "create" | "voices" | "clone" | "history" | "plans";
 const tabs = [
@@ -398,7 +399,6 @@ function VoiceComparisonShowcase({
 }
 
 export function VoiceStudio() {
-  const [createdVoiceId,setCreatedVoiceId]=useState<string|null>(null);
   const { user, isLoading } = useAuth();
   const [tab, setTab] = useState<Tab>("create");
   const [voices, setVoices] = useState<StudioVoice[]>([
@@ -755,9 +755,8 @@ export function VoiceStudio() {
     form.set("consent", "true");
     form.set("requestKey", cloneKey.current);
     try {
-      const result=await api<{voice_id?:string}>("clone", { method: "POST", body: form });
-      setCreatedVoiceId(result.voice_id||null);
-      setNotice("Đã tạo giọng riêng. Voice ID và nút sao chép nằm trên thẻ giọng bên dưới.");
+      await api<{voice_id?:string}>("clone", { method: "POST", body: form });
+      setNotice("Giọng riêng đã được tạo thành công. Bạn có thể dùng ngay trong Voice Studio hoặc mở mục Giọng của tôi để sao chép Voice ID.");
       setClip(null);
       setCloneName("");
       setCloneAccent("");
@@ -844,9 +843,32 @@ export function VoiceStudio() {
       (gender === "all" || v.gender === gender) &&
       `${v.name} ${v.description}`.toLowerCase().includes(search.toLowerCase()),
   );
+  const todayJobs = (account?.jobs ?? []).filter((job) => {
+    const created = new Date(job.created_at);
+    const today = new Date();
+    return (
+      created.getFullYear() === today.getFullYear() &&
+      created.getMonth() === today.getMonth() &&
+      created.getDate() === today.getDate()
+    );
+  });
+  const dismissNotice = useCallback(() => setNotice(""), []);
 
   return (
     <div className="voice-page">
+      {notice && (
+        <FeedbackToast
+          message={notice}
+          onClose={dismissNotice}
+          title={
+            notice.includes("Thanh toán")
+              ? "Thanh toán thành công"
+              : notice.includes("Giọng riêng")
+                ? "Clone Pro 2.1 đã sẵn sàng"
+                : "Đã hoàn tất"
+          }
+        />
+      )}
       <div className="voice-heading">
         <div>
           <span className="voice-eyebrow">
@@ -1020,21 +1042,15 @@ export function VoiceStudio() {
             {error}
           </div>
         )}
-        {notice && (
-          <div className="voice-success" role="status">
-            <CheckCircle2 size={17} />
-            {notice}
-          </div>
-        )}
-        {createdVoiceId && <div className="voice-success"><VoiceId id={createdVoiceId}/></div>}
         <div
           id="voice-panel"
           role="tabpanel"
           aria-labelledby={`voice-tab-${tab}`}
         >
           {tab === "create" && (
-            <div className="voice-editor-layout">
-              <div className="voice-editor">
+            <>
+              <div className="voice-editor-layout">
+                <div className="voice-editor">
                 <div className="voice-section-heading">
                   <div>
                     <span className="voice-step">01 / NỘI DUNG</span>
@@ -1114,7 +1130,7 @@ export function VoiceStudio() {
                   </p>
                 )}
               </div>
-              <aside className="voice-settings">
+                <aside className="voice-settings">
                 <span className="voice-step">02 / GIỌNG ĐỌC</span>
                 <h2>Chọn chất giọng. Lời thoại dẫn cảm xúc.</h2>
                 <button
@@ -1191,8 +1207,41 @@ export function VoiceStudio() {
                     Tạo giọng clone <ArrowRight size={14} />
                   </button>
                 </div>
-              </aside>
-            </div>
+                </aside>
+              </div>
+              <section className="voice-today" aria-labelledby="voice-today-title">
+                <div className="voice-today-heading">
+                  <div>
+                    <span className="voice-step">BẢN GHI HÔM NAY</span>
+                    <h3 id="voice-today-title">Tất cả đoạn bạn đã tạo hôm nay</h3>
+                  </div>
+                  <span>{todayJobs.length} bản ghi</span>
+                </div>
+                {todayJobs.length ? (
+                  <div className="voice-today-list">
+                    {todayJobs.map((job) => (
+                      <article key={job.id}>
+                        <span className="voice-history-icon"><Music2 size={19} /></span>
+                        <div>
+                          <strong>{job.transcript.slice(0, 100)}{job.transcript.length > 100 ? "…" : ""}</strong>
+                          <small>{job.voice_name} · {new Date(job.created_at).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })} · {formatNumber(job.credits)} credit</small>
+                        </div>
+                        {job.status === "ready" ? (
+                          <div className="voice-today-actions">
+                            <button className="voice-btn" disabled={!!busy} onClick={() => void listen(job.id)}><Play size={15} /> Nghe</button>
+                            <a className="voice-btn" href={`/api/voice/audio?id=${job.id}&download=1`} download="windi-voice.mp3" target="_blank" rel="noreferrer"><ArrowDownToLine size={15} /> Tải MP3</a>
+                          </div>
+                        ) : (
+                          <span className={`voice-job-status voice-job-${job.status}`}>{statusName(job.status)}</span>
+                        )}
+                      </article>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="voice-today-empty">Các bản ghi tạo trong hôm nay sẽ xuất hiện tại đây. Lịch sử được giữ tối đa 7 ngày.</p>
+                )}
+              </section>
+            </>
           )}
           {tab === "voices" && (
             <section className="voice-tab-body">
@@ -1613,7 +1662,7 @@ export function VoiceStudio() {
                 <div>
                   <span className="voice-step">YOUR AUDIO SHELF</span>
                   <h2>Những câu chuyện đã thành tiếng.</h2>
-                  <p>50 bản ghi gần nhất. Nghe lại và tải về khi bạn cần.</p>
+                  <p>Nghe lại và tải về trong 7 ngày. Sau đó bản ghi được xóa tự động để bảo vệ dung lượng.</p>
                 </div>
                 <button className="voice-btn" onClick={() => void refresh()}>
                   <RefreshCw size={16} />
@@ -1665,7 +1714,7 @@ export function VoiceStudio() {
                 </div>
               )}
               <p className="voice-hint">
-                Yêu cầu chờ đối soát vẫn tạm giữ credit.{" "}
+                Bản ghi âm, timestamp và nội dung sẽ được xóa sau 7 ngày. Yêu cầu chờ đối soát vẫn tạm giữ credit.{" "}
                 <Link href="/support">Liên hệ hỗ trợ</Link> nếu trạng thái chưa
                 được cập nhật.
               </p>

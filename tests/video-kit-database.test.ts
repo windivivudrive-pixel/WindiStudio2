@@ -15,10 +15,13 @@ beforeAll(async()=>{
  alter default privileges in schema public grant all on tables to anon,authenticated,service_role;`);
  await db.exec(await readFile('supabase/migrations/20260811000000_creatorflow_commerce.sql','utf8'));
  await db.exec(await readFile('supabase/migrations/20260905181816_windi_voice_studio.sql','utf8'));
+ await db.exec(await readFile('supabase/migrations/20260907171404_voice_welcome_trial_offers.sql','utf8'));
  await db.exec(await readFile('supabase/migrations/20260910032859_windi_video_workflow_v1.sql','utf8'));
  await db.exec(await readFile('supabase/migrations/20260910070601_tidy_windi_device_activation.sql','utf8'));
  await db.exec(await readFile('supabase/migrations/20260910145158_video_kit_voice_bonus.sql','utf8'));
  await db.exec(await readFile('supabase/migrations/20260914053354_video_kit_trial_pricing.sql','utf8'));
+ await db.exec(await readFile('supabase/migrations/20260914151615_workflow_voice_trial_bundle.sql','utf8'));
+ await db.exec(await readFile('supabase/migrations/20260914155355_workflow_voice_bundle_30_days.sql','utf8'));
  await db.exec("set role service_role;update products set is_active=true,metadata=jsonb_set(metadata,'{release_ready}','true') where metadata->>'sku'='windi-video-workflow-v1'");
  productId=(await db.query<{id:string}>("select id from products where metadata->>'sku'='windi-video-workflow-v1'")).rows[0].id;
  await db.exec('reset role');
@@ -46,18 +49,19 @@ test('payment is idempotent and grants one entitlement only for the exact amount
  expect((await db.query('select windi_video_kit_pay($1,$2,$3,$4)',[order.payment_code,'sepay-kit-a',89000,{id:'sepay-kit-a'}])).rows).toEqual([{windi_video_kit_pay:'paid'}]);
  expect((await db.query('select windi_video_kit_pay($1,$2,$3,$4)',[order.payment_code,'sepay-kit-a',89000,{id:'sepay-kit-a'}])).rows).toEqual([{windi_video_kit_pay:'paid'}]);
  expect((await db.query('select count(*)::int n from product_entitlements where user_id=$1 and product_id=$2',[a,productId])).rows).toEqual([{n:1}]);
- expect((await db.query('select voice_credits,voice_credits_used from product_entitlements where user_id=$1 and product_id=$2',[a,productId])).rows).toEqual([{voice_credits:20000,voice_credits_used:0}]);
+ expect((await db.query('select voice_credits,voice_credits_used from product_entitlements where user_id=$1 and product_id=$2',[a,productId])).rows).toEqual([{voice_credits:0,voice_credits_used:0}]);
+ expect((await db.query("select plan_id,credits,clone_limit,duration_days from windi_voice_orders where user_id=$1 and gateway_id like 'workflow:%'",[a])).rows).toEqual([{plan_id:'trial',credits:10000,clone_limit:1,duration_days:30}]);
  expect((await db.query('select count(*)::int n from payment_events where gateway_id=$1',['sepay-kit-a'])).rows).toEqual([{n:1}]);
 });
 
-test('workflow voice bonus reserves and refunds without a paid Voice period',async()=>{
+test('workflow bundle reserves and refunds from its included Voice trial',async()=>{
  const requestKey='00000000-0000-4000-8000-000000000099';
  const job=(await db.query<{id:string;period_id:string|null;entitlement_id:string|null}>('select * from windi_voice_reserve($1,$2,$3,$4,$5,$6,$7)',[a,requestKey,'voice-id','Voice','Xin chào','vi',1])).rows[0];
- expect(job.period_id).toBeNull();
- expect(job.entitlement_id).toBeTruthy();
- expect((await db.query('select voice_credits_used from product_entitlements where user_id=$1 and product_id=$2',[a,productId])).rows).toEqual([{voice_credits_used:8}]);
+ expect(job.period_id).toBeTruthy();
+ expect(job.entitlement_id).toBeNull();
+ expect((await db.query("select used_credits from windi_voice_periods where user_id=$1 and plan_id='trial'",[a])).rows).toEqual([{used_credits:8}]);
  await db.query('select windi_voice_finish($1,$2,$3)',[job.id,false,null]);
- expect((await db.query('select voice_credits_used from product_entitlements where user_id=$1 and product_id=$2',[a,productId])).rows).toEqual([{voice_credits_used:0}]);
+ expect((await db.query("select used_credits from windi_voice_periods where user_id=$1 and plan_id='trial'",[a])).rows).toEqual([{used_credits:0}]);
 });
 
 test('underpayment and late payment never silently grant a license',async()=>{

@@ -50,6 +50,9 @@ html[data-theme=dark] .site-header-logo {
   filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.55));
 }
 
+/* Screen-level confirmations: important success states must not disappear in the page flow. */
+.feedback-toast{position:fixed;z-index:100;top:88px;right:24px;width:min(460px,calc(100vw - 32px));display:flex;align-items:flex-start;gap:12px;padding:16px 17px;border:2px solid var(--border);border-left:6px solid var(--green);border-radius:10px;background:var(--surface);color:var(--ink);box-shadow:8px 8px 0 color-mix(in srgb,var(--border) 24%,transparent);animation:feedback-toast-in .22s ease-out}.feedback-toast-icon{flex:none;color:var(--green);margin-top:1px}.feedback-toast-copy{min-width:0;flex:1}.feedback-toast-copy strong{display:block;font-size:13px;line-height:1.35}.feedback-toast-copy p{margin:4px 0 0;color:var(--muted);font-size:11px;line-height:1.6}.feedback-toast-close{display:grid;place-items:center;flex:none;width:28px;height:28px;border:1.5px solid color-mix(in srgb,var(--border) 45%,transparent);border-radius:6px;background:var(--surface-2);color:var(--ink);cursor:pointer}.feedback-toast-close:hover{background:var(--yellow)}@keyframes feedback-toast-in{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}@media(max-width:560px){.feedback-toast{top:76px;right:16px;width:calc(100vw - 32px);padding:14px}.feedback-toast-copy p{font-size:10px}}@media(prefers-reduced-motion:reduce){.feedback-toast{animation:none}}
+
 .toolbox-header-link {
   height: 34px;
   border: 2px solid var(--border);
