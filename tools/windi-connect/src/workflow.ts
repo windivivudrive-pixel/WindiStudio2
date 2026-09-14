@@ -20,6 +20,7 @@ export type LayoutArtifact={
   basePreset:LayoutPreset;
   renderer?:'ws1-reference-hybrid-flow';
   imageIdentityLock?:Record<string,unknown>;
+  imageAspectRatio?:'16:9'|'9:16'|'1:1';
   summary:string;
   pacing:{hookDurationMs:number;averageBeatDurationMs:number;cutRhythm:string};
   palette:{background:string;surface:string;text:string;accent:string;border:string};
@@ -93,6 +94,7 @@ export function validateLayout(value:unknown):LayoutArtifact{
   const basePreset=value.basePreset==='dark-cinematic'?'dark-cinematic':value.basePreset==='paper-editorial'?'paper-editorial':null;if(!basePreset)throw new Error('INVALID_BASE_PRESET');
   if(value.renderer!==undefined&&value.renderer!=='ws1-reference-hybrid-flow')throw new Error('UNSUPPORTED_LAYOUT_RENDERER');
   if(value.imageIdentityLock!==undefined&&!isRecord(value.imageIdentityLock))throw new Error('INVALID_IMAGE_IDENTITY_LOCK');
+  if(value.imageAspectRatio!==undefined&&!['16:9','9:16','1:1'].includes(String(value.imageAspectRatio)))throw new Error('INVALID_IMAGE_ASPECT_RATIO');
   let source:LayoutArtifact['source'];
   if(value.source.kind==='builtin'){
     const preset=value.source.preset==='dark-cinematic'?'dark-cinematic':value.source.preset==='paper-editorial'?'paper-editorial':null;if(!preset)throw new Error('INVALID_LAYOUT_PRESET');source={kind:'builtin',preset};
@@ -107,7 +109,7 @@ export function validateLayout(value:unknown):LayoutArtifact{
     if(!compositions.includes(entry.composition as SceneComposition)||!positions.includes(entry.textPosition as typeof positions[number])||(entry.imageFit!=='cover'&&entry.imageFit!=='contain'))throw new Error(`INVALID_LAYOUT_SCENE_${index+1}`);
     return {id,role:text(entry.role,'layout_scene_role',300),composition:entry.composition as SceneComposition,textPosition:entry.textPosition as 'top'|'center'|'bottom',imageFit:entry.imageFit as 'cover'|'contain'};
   });if(!sceneTypes.length||sceneTypes.length>20)throw new Error('INVALID_LAYOUT_SCENE_COUNT');
-  return {...(value.renderer?{renderer:value.renderer as 'ws1-reference-hybrid-flow'}:{}),...(isRecord(value.imageIdentityLock)?{imageIdentityLock:value.imageIdentityLock}:{}),schemaVersion:1,version:integer(value.version,'layout_version'),ideaId:text(value.ideaId,'idea_id',100),id:text(value.id,'layout_id',100),name:text(value.name,'layout_name',200),source,basePreset,summary:text(value.summary,'layout_summary',4000),pacing:{hookDurationMs:integer(value.pacing.hookDurationMs,'hook_duration'),averageBeatDurationMs:integer(value.pacing.averageBeatDurationMs,'average_beat_duration'),cutRhythm:text(value.pacing.cutRhythm,'cut_rhythm',500)},palette:{background:color(value.palette.background,'layout_background'),surface:color(value.palette.surface,'layout_surface'),text:color(value.palette.text,'layout_text'),accent:color(value.palette.accent,'layout_accent'),border:color(value.palette.border,'layout_border')},captions:{position:value.captions.position as 'top'|'center'|'bottom',style:value.captions.style as 'boxed'|'pill'|'plain'},sceneTypes};
+  return {...(value.imageAspectRatio?{imageAspectRatio:value.imageAspectRatio as LayoutArtifact['imageAspectRatio']}:{}),...(value.renderer?{renderer:value.renderer as 'ws1-reference-hybrid-flow'}:{}),...(isRecord(value.imageIdentityLock)?{imageIdentityLock:value.imageIdentityLock}:{}),schemaVersion:1,version:integer(value.version,'layout_version'),ideaId:text(value.ideaId,'idea_id',100),id:text(value.id,'layout_id',100),name:text(value.name,'layout_name',200),source,basePreset,summary:text(value.summary,'layout_summary',4000),pacing:{hookDurationMs:integer(value.pacing.hookDurationMs,'hook_duration'),averageBeatDurationMs:integer(value.pacing.averageBeatDurationMs,'average_beat_duration'),cutRhythm:text(value.pacing.cutRhythm,'cut_rhythm',500)},palette:{background:color(value.palette.background,'layout_background'),surface:color(value.palette.surface,'layout_surface'),text:color(value.palette.text,'layout_text'),accent:color(value.palette.accent,'layout_accent'),border:color(value.palette.border,'layout_border')},captions:{position:value.captions.position as 'top'|'center'|'bottom',style:value.captions.style as 'boxed'|'pill'|'plain'},sceneTypes};
 }
 
 function builtinLayout(ideaId:string,preset:LayoutPreset,version=1):LayoutArtifact{

@@ -1,9 +1,10 @@
 import 'server-only';
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/server';
+import {voiceDisplayText} from './branding';
 import { DEFAULT_WORKFLOW_VOICE_ID, COMPARISON_VOICES, STARTER_VOICES, VOICE_LANGUAGES, VOICE_LIBRARY_LANGUAGES, isSampleLibraryLanguage, voiceLibraryLimit, voiceUseCases, type StudioVoice, type VoiceAccent } from './shared';
 
-export class VoiceError extends Error { constructor(message:string, public status=400) {super(message);} }
+export class VoiceError extends Error { constructor(message:string, public status=400) {super(voiceDisplayText(message));} }
 export const bucket = 'windi-voice-audio';
 export const previewBucket = 'windi-voice-previews';
 export function writer() {
@@ -50,7 +51,7 @@ let freeKeyCursor = 0;
 
 export function mainCartesiaKey() {
   const key = process.env.CARTESIA_API_KEY_MAIN || process.env.CARTESIA_API_KEY || process.env.VITE_CARTESIA_API_KEY;
-  if (!key) throw new VoiceError('Voice Studio chưa có API key Cartesia cho tài khoản trả phí.',503);
+  if (!key) throw new VoiceError('Clone Pro 2.1 chưa được cấu hình cho tài khoản trả phí.',503);
   return key;
 }
 
@@ -63,7 +64,7 @@ export function freeCartesiaKeys() {
 
 function freeCartesiaKey(userId?:string) {
   const keys = freeCartesiaKeys();
-  if (!keys.length) throw new VoiceError('Voice Studio chưa có API key Cartesia cho tài khoản miễn phí.',503);
+  if (!keys.length) throw new VoiceError('Clone Pro 2.1 chưa được cấu hình cho tài khoản miễn phí.',503);
   if (userId) {
     let hash = 0;
     for (const char of userId) hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
@@ -85,8 +86,16 @@ async function paidVoiceSubscription(userId:string) {
 export async function cartesia(path:string, init:RequestInit={}, options:CartesiaOptions={}) {
   const purpose=options.purpose||'tts';
   const useMain=purpose==='main'||purpose==='clone'||(purpose==='tts'&&!!options.userId&&await paidVoiceSubscription(options.userId));
-  const apiKey=useMain?mainCartesiaKey():freeCartesiaKey(options.userId);
-  return fetch(`https://api.cartesia.ai${path}`,{...init,cache:'no-store',signal:AbortSignal.timeout(90000),headers:{Authorization:`Bearer ${apiKey}`,'Cartesia-Version':'2026-08-14',...init.headers}});
+  const first=useMain?mainCartesiaKey():freeCartesiaKey(options.userId);
+  const keys=useMain?[first]:[first,...new Set(freeCartesiaKeys().filter(key=>key!==first))];
+  for(let index=0;index<keys.length;index++) {
+    // Only explicit rejection can move a free request to another account.
+    // Never retry a timeout, successful stream, or ambiguous server error.
+    const response=await fetch(`https://api.cartesia.ai${path}`,{...init,cache:'no-store',signal:AbortSignal.timeout(90000),headers:{...init.headers,Authorization:`Bearer ${keys[index]}`,'Cartesia-Version':'2026-08-14'}});
+    if(useMain||![402,429].includes(response.status)||index===keys.length-1)return response;
+    await response.body?.cancel();
+  }
+  throw new VoiceError('Clone Pro 2.1 tạm thời không khả dụng.',503);
 }
 const PUBLIC_VOICE_TARGET_MAX = 12;
 const PREVIEW_CACHE_MS = 60 * 60 * 1000;
@@ -117,7 +126,7 @@ async function catalogPage(language?:string, cursor?:string):Promise<CartesiaCat
         return publicAccess&&publicVisibility&&voice.is_owner===false&&voice.status==='active';
       })
       .filter((voice:{language:string})=>isSampleLibraryLanguage(voice.language))
-      .map((voice:{id:string;name:string;description?:string;tagline?:string;language:string;gender?:string})=>({id:voice.id,name:voice.name,description:voice.description||voice.tagline||'',language:voice.language,gender:voice.gender,useCases:voiceUseCases(voice.tagline,voice.description),kind:'public'})),
+      .map((voice:{id:string;name:string;description?:string;tagline?:string;language:string;gender?:string})=>({id:voice.id,name:voiceDisplayText(voice.name),description:voiceDisplayText(voice.description||voice.tagline||''),language:voice.language,gender:voice.gender,useCases:voiceUseCases(voice.tagline,voice.description),kind:'public'})),
     hasMore:result.has_more===true,
     nextPage:typeof result.next_page==='string'?result.next_page:null,
   };

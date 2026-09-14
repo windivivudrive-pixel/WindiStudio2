@@ -964,7 +964,7 @@ export function VoiceStudio() {
             {isLoading
               ? "Đang tải tài khoản…"
               : user
-                ? isAdmin ? "Admin · Cartesia" : currentPlan
+                ? isAdmin ? "Admin · Clone Pro 2.1" : currentPlan
                   ? `Gói ${currentPlan.name}`
                   : workflowBonusRemaining > 0
                     ? "20K credit từ Video Workflow"
@@ -974,7 +974,7 @@ export function VoiceStudio() {
           <div>
             {user && (
               <>
-                <strong>{isAdmin ? "Quota Cartesia" : formatNumber(remaining)}</strong>
+                <strong>{isAdmin ? "Quota Clone Pro 2.1" : formatNumber(remaining)}</strong>
                 <span>{isAdmin ? "· quản trị" : "credit còn lại"}</span>
                 {period && (
                   <span className="voice-period">
@@ -1337,7 +1337,7 @@ export function VoiceStudio() {
                   </p>
                 </div>
                 <span className="voice-quota">
-                  {isAdmin ? `${activeCloneCount} giọng · quota Cartesia` : period
+                  {isAdmin ? `${activeCloneCount} giọng · quota Clone Pro 2.1` : period
                     ? period.clone_limit
                       ? `${activeCloneCount} / ${period.clone_limit} giọng đang hoạt động`
                       : "Chọn Clone thử để tạo giọng riêng"

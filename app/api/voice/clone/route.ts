@@ -14,12 +14,12 @@ async function providerFailure(response:Response):Promise<ProviderFailure> {
 }
 
 function providerMessage(status:number,errorCode:string) {
-  if(status===402||errorCode==='plan_upgrade_required') return 'Tính năng clone phía Cartesia chưa được kích hoạt cho gói API hiện tại. Vui lòng liên hệ hỗ trợ để nâng cấp nhà cung cấp.';
+  if(status===402||errorCode==='plan_upgrade_required') return 'Tính năng clone phía Clone Pro 2.1 chưa được kích hoạt cho gói API hiện tại. Vui lòng liên hệ hỗ trợ để nâng cấp nhà cung cấp.';
   if(status===401||status===403) return 'Dịch vụ clone giọng chưa được cấp quyền. Vui lòng quay lại sau.';
   if(status===413) return 'Mẫu giọng quá lớn. Hãy chọn file nhỏ hơn 3 MB.';
   if(status===400||status===422) return 'Mẫu giọng chưa phù hợp để clone. Hãy dùng đoạn thu rõ tiếng, một người nói liên tục trong khoảng 5–10 giây.';
   if(status===429) return 'Dịch vụ clone đang bận. Hãy thử lại sau ít phút.';
-  if(status>=500) return 'Dịch vụ Cartesia đang tạm gián đoạn. Vui lòng thử lại sau.';
+  if(status>=500) return 'Dịch vụ Clone Pro 2.1 đang tạm gián đoạn. Vui lòng thử lại sau.';
   return 'Chưa clone được giọng lúc này. Hãy thử lại với mẫu thu rõ tiếng hơn.';
 }
 
@@ -74,7 +74,7 @@ export async function POST(request:Request) {
   catch {await releaseReservation();throw new VoiceError('Không kết nối được với dịch vụ clone. Lượt clone đã được hoàn lại; vui lòng thử lại.',503);}
   if(!response.ok) {
     const providerError=await providerFailure(response);
-    console.error('Cartesia clone rejected',{status:response.status,errorCode:providerError.errorCode||'unknown',requestId:providerError.requestId||'unknown'});
+    console.error('Clone Pro 2.1 clone rejected',{status:response.status});
     const message=providerMessage(response.status,providerError.errorCode);
     await releaseReservation();
     throw new VoiceError(`${message} Lượt clone đã được hoàn lại.`,502);

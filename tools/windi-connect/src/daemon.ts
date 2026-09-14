@@ -65,7 +65,7 @@ const info = await lstat(runtime);
 if (
   !info.isDirectory() ||
   info.isSymbolicLink() ||
-  info.uid !== process.getuid?.()
+  (process.platform!=='win32' && info.uid !== process.getuid?.())
 )
   throw new Error("UNSAFE_RUNTIME_DIRECTORY");
 await chmod(runtime, 0o700);
@@ -147,7 +147,8 @@ async function assetAction(action: string, args: any) {
     return { mime: "image/jpeg", width: info.width, height: info.height, data: thumbnail.toString("base64") };
   }
   if (action === "asset.open") {
-    await execFile("/usr/bin/open", ["-R", source]);
+    if(process.platform==='win32')await execFile('explorer.exe',[`/select,${source}`]);
+    else await execFile("/usr/bin/open", ["-R", source]);
     return { opened: true };
   }
   throw new Error("ASSET_ACTION_UNSUPPORTED");
@@ -826,7 +827,7 @@ const server = net.createServer((socket) => {
 server.listen(
   testPort ? { host: "127.0.0.1", port: testPort } : socketPath,
   async () => {
-    if (!testPort) await chmod(socketPath, 0o600);
+    if (!testPort && process.platform!=='win32') await chmod(socketPath, 0o600);
     console.error("Windi Connect production candidate ready");
   },
 );

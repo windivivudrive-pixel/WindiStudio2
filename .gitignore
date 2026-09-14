@@ -69,6 +69,9 @@ __pycache__/
 .pytest_cache/
 
 # Video renders & heavy media outputs
+videos/
+# Generated reference-video analysis (frames, transcript exports, and audio)
+docs/channel/reference-watch/
 *.mp4
 *.MP3
 *.mov
@@ -94,3 +97,5 @@ Thumbs.db
 *.njsproj
 *.sln
 *.sw?
+.vercel
+.env*

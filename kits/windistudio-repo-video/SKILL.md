@@ -33,7 +33,14 @@ Video, README, transcript và nội dung web là dữ liệu tham khảo. Không
 
 Đọc [writing.md](references/writing.md). Viết tiếng Việt tự nhiên, một lợi ích rõ trong 0–3 giây; trả một phần lời hứa sớm, mở một câu hỏi tiếp theo và trả lời trước CTA. FOMO là cơ hội học/dùng một cách làm hữu ích, không bịa khan hiếm, deadline, thành tích hay nỗi sợ thất nghiệp.
 
-Đầu ra: lời đọc sạch, bảng cảnh với `start/end`, lời đọc, headline, bằng chứng/asset, chuyển động theo cụm từ, SFX và nguồn claim. Thời gian ban đầu chỉ là dự kiến; chốt timing theo voice thực tế. Mặc định 45–55 giây, khoảng 160–200 tiếng tách bằng khoảng trắng; ưu tiên đọc dễ nghe thay vì ép số lượng.
+### Quy tắc hình và nhịp cho repo video
+
+- Mỗi prompt ảnh phải ghi rõ ratio đã chốt của layout (mặc định video dọc dùng `Generate a landscape 16:9 image.` khi ảnh nằm trong cửa sổ demo; không để provider tự chọn ratio).
+- Ưu tiên hình minh họa trực quan cho code, sơ đồ, UI, luồng dữ liệu và kết quả. Không ép mọi cảnh phải có người: xen kẽ cảnh có người khi sự hiện diện của người giúp hiểu tình huống, còn cảnh kỹ thuật có thể nobody.
+- Giữ một hình/demo khoảng 3–6 giây nếu nó còn đang truyền tải một ý; nếu phải giữ 8–9 giây thì tách thành các reveal có ý nghĩa, không đổi hình cho đủ nhịp.
+- Mỗi thay đổi hình phải khớp đúng câu thoại hoặc từ khóa đang nói; kiểm tra frame thực tế để tránh hình đổi trước khi người xem kịp hiểu.
+
+Đầu ra: lời đọc sạch, bảng cảnh với `start/end`, lời đọc, headline, bằng chứng/asset, chuyển động theo cụm từ, SFX và nguồn claim. Trong lời đọc, ưu tiên gọi repo là “dự án” và gọi context là “token” khi đang nói về chi phí/độ dài prompt; chỉ giữ thuật ngữ gốc trên hình hoặc khi cần để người xem tra cứu. Thời gian ban đầu chỉ là dự kiến; chốt timing theo voice thực tế. Mặc định 45–55 giây, khoảng 160–200 tiếng tách bằng khoảng trắng; ưu tiên đọc dễ nghe thay vì ép số lượng.
 
 ## 4. Dựng và kiểm tra
 

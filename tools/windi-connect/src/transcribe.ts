@@ -22,7 +22,7 @@ async function rendererRoot(){for(const candidate of [path.resolve(here,'../rend
 async function whisper(){const renderer=await rendererRoot();const require=createRequire(path.join(renderer,'package.json'));return {api:require('@remotion/install-whisper-cpp') as any,renderer};}
 export async function prepareWhisper(){
   const {api}=await whisper();
-  const folder=path.join(home,'whisper.cpp'),executable=path.join(folder,'main');
+  const folder=path.join(home,'whisper.cpp'),executable=path.join(folder,process.platform==='win32'?'main.exe':'main');
   const ready=await lstat(executable).then(()=>true).catch(()=>false);
   if(!ready)await rm(folder,{recursive:true,force:true});
   await api.installWhisperCpp({to:folder,version:'1.5.5'});

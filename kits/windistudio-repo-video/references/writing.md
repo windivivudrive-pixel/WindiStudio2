@@ -4,6 +4,8 @@
 
 Người bạn biết chọn tool, nói có kiểm chứng. Tiếng Việt gần gũi, câu ngắn, chủ động. Giải thích “repo” là bộ mã/công cụ mở khi cần; chỉ nói tên kỹ thuật nếu nó làm rõ cách dùng. Không đọc một danh sách tính năng hoặc số sao thay cho câu chuyện.
 
+Trong lời đọc, ưu tiên gọi repo là “dự án” và gọi context là “token” khi đang nói về chi phí/độ dài prompt; giữ thuật ngữ gốc trên hình hoặc caption nếu người xem cần tra cứu.
+
 ## Nhịp mặc định 45–55 giây
 
 | Khoảng | Vai trò | Hình cần có |
@@ -16,7 +18,9 @@ Người bạn biết chọn tool, nói có kiểm chứng. Tiếng Việt gần
 | 36–45s | Cách bắt đầu + trả lời open loop | Bước đầu rõ ràng, không đọc lệnh dài |
 | 45–50s | CTA có lợi ích, nối về WindiStudio | URL thực tế + watermark; giữ đủ lâu để đọc |
 
-Không cần đủ bảy cảnh nếu chủ đề đơn giản. Tránh 3 giây end card không có nội dung. Có thay đổi ý nghĩa/hình sau khoảng 2–4 giây: reveal kết quả, chuyển vùng demo, tô bước đang nói; không đổi cảnh chỉ để gây nhiễu.
+Không cần đủ bảy cảnh nếu chủ đề đơn giản. Tránh 3 giây end card không có nội dung. Giữ một hình/demo khoảng 3–6 giây nếu nó còn đang truyền tải một ý; nếu phải giữ 8–9 giây thì tách thành các reveal có ý nghĩa. Mỗi thay đổi hình phải khớp đúng câu thoại hoặc từ khóa đang nói; không đổi cảnh chỉ để gây nhiễu.
+
+Hình repo không cần lúc nào cũng có người. Ưu tiên minh họa code, sơ đồ, UI, luồng dữ liệu và kết quả; xen kẽ cảnh có người khi sự hiện diện của người giúp hiểu tình huống. Prompt phải nêu rõ cảnh nobody hay có người, cùng ratio đã chốt, framing và hành động cụ thể.
 
 ## Chọn hook
 

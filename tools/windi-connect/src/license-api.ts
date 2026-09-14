@@ -4,6 +4,7 @@ import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { home } from "./protocol.ts";
+import {readCredential,saveCredential} from './credentials.ts';
 
 const run = promisify(execFile);
 const service = "com.windistudio.video-workflow";
@@ -49,16 +50,7 @@ export async function workflowDeviceId() {
 
 export async function workflowToken() {
   try {
-    return (
-      await run("/usr/bin/security", [
-        "find-generic-password",
-        "-a",
-        account,
-        "-s",
-        service,
-        "-w",
-      ])
-    ).stdout.trim();
+    return await readCredential(service,account);
   } catch {
     throw new Error("LOGIN_REQUIRED: chạy `windi login` để kết nối tài khoản trước.");
   }
@@ -95,16 +87,7 @@ export async function activateLicense(
     throw new Error("INVALID_WINDI_WORKFLOW_TOKEN");
   if (requestedApiUrl) await saveApiUrl(requestedApiUrl.replace(/\/$/, ""));
   const result = await request("/api/video-kits/access", secret);
-  await run("/usr/bin/security", [
-    "add-generic-password",
-    "-U",
-    "-a",
-    account,
-    "-s",
-    service,
-    "-w",
-    secret,
-  ]);
+  await saveCredential(service,account,secret);
   return result;
 }
 

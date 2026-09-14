@@ -1,4 +1,5 @@
 import 'server-only';
+import {voiceDisplayText} from './branding';
 import { cartesia, VoiceError, writer } from './server';
 import { isUUID, type StudioVoice } from './shared';
 
@@ -14,13 +15,13 @@ export async function requireVoiceAdmin(userId: string) {
 
 function studioVoice(v: Record<string,unknown>): StudioVoice {
   if(!isUUID(v.id)||typeof v.name!=='string') throw new VoiceError('Dữ liệu giọng không hợp lệ.',502);
-  return {id:v.id,name:v.name,language:typeof v.language==='string'?v.language:'vi',description:typeof v.description==='string'?v.description:'',kind:'public'};
+  return {id:v.id,name:voiceDisplayText(v.name),language:typeof v.language==='string'?v.language:'vi',description:typeof v.description==='string'?voiceDisplayText(v.description):'',kind:'public'};
 }
 
 export async function providerVoice(id:string) {
   if(!isUUID(id)) throw new VoiceError('Voice ID không hợp lệ.');
   const response=await cartesia(`/voices/${encodeURIComponent(id)}`,{}, {purpose:'main'});
-  if(!response.ok) throw new VoiceError(response.status===404?'Không tìm thấy giọng trong tài khoản Cartesia đang kết nối.':'Cartesia chưa cho phép truy cập giọng này.',response.status===404?404:502);
+  if(!response.ok) throw new VoiceError(response.status===404?'Không tìm thấy giọng trong tài khoản Clone Pro 2.1 đang kết nối.':'Clone Pro 2.1 chưa cho phép truy cập giọng này.',response.status===404?404:502);
   return studioVoice(await response.json());
 }
 
@@ -29,7 +30,7 @@ export async function adminVoicePage(cursor?:string) {
   const params=new URLSearchParams({limit:'100'});
   if(cursor) params.set('starting_after',cursor);
   const response=await cartesia(`/voices?${params}`,{}, {purpose:'main'});
-  if(!response.ok) throw new VoiceError('Chưa tải được thư viện Cartesia.',502);
+  if(!response.ok) throw new VoiceError('Chưa tải được thư viện Clone Pro 2.1.',502);
   const body=await response.json();
   if(!Array.isArray(body.data)) throw new VoiceError('Dữ liệu thư viện không hợp lệ.',502);
   return {voices:body.data.map(studioVoice),hasMore:body.has_more===true,nextPage:typeof body.next_page==='string'?body.next_page:null};

@@ -8,7 +8,7 @@ test('personal installer requires purchaser session',async()=>{mocks.identity.mo
 test('installer binds a private workflow token, with no CLI login step',async()=>{
  mocks.identity.mockResolvedValue({user:{id:'buyer'}});
  const inserted:unknown[]=[];
- const entitlement={id:'e',product_id:'p'},release={version:'0.5.6-beta',sha256:'a'.repeat(64),storage_bucket:'private',storage_path:'release.zip'};
+ const entitlement={id:'e',product_id:'p'},release={version:'0.5.9',sha256:'a'.repeat(64),storage_bucket:'private',storage_path:'release.zip'};
  mocks.writer.mockReturnValue({from:(table:string)=>{const q:any={select:()=>q,eq:()=>q,order:()=>q,limit:()=>q,maybeSingle:async()=>({data:table==='product_entitlements'?entitlement:release}),insert:async(v:unknown)=>{inserted.push(v);return {error:null}}};return q},storage:{from:()=>({createSignedUrl:async()=>({data:{signedUrl:'https://storage.test/signed'}})})}});
  const response=await POST(new Request('https://windi.test/api/video-kits/installer',{method:'POST'}));expect(response.status).toBe(200);
  const zip=await JSZip.loadAsync(await response.arrayBuffer());
@@ -16,4 +16,7 @@ test('installer binds a private workflow token, with no CLI login step',async()=
  expect(config.token).toMatch(/^windi_kit_/);expect(inserted[0]).toMatchObject({user_id:'buyer',purpose:'video_workflow'});
  expect(JSON.stringify(inserted)).not.toContain(config.token);
  const script=await zip.file('Cai Windi.command')!.async('string');expect(script).toContain('shasum -a 256');expect(script).not.toContain('windi login');
+ const windows=await zip.file('Cai Windi Windows.ps1')!.async('string');
+ expect(windows).toContain('Get-FileHash -Algorithm SHA256');expect(windows).toContain('windi-account.json');expect(windows).toContain('scripts/bootstrap.ps1');
+ expect(windows).not.toContain(config.token);expect(zip.file('Cai Windi Windows.cmd')).not.toBeNull();
 });

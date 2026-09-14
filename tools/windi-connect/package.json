@@ -1,6 +1,6 @@
 {
   "name": "@windistudio/connect",
-  "version": "0.5.6",
+  "version": "0.5.9",
   "private": true,
   "type": "module",
   "engines": {
@@ -10,6 +10,7 @@
     "build:extensions": "node scripts/build-extensions.mjs",
     "install:local": "node scripts/install.mjs",
     "package:installer": "node scripts/package-installer.mjs",
+    "package:release": "node scripts/package-release.mjs",
     "start": "node src/daemon.ts",
     "test": "node --test tests/*.test.ts",
     "typecheck": "../../node_modules/.bin/tsc -p tsconfig.json"
