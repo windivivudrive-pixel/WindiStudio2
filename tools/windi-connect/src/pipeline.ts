@@ -8,12 +8,12 @@ import {assembleSamples} from './audio-assembly.ts';
 import {resolveFlowVoice} from './voice-default.ts';
 
 async function channelDefaultVoice(root:string){
-  const fromProcess=process.env.CARTESIA_VOICE_ID?.trim();
+  const fromProcess=process.env.WINDI_VOICE_ID?.trim()||process.env.CARTESIA_VOICE_ID?.trim();
   if(fromProcess)return fromProcess;
   // The WindiStudio channel owns this project-local default. Only the ID is
   // read; provider API keys stay solely in the app environment.
   const local=await readFile(path.join(root,'.env.local'),'utf8').catch(()=>null);
-  const match=local?.match(/^CARTESIA_VOICE_ID\s*=\s*(.*)$/m);
+  const match=local?.match(/^WINDI_VOICE_ID\s*=\s*(.*)$/m)||local?.match(/^CARTESIA_VOICE_ID\s*=\s*(.*)$/m);
   return match?.[1]?.trim().replace(/^(["'])(.*)\1$/, '$2').trim();
 }
 

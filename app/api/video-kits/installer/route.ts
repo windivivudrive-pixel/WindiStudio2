@@ -3,6 +3,7 @@ import {createProductToken} from '@/lib/products/license';
 import {failure,identity,VoiceError,writer} from '@/lib/voice/server';
 export const runtime='nodejs';
 const quote=(value:string)=>"'"+value.replaceAll("'","'\\''")+"'";
+const psQuote=(value:string)=>"'"+value.replaceAll("'","''")+"'";
 export async function POST(request:Request){
  try{
   const {user}=await identity(request),db=writer();
@@ -33,7 +34,25 @@ ROOT="$TMP/app/Windi Connect Installer.app/Contents/Resources/windi-connect"
 cp "$BASE/windi-account.json" "$ROOT/windi-account.json"
 /bin/sh "$ROOT/Install Windi Connect.command"
 `,{unixPermissions:0o100700});
-  zip.file('HUONG-DAN.txt','Giải nén toàn bộ ZIP, mở Cai Windi.command. Bộ cài tự kết nối Voice của tài khoản đã mua. Không chia sẻ bộ cài cá nhân. Link tải bên trong có hạn 24 giờ; tải bộ cài mới từ website nếu hết hạn. Bật extension Windi một lần theo hướng dẫn. Sau đó nói với Codex: Dùng Windi làm video này.');
+  if(Number(release.version.split('.')[2]?.split('-')[0])>=9){
+    zip.file('Cai Windi Windows.cmd','@echo off\r\npowershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0Cai Windi Windows.ps1"\r\n');
+    zip.file('Cai Windi Windows.ps1',`$ErrorActionPreference='Stop'
+try {
+  $temp=Join-Path ([IO.Path]::GetTempPath()) ('windi-'+[guid]::NewGuid())
+  New-Item -ItemType Directory -Path $temp | Out-Null
+  $archive=Join-Path $temp 'windi.zip'
+  Invoke-WebRequest -UseBasicParsing -Uri ${psQuote(signed.signedUrl)} -OutFile $archive
+  if((Get-FileHash -Algorithm SHA256 $archive).Hash.ToLower() -ne ${psQuote(release.sha256.toLowerCase())}){throw 'Checksum mismatch'}
+  Expand-Archive -LiteralPath $archive -DestinationPath (Join-Path $temp 'app')
+  $root=Join-Path $temp 'app/Windi Connect Installer.app/Contents/Resources/windi-connect'
+  Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'windi-account.json') -Destination (Join-Path $root 'windi-account.json')
+  & powershell.exe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $root 'scripts/bootstrap.ps1')
+  if($LASTEXITCODE -ne 0){throw 'Installation failed'}
+} catch { Write-Host $_.Exception.Message; Read-Host 'Press Enter'; exit 1 }
+finally { if($temp -and (Test-Path $temp)){Remove-Item -LiteralPath $temp -Recurse -Force} }
+`);
+  }
+  zip.file('HUONG-DAN.txt','Giải nén toàn bộ ZIP. macOS: mở Cai Windi.command. Windows x64 (bản 0.5.9 trở lên): mở Cai Windi Windows.cmd. Cần Internet để tự cài môi trường lần đầu. Bộ cài tự kết nối Voice của tài khoản đã mua. Không chia sẻ bộ cài cá nhân. Link tải bên trong có hạn 24 giờ; tải bộ cài mới từ website nếu hết hạn. Bật extension Windi một lần theo hướng dẫn. Sau đó nói với Codex: Dùng Windi làm video này.');
   const bytes=await zip.generateAsync({type:'uint8array',platform:'UNIX'});
   return new Response(bytes,{headers:{'Content-Type':'application/zip','Content-Disposition':'attachment; filename="Windi-Cai-Dat-Ca-Nhan.zip"','Cache-Control':'private, no-store'}});
  }catch(error){return failure(error);}

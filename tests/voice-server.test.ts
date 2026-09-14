@@ -5,6 +5,38 @@ import {cartesia,freeCartesiaKeys,mainCartesiaKey,publicVoices} from '../lib/voi
 
 const fetchMock=vi.fn();
 
+test('free pool tries at most five distinct keys after explicit quota rejection',async()=>{
+  for(let i=1;i<=5;i++)vi.stubEnv(`CARTESIA_API_KEY_${i}`,`free-${i}`);
+  fetchMock.mockReset();
+  fetchMock.mockImplementation(async()=>new Response('quota',{status:402}));
+  const response=await cartesia('/tts/sse',{method:'POST',body:'{}'});
+  expect(response.status).toBe(402);
+  expect(fetchMock).toHaveBeenCalledTimes(5);
+  expect(new Set(fetchMock.mock.calls.map(([,init])=>new Headers(init.headers).get('Authorization'))).size).toBe(5);
+});
+
+test('free pool succeeds on next key but never retries an ambiguous failure',async()=>{
+  vi.stubEnv('CARTESIA_API_KEY_1','free-1');vi.stubEnv('CARTESIA_API_KEY_2','free-2');
+  fetchMock.mockReset();
+  fetchMock.mockResolvedValueOnce(new Response('busy',{status:429})).mockResolvedValueOnce(new Response('audio'));
+  expect(await (await cartesia('/tts/sse',{method:'POST',body:'{}'})).text()).toBe('audio');
+  expect(fetchMock).toHaveBeenCalledTimes(2);
+  fetchMock.mockReset();fetchMock.mockRejectedValue(new Error('timeout'));
+  await expect(cartesia('/tts/sse',{method:'POST',body:'{}'})).rejects.toThrow('timeout');
+  expect(fetchMock).toHaveBeenCalledTimes(1);
+  fetchMock.mockReset();fetchMock.mockResolvedValue(new Response('server error',{status:500}));
+  expect((await cartesia('/tts/sse')).status).toBe(500);
+  expect(fetchMock).toHaveBeenCalledTimes(1);
+});
+
+test('private and paid voices never fail over to unrelated free accounts',async()=>{
+  vi.stubEnv('CARTESIA_API_KEY_MAIN','main-key');vi.stubEnv('CARTESIA_API_KEY_1','free-1');
+  fetchMock.mockReset();fetchMock.mockResolvedValue(new Response('quota',{status:402}));
+  await cartesia('/tts/sse',{}, {purpose:'main'});
+  expect(fetchMock).toHaveBeenCalledTimes(1);
+  expect(new Headers(fetchMock.mock.calls[0][1].headers).get('Authorization')).toBe('Bearer main-key');
+});
+
 beforeEach(()=>{
   vi.stubEnv('CARTESIA_API_KEY','test-cartesia-key');
   vi.stubGlobal('fetch',fetchMock);

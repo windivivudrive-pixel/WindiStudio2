@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import {cleanWorkflowImages} from './watermark.ts';
+import {environmentStatus} from './environment-status.ts';
 import {runPipeline} from './pipeline.ts';
 import net from "node:net";
 import path from "node:path";
@@ -450,7 +451,7 @@ async function voice(args: Parsed) {
   if (action === "generate") {
     const generated = await generateWorkflowVoice(
       base,
-      value(args, "voice", true)!,
+      value(args, "voice"),
       Number(value(args, "speed") || 1),
     );
     await request("workflow.voice.import", {
@@ -507,6 +508,7 @@ try {
     output(
       {
         license: await licenseStatus(),
+        environment: await environmentStatus(),
         videoAnalyzer: await videoAnalyzerStatus(),
         connect: await request("doctor"),
       },

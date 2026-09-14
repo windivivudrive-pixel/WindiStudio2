@@ -4,6 +4,8 @@ import {validateLayout} from '../src/workflow.ts';
 import {ws1CaptionGroups} from '../../../kits/video-starter/src/ws1-captions.ts';
 const layout={schemaVersion:1,version:1,ideaId:'test',id:'ws1-reference-hybrid-flow',name:'WS1',renderer:'ws1-reference-hybrid-flow',source:{kind:'builtin',preset:'dark-cinematic'},basePreset:'dark-cinematic',summary:'WS1 blue grid',pacing:{hookDurationMs:3000,averageBeatDurationMs:4000,cutRhythm:'spoken anchors'},palette:{background:'#081a2a',surface:'#102b3a',text:'#f3f0df',accent:'#ff6f9d',border:'#9bc8c3'},captions:{position:'bottom',style:'boxed'},sceneTypes:[{id:'hook',role:'hook',composition:'framed',textPosition:'top',imageFit:'cover'}],imageIdentityLock:{medium:'photorealistic',characterScope:'project'}};
 test('WS1 renderer and image identity survive layout registration',()=>{
+  assert.equal(validateLayout({...layout,imageAspectRatio:'16:9'}).imageAspectRatio,'16:9');
+  assert.throws(()=>validateLayout({...layout,imageAspectRatio:'4:5'}),/INVALID_IMAGE_ASPECT_RATIO/);
   const saved=validateLayout(layout);assert.equal(saved.renderer,layout.renderer);assert.deepEqual(saved.imageIdentityLock,layout.imageIdentityLock);
   assert.throws(()=>validateLayout({...layout,renderer:'unimplemented'}),/UNSUPPORTED_LAYOUT_RENDERER/);
 });

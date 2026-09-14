@@ -1,6 +1,6 @@
 import {Audio} from '@remotion/media';
 import {ding,mouseClick,pageTurn,uiSwitch,whoosh} from '@remotion/sfx';
-import {AbsoluteFill,CanvasImage,Sequence,interpolate,staticFile,useCurrentFrame,useVideoConfig} from 'remotion';
+import {AbsoluteFill,CanvasImage,OffthreadVideo,Sequence,interpolate,staticFile,useCurrentFrame,useVideoConfig} from 'remotion';
 import type {WindiVideoProps} from './types';
 import {ws1CaptionGroups} from './ws1-captions';
 
@@ -26,7 +26,7 @@ export function WS1Video(props:WindiVideoProps){
       <div style={{fontSize:86,lineHeight:1.08,letterSpacing:-3.5,fontWeight:800,marginBottom:36}}>{copy.titleLines.map((line,i)=><div key={i} style={{color:i?C.accent:C.ink}}>{line}</div>)}</div>
       <div style={{border:`4px solid ${C.border}`,borderRadius:20,overflow:'hidden',background:C.paper,boxShadow:`9px 10px 0 ${C.border}35`}}>
         <div style={{height:58,background:index%4===1?C.green:C.accent,borderBottom:`3px solid ${C.border}`,display:'flex',alignItems:'center',padding:'0 22px',gap:20,fontSize:27}}><span>● ● ●</span><span>{copy.label}</span><span style={{marginLeft:'auto'}}>×</span></div>
-        <div style={{height:410,overflow:'hidden',position:'relative'}}><CanvasImage src={staticFile(beat.image)} style={{width:'100%',height:'100%',objectFit:'cover',transform:`scale(${1.18+progress*.035})`,transformOrigin:'center'}}/></div>
+        <div style={{height:410,overflow:'hidden',position:'relative'}}>{beat.video?<Sequence from={Math.floor(beat.startMs/1000*fps)} durationInFrames={Math.max(1,Math.ceil((beat.endMs-beat.startMs)/1000*fps))}><OffthreadVideo src={staticFile(beat.video)} muted volume={0} style={{width:'100%',height:'100%',objectFit:'contain',background:'#081a2a'}}/></Sequence>:<CanvasImage src={staticFile(beat.image)} style={{width:'100%',height:'100%',objectFit:'cover',transform:`scale(${1.18+progress*.035})`,transformOrigin:'center'}}/>}</div>
         <div style={{padding:'20px 28px 18px'}}>
           <div style={{height:86,display:'flex',alignItems:'center',justifyContent:'center',gap:8}}>{Array.from({length:56},(_,i)=><div key={i} style={{width:6,borderRadius:6,height:6+Math.min(1,amplitude*2.5)*(22+52*(.5+.5*Math.sin(i*.8+f*.16))),background:i%8===0?C.ink:C.accent}}/>)}</div>
           <div style={{height:5,background:'#081a2a',marginTop:10}}><div style={{width:`${progress*100}%`,height:'100%',background:C.accent}}/></div>

@@ -18,6 +18,7 @@ beforeAll(async()=>{
  await db.exec(await readFile('supabase/migrations/20260910032859_windi_video_workflow_v1.sql','utf8'));
  await db.exec(await readFile('supabase/migrations/20260910070601_tidy_windi_device_activation.sql','utf8'));
  await db.exec(await readFile('supabase/migrations/20260910145158_video_kit_voice_bonus.sql','utf8'));
+ await db.exec(await readFile('supabase/migrations/20260914053354_video_kit_trial_pricing.sql','utf8'));
  await db.exec("set role service_role;update products set is_active=true,metadata=jsonb_set(metadata,'{release_ready}','true') where metadata->>'sku'='windi-video-workflow-v1'");
  productId=(await db.query<{id:string}>("select id from products where metadata->>'sku'='windi-video-workflow-v1'")).rows[0].id;
  await db.exec('reset role');
@@ -26,7 +27,7 @@ afterAll(()=>db.close());
 
 test('release starts private and uses private storage buckets',async()=>{
  expect((await db.query("select public from storage.buckets where id in ('windi-releases','windi-voice-timing') order by id")).rows).toEqual([{public:false},{public:false}]);
- expect((await db.query("select price_vnd,metadata->>'launch_price_vnd' launch from products where id=$1",[productId])).rows).toEqual([{price_vnd:499000,launch:'299000'}]);
+ expect((await db.query("select price_vnd,metadata->>'launch_price_vnd' launch from products where id=$1",[productId])).rows).toEqual([{price_vnd:369000,launch:'89000'}]);
 });
 
 test('launch price is database-controlled for exactly the first 100 slots',async()=>{
@@ -34,16 +35,16 @@ test('launch price is database-controlled for exactly the first 100 slots',async
  insert into product_entitlements(user_id,product_id,kind)
  select id,'${productId}','video_workflow_v1' from auth.users where id not in ('${a}','${b}') limit 99;`);
  const first=(await db.query<{id:string;total_amount_vnd:number;payment_code:string;created_at:string;expires_at:string}>('select * from windi_video_kit_order($1)',[a])).rows[0];
- expect(first.total_amount_vnd).toBe(299000);expect(first.payment_code).toMatch(/^WINDI K[A-Z0-9]{8}$/);
+ expect(first.total_amount_vnd).toBe(89000);expect(first.payment_code).toMatch(/^WINDI K[A-Z0-9]{8}$/);
  const next=(await db.query<{total_amount_vnd:number}>('select * from windi_video_kit_order($1)',[b])).rows[0];
- expect(next.total_amount_vnd).toBe(499000);
+ expect(next.total_amount_vnd).toBe(369000);
  expect(Date.parse(first.expires_at)-Date.parse(first.created_at)).toBeLessThanOrEqual(601_000);
 });
 
 test('payment is idempotent and grants one entitlement only for the exact amount',async()=>{
  const order=(await db.query<{id:string;payment_code:string}>('select * from windi_video_kit_order($1)',[a])).rows[0];
- expect((await db.query('select windi_video_kit_pay($1,$2,$3,$4)',[order.payment_code,'sepay-kit-a',299000,{id:'sepay-kit-a'}])).rows).toEqual([{windi_video_kit_pay:'paid'}]);
- expect((await db.query('select windi_video_kit_pay($1,$2,$3,$4)',[order.payment_code,'sepay-kit-a',299000,{id:'sepay-kit-a'}])).rows).toEqual([{windi_video_kit_pay:'paid'}]);
+ expect((await db.query('select windi_video_kit_pay($1,$2,$3,$4)',[order.payment_code,'sepay-kit-a',89000,{id:'sepay-kit-a'}])).rows).toEqual([{windi_video_kit_pay:'paid'}]);
+ expect((await db.query('select windi_video_kit_pay($1,$2,$3,$4)',[order.payment_code,'sepay-kit-a',89000,{id:'sepay-kit-a'}])).rows).toEqual([{windi_video_kit_pay:'paid'}]);
  expect((await db.query('select count(*)::int n from product_entitlements where user_id=$1 and product_id=$2',[a,productId])).rows).toEqual([{n:1}]);
  expect((await db.query('select voice_credits,voice_credits_used from product_entitlements where user_id=$1 and product_id=$2',[a,productId])).rows).toEqual([{voice_credits:20000,voice_credits_used:0}]);
  expect((await db.query('select count(*)::int n from payment_events where gateway_id=$1',['sepay-kit-a'])).rows).toEqual([{n:1}]);
@@ -64,7 +65,7 @@ test('underpayment and late payment never silently grant a license',async()=>{
  await db.query('select windi_video_kit_pay($1,$2,$3,$4)',[pending.payment_code,'sepay-under',1000,{id:'sepay-under'}]);
  expect((await db.query('select count(*)::int n from product_entitlements where user_id=$1',[b])).rows).toEqual([{n:0}]);
  await db.exec("update orders set status='EXPIRED' where id='"+pending.id+"'");
- expect((await db.query('select windi_video_kit_pay($1,$2,$3,$4)',[pending.payment_code,'sepay-late',499000,{id:'sepay-late'}])).rows).toEqual([{windi_video_kit_pay:'review'}]);
+ expect((await db.query('select windi_video_kit_pay($1,$2,$3,$4)',[pending.payment_code,'sepay-late',369000,{id:'sepay-late'}])).rows).toEqual([{windi_video_kit_pay:'review'}]);
 });
 
 test('one active device is enforced atomically and replacement revokes the old device',async()=>{

@@ -21,6 +21,7 @@ type Order = {
 };
 type Account = {
   product: {
+    price_vnd?: number;
     is_active: boolean;
     metadata: {
       release_ready?: boolean;
@@ -151,7 +152,8 @@ export function VideoKitCommerce() {
     (order) =>
       order.status === "PENDING" && Date.parse(order.expires_at) > Date.now(),
   );
-  const launchPrice = account?.product?.metadata.launch_price_vnd ?? 299000;
+  const launchPrice = account?.product?.metadata.launch_price_vnd ?? 89000;
+  const originalPrice = account?.product?.price_vnd ?? 369000;
   const includedVoiceCredits =
     account?.product?.metadata.voice_bonus_credits ?? 20000;
 
@@ -168,9 +170,9 @@ export function VideoKitCommerce() {
           </p>
         </div>
         <div className="kit-price-box">
-          <span>100 tài khoản đầu</span>
+          <span>Giá dùng thử · 100 tài khoản đầu</span>
           <strong>{money(launchPrice)}đ</strong>
-          <small>Sau đó 499.000đ</small>
+          <small>Giá gốc <s>{money(originalPrice)}đ</s></small>
           {loading ? (
             <button disabled>Đang kiểm tra...</button>
           ) : account?.entitlement ? (
@@ -231,7 +233,7 @@ export function VideoKitCommerce() {
               <KeyRound size={18} /> Windi Voice API
             </h3>
             <p>
-              Workflow gọi Windi; khóa Cartesia luôn ở backend. Audio và word
+              Workflow dùng Clone Pro 2.1. Audio và word
               timestamp được tạo trong cùng một lần gọi, không chạy Whisper lại.
             </p>
             {account.voiceApi.bonus && (

@@ -106,7 +106,7 @@ test("combined extension keeps provider state separated", async () => {
   assert.doesNotMatch(source, /op==='flowDownloadExisting'/);
   assert.match(source, /chatgptSaveOriginal/);
   assert.match(source, /chatgpt-image-save/);
-  assert.match(source, /item\.provider!==provider\|\|item\.jobId!==jobId/);
+  assert.match(source, /downloads\[i\]\.provider===provider&&downloads\[i\]\.jobId===jobId/);
   assert.match(source, /CHATGPT_SAVE_NOT_FOUND/);
   assert.match(source, /Network\.getResponseBody/);
   assert.match(source, /patchStatus\(provider,\{tabId:null\}\)/);

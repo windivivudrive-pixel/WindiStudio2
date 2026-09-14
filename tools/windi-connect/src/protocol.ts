@@ -2,6 +2,13 @@ import { homedir } from "node:os";
 import path from "node:path";
 import { createHash } from "node:crypto";
 import { StringDecoder } from "node:string_decoder";
+import {readFileSync} from 'node:fs';
+try {
+  const setup=JSON.parse(readFileSync(new URL('../environment.json',import.meta.url),'utf8'));
+  process.env.FFMPEG_PATH ||= setup.ffmpeg;
+  process.env.PATH=[setup.media,setup.pythonBin,process.env.PATH].filter(Boolean).join(path.delimiter);
+  if(process.platform==='darwin')process.env.DYLD_LIBRARY_PATH=setup.media;
+} catch(error) {if((error as NodeJS.ErrnoException).code!=='ENOENT')throw error;}
 
 /** The local protocol is deliberately private to one macOS account. */
 export const VERSION = 2;
@@ -9,15 +16,15 @@ export const providers = ["flow", "chatgpt"] as const;
 export type Provider = (typeof providers)[number];
 export const home = path.resolve(
   process.env.WINDI_HOME ||
-    path.join(homedir(), "Library/Application Support/WindiConnect"),
+    (process.platform==='win32'?path.join(process.env.LOCALAPPDATA||path.join(homedir(),'AppData/Local'),'WindiConnect'):path.join(homedir(), "Library/Application Support/WindiConnect")),
 );
 // macOS Unix socket paths have a small length limit. The owner-only directory
 // prevents another account from replacing our socket, even with a short path.
 export const runtime = path.join(
-  "/tmp",
+  process.platform==='win32'?home:"/tmp",
   `windi-${process.getuid?.() ?? "user"}-${createHash("sha256").update(home).digest("hex").slice(0, 10)}`,
 );
-export const socketPath = path.join(runtime, "connect.sock");
+export const socketPath = process.platform==='win32'?`\\\\.\\pipe\\windi-${createHash('sha256').update(home).digest('hex').slice(0,24)}`:path.join(runtime, "connect.sock");
 export const databasePath = path.join(home, "state.sqlite");
 export const stagingRoot = path.join(home, "staging");
 export const providerUrl = (provider: Provider) =>
