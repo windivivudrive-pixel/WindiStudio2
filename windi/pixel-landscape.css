@@ -1,10 +1,16 @@
 @import url('https://fonts.googleapis.com/css2?family=Comic+Neue:wght@700&display=swap');
 
 /* The footer is intentionally only ground and grass.  The game stays in the hero. */
-.site-footer { position: relative; isolation: isolate; min-height: 115px; margin-top: 58px; padding-top: 29px; padding-bottom: 29px; border-top: 4px solid #243418; background-color: #806d2f; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='48' viewBox='0 0 96 48'%3E%3Cpath fill='%23544520' d='M4 5h4v2H4zM28 29h3v3h-3zM65 9h3v2h-3zM84 35h5v2h-5zM47 44h3v2h-3z'/%3E%3Cpath fill='%23a08a42' d='M15 38h3v2h-3zM42 13h4v2h-4zM74 26h3v2h-3z'/%3E%3C/svg%3E"); color: #fff9ea; }
+.site-footer { position: relative; isolation: isolate; min-height: 115px; margin-top: 58px; padding-top: 29px; padding-bottom: 29px; border-top: 4px solid #243418; background-color: #806d2f; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='48' viewBox='0 0 96 48'%3E%3Cpath fill='%23544520' d='M4 5h4v2H4zM28 29h3v3h-3zM65 9h3v2h-3zM84 35h5v2h-5zM47 44h3v2h-3z'/%3E%3Cpath fill='%23a08a42' d='M15 38h3v2h-3zM42 13h4v2h-4zM74 26h3v2h-3z'/%3E%3C/svg%3E"); color: #fff9ea; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; column-gap: 28px; }
 .site-footer strong, .site-footer .footer-support { color: #fff9ea; }
 .site-footer .small-copy { color: #fff3d0; }
 .site-footer > div:not(.pixel-landscape), .site-footer > nav { position: relative; z-index: 1; }
+.footer-brand { min-width: 0; }
+.footer-brand p { white-space: nowrap; }
+.site-footer nav { justify-content: flex-end; row-gap: 8px; }
+.footer-contact { display: inline-flex; align-items: center; gap: 12px; padding-left: 16px; border-left: 1px solid rgba(255, 249, 234, .38); white-space: nowrap; }
+.footer-contact-label { color: #fff3d0; font: 700 10px var(--font-geist-mono), monospace; letter-spacing: .08em; text-transform: uppercase; }
+.footer-contact a { color: #fff9ea; font-weight: 750; }
 .site-footer nav a { padding: 10px 0; text-decoration-thickness: 2px; text-underline-offset: 5px; }
 .site-footer nav a:hover { text-decoration: underline; }
 .site-footer nav a:focus-visible { outline: 2px solid #fff9ea; outline-offset: 5px; }
@@ -23,9 +29,16 @@
 [data-theme='dark'] .site-footer { background-color: #53441f; }
 [data-theme='dark'] .pixel-landscape { filter: brightness(.82); }
 
+@media (max-width: 1180px) {
+  .site-footer { grid-template-columns: 1fr; align-items: start; row-gap: 12px; }
+  .footer-brand p { white-space: normal; }
+  .site-footer nav { justify-content: flex-start; }
+}
+
 @media (max-width: 560px) {
   .site-footer { gap: 12px; margin-top: 52px; padding-top: 22px; padding-bottom: 22px; }
   .pixel-bush { width: 96px; height: 45px; }
   .bush-right { right: 5%; width: 72px; height: 34px; }
-  .site-footer nav { gap: 22px; }
+  .site-footer nav { gap: 12px 22px; }
+  .footer-contact { width: 100%; padding-left: 0; border-left: 0; }
 }

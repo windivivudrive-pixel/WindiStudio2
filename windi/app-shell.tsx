@@ -247,7 +247,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       <footer className="site-footer">
         <PixelLandscape />
-        <div>
+        <div className="footer-brand">
           <p>
             <strong>WINDI STUDIO</strong> · Video Kits · Voice Studio · Công cụ sáng tạo.
           </p>
@@ -261,6 +261,25 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <Heart size={15} aria-hidden="true" />
             Ủng hộ Windi
           </Link>
+          <span className="footer-contact" aria-label="Liên hệ hỗ trợ">
+            <span className="footer-contact-label">Hỗ trợ</span>
+            <a
+              href="https://www.facebook.com/profile.php?id=61594238790213"
+              target="_blank"
+              rel="noreferrer"
+              aria-label="Liên hệ Windi Studio qua Facebook, mở tab mới"
+            >
+              Facebook
+            </a>
+            <a
+              href="https://tiktok.com/@windistudiovn"
+              target="_blank"
+              rel="noreferrer"
+              aria-label="Liên hệ Windi Studio qua TikTok, mở tab mới"
+            >
+              TikTok
+            </a>
+          </span>
           <BuyMeACoffeeButton />
         </nav>
       </footer>
