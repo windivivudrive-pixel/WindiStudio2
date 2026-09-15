@@ -12,7 +12,8 @@ import { useToolbox } from './toolbox-context';
 import { useAuth } from './auth-context';
 import { BuyMeACoffeeButton } from './buy-me-a-coffee';
 
-const nav: {href:string;label:string;items?:{href:string;label:string}[]}[] = [
+type NavItem = { href: string; label: string; items?: { href: string; label: string }[] };
+const nav: NavItem[] = [
   { href: '/video-kits', label: 'Video Kits' },
   { href: '/voice-studio', label: 'Voice Studio' },
   { href: '/discover', label: 'Công cụ' },
@@ -21,6 +22,7 @@ const nav: {href:string;label:string;items?:{href:string;label:string}[]}[] = [
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname=usePathname();
+  const navItems = nav;
   const [open, setOpen] = useState(false);
   const [studioMenuOpen, setStudioMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -70,7 +72,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </Link>
 
         <nav aria-label="Điều hướng chính">
-          {nav.map((item) => {
+          {navItems.map((item) => {
             if (item.items) {
               return (
                 <div className="studio-nav-menu" key={item.label} ref={studioMenuRef}>
@@ -198,7 +200,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <Wrench size={16} /> My Toolbox ({count} tools)
             </Link>
           )}
-          {nav.map((item) => {
+          {navItems.map((item) => {
             if (item.items) {
               return (
                 <div className="mobile-studio-nav" key={item.label}>

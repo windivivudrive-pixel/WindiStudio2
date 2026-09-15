@@ -109,4 +109,167 @@ describe('Language translation engine', () => {
       'Suitable for Social & Marketing: Automate small content tasks with visual flows and human approval steps. Official README and GitHub metrics cross-checked. Order reflects editorial priority, not overall GitHub ranking.'
     );
   });
+
+  it('translates home page hero, arcade, voice, layouts, connect and news to English', () => {
+    // Navigation & Shell
+    expect(translateText('Công cụ', 'en')).toBe('Tools');
+    expect(translateText('Tin tức', 'en')).toBe('News');
+    expect(translateText('Hồ sơ của tôi', 'en')).toBe('My profile');
+    expect(translateText('Công cụ sáng tạo.', 'en')).toBe('Creative tools.');
+
+    // Workflow Hero
+    expect(translateText('Bạn chốt hướng.', 'en')).toBe('You set the direction.');
+    expect(translateText('Windi làm', 'en')).toBe('Windi crafts the');
+    expect(translateText('Một video đáng xem không bắt đầu từ nút render.', 'en')).toBe("A great video doesn't start with the render button.");
+    expect(translateText('Nó bắt đầu từ một hướng kể đủ đúng để người ta muốn xem tiếp.', 'en')).toBe('It starts with a storyline compelling enough to keep people watching.');
+    expect(translateText('Bắt đầu với Video Kits', 'en')).toBe('Get started with Video Kits');
+    expect(translateText('Sở hữu Video Kits', 'en')).toBe('Get Video Kits');
+    expect(translateText('Nghe thử Voice Studio', 'en')).toBe('Preview Voice Studio');
+    expect(translateText('CHỐT Ý TƯỞNG', 'en')).toBe('SHAPE THE IDEA');
+    expect(translateText('CHỌN LAYOUT', 'en')).toBe('CHOOSE A LAYOUT');
+    expect(translateText('DUYỆT KỊCH BẢN', 'en')).toBe('APPROVE SCRIPT');
+    expect(translateText('Không đốt quota vào một hướng chưa chốt.', 'en')).toBe("Don't burn quota on an unconfirmed direction.");
+    expect(translateText('Bạn duyệt ba điểm quan trọng. Windi lo phần còn lại.', 'en')).toBe('You approve three key gates. Windi handles the rest.');
+
+    // Voice Feature
+    expect(translateText('Đừng chỉ đọc.', 'en')).toBe("Don't just read.");
+    expect(translateText('Hãy khiến người ta nghe tiếp.', 'en')).toBe('Make people keep listening.');
+    expect(translateText('Khám phá Voice Studio', 'en')).toBe('Explore Voice Studio');
+    expect(translateText('01 / CHỮA LÀNH', 'en')).toBe('01 / HEALING & CALM');
+    expect(translateText('Nghe mẫu giọng Chữa Lành', 'en')).toBe('Listen to Healing voice sample');
+    expect(translateText('Ấm áp · chậm rãi · giàu khoảng lặng', 'en')).toBe('Warm · gentle · rich in pauses');
+
+    // Layouts
+    expect(translateText('03 / CHỌN PHONG CÁCH', 'en')).toBe('03 / CHOOSE A STYLE');
+    expect(translateText('Một câu chuyện.', 'en')).toBe('One story.');
+    expect(translateText('Một cảm giác rất khác.', 'en')).toBe('A distinctly different feeling.');
+    expect(translateText('Chọn cách kể', 'en')).toBe('Choose storytelling style');
+    expect(translateText('Biến điều', 'en')).toBe('Turn complex');
+    expect(translateText('phức tạp thành', 'en')).toBe('ideas into');
+    expect(translateText('thứ ai cũng hiểu.', 'en')).toBe('what anyone can understand.');
+    expect(translateText('Rõ ý. Có nhịp. Không hề nhạt.', 'en')).toBe('Clear intent. In rhythm. Never dull.');
+    expect(translateText('Khi mỗi cảnh', 'en')).toBe('When every scene');
+    expect(translateText('đều phải khiến', 'en')).toBe('demands to make');
+    expect(translateText('người ta dừng lại.', 'en')).toBe('viewers stop and watch.');
+    expect(translateText('Điện ảnh. Dày cảm xúc. Có dư âm.', 'en')).toBe('Cinematic. Emotionally rich. Resonant.');
+
+    // Windi Connect
+    expect(translateText('04 / WINDI CONNECT', 'en')).toBe('04 / WINDI CONNECT');
+    expect(translateText('Đừng để ý tưởng', 'en')).toBe("Don't let ideas");
+    expect(translateText('chết trong một tab.', 'en')).toBe('die inside a tab.');
+    expect(translateText('Xem Windi Connect hoạt động', 'en')).toBe('See how Windi Connect works');
+    expect(translateText('Windi Connect đưa ảnh vào đúng cảnh của video', 'en')).toBe('Windi Connect routes visuals into the right video scene');
+    expect(translateText('SẴN SÀNG', 'en')).toBe('READY');
+    expect(translateText('Cảnh 04', 'en')).toBe('Scene 04');
+    expect(translateText('prompt đã chốt', 'en')).toBe('approved prompt');
+    expect(translateText('hoặc Google Flow', 'en')).toBe('or Google Flow');
+    expect(translateText('ẢNH ĐÃ THÊM', 'en')).toBe('IMAGE ADDED');
+    expect(translateText('Cảnh 04 đã sẵn sàng để dựng', 'en')).toBe('Scene 04 is ready for assembly');
+    expect(translateText('✓ Không cần chép file thủ công', 'en')).toBe('✓ No manual file copying needed');
+
+    // Arcade Console & Controls
+    expect(translateText('Quy trình làm video cùng Windi', 'en')).toBe('Video creation workflow with Windi');
+    expect(translateText('BẠN', 'en')).toBe('YOU');
+    expect(translateText('✓ ĐÃ DUYỆT', 'en')).toBe('✓ APPROVED');
+    expect(translateText('CHỌN LẠI', 'en')).toBe('RESET');
+    expect(translateText('DUYỆT', 'en')).toBe('APPROVE');
+    expect(translateText('TIẾP TỤC', 'en')).toBe('CONTINUE');
+    expect(translateText('Ⅱ TẠM DỪNG', 'en')).toBe('Ⅱ PAUSE');
+    expect(translateText('▶ XEM TIẾP', 'en')).toBe('▶ PLAY');
+    expect(translateText('↺ XEM LẠI', 'en')).toBe('↺ REPLAY');
+    expect(translateText('Giảm chuyển động', 'en')).toBe('Reduce motion');
+    expect(translateText('Một chủ đề có thể thành video đáng xem.', 'en')).toBe('Any topic can become a compelling video.');
+    expect(translateText('Một điều ít ai biết', 'en')).toBe('Little-known fact');
+
+    // News & Ticker
+    expect(translateText('Tin mới cho người làm sáng tạo', 'en')).toBe('Latest news for creators');
+    expect(translateText('Google Workspace ra mắt Google Pics: AI thiết kế đồ họa đối đầu Canva, tích hợp Docs & Slides', 'en'))
+      .toBe('Google Workspace launches Google Pics: AI graphic design challenging Canva, built into Docs & Slides');
+  });
+
+  it('translates English text back to Vietnamese when language is vi', () => {
+    // Navigation and Shell
+    expect(translateText('Sign in', 'vi')).toBe('Đăng nhập');
+    expect(translateText('Log out', 'vi')).toBe('Đăng xuất');
+    expect(translateText('Sign out', 'vi')).toBe('Đăng xuất');
+    expect(translateText('Support Windi', 'vi')).toBe('Ủng hộ Windi');
+    expect(translateText('Tools', 'vi')).toBe('Công cụ');
+    expect(translateText('News', 'vi')).toBe('Tin tức');
+    expect(translateText('My profile', 'vi')).toBe('Hồ sơ của tôi');
+    expect(translateText('Open menu', 'vi')).toBe('Mở menu');
+    expect(translateText('Close menu', 'vi')).toBe('Đóng menu');
+    expect(translateText('Main navigation', 'vi')).toBe('Điều hướng chính');
+    expect(translateText('Mobile navigation', 'vi')).toBe('Điều hướng di động');
+    expect(translateText('Footer links', 'vi')).toBe('Liên kết cuối trang');
+    expect(translateText('Creative tools.', 'vi')).toBe('Công cụ sáng tạo.');
+
+    // Workflow Hero
+    expect(translateText('You set the direction.', 'vi')).toBe('Bạn chốt hướng.');
+    expect(translateText('Windi crafts the video.', 'vi')).toBe('Windi làm video.');
+    expect(translateText("A great video doesn't start with the render button.", 'vi')).toBe('Một video đáng xem không bắt đầu từ nút render.');
+    expect(translateText('It starts with a storyline compelling enough to keep people watching.', 'vi')).toBe('Nó bắt đầu từ một hướng kể đủ đúng để người ta muốn xem tiếp.');
+    expect(translateText('Get started with Video Kits', 'vi')).toBe('Bắt đầu với Video Kits');
+    expect(translateText('Get Video Kits', 'vi')).toBe('Sở hữu Video Kits');
+    expect(translateText('Preview Voice Studio', 'vi')).toBe('Nghe thử Voice Studio');
+    expect(translateText('SHAPE THE IDEA', 'vi')).toBe('CHỐT Ý TƯỞNG');
+    expect(translateText('CHOOSE LAYOUT', 'vi')).toBe('CHỌN LAYOUT');
+    expect(translateText('CHOOSE A LAYOUT', 'vi')).toBe('CHỌN LAYOUT');
+    expect(translateText('APPROVE SCRIPT', 'vi')).toBe('DUYỆT KỊCH BẢN');
+    expect(translateText("Don't burn quota on an unconfirmed direction.", 'vi')).toBe('Không đốt quota vào một hướng chưa chốt.');
+    expect(translateText('You approve three key gates. Windi handles the rest.', 'vi')).toBe('Bạn duyệt ba điểm quan trọng. Windi lo phần còn lại.');
+
+    // Arcade Console
+    expect(translateText('YOU DECIDE', 'vi')).toBe('BẠN QUYẾT');
+    expect(translateText('Video creation workflow with Windi', 'vi')).toBe('Quy trình làm video cùng Windi');
+    expect(translateText('✓ APPROVED', 'vi')).toBe('✓ ĐÃ DUYỆT');
+    expect(translateText('RESET', 'vi')).toBe('CHỌN LẠI');
+    expect(translateText('APPROVE', 'vi')).toBe('DUYỆT');
+    expect(translateText('CONTINUE', 'vi')).toBe('TIẾP TỤC');
+    expect(translateText('Ⅱ PAUSE', 'vi')).toBe('Ⅱ TẠM DỪNG');
+    expect(translateText('▶ PLAY', 'vi')).toBe('▶ XEM TIẾP');
+    expect(translateText('↺ REPLAY', 'vi')).toBe('↺ XEM LẠI');
+    expect(translateText('Reduce motion', 'vi')).toBe('Giảm chuyển động');
+
+    // Dynamic patterns in reverse
+    expect(translateText('46.743 stars · 7.278 forks', 'vi')).toBe('46.743 sao · 7.278 fork');
+    expect(translateText('100.000 GitHub stars', 'vi')).toBe('100.000 sao GitHub');
+    expect(translateText('12 tools', 'vi')).toBe('12 công cụ');
+    expect(translateText('25 results', 'vi')).toBe('25 kết quả');
+    expect(translateText('Updated today', 'vi')).toBe('Cập nhật hôm nay');
+    expect(translateText('Updated this week', 'vi')).toBe('Cập nhật tuần này');
+    expect(translateText('Updated 3 days ago', 'vi')).toBe('Cập nhật 3 ngày trước');
+    expect(translateText('Project updated: 12/03/2026', 'vi')).toBe('Dự án cập nhật: 12/03/2026');
+    expect(translateText('Hit duck! 100 points.', 'vi')).toBe('Trúng vịt! 100 điểm.');
+  });
+
+  it('guarantees round-trip two-way translation (VI -> EN -> VI)', () => {
+    const samples = [
+      'Đăng nhập',
+      'Ủng hộ Windi',
+      'Công cụ',
+      'Tin tức',
+      'Hồ sơ của tôi',
+      'Bạn chốt hướng.',
+      'Windi làm video.',
+      'Một video đáng xem không bắt đầu từ nút render.',
+      'Bắt đầu với Video Kits',
+      'Sở hữu Video Kits',
+      'Nghe thử Voice Studio',
+      'CHỐT Ý TƯỞNG',
+      'DUYỆT KỊCH BẢN',
+      'BẠN QUYẾT',
+      '12 công cụ',
+      '46.743 sao · 7.278 fork',
+      'Cập nhật hôm nay',
+      'Dự án cập nhật: 12/03/2026',
+    ];
+
+    for (const vi of samples) {
+      const en = translateText(vi, 'en');
+      expect(en).not.toBe(vi);
+      const backToVi = translateText(en, 'vi');
+      expect(backToVi).toBe(vi);
+    }
+  });
 });
+

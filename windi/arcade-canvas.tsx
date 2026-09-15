@@ -4,22 +4,23 @@ import {Application,Assets,Container,Graphics,Sprite,Text,Texture} from 'pixi.js
 import {createArcadeDog} from './arcade-dog';
 import type {ArcadeState} from './arcade-state';
 
-type Props={state:ArcadeState;running:boolean;onReady:()=>void;onFailure:()=>void};
+type Props={state:ArcadeState;running:boolean;onReady:()=>void;onFailure:()=>void;language?:string};
 const W=360,H=540;
 export default function ArcadeCanvas(props:Props){
   const host=useRef<HTMLDivElement>(null),latest=useRef(props);latest.current=props;
   useEffect(()=>{
     if(!host.current)return;const mount=host.current;
     let disposed=false,initialized=false,app:Application|undefined,scene:Container|undefined;
-    let revision=-1,stage=-1,theme='',choice=-1,time=0,sceneTime=0,lastState:ArcadeState|undefined;
+    let revision=-1,stage=-1,theme='',choice=-1,time=0,sceneTime=0,lastLang='',lastState:ArcadeState|undefined;
     let animate:((t:number,s:ArcadeState)=>void)|undefined;
     const render=()=>{if(!app||!initialized||disposed||!birdFrames.length)return;const p=latest.current;
       const currentTheme=document.documentElement.dataset.theme||'light';
       const selection=p.state.choices[3]||0;
-      if(revision!==p.state.revision||stage!==p.state.stage||theme!==currentTheme||choice!==selection){
+      const lang=p.language||'vi';
+      if(revision!==p.state.revision||stage!==p.state.stage||theme!==currentTheme||choice!==selection||lastLang!==lang){
         scene?.destroy({children:true});scene=new Container();app.stage.addChild(scene);
-        stage=p.state.stage;revision=p.state.revision;theme=currentTheme;choice=selection;sceneTime=time;
-        animate=buildScene(scene,stage,theme==='dark',selection,birdFrames);
+        stage=p.state.stage;revision=p.state.revision;theme=currentTheme;choice=selection;sceneTime=time;lastLang=lang;
+        animate=buildScene(scene,stage,theme==='dark',selection,birdFrames,lang==='en');
       }
       animate?.(time-sceneTime,p.state);app.render();lastState=p.state;
     };
@@ -39,13 +40,13 @@ export default function ArcadeCanvas(props:Props){
     }catch{if(!disposed)latest.current.onFailure();}}
     void init();
     // Synchronize React state without reinitializing the renderer or allocating per frame.
-    const sync=setInterval(()=>{if(!initialized||disposed||!birdFrames.length)return;if(latest.current.state!==lastState)render();if(latest.current.running)app?.start();else app?.stop();},80);
+    const sync=setInterval(()=>{if(!initialized||disposed||!birdFrames.length)return;if(latest.current.state!==lastState||latest.current.language!==lastLang)render();if(latest.current.running)app?.start();else app?.stop();},80);
     return()=>{disposed=true;clearInterval(sync);observer.disconnect();themeObserver.disconnect();if(initialized&&app)app.destroy(true,{children:true});};
   },[]);
-  return <div ref={host} className="arcade-canvas" aria-hidden="true"/>;
+  return <div ref={host} className="arcade-canvas" data-windi-no-translate="true" aria-hidden="true"/>;
 }
 
-function buildScene(root:Container,index:number,dark:boolean,layout:number,birds:Texture[]){
+function buildScene(root:Container,index:number,dark:boolean,layout:number,birds:Texture[],isEn=false){
   const ink=dark?0xdad8c8:0x304739,paper=dark?0x263a35:0xf4f0d9,wall=dark?0x182d28:0xdde4c8,green=0xabc581,orange=0xec996e,blue=0x9fbcc4;
   const moving:Array<(t:number,s:ArcadeState)=>void>=[];
   const box=(x:number,y:number,w:number,h:number,color:number,parent:Container=root)=>{const g=new Graphics().rect(0,0,w,h).fill(color);g.position.set(x,y);parent.addChild(g);return g;};
@@ -66,7 +67,7 @@ function buildScene(root:Container,index:number,dark:boolean,layout:number,birds
     box(218,279,72,68,0x26372d);box(224,285,60,57,0x637f65);
   };
   const miniPicture=(x:number,y:number,w:number,h:number,seed:number)=>{frame(x,y,w,h,seed%2?blue:green);box(x+9,y+9,12,12,0xf4d790);const mountain=new Graphics().poly([x+5,y+h-5,x+w*.4,y+h*.42,x+w*.63,y+h*.7,x+w-5,y+h*.25,x+w-5,y+h-5]).fill(seed%2?0x5b796b:0x7a9161);root.addChild(mountain);};
-  if(index===0){desk();frame(132,150,180,61);label('VIDEO WORKFLOW',149,166,18);label('CHỐT HƯỚNG KỂ',158,190,11);const folder=box(75,310,37,25,orange);moving.push(t=>{folder.x=75+Math.sin(t)*8;folder.y=310+Math.sin(t*3)*7;});}
+  if(index===0){desk();frame(132,150,180,61);label('VIDEO WORKFLOW',149,166,18);label(isEn?'LOCK STORYLINE':'CHỐT HƯỚNG KỂ',isEn?142:158,190,11);const folder=box(75,310,37,25,orange);moving.push(t=>{folder.x=75+Math.sin(t)*8;folder.y=310+Math.sin(t*3)*7;});}
   if(index===1||index===2){
     for(let i=0;i<3;i++){const sheet=new Container();root.addChild(sheet);sheet.position.set(127+i*62,161+(i%2)*10);box(3,4,53,71,ink,sheet);box(0,0,53,71,paper,sheet);label('0'+(i+1),8,9,16,ink,sheet);for(let j=0;j<3;j++)box(8,35+j*8,36-j*6,2,green,sheet);moving.push((t,s)=>{sheet.y=161+(i%2)*10+Math.sin(t*2+i)*5;sheet.scale.set(index===2&&(s.choices[2]||0)===i?1.12:1);sheet.alpha=index===1?Math.min(1,.3+t*.5-i*.15):1;});}desk();
   }
@@ -86,11 +87,11 @@ function buildScene(root:Container,index:number,dark:boolean,layout:number,birds
     frame(120,132,208,145,dark?0x132720:paper);for(let row=0;row<3;row++)for(let col=0;col<4;col++)box(133+col*46,150+row*29,40,20,[green,blue,orange][row]);
     const playhead=box(132,145,2,104,ink);moving.push((t,s)=>playhead.x=132+(index===8?s.progress:(t*.2)%1)*182);
     label(index===8?'RENDER / LOCAL':'VOICE + CAPTIONS',135,254,11);
-    if(index===7){const words=['Từng','từ','đúng','nhịp.'].map((word,i)=>label(word,40+i*75,397,16));moving.push(t=>words.forEach((word,i)=>word.alpha=Math.floor(t*2)%4===i?1:.3));}desk();
+    if(index===7){const words=(isEn?['Every','word','on','beat.']:['Từng','từ','đúng','nhịp.']).map((word,i)=>label(word,40+i*75,397,16));moving.push(t=>words.forEach((word,i)=>word.alpha=Math.floor(t*2)%4===i?1:.3));}desk();
   }
   if(index===9){
-    frame(129,131,108,192,layout===1?0x1b2924:paper);miniPicture(137,140,92,109,layout);label('CÂU CHUYỆN',143,263,10,layout===1?0xe7e2ce:ink);label('CỦA BẠN.',143,280,12,layout===1?0xe7e2ce:ink);
-    for(let i=0;i<3;i++){const check=label(['✓ VIDEO','✓ VOICE','✓ CAPTION'][i],251,157+i*24,11);moving.push((t,s)=>check.alpha=s.progress>i*.25?1:.25);}
+    frame(129,131,108,192,layout===1?0x1b2924:paper);miniPicture(137,140,92,109,layout);label(isEn?'YOUR':'CÂU CHUYỆN',143,263,10,layout===1?0xe7e2ce:ink);label(isEn?'STORY.':'CỦA BẠN.',143,280,12,layout===1?0xe7e2ce:ink);
+    for(let i=0;i<3;i++){const check=label(['✓ VIDEO','✓ VOICE',isEn?'✓ CAPTIONS':'✓ CAPTION'][i],251,157+i*24,11);moving.push((t,s)=>check.alpha=s.progress>i*.25?1:.25);}
     moving.push((t,s)=>{dog.x=254;dog.y=405-(s.acting?Math.abs(Math.sin(t*4))*30:0);bird.position.set(75+Math.sin(t*2)*25,289+Math.cos(t*2)*22);});
     for(let i=0;i<24;i++){const confetti=box((i*73)%W,140+(i*47)%240,4,7,[orange,green,blue][i%3]);moving.push((t,s)=>{confetti.visible=true;confetti.y=130+((t*40+i*47)%270);confetti.rotation=t+i;});}
   }
@@ -104,7 +105,7 @@ function buildScene(root:Container,index:number,dark:boolean,layout:number,birds
     box(284,351,29,14,0x684832);box(294,357,10,3,0xe1b97e);
     box(284,369,29,13,0x684832);box(294,374,10,3,0xe1b97e);
     box(184,350,92,29,0x33271e);box(187,353,86,23,0xf4ddb0);
-    const nameplate=new Text({text:'BẠN QUYẾT',resolution:2,style:{fontFamily:'Arial, sans-serif',fontSize:13,fontWeight:'bold',fill:0x33271e,padding:4}});
+    const nameplate=new Text({text:isEn?'YOU DECIDE':'BẠN QUYẾT',resolution:2,style:{fontFamily:'Arial, sans-serif',fontSize:isEn?11:13,fontWeight:'bold',fill:0x33271e,padding:4}});
     nameplate.anchor.set(.5);nameplate.position.set(230,364);root.addChild(nameplate);
     box(179,320,31,10,0xf4f0d9);box(183,316,29,5,0xffffff);
     box(307,312,14,18,0x577f67);box(311,306,3,13,0xf4ddb0);

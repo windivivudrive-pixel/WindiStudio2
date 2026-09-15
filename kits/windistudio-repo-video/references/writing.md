@@ -18,9 +18,9 @@ Trong lời đọc, ưu tiên gọi repo là “dự án” và gọi context l�
 | 36–45s | Cách bắt đầu + trả lời open loop | Bước đầu rõ ràng, không đọc lệnh dài |
 | 45–50s | CTA có lợi ích, nối về WindiStudio | URL thực tế + watermark; giữ đủ lâu để đọc |
 
-Không cần đủ bảy cảnh nếu chủ đề đơn giản. Tránh 3 giây end card không có nội dung. Giữ một hình/demo khoảng 3–6 giây nếu nó còn đang truyền tải một ý; nếu phải giữ 8–9 giây thì tách thành các reveal có ý nghĩa. Mỗi thay đổi hình phải khớp đúng câu thoại hoặc từ khóa đang nói; không đổi cảnh chỉ để gây nhiễu.
+Không cần đủ bảy ý nội dung nếu chủ đề đơn giản. Chọn số minh họa kỹ thuật theo độ dài thoại, số ý và proof cần thiết; có thể thêm source capture khi cần chứng minh claim. Giữ từng visual 3–5 giây; nếu một ý dài hơn, tách thành các reveal có nghĩa và asset khác nhau. Không zoom/pan một ảnh để giả beat mới. Mỗi thay đổi hình phải khớp đúng câu thoại hoặc từ khóa đang nói; không đổi cảnh chỉ để gây nhiễu.
 
-Hình repo không cần lúc nào cũng có người. Ưu tiên minh họa code, sơ đồ, UI, luồng dữ liệu và kết quả; xen kẽ cảnh có người khi sự hiện diện của người giúp hiểu tình huống. Prompt phải nêu rõ cảnh nobody hay có người, cùng ratio đã chốt, framing và hành động cụ thể.
+Hình repo không cần lúc nào cũng có người. Ưu tiên minh họa code, sơ đồ, UI, luồng dữ liệu và kết quả; xen kẽ cảnh có người khi sự hiện diện của người giúp hiểu tình huống. Mỗi kịch bản hoàn chỉnh bắt buộc có `image-prompts.md`, mapping từng beat tới prompt/capture. Mỗi prompt phải tự chứa ratio đã chốt, style lock, framing, hành động cụ thể và negative constraints; không tham chiếu rút gọn tới một prefix nằm ở chỗ khác. Nếu người dùng chỉ định video/tập chuẩn, tách palette, medium, composition, character scope, typography/caption policy và nhịp để làm style lock trước khi viết prompt. Source capture là proof và không thay thế prompt cho beat minh họa khác.
 
 ## Chọn hook
 
