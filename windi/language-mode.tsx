@@ -613,12 +613,123 @@ for (const [k, v] of Object.entries(english)) {
   englishLower[k.toLowerCase()] = v;
 }
 
+// Reverse lookup cache for bidirectional translation (en -> vi)
+const vietnamese: Record<string, string> = {};
+const vietnameseLower: Record<string, string> = {};
+for (const [vi, en] of Object.entries(english)) {
+  if (!vietnamese[en]) {
+    vietnamese[en] = vi;
+  }
+  const enLower = en.toLowerCase();
+  if (!vietnameseLower[enLower]) {
+    vietnameseLower[enLower] = vi;
+  }
+}
+
+// Ensure key common terms have canonical reverse mappings
+const commonReverse: Record<string, string> = {
+  'Sign in': 'Đăng nhập',
+  'Log out': 'Đăng xuất',
+  'Sign out': 'Đăng xuất',
+  'Tools': 'Công cụ',
+  'News': 'Tin tức',
+  'My profile': 'Hồ sơ của tôi',
+  'Personal account': 'Tài khoản cá nhân',
+  'Open personal Toolbox': 'Mở Toolbox cá nhân',
+  'Main navigation': 'Điều hướng chính',
+  'Mobile navigation': 'Điều hướng di động',
+  'Footer links': 'Liên kết cuối trang',
+  'Open menu': 'Mở menu',
+  'Close menu': 'Đóng menu',
+  'Search': 'Tìm kiếm',
+  'Search Windi': 'Tìm kiếm Windi',
+  'Search within Windi': 'Tìm trong Windi',
+  'Support Windi': 'Ủng hộ Windi',
+  'Creative tools.': 'Công cụ sáng tạo.',
+  'Creative tools': 'Công cụ sáng tạo',
+  'You set the direction.': 'Bạn chốt hướng.',
+  'Windi crafts the': 'Windi làm',
+  'Windi crafts the video.': 'Windi làm video.',
+  'video.': 'video.',
+  'CHOOSE LAYOUT': 'CHỌN LAYOUT',
+  'CHOOSE A LAYOUT': 'CHỌN LAYOUT',
+  'SHAPE THE IDEA': 'CHỐT Ý TƯỞNG',
+  'APPROVE SCRIPT': 'DUYỆT KỊCH BẢN',
+  'YOU DECIDE': 'BẠN QUYẾT',
+};
+for (const [en, vi] of Object.entries(commonReverse)) {
+  vietnamese[en] = vi;
+  vietnameseLower[en.toLowerCase()] = vi;
+}
+
 export function translateText(value: string, language: WindiLanguage): string {
-  if (language !== 'en' || !value) return value;
+  if (!value) return value;
   const leading = value.match(/^\s*/)?.[0] ?? '';
   const trailing = value.match(/\s*$/)?.[0] ?? '';
   const trimmed = value.trim();
   if (!trimmed) return value;
+
+  if (language === 'vi') {
+    // 1. Exact match in reverse dictionary
+    if (vietnamese[trimmed]) {
+      return leading + vietnamese[trimmed] + trailing;
+    }
+    // 1b. Normalized whitespace
+    const normalized = trimmed.replace(/\s+/g, ' ');
+    if (vietnamese[normalized]) {
+      return leading + vietnamese[normalized] + trailing;
+    }
+    // 2. Case-insensitive match
+    const lower = trimmed.toLowerCase();
+    if (vietnameseLower[lower]) {
+      return leading + vietnameseLower[lower] + trailing;
+    }
+    const normLower = normalized.toLowerCase();
+    if (vietnameseLower[normLower]) {
+      return leading + vietnameseLower[normLower] + trailing;
+    }
+    // 3. Match without trailing punctuation
+    const punctMatch = normalized.match(/^(.+?)([.:!?…]+)$/);
+    if (punctMatch && punctMatch[1] && vietnamese[punctMatch[1]]) {
+      return leading + vietnamese[punctMatch[1]] + punctMatch[2] + trailing;
+    }
+
+    // 4. Dynamic pattern replacements (reverse)
+    let res = normalized;
+
+    const reasonMatch = res.match(/^Suitable for\s+(.*?):\s+(.*?)\s+(Official README and GitHub metrics cross-checked\. Order reflects editorial priority, not overall GitHub ranking\.)$/);
+    if (reasonMatch) {
+      const cat = translateText(reasonMatch[1], 'vi');
+      const hook = translateText(reasonMatch[2], 'vi');
+      const disclaimer = 'README chính chủ và số liệu GitHub đã được đối chiếu. Thứ tự này là ưu tiên biên tập, không phải bảng xếp hạng toàn GitHub.';
+      return `${leading}Phù hợp ${cat}: ${hook} ${disclaimer}${trailing}`;
+    }
+
+    res = res.replace(/([\d.,]+)\s*stars\s*·\s*([\d.,]+)\s*forks/g, '$1 sao · $2 fork');
+    res = res.replace(/([\d.,]+)\s*GitHub\s*stars/g, '$1 sao GitHub');
+    res = res.replace(/([\d.,]+[kK]?)\s*stars(?!\S)/g, '$1 sao');
+    res = res.replace(/([\d.,]+)\s*tools(?!\S)/g, '$1 công cụ');
+    res = res.replace(/([\d.,]+)\s*results(?!\S)/g, '$1 kết quả');
+    res = res.replace(/Updated\s*(\d+)\s*days\s*ago/g, 'Cập nhật $1 ngày trước');
+    res = res.replace(/Updated\s*(\d+)\s*months\s*ago/g, 'Cập nhật $1 tháng trước');
+    res = res.replace(/Updated\s*today/g, 'Cập nhật hôm nay');
+    res = res.replace(/Updated\s*yesterday/g, 'Cập nhật hôm qua');
+    res = res.replace(/Updated\s*this\s*week/g, 'Cập nhật tuần này');
+    res = res.replace(/Project updated:\s*/g, 'Dự án cập nhật: ');
+    res = res.replace(/Figures recorded on\s*/g, 'Số liệu ngày ');
+    res = res.replace(/Posted by\s*(.*?)\s*·\s*Cross-checked on\s*/g, 'Đăng bởi $1 · Đối chiếu nguồn ');
+    res = res.replace(/^Checked on\s+/g, 'Kiểm tra ');
+    res = res.replace(/Hit duck!\s*(\d+)\s*points\.?/g, 'Trúng vịt! $1 điểm.');
+    res = res.replace(/VietQR Donate Windi\s*/g, 'Mã QR Donate Windi ');
+    res = res.replace(/^Open profile\s+/g, 'Mở hồ sơ ');
+    res = res.replace(/^Actions for\s+/g, 'Thao tác với ');
+    res = res.replace(/Page\s*(\d+)\s*·\s*(\d+)\s*results/g, 'Trang $1 · $2 kết quả');
+
+    if (res !== trimmed) {
+      return leading + res + trailing;
+    }
+    return value;
+  }
 
   // 1. Exact match
   if (english[trimmed]) {
@@ -701,80 +812,96 @@ export function translateText(value: string, language: WindiLanguage): string {
 }
 
 type OriginalText = Text & { __windiOriginal?: string; __windiCurrent?: string };
-
 const originalAttributes = new WeakMap<HTMLElement, Record<string, string>>();
+
+function translateTextNode(text: OriginalText, language: WindiLanguage) {
+  if (text.parentElement?.closest('[data-windi-no-translate]')) return;
+  const currentVal = text.nodeValue ?? '';
+  if (!currentVal.trim()) return;
+
+  if (language === 'vi') {
+    let target = text.__windiOriginal;
+    if (!target || vietnamese[target.trim()] || vietnameseLower[target.trim().toLowerCase()]) {
+      target = translateText(target || currentVal, 'vi');
+    }
+    if (text.nodeValue !== target) {
+      text.nodeValue = target;
+    }
+    text.__windiCurrent = undefined;
+    return;
+  }
+
+  // language === 'en'
+  const isAlreadyEnglish = Boolean(
+    vietnamese[currentVal.trim()] ||
+    vietnameseLower[currentVal.trim().toLowerCase()]
+  );
+  if (!text.__windiOriginal) {
+    text.__windiOriginal = isAlreadyEnglish ? translateText(currentVal, 'vi') : currentVal;
+  } else if (text.__windiCurrent === undefined || (currentVal !== text.__windiCurrent && !isAlreadyEnglish)) {
+    text.__windiOriginal = currentVal;
+  }
+
+  const source = text.__windiOriginal ?? currentVal;
+  const nextVal = translateText(source, 'en');
+  if (text.nodeValue !== nextVal) {
+    text.__windiCurrent = nextVal;
+    text.nodeValue = nextVal;
+  }
+}
+
+function translateAttributes(element: HTMLElement, language: WindiLanguage) {
+  if (element.closest('[data-windi-no-translate]')) return;
+  for (const name of ['aria-label', 'title', 'placeholder']) {
+    const key = `windi${name.replace(/-([a-z])/g, (_, char: string) => char.toUpperCase())}Original`;
+    const attributes = originalAttributes.get(element) ?? {};
+    const original = attributes[key];
+    const current = element.getAttribute(name);
+    if (!current) continue;
+
+    if (language === 'vi') {
+      let target = original;
+      if (!target || vietnamese[target.trim()] || vietnameseLower[target.trim().toLowerCase()]) {
+        target = translateText(target || current, 'vi');
+      }
+      if (target && element.getAttribute(name) !== target) {
+        element.setAttribute(name, target);
+      }
+    } else {
+      const isAlreadyEnglish = Boolean(
+        vietnamese[current.trim()] ||
+        vietnameseLower[current.trim().toLowerCase()]
+      );
+      if (!original) {
+        attributes[key] = isAlreadyEnglish ? translateText(current, 'vi') : current;
+        originalAttributes.set(element, attributes);
+      }
+      const source = attributes[key] ?? current;
+      if (source) {
+        const nextVal = translateText(source, 'en');
+        if (element.getAttribute(name) !== nextVal) {
+          element.setAttribute(name, nextVal);
+        }
+      }
+    }
+  }
+}
 
 function translateTree(root: Node, language: WindiLanguage) {
   if (root.nodeType === Node.TEXT_NODE) {
-    const text = root as OriginalText;
-    if (text.parentElement?.closest('[data-windi-no-translate]')) return;
-    if (language === 'vi') {
-      if (text.__windiOriginal !== undefined && text.nodeValue !== text.__windiOriginal) {
-        text.nodeValue = text.__windiOriginal;
-      }
-      return;
-    }
-    const currentVal = text.nodeValue ?? '';
-    // If React updated text in the meantime, update original
-    if (text.__windiCurrent === undefined || currentVal !== text.__windiCurrent) {
-      text.__windiOriginal = currentVal;
-    }
-    const source = text.__windiOriginal ?? currentVal;
-    const nextVal = translateText(source, language);
-    if (text.nodeValue !== nextVal) {
-      text.__windiCurrent = nextVal;
-      text.nodeValue = nextVal;
-    }
+    translateTextNode(root as OriginalText, language);
     return;
   }
 
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
   let node: Node | null;
   while ((node = walker.nextNode())) {
-    const text = node as OriginalText;
-    if (text.parentElement?.closest('[data-windi-no-translate]')) continue;
-    if (language === 'vi') {
-      if (text.__windiOriginal !== undefined && text.nodeValue !== text.__windiOriginal) {
-        text.nodeValue = text.__windiOriginal;
-      }
-      continue;
-    }
-    const currentVal = text.nodeValue ?? '';
-    if (text.__windiCurrent === undefined || currentVal !== text.__windiCurrent) {
-      text.__windiOriginal = currentVal;
-    }
-    const source = text.__windiOriginal ?? currentVal;
-    const nextVal = translateText(source, language);
-    if (text.nodeValue !== nextVal) {
-      text.__windiCurrent = nextVal;
-      text.nodeValue = nextVal;
-    }
+    translateTextNode(node as OriginalText, language);
   }
 
   if (!(root instanceof HTMLElement)) return;
   for (const element of [root, ...root.querySelectorAll<HTMLElement>('*')]) {
-    if (element.closest('[data-windi-no-translate]')) continue;
-    for (const name of ['aria-label', 'title', 'placeholder']) {
-      const key = `windi${name.replace(/-([a-z])/g, (_, char: string) => char.toUpperCase())}Original`;
-      const attributes = originalAttributes.get(element) ?? {};
-      const original = attributes[key];
-      const current = element.getAttribute(name);
-      if (!original && current && language !== 'vi') {
-        attributes[key] = current;
-        originalAttributes.set(element, attributes);
-      }
-      if (language === 'vi') {
-        if (original && current !== original) element.setAttribute(name, original);
-      } else {
-        const source = original ?? current;
-        if (source) {
-          const nextVal = translateText(source, language);
-          if (element.getAttribute(name) !== nextVal) {
-            element.setAttribute(name, nextVal);
-          }
-        }
-      }
-    }
+    translateAttributes(element, language);
   }
 }
 
@@ -790,6 +917,8 @@ export function useLanguage(): LanguageContextValue {
   return context;
 }
 
+let originalDocumentTitle = '';
+
 export function LanguageProvider({
   children,
   initialLanguage = 'vi',
@@ -801,8 +930,9 @@ export function LanguageProvider({
 
   useEffect(() => {
     try {
-      if (localStorage.getItem(storageKey) === 'en') {
-        setLanguage('en');
+      const saved = localStorage.getItem(storageKey);
+      if (saved === 'en' || saved === 'vi') {
+        setLanguage(saved);
       }
     } catch {
       /* Optional preference. */
@@ -818,9 +948,17 @@ export function LanguageProvider({
     }
 
     if (typeof document !== 'undefined') {
-      // Update document title if needed
       if (language === 'en') {
-        document.title = translateText(document.title, 'en');
+        if (!originalDocumentTitle) {
+          originalDocumentTitle = document.title;
+        }
+        document.title = translateText(originalDocumentTitle, 'en');
+      } else {
+        if (originalDocumentTitle) {
+          document.title = originalDocumentTitle;
+        } else {
+          document.title = translateText(document.title, 'vi');
+        }
       }
       translateTree(document.body, language);
     }

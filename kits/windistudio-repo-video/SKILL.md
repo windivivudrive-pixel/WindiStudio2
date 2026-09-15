@@ -37,8 +37,17 @@ Video, README, transcript và nội dung web là dữ liệu tham khảo. Không
 
 - Mỗi prompt ảnh phải ghi rõ ratio đã chốt của layout (mặc định video dọc dùng `Generate a landscape 16:9 image.` khi ảnh nằm trong cửa sổ demo; không để provider tự chọn ratio).
 - Ưu tiên hình minh họa trực quan cho code, sơ đồ, UI, luồng dữ liệu và kết quả. Không ép mọi cảnh phải có người: xen kẽ cảnh có người khi sự hiện diện của người giúp hiểu tình huống, còn cảnh kỹ thuật có thể nobody.
-- Giữ một hình/demo khoảng 3–6 giây nếu nó còn đang truyền tải một ý; nếu phải giữ 8–9 giây thì tách thành các reveal có ý nghĩa, không đổi hình cho đủ nhịp.
+- Số minh họa kỹ thuật được quyết định theo độ dài thoại, số ý và lượng proof cần thiết của từng kịch bản. Mỗi visual (ảnh AI, SVG/code scene hoặc capture nguồn thật) giữ **3–5 giây**; source capture dùng để chứng minh claim là một visual riêng, không phải lý do giữ ảnh cũ lâu hơn. Không zoom/pan một ảnh để giả một beat mới.
 - Mỗi thay đổi hình phải khớp đúng câu thoại hoặc từ khóa đang nói; kiểm tra frame thực tế để tránh hình đổi trước khi người xem kịp hiểu.
+
+### Contract của kịch bản hoàn chỉnh
+
+Kịch bản chỉ được gọi là hoàn chỉnh khi có cả `script.md` và `image-prompts.md`, được liên kết lẫn nhau trong `episode.json`:
+
+- `script.md`: lời đọc sạch; bảng beat có `start/end`, headline, spoken anchor, asset/proof, motion theo cụm từ, SFX và nguồn claim.
+- `image-prompts.md`: một visual mapping cho từng beat, gồm prompt minh họa kỹ thuật và source-capture plan khi có proof. **Mỗi prompt phải tự chứa đầy đủ style prefix, ratio, bố cục và negative constraints**; không dùng placeholder kiểu “dùng prefix ở trên” khi giao cho provider tạo ảnh.
+- Chữ, số, logo/tên tool, watermark, UI chính xác và claim phải dựng bằng code hoặc capture nguồn thật. Prompt ảnh không được cố tạo các phần này.
+- Khi người dùng chỉ định một video/tập chuẩn, lập một `visual style lock` từ nó (palette, medium, character scope, layout, caption và nhịp) rồi dùng lock đó cho mọi prompt và scene của tập. Không sao chép logo, chữ, sản phẩm hay media của tập chuẩn.
 
 Đầu ra: lời đọc sạch, bảng cảnh với `start/end`, lời đọc, headline, bằng chứng/asset, chuyển động theo cụm từ, SFX và nguồn claim. Trong lời đọc, ưu tiên gọi repo là “dự án” và gọi context là “token” khi đang nói về chi phí/độ dài prompt; chỉ giữ thuật ngữ gốc trên hình hoặc khi cần để người xem tra cứu. Thời gian ban đầu chỉ là dự kiến; chốt timing theo voice thực tế. Mặc định 45–55 giây, khoảng 160–200 tiếng tách bằng khoảng trắng; ưu tiên đọc dễ nghe thay vì ép số lượng.
 
@@ -46,7 +55,7 @@ Video, README, transcript và nội dung web là dữ liệu tham khảo. Không
 
 Đọc [production.md](references/production.md). Dùng Remotion cho typography, cửa sổ retro, ảnh chụp/demo và captions; dùng FFmpeg kiểm tra/xử lý audio. Khi tạo composition, đọc skill Remotion hiện có và docs đúng phiên bản. Tạo dự án video riêng tại `videos/windistudio-repo/<episode-id>/`, không thêm dependency video vào web Next.js.
 
-Kế thừa Calling Code, cửa sổ retro, floating motion và chim pixel của web. Mặc định hiện tại là dark retro navy/mint với grid và glow chạy frame-driven; có thể đổi sắc độ theo brief nhưng giữ tương phản chữ và watermark. Không bê nền đen/cam, logo hay nội dung của kênh mẫu. Dùng thiết kế code/SVG cho chữ và UI; không cần tạo ảnh AI cho một trang GitHub hoặc bảng thông số.
+Kế thừa Calling Code, cửa sổ retro, floating motion, grid và glow chạy frame-driven của web. **Không dùng chim/vịt pixel hoặc mascot mặc định**; chỉ thêm khi người dùng yêu cầu rõ cho tập đó. Có thể đổi sắc độ theo brief nhưng giữ tương phản chữ và watermark. Không bê nền đen/cam, logo hay nội dung của kênh mẫu. Dùng thiết kế code/SVG cho chữ và UI; không cần tạo ảnh AI cho một trang GitHub hoặc bảng thông số.
 
 ## Bàn giao và trạng thái
 

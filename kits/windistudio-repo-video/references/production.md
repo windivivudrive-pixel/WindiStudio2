@@ -12,7 +12,7 @@ Nguồn kiểm tra trong workspace WindiStudio2: `app/globals.css`, `windi/home.
 | Nhấn | Hồng `#ff6f9d`, vàng đồng `#b8892d`, cyan `#62bfd0` |
 | Xanh lá | Teal `#267d73` |
 | Font | SVN-Calling Code Regular/Bold, giữ dấu tiếng Việt |
-| Motion | Cửa sổ lơ lửng nhẹ, grid dịch theo frame, glow teal/vàng chạy sine, cursor chọn ô, chim pixel xuất hiện có chủ đích |
+| Motion | Cửa sổ lơ lửng nhẹ, grid dịch theo frame, glow teal/vàng chạy sine và cursor chọn ô; không dùng mascot mặc định |
 
 Chuyển sắc thái web sang video, không quay nguyên trang rồi thu nhỏ. Viền cứng 3–4px, bóng lệch 6–10px ở canvas 1080. Mỗi cảnh có một tiêu điểm. Có thể dùng cửa sổ xếp lớp, nhưng không lồng nhiều card. Dark theme dùng navy/mint và highlight rất nhẹ; tránh glow sci-fi, nền đen/cam, font sans đại trà giống video mẫu.
 
@@ -22,7 +22,7 @@ Chuyển sắc thái web sang video, không quay nguyên trang rồi thu nhỏ. 
 - Safe zone đề xuất: x=80..900, y=160..1600 cho nội dung quan trọng; chừa phải và đáy cho UI Shorts/TikTok. Kiểm tra bằng overlay mục tiêu, không coi safe zone là bảo đảm mọi nền tảng.
 - Headline 84–112px, tối đa 2–3 dòng; supporting text 44–54px. Caption 48–58px, 3–7 từ mỗi cụm, tối đa 2 dòng quanh y=1360..1510. Nhấn 1–2 từ, không tô cả câu.
 - Watermark **WindiStudio - Sử Dụng AI Hiệu Quả** xuất hiện từ frame đầu tới cuối. Đề xuất ô kem cố định x=80..900, y=162..264, text 34–38px; cho phép ngắt dòng sau dấu gạch nhưng giữ nguyên chữ/dấu/casing. Đo độ rộng và kiểm ở preview 360×640. Không nhét watermark sát đáy.
-- Chim pixel không che caption, headline, proof hay watermark. Đưa vào mở/kết hoặc đường đi ngắn có chủ đích, không bay liên tục qua nội dung.
+- Không dùng chim/vịt pixel hay mascot mặc định. Chỉ thêm khi người dùng yêu cầu rõ cho tập; khi đó vẫn không được che caption, headline, proof hoặc watermark.
 
 ## Voice và nguồn hình
 
@@ -36,7 +36,7 @@ Chuyển sắc thái web sang video, không quay nguyên trang rồi thu nhỏ. 
 
 Scaffold standalone theo skill Remotion hiện có; dùng đúng package/docs của version cài đặt. Pin các package `remotion` và `@remotion/*` tương thích. Đưa font/ảnh/audio vào public của dự án video và tham chiếu bằng `staticFile()`.
 
-Tách `RetroWindow`, `BrandWatermark`, `PixelBird`, `RepoProof`, `InputOutputDemo`, `TimedCaptions` và từng scene. Mọi chuyển động dựa trên frame (`useCurrentFrame`, `interpolate`/spring đúng phiên bản), gồm grid `backgroundPosition` modulo kích thước ô, glow theo sine và floating translate/tilt; không `setTimeout`, CSS animation hay random không seed.
+Tách `RetroWindow`, `BrandWatermark`, `RepoProof`, `InputOutputDemo`, `TimedCaptions` và từng scene. Chỉ tạo component mascot khi người dùng đã yêu cầu nó cho tập cụ thể. Mọi chuyển động dựa trên frame (`useCurrentFrame`, `interpolate`/spring đúng phiên bản), gồm grid `backgroundPosition` modulo kích thước ô, glow theo sine và floating translate/tilt; không `setTimeout`, CSS animation hay random không seed.
 
 Cue tối thiểu: `id`, `start`, `end`, `spokenAnchor`, `headline`, `captionChunks`, `asset`, `action`, `claimSource`. Ví dụ hành vi: từ “kết quả” → reveal output, tên repo → title, số đã đọc → highlight số, “lưu ý” → sticky note. Đừng chia bảy slide rồi chỉ crossfade; mỗi cảnh cần có hành vi theo lời đọc.
 

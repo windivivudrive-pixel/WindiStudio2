@@ -74,6 +74,7 @@ videos/
 docs/channel/reference-watch/
 *.mp4
 *.MP3
+!public/music background.MP3
 *.mov
 *.webm
 *.avi

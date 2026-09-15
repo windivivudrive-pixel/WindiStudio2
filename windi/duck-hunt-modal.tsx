@@ -72,6 +72,7 @@ export function DuckHuntModal({ isOpen, onClose }: DuckHuntModalProps) {
     <div className="dialog-backdrop duck-hunt-backdrop" onClick={onClose}>
       <div
         className="retro-window tone-yellow duck-hunt-modal"
+        data-windi-no-translate="true"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"

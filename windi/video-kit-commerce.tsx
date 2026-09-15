@@ -8,9 +8,9 @@ import {
   Download,
   KeyRound,
   RefreshCw,
-  ShieldCheck,
   X,
 } from "lucide-react";
+import { FeedbackToast } from "./feedback-toast";
 
 type Order = {
   id: string;
@@ -27,7 +27,9 @@ type Account = {
       release_ready?: boolean;
       launch_price_vnd?: number;
       launch_limit?: number;
-      voice_bonus_credits?: number;
+      voice_trial_credits?: number;
+      voice_trial_clone_limit?: number;
+      voice_trial_duration_days?: number;
     };
   } | null;
   entitlement: {
@@ -77,8 +79,11 @@ export function VideoKitCommerce() {
   const [checkout, setCheckout] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
   const [authenticated, setAuthenticated] = useState(true);
   const dialog = useRef<HTMLDialogElement>(null);
+  const checkoutOrderIdRef = useRef<string | null>(null);
+  const checkoutStatusRef = useRef<string | null>(null);
 
   const refresh = useCallback(async () => {
     const response = await fetch("/api/video-kits/account", {
@@ -95,6 +100,11 @@ export function VideoKitCommerce() {
     setAuthenticated(true);
     setAccount(body);
     setLoading(false);
+    const nextOrder = body.orders?.find((item: Order) => item.id === checkoutOrderIdRef.current);
+    if (nextOrder?.status === "PAID" && checkoutStatusRef.current === "PENDING") {
+      setNotice("Thanh toán đã được xác nhận. Video Workflow, 10.000 credit Voice và 1 lượt Clone Pro 2.1 đã được cấp cho tài khoản.");
+    }
+    if (nextOrder) checkoutStatusRef.current = nextOrder.status;
     setCheckout((current) => {
       if (!current) return current;
       return (
@@ -133,6 +143,8 @@ export function VideoKitCommerce() {
       setError(body.error || "Chưa tạo được đơn hàng.");
       return;
     }
+    checkoutOrderIdRef.current = body.order.id;
+    checkoutStatusRef.current = body.order.status;
     setCheckout(body.order);
     await refresh();
   }
@@ -144,6 +156,7 @@ export function VideoKitCommerce() {
     const url=URL.createObjectURL(await response.blob());
     const a=document.createElement('a');a.href=url;a.download='Windi-Cai-Dat-Ca-Nhan.zip';a.click();
     window.setTimeout(()=>URL.revokeObjectURL(url),60000);
+    setNotice("Bộ cài Windi đang được tải xuống. Giải nén và mở file cài đặt để bắt đầu.");
   }
 
   const released =
@@ -154,20 +167,30 @@ export function VideoKitCommerce() {
   );
   const launchPrice = account?.product?.metadata.launch_price_vnd ?? 89000;
   const originalPrice = account?.product?.price_vnd ?? 369000;
-  const includedVoiceCredits =
-    account?.product?.metadata.voice_bonus_credits ?? 20000;
+  const includedVoiceCredits=account?.product?.metadata.voice_trial_credits??10000;
+  const includedCloneLimit=account?.product?.metadata.voice_trial_clone_limit??1;
+  const includedVoiceDays=account?.product?.metadata.voice_trial_duration_days??30;
 
   return (
     <section className="kit-commerce" aria-labelledby="kit-buy-title">
+      {notice && (
+        <FeedbackToast
+          message={notice}
+          onClose={() => setNotice("")}
+          title={notice.startsWith("Thanh toán") ? "Mua Video Kit thành công" : "Đã hoàn tất"}
+        />
+      )}
       <div className="kit-price-panel">
         <div>
           <span className="kit-price-kicker">Giấy phép trọn đời cho V1</span>
           <h2 id="kit-buy-title">Cài một lần. Làm video trong mọi project.</h2>
-          <p>
-            Dùng theo tài khoản, không cần kích hoạt máy. Kèm {money(includedVoiceCredits)}
-            {" "}credit Windi Voice API; quota Flow hoặc ChatGPT dùng tài khoản
-            của bạn.
-          </p>
+          <p>Dùng theo tài khoản, không cần kích hoạt máy. Với 89K, bạn nhận:</p>
+          <ul className="kit-included-list">
+            <li><strong>Automation Video Workflow</strong> — từ kịch bản đến video trong một quy trình.</li>
+            <li><strong>{includedCloneLimit} giọng Clone Pro 2.1 miễn phí</strong> — tạo giọng riêng đầu tiên của bạn.</li>
+            <li><strong>{money(includedVoiceCredits)} credit Voice</strong> — dùng trong {includedVoiceDays} ngày cùng gói clone.</li>
+            <li><strong>Extension tạo hình tự động</strong> — gửi prompt đúng cảnh sang Google Flow hoặc ChatGPT.</li>
+          </ul>
         </div>
         <div className="kit-price-box">
           <span>Giá dùng thử · 100 tài khoản đầu</span>
@@ -188,16 +211,10 @@ export function VideoKitCommerce() {
               {activeOrder ? "Mở đơn đang chờ" : "Mua Windi Workflow"}
             </button>
           ) : (
-            <button disabled>Đang hoàn tất kiểm chứng</button>
+            <button disabled>Tạm thời chưa mở bán</button>
           )}
         </div>
       </div>
-      {!released && !account?.entitlement && (
-        <p className="kit-release-lock">
-          <ShieldCheck size={18} /> Thanh toán chỉ được mở sau khi Flow,
-          ChatGPT, bộ cài sạch và hai video demo đã qua kiểm tra thực tế.
-        </p>
-      )}
       {error && (
         <p className="kit-commerce-error" role="alert">
           {error}
@@ -243,11 +260,11 @@ export function VideoKitCommerce() {
             )}
             {account.voiceApi.plan ? (
               <p className="kit-voice-plan">
-                Gói Voice mua thêm: {account.voiceApi.plan.plan_id} · còn {money(Math.max(0, account.voiceApi.plan.credits - account.voiceApi.plan.used_credits))} credit · hết hạn {new Date(account.voiceApi.plan.ends_at).toLocaleDateString("vi-VN")}
+                {account.voiceApi.plan.plan_id==='trial'?'Gói Clone đi kèm Workflow':'Gói Voice đang dùng'} · còn {money(Math.max(0, account.voiceApi.plan.credits - account.voiceApi.plan.used_credits))} credit · hết hạn {new Date(account.voiceApi.plan.ends_at).toLocaleDateString("vi-VN")}
               </p>
             ) : (
               <p className="kit-voice-plan">
-                Muốn tạo thêm sau khi dùng hết 20K? <Link href="/voice-studio">Mua thêm Windi Voice credit</Link>
+                Muốn dùng thêm sau gói Clone? <Link href="/voice-studio">Mua thêm Windi Voice credit</Link>
               </p>
             )}
             <p>
@@ -290,7 +307,7 @@ export function VideoKitCommerce() {
                   <button
                     className="kit-payment-code"
                     onClick={() =>
-                      void navigator.clipboard.writeText(checkout.payment_code)
+                      void navigator.clipboard.writeText(checkout.payment_code).then(() => setNotice("Đã sao chép nội dung chuyển khoản."))
                     }
                   >
                     {checkout.payment_code}

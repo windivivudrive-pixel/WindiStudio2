@@ -5,9 +5,12 @@ import {Pause,Play,Sparkles,Terminal,Film} from 'lucide-react';
 import {PixelDuck} from './pixel-duck';
 import {makeDuckFall,makeDuckFlight} from '@/lib/ambient-flight';
 import {DuckHuntModal} from './duck-hunt-modal';
+import {useLanguage} from './language-mode';
 
 const preferenceKey='windi:ambient-motion';
 export function AmbientMotion(){
+  const {language}=useLanguage();
+  const isEn=language==='en';
   const rootRef=useRef<HTMLDivElement>(null),duckRef=useRef<HTMLButtonElement>(null);
   const toggleRef=useRef<HTMLButtonElement>(null),shootRef=useRef<()=>void>(()=>{});
   const animationRef=useRef<Animation|undefined>(undefined);
@@ -82,15 +85,15 @@ export function AmbientMotion(){
     try{localStorage.setItem(preferenceKey,next?'on':'off');}catch{/* Preference is optional. */}
   };
   return <>
-    <div ref={rootRef} className="ambient-control">
+    <div ref={rootRef} className="ambient-control" data-windi-no-translate="true">
       <div className="ambient-background" aria-hidden="true"><span className="ambient-star star-one">✦</span><span className="ambient-star star-two">✧</span><span className="ambient-star star-three">+</span></div>
       <div className="duck-playfield">
-        <button ref={duckRef} type="button" className="ambient-duck" data-phase={phase} aria-label="Bắn vịt pixel" title="Bấm để bắn · Enter / Space khi dùng bàn phím" tabIndex={running&&phase==='flying'?0:-1} aria-disabled={phase!=='flying'} onClick={()=>shootRef.current()} onFocus={()=>{if(phase==='flying')animationRef.current?.pause();}} onBlur={()=>{if(phase==='flying')animationRef.current?.play();}}>
+        <button ref={duckRef} type="button" className="ambient-duck" data-phase={phase} aria-label={isEn ? "Shoot pixel duck" : "Bắn vịt pixel"} title={isEn ? "Click to shoot · Enter / Space on keyboard" : "Bấm để bắn · Enter / Space khi dùng bàn phím"} tabIndex={running&&phase==='flying'?0:-1} aria-disabled={phase!=='flying'} onClick={()=>shootRef.current()} onFocus={()=>{if(phase==='flying')animationRef.current?.pause();}} onBlur={()=>{if(phase==='flying')animationRef.current?.play();}}>
           <span className="duck-facing"><PixelDuck/></span><span className="duck-impact" aria-hidden="true">✦</span><span className="duck-points" aria-hidden="true">+100</span>
         </button>
       </div>
-      <span className="sr-only" role="status">{hits>0?`Trúng vịt! ${hits*100} điểm.`:''}</span>
-      <button ref={toggleRef} type="button" className="motion-toggle" disabled={!ready||reduced} aria-pressed={running} onClick={toggle} aria-label={reduced?'Chuyển động đã giảm theo cài đặt thiết bị':running?'Tắt chuyển động trang trí':'Bật chuyển động trang trí'}>{running?<Pause size={12}/>:<Play size={12}/>}<span>{reduced?'Giảm chuyển động':running?'Chuyển động: bật':'Chuyển động: tắt'}</span>{hits>0&&<span className="duck-score">{hits*100} PTS</span>}</button>
+      <span className="sr-only" role="status">{hits>0?(isEn?`Hit duck! ${hits*100} points.`:`Trúng vịt! ${hits*100} điểm.`):''}</span>
+      <button ref={toggleRef} type="button" className="motion-toggle" disabled={!ready||reduced} aria-pressed={running} onClick={toggle} aria-label={reduced ? (isEn ? 'Motion reduced by device setting' : 'Chuyển động đã giảm theo cài đặt thiết bị') : running ? (isEn ? 'Turn off decorative motion' : 'Tắt chuyển động trang trí') : (isEn ? 'Turn on decorative motion' : 'Bật chuyển động trang trí')}>{running?<Pause size={12}/>:<Play size={12}/>}<span>{reduced ? (isEn ? 'Reduced motion' : 'Giảm chuyển động') : running ? (isEn ? 'Motion: on' : 'Chuyển động: bật') : (isEn ? 'Motion: off' : 'Chuyển động: tắt')}</span>{hits>0&&<span className="duck-score">{hits*100} PTS</span>}</button>
     </div>
     <DuckHuntModal isOpen={showHuntModal} onClose={() => setShowHuntModal(false)} />
   </>;

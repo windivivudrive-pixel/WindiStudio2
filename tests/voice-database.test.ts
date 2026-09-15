@@ -22,6 +22,7 @@ beforeAll(async()=>{
  await db.exec(await readFile('supabase/migrations/20260909031102_add_voice_clone_accent.sql','utf8'));
  await db.exec(await readFile('supabase/migrations/20260909074124_voice_trial_purchase_eligibility.sql','utf8'));
  await db.exec(await readFile('supabase/migrations/20260909082654_voice_payment_transaction_time.sql','utf8'));
+ await db.exec(await readFile('supabase/migrations/20260914155122_starter_full_price_after_trial.sql','utf8'));
 },30000);
 afterAll(()=>db.close());
 test('five plans, private storage, and no client money/credit mutation',async()=>{
@@ -107,15 +108,15 @@ test('wrong amounts and reused gateway IDs never grant a subscription',async()=>
  expect((await db.query('select windi_voice_pay($1,$2,$3)',[other.payment_code,'gateway-2',1000])).rows).toEqual([{windi_voice_pay:'review'}]);
  expect((await db.query('select * from windi_voice_periods where user_id=$1',[b])).rows).toHaveLength(0);
 });
-test('trial gives one clone slot and Starter upgrade preserves that voice for 40.000đ',async()=>{
+test('trial gives one clone slot and Starter keeps its full 69.000đ price',async()=>{
  const trial=(await db.query<{payment_code:string;amount_vnd:number}>('select * from windi_voice_order($1,$2)',[b,'trial'])).rows[0];
  expect(trial.amount_vnd).toBe(29000);
  await db.query('select windi_voice_pay($1,$2,$3)',[trial.payment_code,'gateway-trial',29000]);
  const trialClone=(await db.query<{id:string}>('select * from windi_voice_clone_reserve($1,$2,$3,$4)',[b,key(21),'Trial voice','vi'])).rows[0];
  await db.query('select windi_voice_clone_finish($1,$2)',[trialClone.id,'trial-provider-voice']);
  const starter=(await db.query<{payment_code:string;amount_vnd:number}>('select * from windi_voice_order($1,$2)',[b,'starter'])).rows[0];
- expect(starter.amount_vnd).toBe(40000);
- await db.query('select windi_voice_pay($1,$2,$3)',[starter.payment_code,'gateway-starter-upgrade',40000]);
+ expect(starter.amount_vnd).toBe(69000);
+ await db.query('select windi_voice_pay($1,$2,$3)',[starter.payment_code,'gateway-starter-upgrade',69000]);
  expect((await db.query('select plan_id,clone_limit,clones_used from windi_voice_periods where user_id=$1 and ends_at>now()',[b])).rows).toEqual([{plan_id:'starter',clone_limit:1,clones_used:0}]);
  await expect(db.query('select windi_voice_clone_reserve($1,$2,$3,$4)',[b,key(22),'Second voice','vi'])).rejects.toThrow('CLONE_LIMIT');
  await db.query('select windi_voice_clone_remove($1,$2)',[b,trialClone.id]);

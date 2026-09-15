@@ -108,7 +108,7 @@ async function videoAnalyzerStatus() {
     path.join(homedir(), ".agents", "skills", "watch", "SKILL.md"),
   ];
   for (const skill of candidates)
-    if (await access(skill).then(() => true).catch(() => false))
+    if (await Promise.all([skill, 'scripts/watch.py', 'scripts/setup.py', 'LICENSE'].map(file => access(file === skill ? skill : path.join(path.dirname(skill), file)).then(() => true).catch(() => false))).then(checks => checks.every(Boolean)))
       return {
         ready: true,
         skill,
