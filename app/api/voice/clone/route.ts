@@ -1,5 +1,5 @@
 import {boundedBody,cartesia,failure,identity,providerReady,resolveCloneAccent,VoiceError,writer} from '@/lib/voice/server';
-import {isUUID,VOICE_LANGUAGES} from '@/lib/voice/shared';
+import {isUUID,VOICE_CLONE_CLIP_LIMITS,VOICE_LANGUAGES} from '@/lib/voice/shared';
 export const runtime='nodejs';
 export const maxDuration=120;
 
@@ -16,8 +16,8 @@ async function providerFailure(response:Response):Promise<ProviderFailure> {
 function providerMessage(status:number,errorCode:string) {
   if(status===402||errorCode==='plan_upgrade_required') return 'Tính năng clone phía Clone Pro 2.1 chưa được kích hoạt cho gói API hiện tại. Vui lòng liên hệ hỗ trợ để nâng cấp nhà cung cấp.';
   if(status===401||status===403) return 'Dịch vụ clone giọng chưa được cấp quyền. Vui lòng quay lại sau.';
-  if(status===413) return 'Mẫu giọng quá lớn. Hãy chọn file nhỏ hơn 3 MB.';
-  if(status===400||status===422) return 'Mẫu giọng chưa phù hợp để clone. Hãy dùng đoạn thu rõ tiếng, một người nói liên tục trong khoảng 5–10 giây.';
+  if(status===413) return 'Mẫu giọng vượt giới hạn. Hãy chọn file tối đa 3 MB và không quá 60 giây.';
+  if(status===400||status===422) return 'Mẫu giọng chưa phù hợp để clone. Hãy dùng đoạn thu rõ tiếng, một người nói liên tục trong khoảng 10–30 giây.';
   if(status===429) return 'Dịch vụ clone đang bận. Hãy thử lại sau ít phút.';
   if(status>=500) return 'Dịch vụ Clone Pro 2.1 đang tạm gián đoạn. Vui lòng thử lại sau.';
   return 'Chưa clone được giọng lúc này. Hãy thử lại với mẫu thu rõ tiếng hơn.';
@@ -47,8 +47,9 @@ export async function POST(request:Request) {
   if(!providerReady()) throw new VoiceError('Dịch vụ clone giọng chưa được kết nối.',503);
   if(Number(request.headers.get('content-length'))>4*1024*1024) throw new VoiceError('Mẫu giọng tối đa 3 MB.',413);
   const form=await (await boundedBody(request,4*1024*1024)).formData();
-  const clip=form.get('clip'),name=String(form.get('name')||'').trim(),language=String(form.get('language')||'vi'),key=form.get('requestKey');
-  if(!(clip instanceof File)||!clip.size||clip.size>3*1024*1024||!isUUID(key)||!name||name.length>80||form.get('consent')!=='true'||!VOICE_LANGUAGES.some(l=>l.id===language)) throw new VoiceError('Kiểm tra tên giọng, file mẫu (tối đa 3 MB) và xác nhận quyền sử dụng.');
+  const clip=form.get('clip'),name=String(form.get('name')||'').trim(),language=String(form.get('language')||'vi'),key=form.get('requestKey'),durationMs=Number(form.get('durationMs'));
+  if(!(clip instanceof File)||!clip.size||clip.size>VOICE_CLONE_CLIP_LIMITS.maxBytes||!isUUID(key)||!name||name.length>80||form.get('consent')!=='true'||!VOICE_LANGUAGES.some(l=>l.id===language)) throw new VoiceError('Kiểm tra tên giọng, file mẫu (tối đa 3 MB) và xác nhận quyền sử dụng.');
+  if(!Number.isFinite(durationMs)||durationMs<=0||durationMs>VOICE_CLONE_CLIP_LIMITS.maxDurationMs) throw new VoiceError('Mẫu ghi âm tối đa 60 giây. Hãy cắt ngắn file rồi tải lại.');
   if(!/\.(mp3|wav|flac|ogg|webm)$/i.test(clip.name)) throw new VoiceError('Chọn file MP3, WAV, FLAC, OGG hoặc WebM.');
   const accent=await resolveCloneAccent(language,form.get('accent'));
   db=writer();
