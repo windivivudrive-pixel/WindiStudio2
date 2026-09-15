@@ -1858,7 +1858,7 @@ export function VoiceStudio() {
                         <li>
                           <Check size={15} />
                           {p.id === "trial"
-                            ? "Nâng cấp Starter trong hạn dùng: còn 40.000đ"
+                            ? "Gói thử độc lập; Starter vẫn 69.000đ"
                             : p.clone_limit
                               ? "Xóa giọng để giải phóng slot"
                               : "Không cần thanh toán để bắt đầu"}
@@ -1895,7 +1895,7 @@ export function VoiceStudio() {
                           ) : !p.purchasable ? (
                             "Tự cấp khi đăng ký"
                           ) : upgradeFromTrial ? (
-                            "Nâng cấp Starter · còn 40.000đ"
+                            "Nâng cấp Starter · 69.000đ"
                           ) : !canBuy ? (
                             "Mua khi hết chu kỳ"
                           ) : !payments || !available ? (
