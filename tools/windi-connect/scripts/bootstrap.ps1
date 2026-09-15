@@ -23,7 +23,10 @@ try {
   }
   & (Join-Path $runtime 'node.exe') --no-warnings (Join-Path $root 'scripts\install.mjs') "--runtime-root=$runtime" "--browser=$browser"
   if ($LASTEXITCODE -ne 0) { throw 'Installation failed. Re-run this installer to retry.' }
-  Write-Host 'Windi installed. Open a new terminal and run: windi doctor'
+  Write-Host ''
+  Write-Host 'Windi Connect installed successfully.' -ForegroundColor Green
+  Write-Host 'Open a new terminal and run: windi doctor'
+  Read-Host 'Press Enter to close'
 } catch {
   Write-Host $_.Exception.Message -ForegroundColor Red
   Read-Host 'Press Enter to close'

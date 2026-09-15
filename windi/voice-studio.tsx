@@ -42,6 +42,7 @@ import {
   COMPARISON_VOICES,
   STARTER_VOICES,
   VOICE_LANGUAGES,
+  VOICE_CLONE_CLIP_LIMITS,
   VOICE_LIBRARY_LANGUAGES,
   VOICE_PLANS,
   type StudioVoice,
@@ -85,6 +86,41 @@ const statusName = (s: string) =>
     expired: "Hết hạn",
     review: "Cần đối soát",
   })[s] || s;
+const MAX_CLONE_CLIP_SECONDS = VOICE_CLONE_CLIP_LIMITS.maxDurationMs / 1000;
+
+function formatClipDuration(seconds: number) {
+  return new Intl.NumberFormat("vi-VN", { maximumFractionDigits: 1 }).format(seconds);
+}
+
+function readClipDuration(file: File) {
+  return new Promise<number>((resolve, reject) => {
+    const audio = document.createElement("audio");
+    const url = URL.createObjectURL(file);
+    const cleanup = () => {
+      audio.onloadedmetadata = null;
+      audio.onerror = null;
+      audio.removeAttribute("src");
+      audio.load();
+      URL.revokeObjectURL(url);
+    };
+    audio.preload = "metadata";
+    audio.onloadedmetadata = () => {
+      const duration = audio.duration;
+      cleanup();
+      if (!Number.isFinite(duration) || duration <= 0) {
+        reject(new Error("Không đọc được thời lượng file. Hãy chọn file âm thanh hợp lệ."));
+        return;
+      }
+      resolve(duration);
+    };
+    audio.onerror = () => {
+      cleanup();
+      reject(new Error("Không đọc được thời lượng file. Hãy chọn MP3, WAV, FLAC, OGG hoặc WebM hợp lệ."));
+    };
+    audio.src = url;
+  });
+}
+
 async function api<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`/api/voice/${path}`, {
     ...init,
@@ -432,6 +468,8 @@ export function VoiceStudio() {
   const [accentLoading, setAccentLoading] = useState(false);
   const [clip, setClip] = useState<File | null>(null);
   const [clipUrl, setClipUrl] = useState("");
+  const [clipDuration, setClipDuration] = useState<number | null>(null);
+  const [clipChecking, setClipChecking] = useState(false);
   const [consent, setConsent] = useState(false);
   const [checkout, setCheckout] = useState<{
     order: VoiceOrder;
@@ -445,6 +483,7 @@ export function VoiceStudio() {
   activeUser.current = user?.id;
   const requestKey = useRef<{ payload: string; key: string } | null>(null);
   const cloneKey = useRef<string | null>(null);
+  const clipValidation = useRef(0);
   const isAdmin = account?.isAdmin === true;
   const period = account?.period;
   const workflowBonusRemaining = account?.bonus
@@ -743,12 +782,17 @@ export function VoiceStudio() {
   }
   async function cloneVoice(event: React.FormEvent) {
     event.preventDefault();
-    if (!clip || !consent || busy) return;
+    if (!clip || !consent || busy || clipChecking || clipDuration === null) return;
+    if (clipDuration > MAX_CLONE_CLIP_SECONDS) {
+      setError("Mẫu ghi âm tối đa 60 giây. Hãy cắt ngắn file rồi tải lại.");
+      return;
+    }
     setBusy("clone");
     setError("");
     cloneKey.current ||= crypto.randomUUID();
     const form = new FormData();
     form.set("clip", clip);
+    form.set("durationMs", String(Math.round(clipDuration * 1000)));
     form.set("name", cloneName);
     form.set("language", cloneLanguage);
     if (cloneAccent) form.set("accent", cloneAccent);
@@ -1495,23 +1539,57 @@ export function VoiceStudio() {
                       <strong>
                         {clip ? clip.name : "Chọn file ghi âm của bạn"}
                       </strong>
-                      <span>MP3, WAV, FLAC, OGG, WebM · tối đa 3 MB</span>
+                      <span>MP3, WAV, FLAC, OGG, WebM · tối đa 3 MB · 60 giây</span>
                       <input
                         type="file"
                         accept=".mp3,.wav,.flac,.ogg,.webm"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file && file.size > 3 * 1024 * 1024) {
-                            setError("Chọn file nhỏ hơn 3 MB.");
-                            e.target.value = "";
+                        onChange={async (e) => {
+                          const input = e.currentTarget;
+                          const file = input.files?.[0] || null;
+                          const validation = ++clipValidation.current;
+                          cloneKey.current = null;
+                          setClip(null);
+                          setClipDuration(null);
+                          setClipChecking(false);
+                          setError("");
+                          if (!file) {
                             return;
                           }
-                          setClip(file || null);
-                          cloneKey.current = null;
-                          setError("");
+                          if (file.size > VOICE_CLONE_CLIP_LIMITS.maxBytes) {
+                            setError("Mẫu ghi âm tối đa 3 MB.");
+                            input.value = "";
+                            return;
+                          }
+                          setClipChecking(true);
+                          try {
+                            const duration = await readClipDuration(file);
+                            if (validation !== clipValidation.current) return;
+                            if (duration > MAX_CLONE_CLIP_SECONDS) {
+                              setError("Mẫu ghi âm tối đa 60 giây. Hãy cắt ngắn file rồi tải lại.");
+                              input.value = "";
+                              return;
+                            }
+                            setClipDuration(duration);
+                            setClip(file);
+                          } catch (error) {
+                            if (validation === clipValidation.current) {
+                              setError((error as Error).message);
+                              input.value = "";
+                            }
+                          } finally {
+                            if (validation === clipValidation.current) setClipChecking(false);
+                          }
                         }}
                       />
                     </label>
+                    {clipChecking && (
+                      <span className="voice-field-hint">Đang kiểm tra thời lượng file…</span>
+                    )}
+                    {clipDuration !== null && (
+                      <span className="voice-field-hint">
+                        Thời lượng {formatClipDuration(clipDuration)} giây / tối đa 60 giây.
+                      </span>
+                    )}
                     {clipUrl && (
                       <audio
                         aria-label="Nghe mẫu giọng của bạn"
@@ -1540,6 +1618,8 @@ export function VoiceStudio() {
                         !available ||
                         (!isAdmin && !period) ||
                         !clip ||
+                        clipChecking ||
+                        clipDuration === null ||
                         !consent ||
                         !cloneName.trim() ||
                         !!busy ||
@@ -1565,7 +1645,7 @@ export function VoiceStudio() {
                     <h3>Mẫu tốt, giọng tự nhiên hơn.</h3>
                     <ol>
                       <li>
-                        <strong>Thu khoảng 10–20 giây</strong>
+                        <strong>Thu khoảng 10–30 giây</strong>
                         <p>
                           Một người nói liên tục, với ngữ điệu bạn muốn giữ.
                         </p>

@@ -1,4 +1,4 @@
-import {mkdir,readFile,writeFile,cp,copyFile,chmod,appendFile,access} from 'node:fs/promises';
+import {mkdir,readFile,writeFile,cp,copyFile,chmod,appendFile,access,rm,lstat} from 'node:fs/promises';
 import {homedir} from 'node:os';
 import {execFileSync} from 'node:child_process';
 import {setTimeout as delay} from 'node:timers/promises';
@@ -57,10 +57,10 @@ const zprofile=path.join(homedir(),'.zprofile');const pathMarker='# Windi Connec
 if(!existingProfile.includes(pathMarker))await appendFile(zprofile,`\n${pathMarker}\nexport PATH="$HOME/.local/bin:$PATH"\n`,{mode:0o600});
 }
 const adapter=path.join(release,'agent-adapters','windi-video-workflow');
-const codexSkill=path.join(homedir(),'.codex','skills','windi-video-workflow');await mkdir(path.dirname(codexSkill),{recursive:true,mode:0o700});await cp(path.join(adapter,'skills','windi-video-workflow'),codexSkill,{recursive:true,force:true});
-const antigravityPlugin=path.join(homedir(),'.gemini','config','plugins','windi-video-workflow');await mkdir(path.dirname(antigravityPlugin),{recursive:true,mode:0o700});await cp(adapter,antigravityPlugin,{recursive:true,force:true});
-const bundledWatch=path.join(root,'vendor','watch');if(await access(bundledWatch).then(()=>true).catch(()=>false)){for(const target of [path.join(homedir(),'.codex','skills','watch'),path.join(homedir(),'.agents','skills','watch')]){await mkdir(path.dirname(target),{recursive:true,mode:0o700});await cp(bundledWatch,target,{recursive:true,force:true});}}
-if(windows){const {finishWindows}=await import('./windows-install.mjs');await finishWindows({home,release,releaseNode,connections,environment});process.exit(0);}
+const codexSkill=path.join(homedir(),'.codex','skills','windi-video-workflow');await mkdir(path.dirname(codexSkill),{recursive:true,mode:0o700});await rm(codexSkill,{recursive:true,force:true}).catch(()=>{});await cp(path.join(adapter,'skills','windi-video-workflow'),codexSkill,{recursive:true,force:true});
+const antigravityPlugin=path.join(homedir(),'.gemini','config','plugins','windi-video-workflow');await mkdir(path.dirname(antigravityPlugin),{recursive:true,mode:0o700});await rm(antigravityPlugin,{recursive:true,force:true}).catch(()=>{});await cp(adapter,antigravityPlugin,{recursive:true,force:true});
+const bundledWatch=path.join(root,'vendor','watch');const watchSkills=[];if(await access(bundledWatch).then(()=>true).catch(()=>false)){for(const target of [path.join(homedir(),'.codex','skills','watch'),path.join(homedir(),'.agents','skills','watch')]){await mkdir(path.dirname(target),{recursive:true,mode:0o700});const existing=await lstat(target).then(()=>true).catch(error=>{if(error?.code==='ENOENT')return false;throw error;});if(existing){watchSkills.push({target,status:'kept-existing'});continue;}await cp(bundledWatch,target,{recursive:true,force:false,errorOnExist:true});watchSkills.push({target,status:'installed'});}}
+if(windows){const {finishWindows}=await import('./windows-install.mjs');await finishWindows({home,release,releaseNode,connections,environment,watchSkills});process.exit(0);}
 for(const [name,executable] of [['python',environment.python],['python3',environment.python],['yt-dlp',path.join(environment.pythonBin,'yt-dlp')],['ffmpeg',environment.ffmpeg],['ffprobe',environment.ffprobe]]){
   await writeFile(path.join(bin,`windi-${name}`),`#!/bin/sh\nexport DYLD_LIBRARY_PATH=${quote(environment.media)}\nexport PATH=${quote(environment.media+path.delimiter+environment.pythonBin+path.delimiter+path.dirname(releaseNode))}:"$PATH"\nexec ${quote(executable)} "$@"\n`,{mode:0o755});
 }

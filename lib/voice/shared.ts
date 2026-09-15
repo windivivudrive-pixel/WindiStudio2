@@ -9,6 +9,7 @@ export const VOICE_PLANS = [
 export const VOICE_LANGUAGES = [{id:'vi',name:'Tiếng Việt'},{id:'en',name:'English'},{id:'ko',name:'한국어'},{id:'ja',name:'日本語'},{id:'zh',name:'中文'},{id:'fr',name:'Français'},{id:'de',name:'Deutsch'},{id:'es',name:'Español'},{id:'th',name:'ไทย'},{id:'id',name:'Bahasa Indonesia'}];
 export const VOICE_LIBRARY_LANGUAGES = [{id:'en',name:'English'},{id:'fr',name:'Français'},{id:'es',name:'Español'},{id:'ko',name:'한국어'},{id:'th',name:'ไทย'},{id:'ja',name:'日本語'},{id:'zh',name:'中文'},{id:'vi',name:'Tiếng Việt'}] as const;
 export const VOICE_LIBRARY_VOICE_LIMITS = {default:5,en:12} as const;
+export const VOICE_CLONE_CLIP_LIMITS = {maxBytes:3*1024*1024,maxDurationMs:60*1000} as const;
 export type VoiceUseCase = 'advertising'|'conversation'|'entertainment';
 const SAMPLE_LANGUAGE_IDS = new Set<string>(VOICE_LIBRARY_LANGUAGES.map(language=>language.id));
 const USE_CASE_RULES:ReadonlyArray<{tag:VoiceUseCase;pattern:RegExp}> = [

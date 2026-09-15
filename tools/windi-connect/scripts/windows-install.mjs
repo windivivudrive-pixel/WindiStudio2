@@ -1,12 +1,14 @@
-import {mkdir,writeFile} from 'node:fs/promises';
+import {mkdir,writeFile,cp} from 'node:fs/promises';
 import {execFileSync,spawn} from 'node:child_process';
 import path from 'node:path';
 const ps=value=>"'"+value.replaceAll("'","''")+"'";
-export async function finishWindows({home,release,releaseNode,connections,environment}){
+export async function finishWindows({home,release,releaseNode,connections,environment,watchSkills=[]}){
   const bin=path.join(home,'bin');await mkdir(bin,{recursive:true});
   const cmd=(file,args='')=>`@echo off\r\nset "PATH=${environment.media};${environment.pythonBin};${path.dirname(releaseNode)};%PATH%"\r\n"${file}" ${args} %*\r\n`;
   await writeFile(path.join(bin,'windi.cmd'),cmd(releaseNode,`--no-warnings "${path.join(release,'src/cli.ts')}"`));
   for(const [name,file] of [['python',environment.python],['python3',environment.python],['ffmpeg',environment.ffmpeg],['ffprobe',environment.ffprobe],['yt-dlp',path.join(environment.pythonBin,'yt-dlp.exe')]])await writeFile(path.join(bin,`windi-${name}.cmd`),cmd(file));
+  const visibleExtension=path.join(bin,'Windi Connect Extension');
+  await cp(path.join(home,'extensions','windi'),visibleExtension,{recursive:true,force:true});
   const manifests=path.join(home,'native-hosts');await mkdir(manifests,{recursive:true});
   for(const provider of ['flow','chatgpt']){
     const name=`com.windistudio.connect.${provider}`,launcher=path.join(release,`native-${provider}.cmd`);
@@ -26,5 +28,7 @@ export async function finishWindows({home,release,releaseNode,connections,enviro
   let ready=false;
   for(let i=0;i<30;i++){try{execFileSync(releaseNode,['--no-warnings',path.join(release,'src/cli.ts'),'doctor'],{stdio:'pipe',timeout:3000});ready=true;break;}catch{await new Promise(resolve=>setTimeout(resolve,500));}}
   if(!ready)throw new Error('Windi chưa khởi động được. Chạy lại bộ cài để sửa môi trường.');
-  console.log(`Đã cài Windi. Mở terminal mới. Bật Developer mode và Load unpacked: ${path.join(home,'extensions/windi')}`);
+  const preserved=watchSkills.filter(skill=>skill.status==='kept-existing').map(skill=>skill.target);
+  if(preserved.length)console.log(`Đã giữ nguyên skill watch có sẵn: ${preserved.join(', ')}`);
+  console.log(`Đã cài Windi. Trong thư mục đang mở, chọn “Windi Connect Extension” khi Load unpacked: ${visibleExtension}`);
 }
