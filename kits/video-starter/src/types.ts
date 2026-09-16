@@ -10,4 +10,4 @@ export type WindiLayoutProfile={
   captions:{position:'top'|'center'|'bottom';style:'boxed'|'pill'|'plain'};
   sceneTypes:Array<{id:string;role:string;composition:WindiSceneComposition;textPosition:'top'|'center'|'bottom';imageFit:'cover'|'contain'}>;
 };
-export type WindiVideoProps={title:string;layout:'paper-editorial'|'dark-cinematic';layoutProfile?:WindiLayoutProfile;audio:string;audioEnvelope?:number[];sampleRanges?:Array<{startMs:number;endMs:number}>;presentation?:{eyebrow:string;scenes:Record<string,{titleLines:string[];label:string;tag:string}>;media?:Record<string,{image?:string;video?:string}>};beats:WindiBeat[];captions:WindiCaption[];brand?:string};
+export type WindiVideoProps={title:string;layout:'paper-editorial'|'dark-cinematic';layoutProfile?:WindiLayoutProfile;audio:string;music?:string;musicVolume?:number;audioEnvelope?:number[];sampleRanges?:Array<{startMs:number;endMs:number}>;presentation?:{eyebrow:string;scenes:Record<string,{titleLines:string[];label:string;tag:string}>;media?:Record<string,{image?:string;video?:string;insetImage?:string;fit?:'cover'|'contain'}>};beats:WindiBeat[];captions:WindiCaption[];brand?:string};

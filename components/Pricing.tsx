@@ -268,6 +268,10 @@ const Pricing: React.FC<PricingProps> = ({ userProfile = null, bankConfig = DEFA
                             <div className="text-center mb-6">
                                 <h3 className="text-xl font-bold text-white mb-1">Thanh toán qua QR</h3>
                                 <p className="text-sm text-gray-400">Sử dụng App ngân hàng để quét mã</p>
+                                <div className="mt-4 rounded-xl border border-green-400/60 bg-green-400/10 px-4 py-3 text-center" role="status">
+                                    <strong className="block text-sm text-green-400">Thanh toán <span className="text-green-400">tự động 24/7</span></strong>
+                                    <span className="mt-1 block text-xs font-semibold leading-relaxed text-gray-200">Quá trình mua tự động hoàn tất sau 5 giây khi thanh toán thành công.</span>
+                                </div>
                             </div>
 
                             <div className="bg-white p-4 rounded-2xl mb-6 shadow-inner mx-auto w-fit">
