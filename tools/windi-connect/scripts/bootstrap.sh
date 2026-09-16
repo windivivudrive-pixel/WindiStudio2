@@ -11,7 +11,9 @@ trap 'rm -rf "$TMP"' EXIT
 printf '\nChọn trình duyệt: [1] Chrome [2] Cốc Cốc: '
 read -r CHOICE
 case "$CHOICE" in 1) BROWSER=chrome;; 2) BROWSER=coccoc;; *) exit 1;; esac
-RUNTIME="$HOME/Library/Application Support/WindiConnect/releases/0.5.9/runtime"
+RELEASE_VERSION="$(sed -n 's/^[[:space:]]*\"version\":[[:space:]]*\"\([^\"]*\)\".*/\1/p' "$ROOT/package.json" | head -1)"
+[ -n "$RELEASE_VERSION" ] || { echo 'Không đọc được version Windi.'; exit 1; }
+RUNTIME="$HOME/Library/Application Support/WindiConnect/releases/$RELEASE_VERSION/runtime"
 if ! "$RUNTIME/bin/node" -e 'if(process.version!=="v24.11.1")process.exit(1)' 2>/dev/null; then
   echo 'Đang tải Node cho Windi…'
   ARCHIVE="node-v24.11.1-darwin-$ARCH.tar.gz"

@@ -1,4 +1,5 @@
 import { failure, identity, paymentConfig, writer } from '@/lib/voice/server';
+import { latestProductRelease } from '@/lib/products/releases';
 
 export const runtime = 'nodejs';
 
@@ -17,9 +18,9 @@ export async function GET() {
     if (orders.error) throw orders.error;
     let release = null;
     if (entitlement.data?.status === 'active') {
-      const result = await db.from('product_releases').select('id,version,sha256,size_bytes,changelog,created_at').eq('product_id', product!.id).eq('is_published', true).order('created_at', { ascending: false }).limit(1).maybeSingle();
+      const result = await db.from('product_releases').select('id,version,sha256,size_bytes,changelog,created_at').eq('product_id', product!.id).eq('is_published', true);
       if (result.error) throw result.error;
-      release = result.data;
+      release = latestProductRelease(result.data ?? []);
     }
     const voicePlan = await db.from('windi_voice_periods').select('id,plan_id,credits,used_credits,ends_at').eq('user_id', user.id).neq('plan_id', 'welcome').lte('starts_at', now).gt('ends_at', now).order('ends_at', { ascending: false }).limit(1).maybeSingle();
     if (voicePlan.error) throw voicePlan.error;

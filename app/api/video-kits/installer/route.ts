@@ -1,5 +1,6 @@
 import JSZip from 'jszip';
 import {createProductToken} from '@/lib/products/license';
+import {latestProductRelease} from '@/lib/products/releases';
 import {failure,identity,VoiceError,writer} from '@/lib/voice/server';
 export const runtime='nodejs';
 const quote=(value:string)=>"'"+value.replaceAll("'","'\\''")+"'";
@@ -9,8 +10,8 @@ export async function POST(request:Request){
   const {user}=await identity(request),db=writer();
   const {data:entitlement,error}=await db.from('product_entitlements').select('id,product_id').eq('user_id',user.id).eq('kind','video_workflow_v1').eq('status','active').maybeSingle();
   if(error)throw error;if(!entitlement)throw new VoiceError('Tài khoản chưa sở hữu Windi Workflow.',403);
-  const {data:release,error:releaseError}=await db.from('product_releases').select('*').eq('product_id',entitlement.product_id).eq('is_published',true).order('created_at',{ascending:false}).limit(1).maybeSingle();
-  if(releaseError)throw releaseError;if(!release)throw new VoiceError('Bộ cài mới chưa được phát hành.',503);
+  const {data:releases,error:releaseError}=await db.from('product_releases').select('*').eq('product_id',entitlement.product_id).eq('is_published',true);
+  if(releaseError)throw releaseError;const release=latestProductRelease(releases??[]);if(!release)throw new VoiceError('Bộ cài mới chưa được phát hành.',503);
   if(!/^0\.5\.(?:[6-9]|[1-9]\d+)(?:-|$)/.test(release.version))throw new VoiceError('Bộ cài tự kết nối Voice đang được chuẩn bị.',503);
   if(!/^[a-f0-9]{64}$/i.test(release.sha256))throw new VoiceError('Bộ cài chưa có checksum hợp lệ.',503);
   const {data:signed,error:signError}=await db.storage.from(release.storage_bucket).createSignedUrl(release.storage_path,86400);
@@ -20,6 +21,7 @@ export async function POST(request:Request){
   if(tokenError)throw tokenError;
   const zip=new JSZip();
   zip.file('windi-account.json',JSON.stringify({token:token.secret,apiUrl:new URL(request.url).origin}),{unixPermissions:0o100600});
+  zip.file('windi-release.json',`${JSON.stringify({product:'windi-video-workflow-v1',version:release.version,sha256:release.sha256,storagePath:release.storage_path},null,2)}\n`,{unixPermissions:0o100600});
   zip.file('Cai Windi.command',`#!/bin/bash
 set -euo pipefail
 umask 077
@@ -52,8 +54,8 @@ try {
 finally { if($temp -and (Test-Path $temp)){Remove-Item -LiteralPath $temp -Recurse -Force} }
 `);
   }
-  zip.file('HUONG-DAN.txt','Giải nén toàn bộ ZIP. macOS: mở Cai Windi.command. Windows x64 (bản 0.5.9 trở lên): mở Cai Windi Windows.cmd. Cần Internet để tự cài môi trường lần đầu. Bộ cài tự kết nối Voice của tài khoản đã mua. Không chia sẻ bộ cài cá nhân. Link tải bên trong có hạn 24 giờ; tải bộ cài mới từ website nếu hết hạn. Bật extension Windi một lần theo hướng dẫn. Sau đó nói với Codex: Dùng Windi làm video này.');
+  zip.file('HUONG-DAN.txt',`Giải nén toàn bộ ZIP. Bản workflow: ${release.version}. Có thể mở windi-release.json để đối chiếu checksum. macOS: mở Cai Windi.command. Windows x64 (bản 0.5.9 trở lên): mở Cai Windi Windows.cmd. Cần Internet để tự cài môi trường lần đầu. Bộ cài tự kết nối Voice của tài khoản đã mua. Không chia sẻ bộ cài cá nhân. Link tải bên trong có hạn 24 giờ; tải bộ cài mới từ website nếu hết hạn. Bật extension Windi một lần theo hướng dẫn. Sau đó nói với Codex: Dùng Windi làm video này.`);
   const bytes=await zip.generateAsync({type:'uint8array',platform:'UNIX'});
-  return new Response(bytes,{headers:{'Content-Type':'application/zip','Content-Disposition':'attachment; filename="Windi-Cai-Dat-Ca-Nhan.zip"','Cache-Control':'private, no-store'}});
+  return new Response(bytes,{headers:{'Content-Type':'application/zip','Content-Disposition':'attachment; filename="Windi-Cai-Dat-Ca-Nhan.zip"','Cache-Control':'private, no-store','X-Windi-Workflow-Version':release.version}});
  }catch(error){return failure(error);}
 }

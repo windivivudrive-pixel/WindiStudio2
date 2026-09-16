@@ -7,7 +7,9 @@ try {
   $browser = if ($choice -eq '1') { 'chrome' } else { 'coccoc' }
   $temp = Join-Path ([IO.Path]::GetTempPath()) ('windi-install-' + [guid]::NewGuid())
   New-Item -ItemType Directory -Path $temp | Out-Null
-  $runtime = Join-Path $env:LOCALAPPDATA 'WindiConnect\releases\0.5.9\runtime'
+  $releaseVersion = (Get-Content -Raw (Join-Path $root 'package.json') | ConvertFrom-Json).version
+  if (-not $releaseVersion) { throw 'Cannot read Windi version.' }
+  $runtime = Join-Path $env:LOCALAPPDATA ("WindiConnect\releases\$releaseVersion\runtime")
   $ready = $false
   if (Test-Path (Join-Path $runtime 'node.exe')) {
     $version = & (Join-Path $runtime 'node.exe') --version
