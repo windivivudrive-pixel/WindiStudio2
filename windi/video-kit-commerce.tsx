@@ -153,10 +153,11 @@ export function VideoKitCommerce() {
     setError("");
     const response=await fetch('/api/video-kits/installer',{method:'POST'});
     if(!response.ok){const body=await response.json();setError(body.error || 'Chưa tải được bộ cài.');return;}
+    const version=response.headers.get('X-Windi-Workflow-Version');
     const url=URL.createObjectURL(await response.blob());
     const a=document.createElement('a');a.href=url;a.download='Windi-Cai-Dat-Ca-Nhan.zip';a.click();
     window.setTimeout(()=>URL.revokeObjectURL(url),60000);
-    setNotice("Bộ cài Windi đang được tải xuống. Giải nén và mở file cài đặt để bắt đầu.");
+    setNotice(`Bộ cài Windi ${version ? `v${version} ` : ''}đang được tải xuống. Giải nén và mở file cài đặt để bắt đầu.`);
   }
 
   const released =

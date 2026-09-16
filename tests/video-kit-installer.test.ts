@@ -9,9 +9,12 @@ test('installer binds a private workflow token, with no CLI login step',async()=
  mocks.identity.mockResolvedValue({user:{id:'buyer'}});
  const inserted:unknown[]=[];
  const entitlement={id:'e',product_id:'p'},release={version:'0.5.9',sha256:'a'.repeat(64),storage_bucket:'private',storage_path:'release.zip'};
- mocks.writer.mockReturnValue({from:(table:string)=>{const q:any={select:()=>q,eq:()=>q,order:()=>q,limit:()=>q,maybeSingle:async()=>({data:table==='product_entitlements'?entitlement:release}),insert:async(v:unknown)=>{inserted.push(v);return {error:null}}};return q},storage:{from:()=>({createSignedUrl:async()=>({data:{signedUrl:'https://storage.test/signed'}})})}});
+ mocks.writer.mockReturnValue({from:(table:string)=>{const q:any={select:()=>q,eq:()=>q,order:()=>q,limit:()=>q,maybeSingle:async()=>({data:entitlement}),then:(resolve:any)=>Promise.resolve({data:table==='product_entitlements'?[entitlement]:[release],error:null}).then(resolve),insert:async(v:unknown)=>{inserted.push(v);return {error:null}}};return q},storage:{from:()=>({createSignedUrl:async()=>({data:{signedUrl:'https://storage.test/signed'}})})}});
  const response=await POST(new Request('https://windi.test/api/video-kits/installer',{method:'POST'}));expect(response.status).toBe(200);
+ expect(response.headers.get('X-Windi-Workflow-Version')).toBe('0.5.9');
  const zip=await JSZip.loadAsync(await response.arrayBuffer());
+ const releaseInfo=JSON.parse(await zip.file('windi-release.json')!.async('string'));
+ expect(releaseInfo.version).toBe('0.5.9');
  const config=JSON.parse(await zip.file('windi-account.json')!.async('string'));
  expect(config.token).toMatch(/^windi_kit_/);expect(inserted[0]).toMatchObject({user_id:'buyer',purpose:'video_workflow'});
  expect(JSON.stringify(inserted)).not.toContain(config.token);
