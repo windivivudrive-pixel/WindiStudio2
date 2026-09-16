@@ -10,6 +10,8 @@ import {
   ArrowRight,
   Check,
   CheckCircle2,
+  ChevronDown,
+  ChevronUp,
   CircleDot,
   Clock3,
   Copy,
@@ -28,6 +30,7 @@ import {
   RefreshCw,
   Search,
   ShieldCheck,
+  SlidersHorizontal,
   Sparkles,
   Trash2,
   Upload,
@@ -276,6 +279,7 @@ function VoiceComparisonShowcase({
   selectedVoiceId?: string;
 }) {
   const [playing, setPlaying] = useState("");
+  const [activeSampleIndex, setActiveSampleIndex] = useState(0);
   const audioRefs = useRef<Record<string, HTMLAudioElement | null>>({});
   function toggle(key: string) {
     const current = audioRefs.current[key];
@@ -327,11 +331,25 @@ function VoiceComparisonShowcase({
           <Check size={14} /> Sẵn sàng cho nhiều format
         </span>
       </div>
+      <div className="voice-compare-mobile-pills" role="tablist" aria-label="Chọn bài nghe thực tế">
+        {voiceComparisons.map((sample, idx) => (
+          <button
+            key={sample.id}
+            type="button"
+            role="tab"
+            aria-selected={activeSampleIndex === idx}
+            className={`voice-compare-pill ${activeSampleIndex === idx ? "is-active" : ""}`}
+            onClick={() => setActiveSampleIndex(idx)}
+          >
+            <span>0{idx + 1}</span> {sample.title}
+          </button>
+        ))}
+      </div>
       <div className="voice-compare-list">
         {voiceComparisons.map((sample, index) => {
           const isSelected = selectedVoiceId === sample.voiceId;
           return (
-            <article className="voice-compare-row" key={sample.id}>
+            <article className={`voice-compare-row ${activeSampleIndex === index ? "is-mobile-active" : ""}`} key={sample.id}>
               <div className="voice-compare-name">
                 <span>0{index + 1}</span>
                 <div>
@@ -455,6 +473,8 @@ export function VoiceStudio() {
   const [text, setText] = useState("");
   const [language, setLanguage] = useState("vi");
   const [speed, setSpeed] = useState(1);
+  const [mobileSettingsOpen, setMobileSettingsOpen] = useState(false);
+  const [activePlanId, setActivePlanId] = useState<string>(VOICE_PLANS[1]?.id || VOICE_PLANS[0]?.id || "starter");
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
   const [gender, setGender] = useState("all");
@@ -620,7 +640,7 @@ export function VoiceStudio() {
     };
     const timer = setInterval(() => {
       if (document.visibilityState === "visible") void poll();
-    }, 7000);
+    }, 5000);
     return () => clearInterval(timer);
   }, [checkout?.order.id, checkout?.order.status, refresh]);
   useEffect(() => {
@@ -1117,6 +1137,40 @@ export function VoiceStudio() {
                     </button>
                   ))}
                 </div>
+                <div className="voice-quick-bar">
+                  <button
+                    type="button"
+                    className="voice-quick-info"
+                    onClick={() => setTab("voices")}
+                    aria-label={`Đang chọn giọng ${selected.name}. Bấm để đổi giọng.`}
+                  >
+                    <span className="voice-avatar voice-quick-avatar">
+                      <AudioLines size={18} />
+                    </span>
+                    <span className="voice-quick-details">
+                      <strong>{selected.name}</strong>
+                      <small>
+                        {selected.kind === "clone"
+                          ? "Giọng riêng"
+                          : "Clone Pro 2.1"}
+                      </small>
+                    </span>
+                    <span className="voice-quick-change">
+                      Đổi giọng <ArrowRight size={12} />
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    className={`voice-quick-settings-trigger ${mobileSettingsOpen ? "is-open" : ""}`}
+                    onClick={() => setMobileSettingsOpen(!mobileSettingsOpen)}
+                    aria-expanded={mobileSettingsOpen}
+                    aria-label="Tùy chỉnh tốc độ và cài đặt nâng cao"
+                  >
+                    <SlidersHorizontal size={13} />
+                    <span>{speed.toFixed(2)}×</span>
+                    {mobileSettingsOpen ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+                  </button>
+                </div>
                 <label className="voice-sr-only" htmlFor="voice-text">
                   Nội dung cần đọc
                 </label>
@@ -1146,6 +1200,17 @@ export function VoiceStudio() {
                     Xóa nội dung
                   </button>
                 </div>
+                <button
+                  type="button"
+                  className={`voice-mobile-settings-toggle ${mobileSettingsOpen ? "is-open" : ""}`}
+                  onClick={() => setMobileSettingsOpen(!mobileSettingsOpen)}
+                  aria-expanded={mobileSettingsOpen}
+                >
+                  <span>
+                    <SlidersHorizontal size={14} /> Tùy chỉnh giọng & tốc độ ({speed.toFixed(2)}× · {language.toUpperCase()})
+                  </span>
+                  {mobileSettingsOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                </button>
                 <div className="voice-create-footer">
                   <span>
                     <Sparkles size={16} /> 1 ký tự = 1 credit
@@ -1174,7 +1239,7 @@ export function VoiceStudio() {
                   </p>
                 )}
               </div>
-                <aside className="voice-settings">
+                <aside className={`voice-settings ${mobileSettingsOpen ? "is-mobile-open" : ""}`}>
                 <span className="voice-step">02 / GIỌNG ĐỌC</span>
                 <h2>Chọn chất giọng. Lời thoại dẫn cảm xúc.</h2>
                 <button
@@ -1639,32 +1704,40 @@ export function VoiceStudio() {
                     </button>
                   </form>
                   <aside className="voice-clone-guide">
-                    <span className="voice-guide-icon">
-                      <Mic2 size={36} />
-                    </span>
-                    <h3>Mẫu tốt, giọng tự nhiên hơn.</h3>
-                    <ol>
-                      <li>
-                        <strong>Thu khoảng 10–30 giây</strong>
-                        <p>
-                          Một người nói liên tục, với ngữ điệu bạn muốn giữ.
-                        </p>
-                      </li>
-                      <li>
-                        <strong>Giữ không gian yên tĩnh</strong>
-                        <p>Không nhạc nền, tiếng vọng hay giọng người khác.</p>
-                      </li>
-                      <li>
-                        <strong>Nói như chính bạn</strong>
-                        <p>Đọc rõ ràng, giữ âm lượng đều và không thì thầm.</p>
-                      </li>
-                    </ol>
-                    <div className="voice-private">
-                      <ShieldCheck size={20} />
-                      <span>
-                        Giọng clone được lưu riêng cho tài khoản của bạn.
-                      </span>
-                    </div>
+                    <details className="voice-clone-guide-details">
+                      <summary className="voice-clone-guide-summary">
+                        <span><Mic2 size={15} /> 3 mẹo thu âm để giọng clone chuẩn</span>
+                        <ChevronDown size={14} />
+                      </summary>
+                      <div className="voice-clone-guide-content">
+                        <span className="voice-guide-icon">
+                          <Mic2 size={36} />
+                        </span>
+                        <h3>Mẫu tốt, giọng tự nhiên hơn.</h3>
+                        <ol>
+                          <li>
+                            <strong>Thu khoảng 10–30 giây</strong>
+                            <p>
+                              Một người nói liên tục, với ngữ điệu bạn muốn giữ.
+                            </p>
+                          </li>
+                          <li>
+                            <strong>Giữ không gian yên tĩnh</strong>
+                            <p>Không nhạc nền, tiếng vọng hay giọng người khác.</p>
+                          </li>
+                          <li>
+                            <strong>Nói như chính bạn</strong>
+                            <p>Đọc rõ ràng, giữ âm lượng đều và không thì thầm.</p>
+                          </li>
+                        </ol>
+                        <div className="voice-private">
+                          <ShieldCheck size={20} />
+                          <span>
+                            Giọng clone được lưu riêng cho tài khoản của bạn.
+                          </span>
+                        </div>
+                      </div>
+                    </details>
                   </aside>
                 </div>
               )}
@@ -1760,36 +1833,82 @@ export function VoiceStudio() {
               ) : (
                 <div className="voice-history">
                   {account.jobs.map((j) => (
-                    <article key={j.id}>
-                      <span className="voice-history-icon">
-                        <Music2 size={21} />
-                      </span>
-                      <div>
-                        <strong>
-                          {j.transcript.slice(0, 90)}
-                          {j.transcript.length > 90 ? "…" : ""}
-                        </strong>
-                        <small>
-                          {j.voice_name} · {date(j.created_at)} ·{" "}
-                          {formatNumber(j.credits)} credit
-                        </small>
-                        <span
-                          className={`voice-job-status voice-job-${j.status}`}
-                        >
-                          {statusName(j.status)}
+                    <div
+                      className={`voice-history-item${audio?.id === j.id ? " is-open" : ""}`}
+                      key={j.id}
+                    >
+                      <article>
+                        <span className="voice-history-icon">
+                          <Music2 size={21} />
                         </span>
-                      </div>
-                      {j.status === "ready" && (
-                        <button
-                          className="voice-btn"
-                          disabled={!!busy}
-                          onClick={() => void listen(j.id)}
-                        >
-                          <Play size={15} />
-                          Nghe / tải
-                        </button>
+                        <div>
+                          <strong>
+                            {j.transcript.slice(0, 90)}
+                            {j.transcript.length > 90 ? "…" : ""}
+                          </strong>
+                          <small>
+                            {j.voice_name} · {date(j.created_at)} ·{" "}
+                            {formatNumber(j.credits)} credit
+                          </small>
+                          <span
+                            className={`voice-job-status voice-job-${j.status}`}
+                          >
+                            {statusName(j.status)}
+                          </span>
+                        </div>
+                        {j.status === "ready" && (
+                          <button
+                            className="voice-btn"
+                            disabled={!!busy}
+                            onClick={() => void listen(j.id)}
+                          >
+                            <Play size={15} />
+                            Nghe / tải
+                          </button>
+                        )}
+                      </article>
+                      {audio?.id === j.id && (
+                        <div className="voice-history-player">
+                          <span className="voice-player-icon">
+                            <AudioLines size={24} />
+                          </span>
+                          <div className="voice-player-title">
+                            <strong>Bản ghi của bạn</strong>
+                            <small>MP3 · sẵn sàng để sử dụng</small>
+                          </div>
+                          <audio
+                            key={audio.url}
+                            src={audio.url}
+                            controls
+                            autoPlay
+                            preload="metadata"
+                            aria-label="Bản ghi đã tạo"
+                            onError={() =>
+                              setError(
+                                "Liên kết nghe đã hết hạn hoặc không tải được. Mở lại bản ghi từ Lịch sử.",
+                              )
+                            }
+                          />
+                          <a
+                            href={`/api/voice/audio?id=${audio.id}&download=1`}
+                            download="windi-voice.mp3"
+                            target="_blank"
+                            rel="noreferrer"
+                            className="voice-btn"
+                          >
+                            <ArrowDownToLine size={16} />
+                            Tải MP3
+                          </a>
+                          <button
+                            className="voice-icon-btn"
+                            aria-label="Đóng trình nghe"
+                            onClick={() => setAudio(null)}
+                          >
+                            <X size={17} />
+                          </button>
+                        </div>
                       )}
-                    </article>
+                    </div>
                   ))}
                 </div>
               )}
@@ -1810,6 +1929,26 @@ export function VoiceStudio() {
                   động gia hạn.
                 </p>
               </div>
+              <div className="voice-plans-mobile-selector" role="tablist" aria-label="Chọn gói cước">
+                {VOICE_PLANS.filter(
+                  (p) =>
+                    p.id !== "trial" ||
+                    !user ||
+                    account === null ||
+                    trialEligible,
+                ).map((p) => (
+                  <button
+                    key={p.id}
+                    type="button"
+                    role="tab"
+                    aria-selected={activePlanId === p.id}
+                    className={`voice-plan-tab-btn ${activePlanId === p.id ? "is-active" : ""}`}
+                    onClick={() => setActivePlanId(p.id)}
+                  >
+                    {p.name}
+                  </button>
+                ))}
+              </div>
               <div className="voice-plans">
                 {VOICE_PLANS.filter(
                   (p) =>
@@ -1825,7 +1964,7 @@ export function VoiceStudio() {
                     period?.plan_id === "trial" && p.id === "starter";
                   return (
                     <article
-                      className={`voice-plan ${featured ? "voice-plan-featured" : ""}`}
+                      className={`voice-plan ${featured ? "voice-plan-featured" : ""} ${activePlanId === p.id ? "is-mobile-active-plan" : ""}`}
                       key={p.id}
                     >
                       {featured && (
@@ -1956,7 +2095,9 @@ export function VoiceStudio() {
             </section>
           )}
         </div>
-        {audio && (
+        {audio &&
+          (tab !== "history" ||
+            !account?.jobs.some((job) => job.id === audio.id)) && (
           <div className="voice-player">
             <span className="voice-player-icon">
               <AudioLines size={26} />
@@ -2041,6 +2182,15 @@ export function VoiceStudio() {
                   <strong className="voice-checkout-price">
                     {formatNumber(checkout.order.amount_vnd)}đ
                   </strong>
+                  <div className="voice-payment-promise" role="status">
+                    <strong>
+                      Thanh toán <span className="voice-payment-emphasis">tự động 24/7</span>
+                    </strong>
+                    <span className="voice-payment-detail">
+                      Quá trình mua tự động hoàn tất sau 5 giây khi thanh toán
+                      thành công.
+                    </span>
+                  </div>
                   <div
                     style={{
                       display: "inline-flex",

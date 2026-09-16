@@ -15,6 +15,7 @@ export function WS1Video(props:WindiVideoProps){
   const local=(ms-beat.startMs)/1000*fps,progress=Math.min(1,Math.max(0,(ms-beat.startMs)/(beat.endMs-beat.startMs)));
   const enter=interpolate(local,[0,12],[0,1],{extrapolateLeft:'clamp',extrapolateRight:'clamp'});
   const copy=props.presentation?.scenes[beat.id]??{titleLines:beat.onScreenText.split('\n'),label:beat.onScreenText.split('\n')[0],tag:beat.spokenAnchor};
+  const customMedia=props.presentation?.media?.[beat.id];
   const visibleCaptions=props.captions.filter(c=>!(props.sampleRanges??[]).some(r=>c.startMs>=r.startMs&&c.startMs<r.endMs));
   const caps=ws1CaptionGroups(visibleCaptions).find(g=>ms>=g[0].startMs&&ms<=g[g.length-1].endMs+100);
   const amplitude=props.audioEnvelope?.[Math.min((props.audioEnvelope?.length??1)-1,Math.floor(ms/20))]??0;
@@ -26,7 +27,7 @@ export function WS1Video(props:WindiVideoProps){
       <div style={{fontSize:86,lineHeight:1.08,letterSpacing:-3.5,fontWeight:800,marginBottom:36}}>{copy.titleLines.map((line,i)=><div key={i} style={{color:i?C.accent:C.ink}}>{line}</div>)}</div>
       <div style={{border:`4px solid ${C.border}`,borderRadius:20,overflow:'hidden',background:C.paper,boxShadow:`9px 10px 0 ${C.border}35`}}>
         <div style={{height:58,background:index%4===1?C.green:C.accent,borderBottom:`3px solid ${C.border}`,display:'flex',alignItems:'center',padding:'0 22px',gap:20,fontSize:27}}><span>● ● ●</span><span>{copy.label}</span><span style={{marginLeft:'auto'}}>×</span></div>
-        <div style={{height:410,overflow:'hidden',position:'relative'}}>{beat.video?<Sequence from={Math.floor(beat.startMs/1000*fps)} durationInFrames={Math.max(1,Math.ceil((beat.endMs-beat.startMs)/1000*fps))}><OffthreadVideo src={staticFile(beat.video)} muted volume={0} style={{width:'100%',height:'100%',objectFit:'contain',background:'#081a2a'}}/></Sequence>:<CanvasImage src={staticFile(beat.image)} style={{width:'100%',height:'100%',objectFit:'cover',transform:`scale(${1.18+progress*.035})`,transformOrigin:'center'}}/>}</div>
+        <div style={{height:410,overflow:'hidden',position:'relative'}}>{beat.video?<Sequence from={Math.floor(beat.startMs/1000*fps)} durationInFrames={Math.max(1,Math.ceil((beat.endMs-beat.startMs)/1000*fps))}><OffthreadVideo src={staticFile(beat.video)} muted volume={0} style={{width:'100%',height:'100%',objectFit:'contain',background:'#081a2a'}}/></Sequence>:<CanvasImage src={staticFile(beat.image)} style={{width:'100%',height:'100%',objectFit:customMedia?.fit??'cover',transform:customMedia?.fit==='contain'?'none':`scale(${1.18+progress*.035})`,transformOrigin:'center',background:'#081a2a'}}/>}<>{customMedia?.insetImage&&<div style={{position:'absolute',right:20,bottom:18,width:292,height:138,padding:8,background:'#102b3aee',border:`3px solid ${C.border}`,borderRadius:9,boxShadow:`5px 5px 0 ${C.border}35`}}><CanvasImage src={staticFile(customMedia.insetImage)} style={{width:'100%',height:'100%',objectFit:'contain'}}/></div>}</></div>
         <div style={{padding:'20px 28px 18px'}}>
           <div style={{height:86,display:'flex',alignItems:'center',justifyContent:'center',gap:8}}>{Array.from({length:56},(_,i)=><div key={i} style={{width:6,borderRadius:6,height:6+Math.min(1,amplitude*2.5)*(22+52*(.5+.5*Math.sin(i*.8+f*.16))),background:i%8===0?C.ink:C.accent}}/>)}</div>
           <div style={{height:5,background:'#081a2a',marginTop:10}}><div style={{width:`${progress*100}%`,height:'100%',background:C.accent}}/></div>
@@ -41,5 +42,6 @@ export function WS1Video(props:WindiVideoProps){
       [0,0,whoosh],[0,9,mouseClick],[1,0,uiSwitch],[1,18,uiSwitch],[2,0,uiSwitch],[3,0,whoosh],[3,18,ding],[4,0,mouseClick],[4,16,ding],[5,0,uiSwitch],[6,0,pageTurn],[7,0,ding],[7,18,mouseClick],
     ].map(([beat,offset,src],i)=>{const b=props.beats[beat as number];return b?<Sequence key={`${beat}-${offset}-${i}`} from={Math.floor(b.startMs/1000*fps)+(offset as number)}><SfxCue src={src as string}/></Sequence>:null})}
     <Audio src={staticFile(props.audio)}/>
+    {props.music&&<Audio src={staticFile(props.music)} volume={props.musicVolume??1} loop/>}
   </AbsoluteFill>;
 }

@@ -295,6 +295,15 @@ export function VideoKitCommerce() {
                   <strong className="kit-checkout-price">
                     {money(checkout.total_amount_vnd)}đ
                   </strong>
+                  <div className="kit-payment-promise" role="status">
+                    <strong>
+                      Thanh toán <span>tự động 24/7</span>
+                    </strong>
+                    <small>
+                      Quá trình mua tự động hoàn tất sau 5 giây khi thanh toán
+                      thành công.
+                    </small>
+                  </div>
                   <img
                     src={`https://img.vietqr.io/image/${encodeURIComponent(account.bank.bank)}-${encodeURIComponent(account.bank.account)}-compact2.png?amount=${checkout.total_amount_vnd}&addInfo=${encodeURIComponent(checkout.payment_code)}&accountName=${encodeURIComponent(account.bank.name)}`}
                     alt="Mã QR thanh toán Windi Video Workflow"

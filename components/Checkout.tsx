@@ -85,6 +85,10 @@ export const Checkout: React.FC<Props> = ({ products, selectedProducts, order, o
               <div className="bg-white rounded-3xl p-8 text-black text-center shadow-2xl">
                 <h3 className="font-bold text-xl mb-2">VietQR Transfer</h3>
                 <p className="text-gray-500 mb-6 text-sm">Quét mã bằng ứng dụng ngân hàng của bạn</p>
+                <div className="mb-6 rounded-xl border border-green-300/60 bg-green-50 px-4 py-3 text-center" role="status">
+                  <strong className="block text-sm text-green-700">Thanh toán <span className="text-green-700">tự động 24/7</span></strong>
+                  <span className="mt-1 block text-xs font-semibold leading-relaxed text-gray-700">Quá trình mua tự động hoàn tất sau 5 giây khi thanh toán thành công.</span>
+                </div>
                 
                 {/* Generate VietQR - Assuming TPB and Account from existing config */}
                 <img 
