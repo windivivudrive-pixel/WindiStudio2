@@ -32,23 +32,7 @@ export async function POST(request:Request){
    'exec /bin/sh "$BASE/'+root+'/scripts/bootstrap.sh"',''
   ].join('\n'),{unixPermissions:0o100755});
   zip.file('Cai Windi Windows.cmd','@echo off\r\npowershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0Windi Connect Installer.app\\Contents\\Resources\\windi-connect\\scripts\\bootstrap.ps1"\r\nif errorlevel 1 pause\r\n');
-  zip.file('HUONG-DAN.txt',[
-   '\uFEFFWINDI VIDEO WORKFLOW v'+release.version,'',
-   'BƯỚC 1 — GIẢI NÉN VÀ CÀI',
-   'Giải nén toàn bộ ZIP vào thư mục bạn muốn giữ lâu dài, trên bất kỳ ổ đĩa nào.',
-   'Windows x64: mở Cai Windi Windows.cmd, chọn trình duyệt rồi chờ báo cài thành công. Không cần chạy Administrator.',
-   'macOS: mở Cai Windi.command.',
-   'Cần Internet để tải môi trường trong lần cài đầu. Voice tự kết nối theo tài khoản đã mua.','',
-   'BƯỚC 2 — NẠP EXTENSION',
-   'Mở chrome://extensions (Cốc Cốc: coccoc://extensions), bật Developer mode, chọn Load unpacked.',
-   'Chọn Windi Connect Extension ngay cạnh file cài trong thư mục vừa giải nén.',
-   'Giữ nguyên thư mục này sau khi nạp. Nếu đã nạp bản cũ từ nơi khác, gỡ bản đó rồi nạp thư mục mới.','',
-   'BƯỚC 3 — BẮT ĐẦU',
-   'Mở PowerShell/terminal mới, chạy: windi doctor',
-   'Khởi động lại Codex hoặc Antigravity để nhận skill mới. Mở thư mục dự án và nói: Dùng Windi làm video này.',
-   'Duyệt ý tưởng, layout và kịch bản theo hướng dẫn.','',
-   'Bộ cài chứa kết nối tài khoản cá nhân. Không chia sẻ ZIP hoặc thư mục đã giải nén.'
-  ].join('\r\n'));
+  zip.file('HUONG-DAN.txt', '\uFEFFWINDI VIDEO WORKFLOW — BẮT ĐẦU\r\n\r\nBƯỚC 1: Giải nén toàn bộ ZIP vào thư mục giữ lâu dài. Windows: mở Cai Windi Windows.cmd; macOS: mở Cai Windi.command. Cần Internet cho lần cài đầu.\r\n\r\nBƯỚC 2: Mở chrome://extensions hoặc coccoc://extensions, bật Developer mode, chọn Load unpacked và chọn Windi Connect Extension ngay trong thư mục giải nén. Không di chuyển thư mục này sau khi nạp.\r\n\r\nBƯỚC 3: Đăng nhập Flow/ChatGPT trong trình duyệt đã kết nối. Mở lại Codex/Antigravity, mở thư mục dự án và gọi Windi Video Workflow.\r\n\r\nHướng dẫn từng bước, hình minh họa và mẫu câu:\r\nhttps://windistudio.app/video-kits/huong-dan\r\n\r\nKhông chia sẻ bộ cài cá nhân hoặc file kết nối tài khoản.');
   const bytes=await zip.generateAsync({type:'uint8array',platform:'UNIX',compression:'DEFLATE',compressionOptions:{level:6}});
   const {error:tokenError}=await db.from('automation_tokens').insert({user_id:user.id,purpose:'video_workflow',name:'Bộ cài cá nhân '+release.version,token_hash:token.hash,token_prefix:token.prefix,last_four:token.lastFour});
   if(tokenError)throw tokenError;

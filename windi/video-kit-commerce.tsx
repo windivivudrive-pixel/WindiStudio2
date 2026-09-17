@@ -230,18 +230,16 @@ export function VideoKitCommerce() {
               <strong>Đã sở hữu Windi Video Workflow V1</strong>
               <span>
                 {account.release
-                  ? `Bản ${account.release.version} · SHA-256 ${account.release.sha256}`
+                  ? `Bản ${account.release.version}`
                   : "Bản phát hành đang được chuẩn bị."}
               </span>
             </div>
           </div>
-          {account.release && <p>{account.release.changelog}</p>}
+          {account.release && <details><summary>Thông tin bản phát hành</summary><p>{account.release.changelog}</p><p style={{overflowWrap:'anywhere'}}>SHA-256 archive nguồn: {account.release.sha256}</p></details>}
           <div className="kit-quickstart">
             <h3>Bắt đầu nhanh</h3>
             <p>Giải nén bộ cài đầy đủ, mở Cai Windi Windows.cmd trên Windows hoặc Cai Windi.command trên macOS. Nạp Windi Connect Extension ngay trong thư mục vừa giải nén. Voice tự kết nối theo tài khoản đã mua.</p>
-            <code>windi setup</code>
-            <code>windi project init</code>
-            <code>windi workflow start</code>
+            <Link className="text-link" href="/video-kits/huong-dan">Xem hướng dẫn làm video đầu tiên →</Link>
             <p>
               Trong Codex hoặc Antigravity, bạn cũng có thể nói: “Dùng Windi làm
               video này”.

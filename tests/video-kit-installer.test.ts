@@ -44,7 +44,12 @@ test('delivers full release and account connection at the installer read path',a
  const cmd=await zip.file('Cai Windi Windows.cmd')!.async('string');
  expect(cmd).toContain('%~dp0Windi Connect Installer.app');
  expect(cmd).not.toContain('Invoke-WebRequest');
- expect(await zip.file('HUONG-DAN.txt')!.async('string')).toContain('BƯỚC 3');
+ const guide=await zip.file('HUONG-DAN.txt')!.async('string');
+ expect(guide).toContain('BƯỚC 3');
+ expect(guide).toContain('https://windistudio.app/video-kits/huong-dan');
+ expect(guide).toContain('Không chia sẻ');
+ expect(guide).not.toContain('windi setup');
+ expect(Object.keys(zip.files).filter(name=>/HUONG-DAN.*\.html$/i.test(name))).toEqual([]);
  expect(zip.file('Cai Windi.command')!.unixPermissions).toBe(0o100755);
  const installer=readFileSync('tools/windi-connect/scripts/install.mjs','utf8');
  expect(installer).toContain("path.join(root,'windi-account.json')");
