@@ -268,7 +268,7 @@ export function VideoKitCommerce() {
               </p>
             )}
             <p>
-              Bộ cài tự lưu kết nối Voice trong macOS Keychain. Bạn không cần đăng nhập CLI hoặc dán mã API.
+              Bộ cài tự lưu kết nối Voice an toàn trên máy (Windows DPAPI hoặc macOS Keychain). Bạn không cần đăng nhập CLI hoặc dán mã API.
             </p>
             <code>windi voice list</code>
             <code>windi voice generate --voice VOICE_UUID</code>

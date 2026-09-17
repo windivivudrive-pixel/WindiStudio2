@@ -7,7 +7,7 @@ import { AmbientMotion } from "@/windi/ambient-motion";
 export const metadata: Metadata = {
   title: "Windi Video Workflow",
   description:
-    "Hệ thống làm video dọc từ ý tưởng, kịch bản, hình, voice đến MP4. Xử lý trên máy Mac của bạn.",
+    "Hệ thống làm video dọc từ ý tưởng, kịch bản, hình, voice đến MP4. Xử lý trực tiếp trên máy của bạn (Windows & macOS).",
   alternates: { canonical: "/video-kits" },
 };
 export default function Page() {
@@ -23,8 +23,8 @@ export default function Page() {
       <AmbientMotion />
       <section className="kit-truth-strip">
         <span>1080 × 1920</span>
-        <span>Render trên máy Mac</span>
-        <span>20K Voice API credit</span>
+        <span>Windows & macOS</span>
+        <span>10K Voice API credit</span>
         <span>Flow hoặc ChatGPT</span>
       </section>
       <section id="kit-layouts" className="kit-layout-showcase">
@@ -75,7 +75,7 @@ export default function Page() {
         <h2>Bạn cần chuẩn bị gì?</h2>
         <div>
           <p>
-            <strong>Máy</strong>macOS Apple Silicon, Chrome hoặc Cốc Cốc.
+            <strong>Máy</strong>Windows hoặc macOS, Chrome hoặc Cốc Cốc.
           </p>
           <p>
             <strong>Môi trường</strong>Codex hoặc Antigravity. CLI vẫn dùng được
@@ -86,7 +86,7 @@ export default function Page() {
             quota riêng.
           </p>
           <p>
-            <strong>Voice</strong>Tặng 20.000 credit Windi Voice API, có sẵn
+            <strong>Voice</strong>Tặng 10.000 credit Windi Voice API, có sẵn
             word timestamp. Có thể mua thêm hoặc nhập file thu âm riêng.
           </p>
           <p>

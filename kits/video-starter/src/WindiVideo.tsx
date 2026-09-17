@@ -42,7 +42,7 @@ function ThumbnailScene({beat,profile,index}:{beat:WindiBeat;profile:WindiLayout
         <div style={{fontSize:20,lineHeight:1.35,color:'#c8c0b3',maxWidth:620}}>{isCta?'Duyệt từng bước. Làm video tiếp theo nhanh hơn.':'FLOW · SCRIPT · IMAGE · VOICE · RENDER'}</div>
         <div style={{padding:'7px 11px',border:`1px solid ${p.border}99`,fontSize:15,fontWeight:900,color:p.accent,whiteSpace:'nowrap'}}>{isCta?'BẮT ĐẦU':'ĐÃ DUYỆT'}</div>
       </div>
-      {isCta&&<div style={{position:'absolute',left:34,right:34,bottom:52,border:`2px solid ${p.accent}`,borderRadius:16,padding:'15px 18px',background:'rgba(240,201,106,.08)',display:'flex',alignItems:'baseline',gap:13}}><span style={{fontSize:44,fontWeight:950,letterSpacing:'-.06em',color:p.accent}}>299K</span><span style={{fontSize:17,fontWeight:900,color:p.text}}>100 TÀI KHOẢN ĐẦU · +20K VOICE CREDIT</span></div>}
+      {isCta&&<div style={{position:'absolute',left:34,right:34,bottom:52,border:`2px solid ${p.accent}`,borderRadius:16,padding:'15px 18px',background:'rgba(240,201,106,.08)',display:'flex',alignItems:'baseline',gap:13}}><span style={{fontSize:44,fontWeight:950,letterSpacing:'-.06em',color:p.accent}}>299K</span><span style={{fontSize:17,fontWeight:900,color:p.text}}>100 TÀI KHOẢN ĐẦU · +10K VOICE CREDIT</span></div>}
     </div>
   </AbsoluteFill>;
 }
