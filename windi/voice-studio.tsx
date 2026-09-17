@@ -1053,7 +1053,7 @@ export function VoiceStudio() {
                 ? isAdmin ? "Admin · Clone Pro 2.1" : currentPlan
                   ? `Gói ${currentPlan.name}`
                   : workflowBonusRemaining > 0
-                    ? "20K credit từ Video Workflow"
+                    ? "10K credit từ Video Workflow"
                     : "Chưa có gói dịch vụ"
                 : "Không gian sáng tạo của bạn"}
           </span>
