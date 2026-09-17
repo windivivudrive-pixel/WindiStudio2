@@ -201,15 +201,15 @@ export function VideoKitCommerce() {
           {loading ? (
             <button disabled>Đang kiểm tra...</button>
           ) : account?.entitlement ? (
-            <button className="kit-buy-button" onClick={() => void downloadInstaller()}>
-              <Download size={17} /> Tải và bắt đầu
+            <button type="button" className="kit-buy-button" onClick={() => void downloadInstaller()}>
+              <Download size={18} /> Tải và bắt đầu
             </button>
           ) : !authenticated ? (
             <Link className="kit-buy-button" href="/login?next=/video-kits">
               Đăng nhập để mua
             </Link>
           ) : released ? (
-            <button className="kit-buy-button" onClick={() => void buy()}>
+            <button type="button" className="kit-buy-button" onClick={() => void buy()}>
               {activeOrder ? "Mở đơn đang chờ" : "Mua Windi Workflow"}
             </button>
           ) : (
