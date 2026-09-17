@@ -19,6 +19,7 @@ export default function Page() {
         <span>Video Workflow</span>
       </nav>
       <WorkflowHero detail />
+      <Link className="text-link" href="/video-kits/huong-dan">Xem hướng dẫn làm video đầu tiên →</Link>
       <AmbientMotion />
       <section className="kit-truth-strip">
         <span>1080 × 1920</span>
