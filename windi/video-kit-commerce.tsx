@@ -155,7 +155,8 @@ export function VideoKitCommerce() {
     if(!response.ok){const body=await response.json();setError(body.error || 'Chưa tải được bộ cài.');return;}
     const version=response.headers.get('X-Windi-Workflow-Version');
     const url=URL.createObjectURL(await response.blob());
-    const a=document.createElement('a');a.href=url;a.download='Windi-Cai-Dat-Ca-Nhan.zip';a.click();
+    const filename=response.headers.get('Content-Disposition')?.match(/filename="([^"]+)"/)?.[1] || 'Windi-Video-Workflow-universal.zip';
+    const a=document.createElement('a');a.href=url;a.download=filename;a.click();
     window.setTimeout(()=>URL.revokeObjectURL(url),60000);
     setNotice(`Bộ cài Windi ${version ? `v${version} ` : ''}đang được tải xuống. Giải nén và mở file cài đặt để bắt đầu.`);
   }
@@ -237,7 +238,7 @@ export function VideoKitCommerce() {
           {account.release && <p>{account.release.changelog}</p>}
           <div className="kit-quickstart">
             <h3>Bắt đầu nhanh</h3>
-            <p>Tải bộ cài cá nhân, giải nén rồi mở Cai Windi.command. Voice được kết nối tự động theo tài khoản đã mua.</p>
+            <p>Giải nén bộ cài đầy đủ, mở Cai Windi Windows.cmd trên Windows hoặc Cai Windi.command trên macOS. Nạp Windi Connect Extension ngay trong thư mục vừa giải nén. Voice tự kết nối theo tài khoản đã mua.</p>
             <code>windi setup</code>
             <code>windi project init</code>
             <code>windi workflow start</code>
