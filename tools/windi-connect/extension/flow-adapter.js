@@ -126,6 +126,10 @@ async function captchaToken(evaluate, tabId, action = 'IMAGE_GENERATION') {
     const execute = globalThis.grecaptcha?.enterprise?.execute;
     if (typeof execute !== 'function') return null;
     try {
+      await Promise.race([
+        new Promise(resolve => globalThis.grecaptcha.enterprise.ready(resolve)),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('CAPTCHA_INIT_TIMEOUT')), 15000)),
+      ]);
       return await globalThis.grecaptcha.enterprise.execute(siteKey, { action });
     } catch {
       return null;
@@ -141,8 +145,11 @@ async function hasCaptchaRuntime(evaluate, tabId) {
 export async function flowDirectStatus({ tabId, url, evaluate }) {
   if (new URL(url).origin === 'https://flow.google.com') {
     const projectId = flowProjectId(url);
-    const available = await evaluate('flow', tabId, () => Boolean(globalThis.WIZ_global_data?.SNlM0e && typeof globalThis.grecaptcha?.enterprise?.execute === 'function'), null);
-    const status = {strategy:'flow-rpc', projectId, ready:Boolean(projectId && available)};
+    const page = await evaluate('flow',tabId,()=>({
+      captchaAvailable:typeof globalThis.grecaptcha?.enterprise?.execute==='function',
+      csrfAvailable:Boolean(globalThis.WIZ_global_data?.SNlM0e),
+    }));
+    const status = {strategy:'flow-rpc',projectId,...page,ready:Boolean(projectId&&page?.captchaAvailable&&page?.csrfAvailable)};
     await reportStatus(status);
     return status;
   }
@@ -156,17 +163,23 @@ export async function flowDirectStatus({ tabId, url, evaluate }) {
 }
 
 export async function flowRefreshSession({ tabId, url, evaluate, cdp }) {
-  if (!tokenFresh()) {
-    await cdp('flow', tabId, 'Network.enable');
+  if (new URL(url).origin === 'https://flow.google.com' || !tokenFresh()) {
+    if (new URL(url).origin !== 'https://flow.google.com') await cdp('flow', tabId, 'Network.enable');
     await chrome.tabs.reload(tabId);
     for (let attempt = 0; attempt < 80; attempt++) {
       const tab = await chrome.tabs.get(tabId);
-      if (tab.status === 'complete' && tokenFresh()) break;
+      if (tab.status === 'complete' && (new URL(url).origin === 'https://flow.google.com' || tokenFresh())) break;
       await new Promise((resolve) => setTimeout(resolve, 250));
     }
   }
   const tab = await chrome.tabs.get(tabId);
-  return flowDirectStatus({ tabId, url: tab.url || url, evaluate });
+  let status;
+  for(let attempt=0;attempt<40;attempt++){
+    status=await flowDirectStatus({tabId,url:tab.url||url,evaluate});
+    if(status.ready)return status;
+    await new Promise(resolve=>setTimeout(resolve,500));
+  }
+  return status;
 }
 
 function clientContext(projectId, token) {
@@ -249,7 +262,7 @@ export async function flowDirectGenerate({ tabId, url, prompt, aspect, model, se
 
 export async function flowUploadReference({tabId,url,base64,mime,name,evaluate}) {
   if(new URL(url).origin!=='https://flow.google.com')throw new Error('FLOW_REFERENCE_REQUIRES_CURRENT_HOST');
-  const token=await captchaToken(evaluate,tabId,'UPLOAD_IMAGE');
+  const token=await captchaToken(evaluate,tabId,'IMAGE_GENERATION');
   if(!token)throw new Error('FLOW_DIRECT_CAPTCHA_UNAVAILABLE');
   const request=buildFlowUploadRequest({projectId:flowProjectId(url),base64,mime,name,captcha:token});
   const response=await evaluate('flow',tabId,flowPageRpc,{rpcId:'maseQ',request});

@@ -10,7 +10,7 @@ const packageInfo=JSON.parse(await readFile(path.join(root,'package.json'),'utf8
 const releaseVersion=String(packageInfo.version);
 // Customer bundles contain source only. Runtime Node and npm dependencies are
 // fetched and integrity-checked during the first customer installation.
-const bundleFilter=source=>{const relative=path.relative(path.resolve(root,'../..','kits/video-starter'),source);return !['public/windi-job','node_modules','build','out','.windi','.git','.next'].some(excluded=>relative===excluded||relative.startsWith(excluded+path.sep))&&!path.basename(source).startsWith('.env');};
+const bundleFilter=source=>{const relative=path.relative(path.resolve(root,'../..','kits/video-starter'),source);return !['public/windi-job','node_modules','build','out','.windi','.git','.next'].some(excluded=>relative===excluded||relative.startsWith(excluded+path.sep))&&!path.basename(source).startsWith('.env')&&path.basename(source)!=='.DS_Store';};
 const extensions=path.join(root,'dist/extensions');try{await access(extensions,constants.R_OK);}catch{throw new Error('Build extensions first: npm run build:extensions');}
 const app=path.join(root,'dist','Windi Connect Installer.app');
 // This is a reproducible build artifact under tools/windi-connect/dist only.

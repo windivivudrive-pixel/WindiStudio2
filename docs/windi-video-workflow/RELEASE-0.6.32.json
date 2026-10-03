@@ -1,0 +1,17 @@
+{
+  "version": "0.6.32",
+  "releaseId": "0bd925da-292a-46a3-a67c-2f4982079a17",
+  "isPublished": true,
+  "sizeBytes": 734869,
+  "sha256": "5f7c8c429201ff172bc593f1c281646356dc8a173fe35b95a59559b32dea3379",
+  "storageReadback": true,
+  "liveRowsSemanticSelector": true,
+  "testsPassed": 124,
+  "typecheckPassed": true,
+  "installerBuildPassed": true,
+  "prepareOnlyInstallPassed": true,
+  "zipCrcPassed": true,
+  "customerAuthenticatedDownload": "not tested",
+  "liveProviderGeneration": "not tested for 0.6.32",
+  "previousFlowAcceptance": "CocCoc/macOS Apple Silicon only"
+}

@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {mkdtemp,readFile,stat} from 'node:fs/promises';
+import {mkdtemp,readFile,stat,mkdir} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import path from 'node:path';
 import {spawn} from 'node:child_process';
@@ -41,4 +41,26 @@ test('daemon isolates provider connections, persists pairing, and rejects discon
   assert.equal((await call('pair',{provider:'flow',profile:'another-flow-profile'})).error,'PAIRING_REQUIRES_RESET');
   assert.deepEqual((await call('browser',{provider:'flow',action:'open',args:{url:'https://flow.google.com/'}})).result,{tabId:123});
   assert.equal((await call('doctor')).result.providers.chatgpt.connected,false);
+  const before=(await call('doctor')).result.providers;
+  assert.equal((await call('grok.status')).result.authenticated,false);
+  assert.equal((await call('browser',{provider:'grok',action:'open',args:{url:'https://flow.google.com/'}})).error,'GROK_BROWSER_OPERATIONS_UNSUPPORTED');
+  const project=path.join(home,'project');await mkdir(project);await call('project.init',{project});
+  const created=await call('job.create',{project,provider:'grok',kind:'create',prompt:'A test image',output:'assets/grok/test'});
+  assert.equal(created.result.job.status,'needs_user_action');assert.equal(created.result.job.error_code,'GROK_LOGIN_REQUIRED');
+  await call('grok.logout');
+  const after=(await call('doctor')).result.providers;
+  assert.deepEqual(after.flow,before.flow);assert.deepEqual(after.chatgpt,before.chatgpt);
+
+  ext.destroy();await delay(30);
+  const batchArgs={project,provider:'flow',kind:'create',prompt:'An owl',output:'assets/windi/owl.jpg',aspect:'4:3',model:'lite',count:4,requestKey:'four-owls'};
+  const variants=(await call('job.create',batchArgs)).result;
+  assert.equal(variants.jobs.length,4);assert.equal(variants.reused,false);
+  assert.deepEqual(variants.jobs.map((job:any)=>job.output_path),[1,2,3,4].map(n=>`assets/windi/owl-0${n}.jpg`));
+  assert.deepEqual(variants.jobs[0].options,{aspect:'4x3',model:'HARBOR_SEAL'});
+  const repeated=(await call('job.create',batchArgs)).result;
+  assert.equal(repeated.reused,true);assert.deepEqual(repeated.jobs.map((j:any)=>j.id),variants.jobs.map((j:any)=>j.id));
+  assert.equal((await call('job.create',{...batchArgs,count:2})).error,'REQUEST_KEY_CONTENT_MISMATCH');
+  assert.equal((await call('job.create',{...batchArgs,model:'pro'})).error,'REQUEST_KEY_CONTENT_MISMATCH');
+  assert.equal((await call('job.create',{...batchArgs,aspect:'21:9'})).error,'FLOW_ASPECT_UNSUPPORTED');
+
 });

@@ -38,8 +38,10 @@ Phải cho thấy kết quả mà hook hứa. Không dùng “ai cũng dùng”,
 - Dùng “nhưng có một điều…” chỉ khi ngay sau đó có giới hạn quan trọng thật.
 - Bằng chứng trước hoặc trong nửa đầu; không giữ toàn bộ lợi ích đến cuối.
 - Không lặp số sao ở mở, giữa và kết. Proof xã hội là phụ; demo mới là chính.
-- Khoảng 160–200 tiếng là ngân sách sơ bộ; dùng thời lượng voice thật để quyết định. Rút câu thay vì tăng tốc voice đến mức khó nghe.
-- Chuẩn hóa cách phát âm tên repo/model trong bản TTS riêng; trên màn hình giữ chính tả chính thức.
+- Khoảng 160–200 tiếng là ngân sách sơ bộ; dùng thời lượng voice thật để quyết định. Cấu hình tốc độ đọc TTS chuẩn ở mức **1.1x** để nhịp video nhanh, dứt khoát, giữ chân người xem.
+- **Cập nhật Model mới nhất:** Luôn cập nhật các mô hình AI đương đại (Claude Opus 3.5 / 3.7 / Sonnet, GPT-4o, GPT-5, GPT-6 Astra...), không dùng các dòng model cũ đã lỗi thời.
+- **Đơn giản hóa nội dung:** Diễn đạt tinh gọn, tránh nhồi nhét chữ nhỏ và thuật ngữ hàn lâm khó hiểu; ưu tiên ẩn dụ đời thường (ví dụ: giáo sư đăm chiêu vài giây vs nhân viên bấm nút trong tích tắc).
+- Chuẩn hóa cách phát âm tên repo/model/domain trong bản TTS riêng (ví dụ: viết `WindiStudio chấm app` để voice đọc chuẩn xác); trên màn hình giữ chính tả chính thức.
 
 ## CTA quảng bá web
 

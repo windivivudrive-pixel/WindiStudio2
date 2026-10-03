@@ -1,4 +1,37 @@
-# Verification status — 0.5.4
+# Verification status — 0.6.32
+
+## Released build — 0.6.32
+
+This package carries the current Windi Connect source, including Grok support,
+the combined Flow/ChatGPT/Grok extension, minimized Flow workspace handling,
+and the updated installer and recovery paths. Exact package, installer, runtime,
+release checks are recorded in [the 0.6.32 release report](../docs/windi-video-workflow/RELEASE-0.6.32.md).
+
+- Windi Connect tests: 124/124 passed; TypeScript and extension build passed.
+- Installer and universal ZIP were built. ZIP CRC passed; its unpacked customer
+  extension, installer manifest and bundled extension all report version 0.6.32.
+- The exact ZIP was extracted to a temporary directory. Its `--prepare-only`
+  install passed with the managed Node runtime, npm dependencies, Sharp,
+  Remotion FFmpeg/FFprobe and yt-dlp. This did not replace the active install.
+- No live Flow, ChatGPT or Grok generation was performed for this build. The
+  Flow acceptance below is from 0.6.31 on Cốc Cốc/macOS; do not infer Chrome,
+  Windows, or new ChatGPT/Grok live acceptance from it.
+
+Current background Flow acceptance from the preceding release:
+[FLOW-0.6.31.md](docs/FLOW-0.6.31.md).
+Background creation, new workspace, references and original downloads were verified
+on Cốc Cốc/macOS with OS focus events recorded. Feature acceptance from 0.6.30:
+[FLOW-0.6.30.md](docs/FLOW-0.6.30.md). Older records below describe their dated versions.
+
+## Historical verification — 0.6.29
+
+## Live Flow check — 2026-09-26, Cốc Cốc / gemini profile
+
+- Flow's direct `BatchGenerateImages` request returned `PUBLIC_ERROR_UNUSUAL_ACTIVITY` on this date. Windi now uses a dedicated unfocused browser window for new images without reference files. The Flow tab is active inside that window, so its page reports `visibilityState: visible`, while the user's original window remained on Extensions.
+- CLI job `8568bbd9-14cb-44ee-8266-66f2cde17efb` completed prompt submission, Flow generation, original 1K download, staging and project publication. Output: `visual-checks/windi-connect-0624-cat/assets/windi/cat-window-0629.jpg`, JPEG 1376×768, SHA-256 `f9abfee62a22c182eab774364cd0e6436acafcbabb8badea867715cd0c73c173`.
+- A second CLI job reused the managed Flow window, selected 9:16, and completed to `visual-checks/windi-connect-0624-cat/assets/windi/cat-portrait-0629.jpg`, JPEG 768×1376. The original browser window still showed the Extensions tab afterward.
+- The exact universal ZIP was extracted and its bundled installer passed a `--prepare-only` run with Node, npm dependencies, Sharp, Remotion FFmpeg/FFprobe, Python and yt-dlp. A full install from that extracted ZIP completed; `windi doctor` then reported the environment ready and Flow connected/paired. Installed CLI job `d8e7738e-2b0e-45c7-8645-235111ef5f2d` completed to `visual-checks/windi-connect-0624-cat/assets/windi/cat-installed-0629.jpg`, JPEG 1376×768, SHA-256 `77c8f61d0bda69f026e57e3def1ff94faa495b151665c9c8fa62497dc86e2617`. The original Extensions tab stayed selected.
+- `npm run typecheck`, extension build, and 106/106 tests passed. The ZIP `Windi-Video-Workflow-v0.6.29-universal.zip` passed `unzip -t`. Reference images still use direct RPC and have not been reverified with the current Flow service; Flow edit remains unsupported.
 
 ## Verified locally
 

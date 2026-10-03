@@ -1,0 +1,19 @@
+{
+  "version": "0.6.31",
+  "releaseId": "9e6b4222-9a98-409a-80bd-795851634db3",
+  "isPublished": true,
+  "sizeBytes": 698056,
+  "sha256": "77b9bd2cba9f7d0f693fd5745539d7273cf577ab8ca5b91e44d3a74786967505",
+  "storageReadback": true,
+  "signedDownload": true,
+  "liveRowsSemanticSelector": true,
+  "anonymousDownloadStatus": 401,
+  "authenticatedWebDownload": "not tested: no signed-in licensed browser session",
+  "cleanInstalledJobs": [
+    "2e246ed4-071f-4400-a06a-e34b5009a969",
+    "12f0d645-0957-4505-9fac-2d8d0b2b6153"
+  ],
+  "focusEvents": 0,
+  "windowState": "minimized",
+  "windiTestsPassed": 124
+}

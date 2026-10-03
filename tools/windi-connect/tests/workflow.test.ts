@@ -57,3 +57,12 @@ test('reference layout requires claude-video evidence contract and controls beat
   const invalid=script();invalid.beats[0].layout='full-frame';const wrongLayoutScript=await save(root,'wrong-layout-script.json',invalid);await assert.rejects(()=>putWorkflowArtifact(root,'script',wrongLayoutScript),/UNKNOWN_BEAT_LAYOUT_full-frame/);
   invalid.beats[0].layout='viral-hook';const accepted=await putWorkflowArtifact(root,'script',await save(root,'reference-script.json',invalid));assert.equal(accepted.stage,'script_review');
 });
+
+test('Grok workflow is explicit and retains approved image ratio without changing legacy defaults',async()=>{
+  const root=await makeProject();await startWorkflow(root,'project-grok',{topic:'T',audience:'A',style:'S',imageProvider:'grok'});
+  await approveIdeaAndLayout(root);
+  const current=await loadWorkflow(root);const layoutFile=path.join(root,current.current.layout!);const layout=JSON.parse(await readFile(layoutFile,'utf8'));layout.imageAspectRatio='16:9';await writeFile(layoutFile,JSON.stringify(layout));
+  await putWorkflowArtifact(root,'script',await save(root,'script.json',script()));const state=await approveWorkflow(root,'script','1');const manifest=await buildImageManifest(root,state);
+  assert.equal(manifest.jobs[0].provider,'grok');assert.equal(manifest.jobs[0].aspect,'16:9');
+  const defaultRoot=await makeProject();assert.equal((await startWorkflow(defaultRoot,'default',{topic:'T',audience:'A',style:'S'})).brief.imageProvider,'flow');
+});

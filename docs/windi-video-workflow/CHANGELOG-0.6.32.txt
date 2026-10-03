@@ -1,0 +1,8 @@
+0.6.32 — Bản cập nhật Windi Connect
+
+- Cập nhật extension gộp Flow, ChatGPT và Grok; popup hiển thị trạng thái và kết quả của cả ba provider.
+- Bổ sung xử lý Flow trong cửa sổ nền, hỗ trợ workspace và khôi phục kết quả an toàn hơn.
+- Cập nhật daemon, CLI, cài đặt và bộ kiểm tra sức khỏe để đồng bộ với extension mới.
+- Bộ cài dành cho khách tiếp tục kèm thư mục Windi Connect Extension để nạp vào Chrome hoặc Cốc Cốc.
+
+Phạm vi xác minh provider và hệ điều hành được ghi trong báo cáo phát hành; không suy rộng kiểm thử Cốc Cốc/macOS sang mọi trình duyệt hoặc nền tảng.
