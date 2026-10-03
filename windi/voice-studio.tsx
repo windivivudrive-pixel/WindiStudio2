@@ -1013,7 +1013,7 @@ export function VoiceStudio() {
                 ? isAdmin ? "Admin · Windi Clone Pro 2.1" : currentPlan
                   ? `Gói ${currentPlan.name}`
                   : workflowBonusRemaining > 0
-                    ? "10K credit từ Video Workflow"
+                    ? "3K credit từ Video Workflow"
                     : "Chưa có gói dịch vụ"
                 : "Không gian sáng tạo của bạn"}
           </span>

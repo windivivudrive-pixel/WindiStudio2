@@ -100,7 +100,7 @@ export function VideoKitCommerce() {
     setLoading(false);
     const nextOrder = body.orders?.find((item: Order) => item.id === checkoutOrderIdRef.current);
     if (nextOrder?.status === "PAID" && checkoutStatusRef.current === "PENDING") {
-      setNotice("Thanh toán đã được xác nhận. Video Workflow, 10.000 credit Voice và 1 lượt Clone Pro 2.1 đã được cấp cho tài khoản.");
+      setNotice("Thanh toán đã được xác nhận. Video Workflow, 3.000 credit Voice và 1 lượt Clone Pro 2.1 đã được cấp cho tài khoản.");
     }
     if (nextOrder) checkoutStatusRef.current = nextOrder.status;
     setCheckout((current) => {
@@ -121,7 +121,7 @@ export function VideoKitCommerce() {
     if (!checkout || checkout.status !== "PENDING") return;
     const timer = window.setInterval(
       () => void refresh().catch(() => undefined),
-      5000,
+      3000,
     );
     return () => window.clearInterval(timer);
   }, [checkout, refresh]);
@@ -166,7 +166,7 @@ export function VideoKitCommerce() {
       order.status === "PENDING" && Date.parse(order.expires_at) > Date.now(),
   );
   const price = account?.product?.price_vnd ?? 219000;
-  const includedVoiceCredits=account?.product?.metadata.voice_trial_credits??10000;
+  const includedVoiceCredits=account?.product?.metadata.voice_trial_credits??3000;
   const includedCloneLimit=account?.product?.metadata.voice_trial_clone_limit??1;
   const includedVoiceDays=account?.product?.metadata.voice_trial_duration_days??30;
 
