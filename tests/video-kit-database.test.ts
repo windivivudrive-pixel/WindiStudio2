@@ -22,6 +22,9 @@ beforeAll(async()=>{
  await db.exec(await readFile('supabase/migrations/20260914053354_video_kit_trial_pricing.sql','utf8'));
  await db.exec(await readFile('supabase/migrations/20260914151615_workflow_voice_trial_bundle.sql','utf8'));
  await db.exec(await readFile('supabase/migrations/20260914155355_workflow_voice_bundle_30_days.sql','utf8'));
+ await db.exec(await readFile('supabase/migrations/20261003164817_voice_plan_advance_purchase.sql','utf8'));
+ await db.exec(await readFile('supabase/migrations/20261003165824_workflow_voice_credit_5k.sql','utf8'));
+ await db.exec(await readFile('supabase/migrations/20261003170239_workflow_voice_credit_3k.sql','utf8'));
  await db.exec("set role service_role;update products set is_active=true,metadata=jsonb_set(metadata,'{release_ready}','true') where metadata->>'sku'='windi-video-workflow-v1'");
  productId=(await db.query<{id:string}>("select id from products where metadata->>'sku'='windi-video-workflow-v1'")).rows[0].id;
  await db.exec('reset role');
@@ -50,7 +53,10 @@ test('payment is idempotent and grants one entitlement only for the exact amount
  expect((await db.query('select windi_video_kit_pay($1,$2,$3,$4)',[order.payment_code,'sepay-kit-a',89000,{id:'sepay-kit-a'}])).rows).toEqual([{windi_video_kit_pay:'paid'}]);
  expect((await db.query('select count(*)::int n from product_entitlements where user_id=$1 and product_id=$2',[a,productId])).rows).toEqual([{n:1}]);
  expect((await db.query('select voice_credits,voice_credits_used from product_entitlements where user_id=$1 and product_id=$2',[a,productId])).rows).toEqual([{voice_credits:0,voice_credits_used:0}]);
- expect((await db.query("select plan_id,credits,clone_limit,duration_days from windi_voice_orders where user_id=$1 and gateway_id like 'workflow:%'",[a])).rows).toEqual([{plan_id:'trial',credits:10000,clone_limit:1,duration_days:30}]);
+ expect((await db.query("select plan_id,credits,clone_limit,duration_days from windi_voice_orders where user_id=$1 and gateway_id like 'workflow:%'",[a])).rows).toEqual([{plan_id:'trial',credits:3000,clone_limit:1,duration_days:30}]);
+ expect((await db.query("select metadata->>'voice_trial_credits' credits from products where id=$1",[productId])).rows).toEqual([{credits:'3000'}]);
+ expect((await db.query("select credits from windi_voice_periods where user_id=$1 and plan_id='trial'",[a])).rows).toEqual([{credits:3000}]);
+ expect((await db.query("select amount from windi_voice_ledger where user_id=$1 and period_id in (select id from windi_voice_periods where user_id=$1 and plan_id='trial') and kind='grant'",[a])).rows).toEqual([{amount:3000}]);
  expect((await db.query('select count(*)::int n from payment_events where gateway_id=$1',['sepay-kit-a'])).rows).toEqual([{n:1}]);
 });
 
