@@ -521,9 +521,7 @@ export function VoiceStudio() {
   const canPurchasePlan = (planId: string) =>
     planId === "trial"
       ? trialEligible && (!period || period.plan_id === "welcome")
-      : !period ||
-        period.plan_id === "welcome" ||
-        (period.plan_id === "trial" && planId === "starter");
+      : true;
   const canGenerate =
     !!user &&
     available &&
@@ -1980,7 +1978,7 @@ export function VoiceStudio() {
                         <li>
                           <Check size={15} />
                           {p.id === "trial"
-                            ? "Gói thử độc lập; Starter vẫn 69.000đ"
+                            ? "Gói thử độc lập; Starter vẫn 129.000đ"
                             : p.clone_limit
                               ? "Xóa giọng để giải phóng slot"
                               : "Không cần thanh toán để bắt đầu"}
@@ -2013,15 +2011,19 @@ export function VoiceStudio() {
                           {busy === p.id ? (
                             <LoaderCircle className="voice-spin" size={16} />
                           ) : isCurrent ? (
-                            "Gói hiện tại"
+                            period?.plan_id !== "welcome" && canBuy
+                              ? "Mua chu kỳ kế tiếp"
+                              : "Gói hiện tại"
                           ) : !p.purchasable ? (
                             "Tự cấp khi đăng ký"
                           ) : upgradeFromTrial ? (
-                            "Nâng cấp Starter · 69.000đ"
+                    "Mua sau gói thử · 129.000đ"
                           ) : !canBuy ? (
-                            "Mua khi hết chu kỳ"
+                            "Chưa đủ điều kiện mua"
                           ) : !payments || !available ? (
                             "Sắp mở thanh toán"
+                          ) : period && period.plan_id !== "welcome" ? (
+                            `Mua tiếp ${p.name}`
                           ) : (
                             `Chọn ${p.name}`
                           )}
@@ -2034,11 +2036,22 @@ export function VoiceStudio() {
                   );
                 })}
               </div>
+              {account?.nextPeriod && (
+                <div className="voice-plan-notes">
+                  <p>
+                    <strong>Gói tiếp theo đã được xếp lịch</strong>
+                    {VOICE_PLANS.find((plan) => plan.id === account.nextPeriod?.plan_id)?.name}
+                    {" "}bắt đầu ngày {date(account.nextPeriod.starts_at)}.
+                  </p>
+                </div>
+              )}
               <div className="voice-plan-notes">
                 <p>
                   <strong>Credit tính thế nào?</strong> 1 ký tự = 1 credit, gồm
                   dấu câu và khoảng trắng trong nội dung. Credit có hiệu lực
-                  theo từng gói và không cộng dồn sang kỳ sau.
+                  theo từng gói và không cộng dồn sang kỳ sau. Bạn có thể mua
+                  trước chu kỳ tiếp theo; gói mới bắt đầu sau khi gói hiện tại
+                  kết thúc.
                 </p>
                 <p>
                   <strong>Giọng clone qua tháng mới?</strong> Giọng được giữ
