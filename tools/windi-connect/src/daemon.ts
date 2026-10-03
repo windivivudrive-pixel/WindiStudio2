@@ -1,3 +1,8 @@
+import {flowImageOptions,flowVariantCount,assertFlowImageAspect} from './flow-options.ts';
+import {GrokWebMedia} from './grok/web.ts';
+import {loadProfile,profileWriter} from './profile-file.ts';
+import {resultOf} from './grok/media.ts';
+import {createGrokJob,resumeGrokJob} from './grok/jobs.ts';
 import {cleanupDownloadedOriginal} from './assets.ts';
 import net from "node:net";
 import { execFile as execFileCallback } from "node:child_process";
@@ -106,21 +111,31 @@ const pending = new Map<
   }
 >();
 const profileFile = path.join(home, "profile.json");
-let profile = JSON.parse(
-  await readFile(profileFile, "utf8").catch(() => "{}"),
-) as Partial<Record<Provider, string>>;
+let profile = await loadProfile(profileFile);
 const send = (socket: net.Socket, message: unknown) =>
   socket.write(`${JSON.stringify(message)}\n`);
-const saveProfile = () =>
-  writeFile(profileFile, JSON.stringify(profile), { mode: 0o600 });
+const writeProfile = profileWriter(profileFile);
+const saveProfile = () => writeProfile(profile);
 const running = new Set<Provider>();
 const lastProject = new Map<Provider, string>();
+let grokWebStatus={authenticated:false,authPending:false,transport:'web',error:null as string|null};
+const grokMedia = new GrokWebMedia(store,stagingRoot,(op,args)=>command('grok',op,args),()=>broadcast('grok'));
+// Resume only identifiable Grok requests after a restart. Legacy recovery is unchanged.
+function recoverKnownGrokJobs(){
+for(const row of store.db.prepare("SELECT * FROM jobs WHERE provider='grok' AND status='unknown_result'").all() as JobRow[]){
+  const result=resultOf(row);
+  if(result.downloadPath||result.transport==='web'&&(result.webDownloadId||result.postUrl||result.uiVideo&&row.submitted_at))store.updateJob(row.id,{status:'queued',error_code:null,user_message:null});
+}
+}
+recoverKnownGrokJobs();
+
 
 function statusFor(provider: Provider) {
   return {
     provider,
     connected: connections.has(provider),
     paired: Boolean(profile[provider]),
+    ...(provider==='grok'?{...grokWebStatus,authenticated:connections.has('grok')&&grokWebStatus.authenticated,backendConnected:true}:{}),
     ...store.providerSummary(provider),
   };
 }
@@ -136,8 +151,15 @@ function broadcast(provider: Provider) {
 
 async function assetAction(action: string, args: any) {
   const source = path.resolve(String(args?.path || ""));
-  if (!path.isAbsolute(source) || !source.startsWith("/Users/win/Documents/"))
+  if (!path.isAbsolute(source) || (!source.startsWith("/Users/win/Documents/") && !store.db.prepare("SELECT id FROM assets WHERE path=? AND provider='grok'").get(source)))
     throw new Error("ASSET_PATH_REJECTED");
+  const grokAsset=store.db.prepare("SELECT * FROM assets WHERE path=? AND provider='grok'").get(source);
+  if(grokAsset){
+    if(action==='asset.open'){
+      if(process.platform==='win32')await execFile('explorer.exe',[`/select,${source}`]);else await execFile('/usr/bin/open',['-R',source]);return {opened:true};
+    }
+    const thumb=await readFile(`${source}.thumb.jpg`);return {mime:'image/jpeg',data:thumb.toString('base64')};
+  }
   const info = await inspectOriginal(source);
   if (action === "asset.preview") {
     const thumbnail = await sharp(source)
@@ -173,6 +195,7 @@ function command(provider: Provider, op: string, args: any = {}) {
   });
 }
 async function rawBrowser(provider: Provider, op: string, args: any = {}) {
+  if(provider==='grok')throw new Error('GROK_BROWSER_OPERATIONS_UNSUPPORTED');
   if (
     ![
       "open",
@@ -183,14 +206,22 @@ async function rawBrowser(provider: Provider, op: string, args: any = {}) {
       "upload",
       "downloads",
       "trackDownload",
+      "flowEnsureWorkspace",
       "flowDirectStatus",
       "flowRefreshSession",
       "flowDirectGenerate",
+      "flowBackgroundSubmit",
+      "flowBackgroundResult",
+      "flowUiInspect",
+      "flowUiAttachReferences",
+      "flowResetSubmission",
       "flowReferenceBegin",
       "flowReferenceChunk",
       "flowReferenceFinish",
       "flowRecoverDownload",
       "chatgptSaveOriginal",
+      "detachDebugger",
+      "reloadExtension",
     ].includes(op)
   )
     throw new Error("INVALID_BROWSER_OPERATION");
@@ -198,6 +229,13 @@ async function rawBrowser(provider: Provider, op: string, args: any = {}) {
     args.url ||= providerUrl(provider);
     if (!allowedUrl(provider, args.url))
       throw new Error("PROVIDER_URL_REJECTED");
+  }
+  if(op==='flowUiAttachReferences'){
+    const job=store.job(String(args.jobId||''));
+    if(!job||job.provider!=='flow'||!Array.isArray(args.files)||args.files.length>4)throw new Error('REFERENCE_NOT_OWNED_BY_JOB');
+    const project=store.projectById(job.project_id);if(!project)throw new Error('PROJECT_NOT_REGISTERED');
+    const owned=[...store.references(job),job.source_path];
+    args.files=await Promise.all(args.files.map(async(file:string)=>{if(!owned.includes(file))throw new Error('REFERENCE_NOT_OWNED_BY_JOB');const safe=await safeFile(project.root,file);await inspectOriginal(safe);return safe;}));
   }
   if (op === "upload") {
     if (
@@ -236,11 +274,13 @@ const browser: BrowserBridge = {
   trackDownload: (provider, tabId, jobId) =>
     rawBrowser(provider, "trackDownload", { tabId, jobId }),
   downloads: (provider) => rawBrowser(provider, "downloads", {}),
+  flowEnsureWorkspace: (projectId) => rawBrowser("flow", "flowEnsureWorkspace", { projectId }),
+  flowUiAttachReferences: (tabId,args) => rawBrowser("flow","flowUiAttachReferences",{tabId,...args}),
   flowDirectStatus: (tabId) => rawBrowser("flow", "flowDirectStatus", { tabId }),
   flowRecoverDownload: (tabId, args) => rawBrowser("flow", "flowRecoverDownload", {tabId,...args}),
   flowRefreshSession: (tabId) => rawBrowser("flow", "flowRefreshSession", { tabId }),
   flowUploadReference: async (tabId,{jobId,file}) => {
-    const job=store.job(jobId);if(!job||job.provider!=='flow'||!store.references(job).includes(file))throw new Error('REFERENCE_NOT_OWNED_BY_JOB');
+    const job=store.job(jobId);if(!job||job.provider!=='flow'||!([...store.references(job),job.source_path].includes(file)))throw new Error('REFERENCE_NOT_OWNED_BY_JOB');
     const project=store.projectById(job.project_id);if(!project)throw new Error('PROJECT_NOT_REGISTERED');
     const safe=await safeFile(project.root,file);const info=await inspectOriginal(safe);
     const bytes=await readFile(safe);
@@ -254,7 +294,10 @@ const browser: BrowserBridge = {
     return rawBrowser('flow','flowReferenceFinish',common);
   },
   flowDirectGenerate: (tabId, args) => rawBrowser("flow", "flowDirectGenerate", { tabId, ...args }),
+  flowBackgroundSubmit: (tabId, args) => rawBrowser("flow", "flowBackgroundSubmit", {tabId,...args}),
+  flowBackgroundResult: (tabId, args) => rawBrowser("flow", "flowBackgroundResult", {tabId,...args}),
   chatgptSaveOriginal: (tabId, args) => rawBrowser("chatgpt", "chatgptSaveOriginal", { tabId, ...args }),
+  detachDebugger: (tabId) => rawBrowser("flow", "detachDebugger", { tabId }),
 };
 
 function messageFor(error: unknown) {
@@ -266,6 +309,7 @@ function messageFor(error: unknown) {
       "Tab xử lý chưa thuộc Windi Connect. Hãy mở popup, bấm Mở tab xử lý cho provider này rồi tiếp tục cùng job.",
     BRIDGE_TIMEOUT_RESULT_UNKNOWN:
       "Mất kết nối trong lúc provider xử lý. Windi không gửi lại để tránh tạo ảnh trùng.",
+    FLOW_BACKGROUND_UNAVAILABLE: "Trình duyệt chưa hỗ trợ thao tác Flow ở nền. Cập nhật trình duyệt/extension rồi tiếp tục cùng job. Windi giữ trạng thái gửi để tránh tạo trùng.",
     DOWNLOAD_NOT_OBSERVED: "Không tìm thấy file ảnh gốc được tải từ provider.",
     UNSUPPORTED_OR_CORRUPT_IMAGE: "File tải về không phải ảnh gốc hợp lệ.",
     INVALID_DOWNLOADED_FILE: "File tải về không hợp lệ hoặc quá lớn.",
@@ -285,6 +329,7 @@ async function run(job: JobRow) {
     const staged = await stageOriginal(current, download.filename);
     store.updateJob(job.id, { staging_path: staged.path });
     if (store.job(job.id)?.status === "cancelled") return;
+    if(current.provider==='flow'){const {aspect}=flowImageOptions(JSON.parse(current.options_json||'{}'),current.prompt);assertFlowImageAspect(aspect,staged.width,staged.height);}
     const duplicate = store.duplicateAsset(current.project_id,current.provider,staged.sha256,current.id);
     if(duplicate){
       store.updateJob(job.id,{
@@ -335,7 +380,12 @@ async function run(job: JobRow) {
       error instanceof ProviderActionRequired
         ? error.message
         : messageFor(error);
-    if (error instanceof ProviderActionRequired || userActionErrors.has(code))
+    const rejectedBeforeAcceptance = provider==='flow' && (
+      /^FLOW_UI_(?:PROMPT_|SETTINGS_|IMAGE_|COUNT_|MODEL_|ASPECT_|START_|REFERENCE_)/.test(code) ||
+      /^FLOW_DIRECT_(?:HTTP_(?:400|401|403|409|429)|SESSION_NOT_READY|CAPTCHA_UNAVAILABLE)$/.test(code) ||
+      code==='FLOW_UNUSUAL_ACTIVITY');
+    if(rejectedBeforeAcceptance)store.updateJob(job.id,{submitted_at:null});
+    if (rejectedBeforeAcceptance || error instanceof ProviderActionRequired || userActionErrors.has(code))
       store.updateJob(job.id, {
         status: "needs_user_action",
         error_code: code,
@@ -343,7 +393,7 @@ async function run(job: JobRow) {
       });
     else if (
       ["submitted", "generating", "downloading"].includes(current.status) &&
-      /DISCONNECTED|TIMEOUT|RESULT_UNKNOWN/.test(code)
+      /DISCONNECTED|TIMEOUT|RESULT_UNKNOWN|RESULT_NEEDS_RECONCILIATION|FLOW_ORIGINAL_|DOWNLOAD_/.test(code)
     )
       store.updateJob(job.id, {
         status: "unknown_result",
@@ -363,7 +413,25 @@ async function run(job: JobRow) {
     void schedule();
   }
 }
+async function runGrok(job:JobRow){
+  try{await grokMedia.run(job);}catch(error){
+    const current=store.job(job.id);if(!current||current.status==='cancelled')return;
+    const code=error instanceof Error&&/^GROK_[A-Z0-9_]+$/.test(error.message)?error.message:'GROK_OPERATION_FAILED';
+    const unknown=Boolean(current.submitted_at)&&/UNKNOWN|TIMEOUT|NETWORK|DOWNLOAD|OPERATION_FAILED/.test(code);
+    const action=/LOGIN|AUTH|ENTITLEMENT|QUOTA|JOB_ACTIVE/.test(code);
+    const beforeSubmit=/^GROK_UI_(CONTROL_MISSING|OPTION_UNAVAILABLE|OPTION_NOT_APPLIED|COMPOSER_MISSING|SUBMIT_UNAVAILABLE|WRONG_PAGE|REFERENCE_NOT_LISTED|REFERENCE_NOT_ATTACHED|UPLOAD_MISSING)$/.test(code);
+    if(beforeSubmit)store.updateJob(job.id,{submitted_at:null});
+    if(beforeSubmit||!current.submitted_at)await command('grok','ui.release',{jobId:job.id}).catch(()=>{});
+    const messages:Record<string,string>={GROK_UI_OPTION_UNAVAILABLE:'Tuỳ chọn video không có trên tài khoản Grok này; chưa gửi lệnh tạo.',GROK_UI_REFERENCE_NOT_LISTED:'Ảnh chưa xuất hiện trong Uploads; chưa gửi lệnh tạo video.',GROK_VIDEO_ASPECT_MISMATCH:'Video Grok trả về sai tỉ lệ đã chọn. Tệp gốc được giữ lại; không tự tạo lại.',GROK_VIDEO_DURATION_MISMATCH:'Video Grok trả về sai thời lượng đã chọn. Tệp gốc được giữ lại; không tự tạo lại.',GROK_JOB_ACTIVE:'Một job Grok cũ vẫn đang chờ kết quả. Tiếp tục hoặc huỷ job đó trước.',GROK_LOGIN_REQUIRED:'Đăng nhập Grok để tiếp tục.',GROK_ENTITLEMENT_REQUIRED:'Tài khoản Grok chưa có quyền sử dụng chức năng này.',GROK_QUOTA_EXCEEDED:'Grok đang giới hạn quota. Thử tiếp tục job sau.',GROK_RESULT_UNKNOWN:'Chưa xác định kết quả Grok; không gửi lại tự động.'};
+    store.updateJob(job.id,{status:unknown?'unknown_result':action?'needs_user_action':'failed',error_code:code,user_message:messages[code]||code});
+  }finally{running.delete('grok');broadcast('grok');void schedule();}
+}
 async function schedule() {
+  if(!running.has('grok')&&connections.has('grok')&&grokWebStatus.authenticated){
+    const next=store.nextQueued('grok',lastProject.get('grok')||null);
+    if(next){running.add('grok');lastProject.set('grok',next.project_id);void runGrok(next);}
+  }
+
   for (const provider of ["flow", "chatgpt"] as Provider[]) {
     if (running.has(provider) || !connections.has(provider)) continue;
     const next = store.nextQueued(provider, lastProject.get(provider) || null);
@@ -378,6 +446,7 @@ async function fileFingerprint(file: string) {
   return createHash("sha256").update(input).digest("hex");
 }
 async function createJob(args: any) {
+  if(args.provider==='grok'){const created=await createGrokJob(store,args);if(!created.reused&&(!connections.has('grok')||!grokWebStatus.authenticated))store.updateJob(created.job.id,{status:'needs_user_action',error_code:'GROK_LOGIN_REQUIRED',user_message:'Chạy windi grok login, rồi windi jobs resume với ID của job này.'});broadcast('grok');void schedule();return {job:serializeJob(store.job(created.job.id)!),reused:created.reused};}
   const provider = validProvider(args.provider);
   const kind = args.kind as JobKind;
   if (kind !== "create" && kind !== "edit") throw new Error("INVALID_JOB_KIND");
@@ -388,8 +457,11 @@ async function createJob(args: any) {
       : await readProjectText(project.root, args.promptFile);
   if (!prompt.content.trim()) throw new Error("PROMPT_FILE_EMPTY");
   if (prompt.content.length > 24_000) throw new Error("INVALID_TEXT");
+  const options = provider==='flow' ? flowImageOptions(args,prompt.content) : undefined;
+  const count = provider==='flow' ? flowVariantCount(args.count) : 1;
+  if(provider!=='flow'&&(args.aspect!==undefined||args.model!==undefined||args.seed!==undefined||args.count!==undefined))throw new Error('IMAGE_OPTIONS_REQUIRE_FLOW_OR_GROK');
   const references = Array.isArray(args.references) ? args.references : [];
-  if (references.length > 4) throw new Error("TOO_MANY_REFERENCES");
+  if (references.length + (kind === "edit" ? 1 : 0) > 4) throw new Error("TOO_MANY_REFERENCES");
   const referenceFiles = await Promise.all(
     references.map(async (file: string) => {
       const safe = await safeFile(project.root, file);
@@ -412,29 +484,36 @@ async function createJob(args: any) {
     source: source ? await fileFingerprint(source) : null,
     references: await Promise.all(referenceFiles.map(fileFingerprint)),
     output: outputRelative,
+    ...(options&&(args.aspect!==undefined||args.model!==undefined||args.seed!==undefined||count!==1)?{options,count}:{}),
   };
   const fingerprint = createHash("sha256")
     .update(JSON.stringify(contents))
     .digest("hex");
-  const created = store.insertJob({
-    projectId: project.id,
-    provider,
-    kind,
-    requestKey: args.requestKey || undefined,
-    fingerprint,
-    prompt: prompt.content,
-    sourcePath: source,
-    references: referenceFiles,
-    outputPath: outputRelative,
-  });
+  if(args.requestKey){
+    const family=[args.requestKey,...[1,2,3,4].map(n=>`${args.requestKey}:v1-of-${n}`)];
+    const expected=count===1?args.requestKey:`${args.requestKey}:v1-of-${count}`;
+    for(const key of family){if(key!==expected&&store.db.prepare('SELECT id FROM jobs WHERE project_id=? AND request_key=?').get(project.id,key))throw new Error('REQUEST_KEY_CONTENT_MISMATCH');}
+  }
+  const inputs = [];
+  for(let index=0;index<count;index++){
+    const ext=path.extname(outputRelative);
+    const variantOutput=count===1?outputRelative:`${ext?outputRelative.slice(0,-ext.length):outputRelative}-${String(index+1).padStart(2,'0')}${ext}`;
+    const variantOptions=options?{...options,...(options.seed===undefined?{}:{seed:(options.seed+index)%2147483648})}:undefined;
+    inputs.push({projectId:project.id,provider,kind,
+      requestKey:args.requestKey?(count===1?args.requestKey:`${args.requestKey}:v${index+1}-of-${count}`):undefined,
+      fingerprint:count===1?fingerprint:createHash('sha256').update(`${fingerprint}:${index}`).digest('hex'),
+      prompt:prompt.content,sourcePath:source,references:referenceFiles,outputPath:variantOutput,options:variantOptions});
+  }
+  const variants=store.insertJobs(inputs).map(created=>({job:serializeJob(created.job),reused:created.reused}));
   broadcast(provider);
   void schedule();
-  return { job: serializeJob(created.job), reused: created.reused };
+  return count===1?variants[0]:{jobs:variants.map(item=>item.job),reused:variants.every(item=>item.reused)};
 }
 function serializeJob(job: JobRow) {
   return {
     ...job,
     references: store.references(job),
+    options: job.options_json ? JSON.parse(job.options_json) : null,
     result: job.result_json ? JSON.parse(job.result_json) : null,
   };
 }
@@ -482,6 +561,7 @@ async function importJobAsset(args: any) {
   if (!path.isAbsolute(String(args.file || ""))) throw new Error("ABSOLUTE_IMPORT_PATH_REQUIRED");
   const sourceInfo = await lstat(source).catch(() => null);
   if (!sourceInfo?.isFile() || sourceInfo.isSymbolicLink()) throw new Error("INVALID_IMPORT_FILE");
+  if(job.provider==='grok'&&JSON.parse(job.options_json||'{}').media==='video')throw new Error('GROK_VIDEO_IMPORT_UNSUPPORTED_USE_RESUME');
   const staged = await stageOriginal(job, source);
   const duplicate = store.duplicateAsset(job.project_id, job.provider, staged.sha256, job.id);
   if (duplicate) throw new Error(`DUPLICATE_ASSET_MISMATCH:${duplicate.job_id}`);
@@ -539,6 +619,7 @@ async function continueWorkflow(projectRoot: string) {
       const created = await createJob({
         project: project.root,
         provider: item.provider,
+        ...(['flow','grok'].includes(item.provider)?{aspect:item.aspect}:{}),
         kind: item.kind,
         promptFile: path.join(project.root, item.promptFile),
         references: item.references.map((file) =>
@@ -602,6 +683,7 @@ const server = net.createServer((socket) => {
       connections.set(provider, { socket, profile: message.profile });
       send(socket, { type: "connected", version: VERSION });
       broadcast(provider);
+      if(provider==='grok')void command('grok','web.status').then(result=>{grokWebStatus={...grokWebStatus,...result,error:null};recoverKnownGrokJobs();broadcast('grok');void schedule();}).catch(()=>{grokWebStatus={...grokWebStatus,authenticated:false};broadcast('grok');});
       void schedule();
       return;
     }
@@ -625,6 +707,21 @@ const server = net.createServer((socket) => {
       respond(message.id, await assetAction(message.op, message.args || {}));
       return;
     }
+    if(message.op?.startsWith('grok.')){
+      if(role==='extension'&&provider!=='grok')throw new Error('WRONG_PROVIDER');
+      let result:any;
+      if(message.op==='grok.status')result={...grokWebStatus,authenticated:connections.has('grok')&&grokWebStatus.authenticated};
+      else if(message.op==='grok.login'||message.op==='grok.doctor'){
+        try{grokWebStatus={...grokWebStatus,...await command('grok',message.op==='grok.login'?'web.login':'web.status'),error:null};result={...grokWebStatus,mediaGenerationVerified:false};}
+        catch(error){grokWebStatus={...grokWebStatus,authenticated:false,error:error instanceof Error?error.message:'GROK_WEB_OPERATION_FAILED'};broadcast('grok');throw error;}
+        void schedule();
+      }else if(message.op==='grok.logout'){
+        if(running.has('grok'))throw new Error('GROK_JOB_ACTIVE');
+        if(connections.has('grok'))await command('grok','web.disconnect');
+        grokWebStatus={...grokWebStatus,authenticated:false,error:null};result=grokWebStatus;
+      }else throw new Error('UNKNOWN_OPERATION');
+      broadcast('grok');respond(message.id,result);return;
+    }
     if (role === "extension") throw new Error("NOT_CLI");
     role = "cli";
     if (message.op === "pair") {
@@ -642,7 +739,7 @@ const server = net.createServer((socket) => {
         phase: "production-candidate",
         home,
         providers: Object.fromEntries(
-          (["flow", "chatgpt"] as Provider[]).map((p) => [p, statusFor(p)]),
+          (["flow", "chatgpt", "grok"] as Provider[]).map((p) => [p, statusFor(p)]),
         ),
         database: databasePath,
       });
@@ -776,6 +873,13 @@ const server = net.createServer((socket) => {
     if (message.op === "job.resume") {
       const prior = store.job(message.args.id);
       if (!prior) throw new Error("JOB_NOT_FOUND");
+      if(prior.provider==='grok'){
+        const job=resumeGrokJob(store,prior,message.args.confirmNoResult===true);broadcast('grok');void schedule();respond(message.id,serializeJob(job));return;
+      }
+      if(prior.provider==='flow'&&message.args.confirmNoResult===true){
+        if(!['unknown_result','needs_user_action'].includes(prior.status)||!['RESULT_NEEDS_RECONCILIATION','BRIDGE_TIMEOUT_RESULT_UNKNOWN'].includes(prior.error_code||''))throw new Error('JOB_NOT_AWAITING_RECONCILIATION');
+        await rawBrowser('flow','flowResetSubmission',{jobId:prior.id,workspaceUrl:prior.workspace_url});
+      }
       const job =
         prior.staging_path && prior.status !== "complete"
           ? await recoverStaged(prior)
@@ -795,6 +899,7 @@ const server = net.createServer((socket) => {
     }
     if (message.op === "job.cancel") {
       const job = store.cancelJob(message.args.id);
+      if(job.provider==='grok')await command('grok','ui.release',{jobId:job.id}).catch(()=>{});
       broadcast(job.provider);
       respond(message.id, serializeJob(job));
       return;
@@ -829,6 +934,7 @@ server.listen(
   async () => {
     if (!testPort && process.platform!=='win32') await chmod(socketPath, 0o600);
     console.error("Windi Connect production candidate ready");
+    void schedule();
   },
 );
 for (const signal of ["SIGINT", "SIGTERM"] as NodeJS.Signals[])

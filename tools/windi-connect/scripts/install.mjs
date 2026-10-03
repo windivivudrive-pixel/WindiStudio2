@@ -5,6 +5,9 @@ import {setTimeout as delay} from 'node:timers/promises';
 import path from 'node:path';
 import {fileURLToPath,pathToFileURL} from 'node:url';
 import {prepareEnvironment} from './environment.mjs';
+import {allocateRelease} from './release-directory.mjs';
+import {probeDaemon} from './daemon-health.mjs';
+import {copyNodeRuntime} from './node-runtime.mjs';
 const windows=process.platform==='win32';
 if(!['darwin','win32'].includes(process.platform)||!(process.platform==='darwin'?['arm64','x64']:['x64']).includes(process.arch))throw new Error('Windi hỗ trợ macOS Apple Silicon/Intel và Windows x64.');
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
@@ -21,7 +24,7 @@ const prepareOnly=process.argv.includes('--prepare-only');
 const target=process.argv.find(value=>value.startsWith('--target='))?.slice('--target='.length);
 if(prepareOnly&&!target)throw new Error('--prepare-only requires --target');
 const home=process.env.WINDI_HOME||(windows?path.join(process.env.LOCALAPPDATA||path.join(homedir(),'AppData/Local'),'WindiConnect'):path.join(homedir(),'Library/Application Support/WindiConnect'));
-const release=target||path.join(home,'releases',releaseVersion);
+const release=await allocateRelease(home,releaseVersion,{windows,target});
 await mkdir(release,{recursive:true,mode:0o700});
 await cp(path.join(root,'src'),path.join(release,'src'),{recursive:true});
 await cp(path.join(root,'dist/extensions'),path.join(release,'extensions'),{recursive:true});
@@ -30,7 +33,7 @@ const packagedRenderer=path.join(root,'renderer');const sourceRenderer=await acc
 // Extensions are loaded from this stable folder. Future releases only require
 // pressing Reload in the browser instead of choosing a new folder.
 const installedExtensions=path.join(home,'extensions');
-if(path.resolve(runtimeRoot)!==path.resolve(release,'runtime'))await cp(runtimeRoot,path.join(release,'runtime'),{recursive:true});
+await copyNodeRuntime(runtimeRoot,path.join(release,'runtime'),{windows});
 const releaseNode=path.join(release,'runtime',windows?'node.exe':'bin/node');
 const releaseNpm=path.join(release,'runtime',windows?'node_modules/npm/bin/npm-cli.js':'lib/node_modules/npm/bin/npm-cli.js');
 await copyFile(path.join(root,'package.json'),path.join(release,'package.json'));
@@ -38,6 +41,8 @@ await copyFile(path.join(root,'package-lock.json'),path.join(release,'package-lo
 const runNpm=(cwd)=>{execFileSync(releaseNode,[releaseNpm,'ci','--omit=dev','--no-audit','--fund=false'],{cwd,stdio:'inherit',env:{...process.env,PATH:path.dirname(releaseNode)+path.delimiter+process.env.PATH}});};
 await runNpm(release);
 await runNpm(path.join(release,'renderer'));
+// Exercise the native binary, not just syntax, before changing installed launchers.
+execFileSync(releaseNode,['--input-type=module','-e',"import sharp from 'sharp'; await sharp({create:{width:2,height:2,channels:3,background:'#000'}}).png().toBuffer(); await import('./src/watermark.ts');"],{cwd:release,stdio:'inherit'});
 const environment=await prepareEnvironment(release,{managedPython:process.argv.includes('--managed-python')});
 execFileSync(releaseNode,['--check',path.join(release,'src/cli.ts')],{stdio:'pipe'});
 if(prepareOnly){console.log(JSON.stringify({prepared:true,release,environment}));process.exit(0);}
@@ -61,6 +66,13 @@ if(!existingProfile.includes(pathMarker))await appendFile(zprofile,`\n${pathMark
 const adapter=path.join(release,'agent-adapters','windi-video-workflow');
 const codexSkill=path.join(homedir(),'.codex','skills','windi-video-workflow');await mkdir(path.dirname(codexSkill),{recursive:true,mode:0o700});await rm(codexSkill,{recursive:true,force:true}).catch(()=>{});await cp(path.join(adapter,'skills','windi-video-workflow'),codexSkill,{recursive:true,force:true});
 const antigravityPlugin=path.join(homedir(),'.gemini','config','plugins','windi-video-workflow');await mkdir(path.dirname(antigravityPlugin),{recursive:true,mode:0o700});await rm(antigravityPlugin,{recursive:true,force:true}).catch(()=>{});await cp(adapter,antigravityPlugin,{recursive:true,force:true});
+const antigravityRules=path.join(homedir(),'.gemini','config','rules');await mkdir(antigravityRules,{recursive:true,mode:0o700});await copyFile(path.join(adapter,'rules','windi-connect-provider.md'),path.join(antigravityRules,'windi-connect-provider.md'));
+const antigravityHooksFile=path.join(homedir(),'.gemini','config','hooks.json');
+try{
+  const existing=JSON.parse(await readFile(antigravityHooksFile,'utf8').catch(error=>{if(error?.code==='ENOENT')return '{}';throw error;}));
+  existing['windi-connect-image-source']={PreToolUse:[{matcher:'generate_image',hooks:[{type:'command',command:`${quote(releaseNode)} ${quote(path.join(antigravityPlugin,'hooks','guard-image-source.mjs'))}`,timeout:10}]}]};
+  await writeFile(antigravityHooksFile,JSON.stringify(existing,null,2)+'\n',{mode:0o600});
+}catch(error){console.warn(`Could not install Antigravity image-source hook: ${error instanceof Error?error.message:String(error)}`);}
 const bundledWatch=path.join(root,'vendor','watch');const watchSkills=[];if(await access(bundledWatch).then(()=>true).catch(()=>false)){for(const target of [path.join(homedir(),'.codex','skills','watch'),path.join(homedir(),'.agents','skills','watch')]){await mkdir(path.dirname(target),{recursive:true,mode:0o700});const existing=await lstat(target).then(()=>true).catch(error=>{if(error?.code==='ENOENT')return false;throw error;});if(existing){watchSkills.push({target,status:'kept-existing'});continue;}await cp(bundledWatch,target,{recursive:true,force:false,errorOnExist:true});watchSkills.push({target,status:'installed'});}}
 if(windows){const {finishWindows}=await import('./windows-install.mjs');await finishWindows({home,release,releaseNode,connections,environment,watchSkills});process.exit(0);}
 for(const [name,executable] of [['python',environment.python],['python3',environment.python],['yt-dlp',path.join(environment.pythonBin,'yt-dlp')],['ffmpeg',environment.ffmpeg],['ffprobe',environment.ffprobe]]){
@@ -71,10 +83,10 @@ const hostDirs=[
   path.join(homedir(),'Library/Application Support/CocCoc/Browser/NativeMessagingHosts'),
 ];
 for(const hostDir of hostDirs)await mkdir(hostDir,{recursive:true,mode:0o700});
-for(const provider of ['flow','chatgpt']){
+for(const provider of ['flow','chatgpt','grok']){
   const launcher=path.join(release,`native-${provider}`);
   await writeFile(launcher,`#!/bin/sh\nexec ${quote(releaseNode)} --no-warnings ${quote(path.join(release,'src/native.ts'))} ${provider} "$@"\n`,{mode:0o755});
-  const manifest=JSON.stringify({name:`com.windistudio.connect.${provider}`,description:'Windi Connect local bridge',path:launcher,type:'stdio',allowed_origins:[`chrome-extension://${connections.windi}/`,`chrome-extension://${connections[provider]}/`]},null,2);
+  const manifest=JSON.stringify({name:`com.windistudio.connect.${provider}`,description:'Windi Connect local bridge',path:launcher,type:'stdio',allowed_origins:[connections.windi,connections[provider]].filter(Boolean).map(id=>`chrome-extension://${id}/`)},null,2);
   for(const hostDir of hostDirs)await writeFile(path.join(hostDir,`com.windistudio.connect.${provider}.json`),manifest,{mode:0o644});
 }
 const escape=s=>s.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');
@@ -84,13 +96,14 @@ await writeFile(plist,`<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE plist PUB
 try{execFileSync('launchctl',['bootout',`gui/${process.getuid()}/com.windistudio.connect`],{stdio:'ignore'});}catch{}
 // bootout returns before launchd always releases the label. A bounded retry
 // handles installing an update while the previous process is terminating.
-for(let attempt=0;attempt<10;attempt++){
-  await delay(300);
-  try{execFileSync('launchctl',['bootstrap',`gui/${process.getuid()}`,plist],{stdio:'pipe'});break;}
-  catch(error){if(attempt===9)throw error;}
-}
 for(let attempt=0;attempt<30;attempt++){
-  try{execFileSync(releaseNode,['--no-warnings',path.join(release,'src/cli.ts'),'doctor'],{stdio:'pipe',timeout:3000});break;}
+  await delay(500);
+  try{execFileSync('launchctl',['bootstrap',`gui/${process.getuid()}`,plist],{stdio:'pipe'});break;}
+  catch(error){if(attempt===29)throw error;}
+}
+const {socketPath}=await import(pathToFileURL(path.join(release,'src/protocol.ts')).href);
+for(let attempt=0;attempt<30;attempt++){
+  try{await probeDaemon(socketPath);break;}
   catch(error){if(attempt===29)throw error;await delay(500);}
 }
 if(browserArg){const app=browserArg==='chrome'?'/Applications/Google Chrome.app':'/Applications/CocCoc.app';try{execFileSync('open',['-a',app,'chrome://extensions/'],{stdio:'ignore'});}catch{console.warn(`Could not open ${app}; open chrome://extensions/ manually.`);}}

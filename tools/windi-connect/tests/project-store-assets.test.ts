@@ -76,3 +76,19 @@ test('a verified manual recovery can replace one job asset without creating a du
   const first=store.setAsset({job,path:path.join(root,'scene.jpg'),mime:'image/jpeg',width:768,height:1376,sha256:'old'});const second=store.setAsset({job,path:path.join(root,'scene.jpg'),mime:'image/jpeg',width:768,height:1376,sha256:'new'});
   assert.equal(second.id,first.id);assert.equal(store.assetForJob(job.id)?.sha256,'new');assert.equal((store.db.prepare('SELECT COUNT(*) AS count FROM assets WHERE job_id=?').get(job.id) as {count:number}).count,1);store.close();
 });
+
+test('variant insertion rolls back the entire batch on a request-key conflict',async()=>{
+ const home=await mkdtemp(path.join(tmpdir(),'windi-atomic-'));const store=await openStore(path.join(home,'state.sqlite'));store.createProject('p',home,'assets/windi');
+ const input={projectId:'p',provider:'flow' as const,kind:'create' as const,prompt:'owl',references:[],outputPath:'assets/windi/owl',fingerprint:'original',requestKey:'batch:v2'};
+ store.insertJob(input);
+ assert.throws(()=>store.insertJobs([{...input,requestKey:'batch:v1'},{...input,fingerprint:'changed'}]),/CONTENT_MISMATCH/);
+ assert.equal(store.jobsForProject('p').length,1);store.close();
+});
+
+test('restart requeues preparation but preserves uncertain accepted requests',async()=>{
+ const home=await mkdtemp(path.join(tmpdir(),'windi-restart-'));const store=await openStore(path.join(home,'state.sqlite'));store.createProject('p',home,'assets/windi');
+ const input={projectId:'p',provider:'flow' as const,kind:'create' as const,prompt:'owl',references:[],outputPath:'assets/windi/owl',fingerprint:'restart'};
+ const prepared=store.insertJob(input).job,submitted=store.insertJob(input).job;
+ store.updateJob(prepared.id,{status:'preparing'});store.updateJob(submitted.id,{status:'preparing',submitted_at:new Date().toISOString()});store.markRunningUnknown();
+ assert.equal(store.job(prepared.id)?.status,'queued');assert.equal(store.job(submitted.id)?.status,'unknown_result');store.close();
+});

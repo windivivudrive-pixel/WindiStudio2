@@ -3,6 +3,7 @@ import {cleanWorkflowImages} from './watermark.ts';
 import {environmentStatus} from './environment-status.ts';
 import {runPipeline} from './pipeline.ts';
 import net from "node:net";
+import {execFile} from "node:child_process";
 import path from "node:path";
 import { access, readFile } from "node:fs/promises";
 import { createInterface } from "node:readline/promises";
@@ -17,6 +18,9 @@ import {
   loginVoice,
 } from "./voice-api.ts";
 import { readProjectText } from "./project.ts";
+import {approveTikTokPost,checkTikTokSession,prepareTikTokPost,publishTikTokPost,tikTokPostStatus} from './tiktok-lightpanda.ts';
+import {approveFacebookReel,checkFacebookPage,facebookReelStatus,prepareFacebookReel,refreshFacebookReel,submitFacebookReel} from './facebook-reels.ts';
+import {approvePostizPost,inspectPostizPost,listPostizChannels,postizPostStatus,preparePostizPost,submitPostizPost} from './postiz-publish.ts';
 import {
   activateLicense,
   licenseStatus,
@@ -197,6 +201,7 @@ async function imagePayload(args: Parsed, kind: "create" | "edit", base: string)
   return {
     project: base,
     provider: value(args, "provider", true),
+    ...(["flow","grok"].includes(value(args,"provider")||"")?{aspect:value(args,"aspect"),resolution:value(args,"resolution"),model:value(args,"model"),quality:value(args,"quality"),seed:value(args,"seed"),count:value(args,"count")}:{}),
     kind,
     prompt,
     references: values(args, "ref").map((file) => path.resolve(base, file)),
@@ -207,6 +212,21 @@ async function imagePayload(args: Parsed, kind: "create" | "edit", base: string)
     output: value(args, "output", true),
     requestKey: value(args, "request-key"),
   };
+}
+async function grok(args:Parsed){
+  const action=args.positionals[1]||'status';if(!['login','logout','status','doctor'].includes(action))throw new Error('Usage: windi grok login|logout|status|doctor');
+  const result=await request(`grok.${action}`);output(result,has(args,'json'));
+  if(action==='login'&&result.authorizationUrl&&!has(args,'no-browser')){
+    const command=process.platform==='win32'?'rundll32.exe':process.platform==='darwin'?'/usr/bin/open':'xdg-open';
+    const argv=process.platform==='win32'?['url.dll,FileProtocolHandler',result.authorizationUrl]:[result.authorizationUrl];
+    await new Promise<void>((resolve)=>execFile(command,argv,()=>resolve()));
+  }
+}
+async function videos(args:Parsed){
+  if(args.positionals[1]!=='create'||value(args,'provider',true)!=='grok')throw new Error('Usage: windi videos create --provider grok --prompt-file FILE --output PATH ');
+  const base=projectPath(args),payload=await imagePayload(args,'create',base),input=value(args,'input');
+  const result=await request('job.create',{...payload,media:'video',input:input?path.resolve(base,input):undefined,duration:value(args,'duration'),aspect:value(args,'aspect'),resolution:value(args,'resolution'),model:value(args,'model')});
+  output(result,has(args,'json'));if(has(args,'wait'))await waitFor(result.job.id,has(args,'json'));
 }
 async function images(args: Parsed) {
   if(args.positionals[1] === "clean") { output(await cleanWorkflowImages(projectPath(args)), has(args,"json")); return; }
@@ -219,7 +239,7 @@ async function images(args: Parsed) {
       await imagePayload(args, action, base),
     );
     output(result, jsonMode);
-    if (has(args, "wait")) await waitFor(result.job.id, jsonMode);
+    if (has(args, "wait")) for(const job of result.jobs||[result.job]) await waitFor(job.id, jsonMode);
     return;
   }
   if (action === "batch") {
@@ -238,6 +258,7 @@ async function images(args: Parsed) {
       const payload = {
         project: base,
         provider: item.provider,
+        ...(['flow','grok'].includes(item.provider)?{aspect:item.aspect,resolution:item.resolution,model:item.model,quality:item.quality,seed:item.seed,count:item.count}:{}),
         kind: item.kind || "create",
         prompt: (
           await readProjectText(base, path.resolve(base, item.promptFile))
@@ -253,7 +274,7 @@ async function images(args: Parsed) {
     }
     output(created, jsonMode);
     if (has(args, "wait"))
-      for (const item of created) await waitFor(item.job.id, jsonMode);
+      for (const item of created) for(const job of item.jobs||[item.job]) await waitFor(job.id, jsonMode);
     return;
   }
   throw new Error("Usage: windi images create|edit|batch");
@@ -276,7 +297,8 @@ async function jobs(args: Parsed) {
   if (action === "resume" || action === "cancel") {
     if (!id) throw new Error("JOB_ID_REQUIRED");
     if(has(args,"confirm-no-result")&&has(args,"confirm-result"))throw new Error("CHOOSE_ONE_RECONCILIATION_RESULT");
-    output(await request(`job.${action}`, { id, confirmNoResult: has(args, "confirm-no-result"), confirmResult: has(args,"confirm-result") }), jsonMode);
+    const resumed=await request(`job.${action}`, { id, confirmNoResult: has(args, "confirm-no-result"), confirmResult: has(args,"confirm-result") });
+    if(action==='resume'&&has(args,'wait'))await waitFor(id,jsonMode);else output(resumed,jsonMode);
     return;
   }
   if (action === "import") {
@@ -480,9 +502,37 @@ async function video(args: Parsed) {
   }
   throw new Error("Usage: windi video preview | render");
 }
+async function tiktok(args:Parsed){
+  const action=args.positionals[1],base=projectPath(args),jsonMode=has(args,'json');
+  if(action==='prepare')return output(await prepareTikTokPost(base,value(args,'caption',true)!,value(args,'account',true)!),jsonMode);
+  if(action==='approve')return output(await approveTikTokPost(base,value(args,'code',true)!),jsonMode);
+  if(action==='status')return output(await tikTokPostStatus(base,value(args,'code',true)!),jsonMode);
+  if(action==='session')return output(await checkTikTokSession(path.resolve(value(args,'cookie-file',true)!),value(args,'account')),jsonMode);
+  if(action==='publish')return output(await publishTikTokPost(base,value(args,'code',true)!,path.resolve(value(args,'cookie-file',true)!)),jsonMode);
+  throw new Error('Usage: windi tiktok prepare --account HANDLE --caption TEXT | approve|status --code CODE | session --cookie-file FILE [--account HANDLE] | publish --code CODE --cookie-file FILE');
+}
+async function facebook(args:Parsed){
+  const action=args.positionals[1],base=projectPath(args),jsonMode=has(args,'json'),version=value(args,'api-version')||'v26.0';
+  if(action==='page')return output(await checkFacebookPage(path.resolve(value(args,'token-file',true)!),value(args,'page-id',true)!,version),jsonMode);
+  if(action==='prepare')return output(await prepareFacebookReel(base,value(args,'caption',true)!,value(args,'page-id',true)!,has(args,'public')?'PUBLISHED':'DRAFT'),jsonMode);
+  if(action==='approve')return output(await approveFacebookReel(base,value(args,'code',true)!),jsonMode);
+  if(action==='status')return output(has(args,'token-file')?await refreshFacebookReel(base,value(args,'code',true)!,path.resolve(value(args,'token-file',true)!),version):await facebookReelStatus(base,value(args,'code',true)!),jsonMode);
+  if(action==='submit')return output(await submitFacebookReel(base,value(args,'code',true)!,path.resolve(value(args,'token-file',true)!),version),jsonMode);
+  throw new Error('Usage: windi facebook page --page-id ID --token-file FILE | prepare --page-id ID --caption TEXT [--public] | approve|status --code CODE | submit --code CODE --token-file FILE');
+}
+async function postiz(args:Parsed){
+  const action=args.positionals[1],base=projectPath(args),jsonMode=has(args,'json');
+  if(action==='channels')return output(await listPostizChannels(value(args,'api-url',true)!,path.resolve(value(args,'key-file',true)!)),jsonMode);
+  if(action==='prepare')return output(await preparePostizPost(base,value(args,'caption',true)!,value(args,'integration-id',true)!,value(args,'api-url',true)!,path.resolve(value(args,'key-file',true)!),has(args,'public')?'PUBLIC_TO_EVERYONE':undefined),jsonMode);
+  if(action==='approve')return output(await approvePostizPost(base,value(args,'code',true)!),jsonMode);
+  if(action==='status')return output(has(args,'key-file')?await inspectPostizPost(base,value(args,'code',true)!,path.resolve(value(args,'key-file',true)!)):await postizPostStatus(base,value(args,'code',true)!),jsonMode);
+  if(action==='submit')return output(await submitPostizPost(base,value(args,'code',true)!,path.resolve(value(args,'key-file',true)!)),jsonMode);
+  throw new Error('Usage: windi postiz channels --api-url URL --key-file FILE | prepare --api-url URL --key-file FILE --integration-id ID --caption TEXT [--public] | approve|status --code CODE | submit --code CODE --key-file FILE');
+}
 function help() {
+  console.log('Postiz: windi postiz channels --api-url URL --key-file FILE | prepare --integration-id ID --caption TEXT --api-url URL --key-file FILE [--public] | approve|status --code CODE | submit --code CODE --key-file FILE');
   console.log(
-    `Windi Video Workflow\n\n  windi setup\n  windi license status\n  windi doctor [--json]\n  windi project init [--project PATH] [--relink|--fork]\n  windi project link --provider flow|chatgpt --url URL\n  windi workflow start --topic "..." --audience "..." --style "..." [--provider flow|chatgpt]\n  windi workflow status\n  windi workflow artifact idea|layout|script --file PATH\n  windi workflow approve idea IDEA_ID\n  windi workflow layout choose paper-editorial|dark-cinematic\n  windi workflow approve layout LAYOUT_VERSION\n  windi workflow approve script SCRIPT_VERSION\n  windi workflow continue\n  windi images create --provider flow --prompt-file prompt.txt --ref character.png --output assets/windi/scene-01 [--wait]\n  windi images edit --provider chatgpt --input assets/windi/scene-01.png --prompt-file revision.txt --output assets/windi/scene-01-v02\n  windi images batch --manifest images.json\n  windi images clean [--project PATH]\n  windi jobs status JOB_ID | resume JOB_ID [--confirm-result|--confirm-no-result]\n  windi jobs import JOB_ID --file FILE [--replace]\n  windi voice list\n  windi voice import --audio voice.mp3 [--captions captions.json]\n  windi voice generate --voice VOICE_ID [--speed 1]\n  windi video preview | render\n\nSau khi duyệt idea, chọn một layout có sẵn hoặc dùng skill watch từ bradautomates/claude-video để phân tích video mẫu, ghi layout JSON rồi duyệt layout. Các lệnh project hỗ trợ --project; tác vụ máy hỗ trợ --json và request-key khi tạo tài nguyên.`,
+    `Windi Video Workflow\n\n  windi grok login|logout|status|doctor\n  windi images create|edit --provider grok --prompt-file FILE --ref IMAGE --output PATH [--aspect 9:16 --resolution 1k --wait]\n  windi videos create --provider grok --prompt-file FILE --output PATH [--duration 6 --resolution 720p --wait]\n  Grok: @image1, @image2… theo thứ tự --input (nếu có), rồi --ref. Grok Web: ảnh tối đa 8 ref; video tối đa 2 ref; 1 ref dùng tỉ lệ ảnh gốc (--aspect auto), 2 ref chọn được tỉ lệ.\n\n  windi setup\n  windi license status\n  windi doctor [--json]\n  windi project init [--project PATH] [--relink|--fork]\n  windi project link --provider flow|chatgpt --url URL\n  windi workflow start --topic "..." --audience "..." --style "..." [--provider flow|chatgpt|grok]\n  windi workflow status\n  windi workflow artifact idea|layout|script --file PATH\n  windi workflow approve idea IDEA_ID\n  windi workflow layout choose paper-editorial|dark-cinematic\n  windi workflow approve layout LAYOUT_VERSION\n  windi workflow approve script SCRIPT_VERSION\n  windi workflow continue\n  windi images create --provider flow --prompt-file prompt.txt --aspect 16:9 --model standard --ref character.png --count 1 --output assets/windi/scene-01 [--wait]\n  Flow: tỷ lệ 9:16|16:9|1:1|3:4|4:3; model standard|pro|lite; count 1–4; tối đa 4 ảnh gồm input và ref.\n  windi images edit --provider chatgpt --input assets/windi/scene-01.png --prompt-file revision.txt --output assets/windi/scene-01-v02\n  windi images batch --manifest images.json\n  windi images clean [--project PATH]\n  windi jobs status JOB_ID | resume JOB_ID [--confirm-result|--confirm-no-result]\n  windi jobs import JOB_ID --file FILE [--replace]\n  windi voice list\n  windi voice import --audio voice.mp3 [--captions captions.json]\n  windi voice generate --voice VOICE_ID [--speed 1]\n  windi video preview | render\n  windi tiktok prepare --account HANDLE --caption TEXT\n  windi tiktok approve|status --code CODE\n  windi tiktok session --cookie-file FILE [--account HANDLE]\n  windi tiktok publish --code CODE --cookie-file FILE\n  windi facebook page --page-id ID --token-file FILE\n  windi facebook prepare --page-id ID --caption TEXT [--public]\n  windi facebook approve|status --code CODE\n  windi facebook submit --code CODE --token-file FILE\n\nSau khi duyệt idea, chọn một layout có sẵn hoặc dùng skill watch từ bradautomates/claude-video để phân tích video mẫu, ghi layout JSON rồi duyệt layout. Các lệnh project hỗ trợ --project; tác vụ máy hỗ trợ --json và request-key khi tạo tài nguyên.`,
   );
 }
 const args = parse(process.argv.slice(2));
@@ -518,10 +568,15 @@ try {
     if (first === "init") await init(args);
     else if (first === "project") await project(args);
     else if (first === "workflow") await workflow(args);
+    else if (first === "grok") await grok(args);
+    else if (first === "videos") await videos(args);
     else if (first === "images") await images(args);
     else if (first === "jobs") await jobs(args);
     else if (first === "voice") await voice(args);
     else if (first === "video") await video(args);
+    else if (first === "tiktok") await tiktok(args);
+    else if (first === "facebook") await facebook(args);
+    else if (first === "postiz") await postiz(args);
     else help();
   }
 } catch (error) {

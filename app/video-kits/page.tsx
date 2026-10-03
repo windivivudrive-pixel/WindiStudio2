@@ -7,7 +7,7 @@ import { AmbientMotion } from "@/windi/ambient-motion";
 export const metadata: Metadata = {
   title: "Windi Video Workflow",
   description:
-    "Hệ thống làm video dọc từ ý tưởng, kịch bản, hình, voice đến MP4. Xử lý trực tiếp trên máy của bạn (Windows & macOS).",
+    "Hệ thống làm video dọc từ ý tưởng, kịch bản, hình, voice đến MP4. Windi Connect hỗ trợ Flow, ChatGPT và Grok Imagine Web. Xử lý trực tiếp trên máy của bạn (Windows & macOS).",
   alternates: { canonical: "/video-kits" },
 };
 export default function Page() {
@@ -25,7 +25,7 @@ export default function Page() {
         <span>1080 × 1920</span>
         <span>Windows & macOS</span>
         <span>10K Voice API credit</span>
-        <span>Flow hoặc ChatGPT</span>
+        <span>Flow · ChatGPT · Grok</span>
       </section>
       <section id="kit-layouts" className="kit-layout-showcase">
         <article>
@@ -82,8 +82,9 @@ export default function Page() {
             ở môi trường khác.
           </p>
           <p>
-            <strong>Tài khoản ảnh</strong>Flow hoặc ChatGPT đã đăng nhập và có
-            quota riêng.
+            <strong>Tài khoản media</strong>Đăng nhập Flow, ChatGPT hoặc Grok
+            trong Chrome/Cốc Cốc và dùng quota riêng. Flow/ChatGPT tạo hình;
+            Grok Imagine tạo video với ảnh ref.
           </p>
           <p>
             <strong>Voice</strong>Tặng 10.000 credit Windi Voice API, có sẵn

@@ -60,6 +60,21 @@ Use one shared Windi renderer across episodes. After delivery, when reclaiming d
 
 All image generation in this workflow must use the WindiConnect backend and its paired bridge through the installed CLI or typed MCP. Never generate through an external browser UI, standalone image tool, or a separately created Flow/ChatGPT session. Before submission, verify provider connection, pairing and this project's workspace mapping. Reuse the correct saved backend workspace in the paired account; connected/paired alone does not prove a project mapping is ready.
 
+For each submitted image, use `windi images create ... --wait` or keep polling its original ID with `windi jobs status JOB_ID --json`. Do not start image QA or render until that job is `complete` and the exact output file exists. If it becomes `needs_user_action`, `unknown_result`, or `failed`, report the job ID and error, then stop the image stage. Never spend Antigravity's built-in Gemini image quota while waiting for Flow or use it to replace a failed Windi job without the user's explicit choice.
+
+### Flow image settings (0.6.31)
+
+Pass the approved layout ratio explicitly with `--aspect 9:16|16:9|1:1|3:4|4:3`.
+Choose `--model standard|pro|lite` when requested; standard is the default.
+`--count 1..4` creates separately tracked variants and `--wait` waits for all.
+Flow accepts up to four PNG/JPEG/WebP inputs in total (20 MB each): create
+uses references; edit puts `--input` first and accepts at most three more refs.
+The UI adapter attaches refs, verifies settings and downloads the original 1K
+from the prompt-matched result. The managed Flow window runs in the background,
+starts minimized and never requests OS focus. Keep it open for workspace reuse. Do not pass a fixed seed in ordinary production: that direct
+RPC path is experimental and was rejected in live acceptance. Never use a
+rejected RPC as permission to switch provider or resubmit an uncertain job.
+
 ### Flow workspace routing
 
 The user does not need to choose a Flow project for each episode. When Flow is the approved provider, reuse the project's existing Flow workspace mapping. For a new local video project, automatically link the configured durable shared Flow workspace, when one exists. Treat a shared workspace and a fresh per-episode workspace as operationally equivalent unless the user explicitly asks for isolation.

@@ -38,7 +38,7 @@ export type ScriptArtifact={schemaVersion:1;version:number;ideaId:string;title:s
 type Approval={status:'pending'|'approved';artifact:string|null;version:number|null;approvedAt:string|null};
 export type WorkflowState={
   schemaVersion:1;workflowId:string;projectId:string;stage:WorkflowStage;
-  brief:{topic:string;audience:string;style:string;layout:LayoutPreset|null;imageProvider:'flow'|'chatgpt'};
+  brief:{topic:string;audience:string;style:string;layout:LayoutPreset|null;imageProvider:'flow'|'chatgpt'|'grok'};
   current:{ideas:string|null;layout:string|null;script:string|null};
   approvals:{idea:Approval&{ideaId?:string|null};layout:Approval&{layoutId?:string|null};script:Approval};
   artifacts:{imageManifest:string|null;voice:string|null;captions:string|null;render:string|null;cover:string|null;qa:string|null};
@@ -139,7 +139,7 @@ export async function saveWorkflow(root:string,state:WorkflowState){state.update
 export async function startWorkflow(root:string,projectId:string,input:Record<string,unknown>){
   const prior=await loadWorkflow(root).catch((error:Error)=>error.message==='WORKFLOW_NOT_STARTED'?null:Promise.reject(error));
   if(prior&&!input.reset)return prior;
-  const provider=input.imageProvider==='chatgpt'?'chatgpt':'flow';
+  const provider=input.imageProvider==='grok'?'grok':input.imageProvider==='chatgpt'?'chatgpt':'flow';
   const at=now();
   const state:WorkflowState={schemaVersion:1,workflowId:randomUUID(),projectId,stage:'idea_review',brief:{topic:text(input.topic,'topic',2000),audience:text(input.audience,'audience',1000),style:text(input.style,'style',1000),layout:null,imageProvider:provider},current:{ideas:null,layout:null,script:null},approvals:{idea:{status:'pending',artifact:null,version:null,approvedAt:null,ideaId:null},layout:{status:'pending',artifact:null,version:null,approvedAt:null,layoutId:null},script:{status:'pending',artifact:null,version:null,approvedAt:null}},artifacts:{imageManifest:null,voice:null,captions:null,render:null,cover:null,qa:null},invalidated:null,createdAt:at,updatedAt:at};
   for(const dir of ['ideas','layouts','layout-analysis','scripts','manifests','prompts','voice','timing','renders','qa'])await mkdir(path.join(outputRoot(root),dir),{recursive:true,mode:0o700});
@@ -203,15 +203,16 @@ export async function approveWorkflow(root:string,kind:'idea'|'layout'|'script',
   return saveWorkflow(root,state);
 }
 
-export type ImageManifest={version:1;workflowId:string;scriptVersion:number;project:string;jobs:Array<{scene:string;provider:'flow'|'chatgpt';kind:'create';promptFile:string;references:string[];output:string;requestKey:string}>};
+export type ImageManifest={version:1;workflowId:string;scriptVersion:number;project:string;jobs:Array<{scene:string;provider:'flow'|'chatgpt'|'grok';aspect?:string;kind:'create';promptFile:string;references:string[];output:string;requestKey:string}>};
 export async function buildImageManifest(root:string,state?:WorkflowState):Promise<ImageManifest>{
   state??=await loadWorkflow(root);if(state.approvals.layout.status!=='approved')throw new Error('LAYOUT_APPROVAL_REQUIRED');if(state.approvals.script.status!=='approved'||!state.current.script)throw new Error('SCRIPT_APPROVAL_REQUIRED');
   const script=validateScript(await readJson(path.join(root,state.current.script)));const jobs=[];
+  const grokAspect=['flow','grok'].includes(state.brief.imageProvider)?(await loadApprovedLayout(root,state)).imageAspectRatio||'9:16':undefined;
   for(const [index,beat] of script.beats.entries()){
     const scene=`scene-${String(index+1).padStart(2,'0')}`;const version=`v${String(script.version).padStart(2,'0')}`;const promptFile=path.join('windi','prompts',`${scene}-${version}.txt`);const output=path.join('assets','windi',`${scene}-${version}`);
     await safeOutput(root,promptFile);await writeFile(path.join(root,promptFile),`${beat.imagePrompt}\n`,{encoding:'utf8',mode:0o600});
     const requestKey=createHash('sha256').update(`${state.workflowId}:${script.version}:${beat.id}:${beat.imagePrompt}:${state.brief.imageProvider}`).digest('hex').slice(0,32);
-    jobs.push({scene,provider:state.brief.imageProvider,kind:'create' as const,promptFile,references:[],output,requestKey});
+    jobs.push({scene,provider:state.brief.imageProvider,...(grokAspect?{aspect:grokAspect}:{}),kind:'create' as const,promptFile,references:[],output,requestKey});
   }
   const manifest:ImageManifest={version:1,workflowId:state.workflowId,scriptVersion:script.version,project:root,jobs};const target=path.join(outputRoot(root),'manifests',`images-script-v${String(script.version).padStart(2,'0')}.json`);await atomicJson(target,manifest);state.artifacts.imageManifest=path.relative(root,target);await saveWorkflow(root,state);return manifest;
 }

@@ -18,6 +18,7 @@
     "catalog:easy-prompts": "node scripts/build-easy-prompts.mjs",
     "catalog:easy-prompts:sync": "node scripts/sync-easy-prompts.mjs",
     "supabase:snapshot": "node scripts/snapshot-live-supabase.mjs",
+    "video-kit:publish-release": "node --env-file=.env.local scripts/publish-video-workflow-release.mjs",
     "legacy:dev": "vite",
     "legacy:build": "tsc && vite build",
     "start:legacy-server": "node server/index.js",

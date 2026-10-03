@@ -90,19 +90,22 @@ test("combined extension keeps provider state separated", async () => {
     new URL("../extension/combined-background.js", import.meta.url),
     "utf8",
   );
+  const workspaceTabs = await readFile(new URL("../extension/workspace-tab.js", import.meta.url), "utf8");
   assert.match(source, /combinedStatus/);
   assert.match(source, /com\.windistudio\.connect\.flow/);
   assert.match(source, /com\.windistudio\.connect\.chatgpt/);
   assert.match(source, /managedTabs\.set\(tab\.id,provider\)/);
   assert.match(source, /waitForProviderTab\(provider,created\.id\)/);
-  assert.match(source, /tab\.status==='complete'/);
+  assert.match(workspaceTabs, /tab\.status==='complete'/);
   assert.match(source, /document\.body\?\.innerText/);
-  assert.match(source, /allowed\(provider,tab\.url\|\|''\)/);
+  assert.match(source, /url=>allowed\(provider,url\)/);
+  assert.match(workspaceTabs, /tabs\.reload\(tabId\)/);
   assert.match(source, /Input\.dispatchMouseEvent/);
   assert.doesNotMatch(source, /el\.click\(\)/);
   assert.match(source, /flowDirectGenerate/);
   assert.match(source, /flowRefreshSession/);
   assert.doesNotMatch(source, /op==='flowUiSubmit'/);
+  assert.doesNotMatch(source, /op==='flowSaveOriginal'/);
   assert.doesNotMatch(source, /op==='flowDownloadExisting'/);
   assert.match(source, /chatgptSaveOriginal/);
   assert.match(source, /chatgpt-image-save/);

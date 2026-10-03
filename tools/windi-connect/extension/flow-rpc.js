@@ -28,7 +28,16 @@ export function parseFlowRpc(text, rpcId) {
   if (matches.length !== 1) throw new Error('BRIDGE_TIMEOUT_RESULT_UNKNOWN');
   const row = matches[0];
   if (row[0] === 'er') throw new Error(`FLOW_RPC_ERROR_${Number(row[2]) || 'UNKNOWN'}`);
-  if (row[0] !== 'wrb.fr' || typeof row[2] !== 'string') throw new Error('BRIDGE_TIMEOUT_RESULT_UNKNOWN');
+  if (row[0] !== 'wrb.fr' || typeof row[2] !== 'string') {
+    if (Array.isArray(row[5])) {
+      const errInfo = row[5]?.[2]?.[0]?.[1]?.[0] || row[5]?.[2]?.[0]?.[0] || '';
+      if (errInfo === 'PUBLIC_ERROR_UNUSUAL_ACTIVITY') {
+        throw new Error('FLOW_ERROR_UNUSUAL_ACTIVITY: Google Flow tạm chặn do reCAPTCHA bảo mật (PUBLIC_ERROR_UNUSUAL_ACTIVITY). Hãy tạo thử 1 ảnh thủ công trên tab Flow hoặc chuyển sang ChatGPT.');
+      }
+      if (errInfo) throw new Error(`FLOW_ERROR_${errInfo}`);
+    }
+    throw new Error('BRIDGE_TIMEOUT_RESULT_UNKNOWN');
+  }
   try { return JSON.parse(row[2]); } catch { throw new Error('BRIDGE_TIMEOUT_RESULT_UNKNOWN'); }
 }
 
@@ -73,7 +82,10 @@ export async function flowPageRpc({rpcId, request}) {
   if (!['cPZSdc','HTrJv','ogiZ0b','maseQ'].includes(rpcId)) throw new Error('UNSUPPORTED_OPERATION');
   const csrf = globalThis.WIZ_global_data?.SNlM0e;
   if (!csrf) return {status:401, text:''};
-  const response = await fetch(`/_/AiSandboxAngularFrontend/data/batchexecute?rpcids=${rpcId}`, {
+  const query = new URLSearchParams({rpcids:rpcId, 'source-path':location.pathname});
+  const sessionId = globalThis.WIZ_global_data?.FdrFJe;
+  if (sessionId) query.set('f.sid', String(sessionId));
+  const response = await fetch(`/_/AiSandboxAngularFrontend/data/batchexecute?${query}`, {
     method:'POST', credentials:'same-origin', redirect:'error',
     headers:{'content-type':'application/x-www-form-urlencoded;charset=UTF-8'},
     body:new URLSearchParams({'f.req':JSON.stringify([[[rpcId,JSON.stringify(request),null,'generic']]]), at:csrf}),
@@ -87,10 +99,13 @@ export async function flowPageRpc({rpcId, request}) {
 export function buildFlowUploadRequest({projectId,base64,mime,name,captcha}) {
   const context=buildFlowImageRequest({projectId,prompt:'upload',aspect:'square',model:'NARWHAL',captcha})[3];
   if(!['image/png','image/jpeg','image/webp'].includes(mime)||typeof base64!=='string'||!base64.length||base64.length>28*1024*1024||!/^[A-Za-z0-9+/]*={0,2}$/.test(base64))throw new Error('INVALID_FLOW_REFERENCE');
-  return [context,base64,mime,true,null,null,null,false,String(name||'reference').slice(0,255)];
+  return [context,base64,mime,1,null,null,null,null,String(name||'reference').replaceAll(' ','_').slice(0,255),null,crypto.randomUUID(),crypto.randomUUID()];
 }
 export function flowUploadedMedia(data){
-  const id=data?.[0]?.[0];
+  const row=data?.[0];
+  // Current UploadMedia returns [content-id, project, media-id, ...].
+  // Older Angular versions returned a single media record.
+  const id=Array.isArray(row)&&row.length===1?row[0]:row?.[2];
   if(typeof id!=='string'||!id||id.length>512)throw new Error('FLOW_UPLOAD_RESULT_INVALID');
   return id;
 }

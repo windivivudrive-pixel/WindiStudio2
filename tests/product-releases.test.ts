@@ -6,8 +6,9 @@ describe('latestProductRelease', () => {
     const release = latestProductRelease([
       { id: 'newer-row', version: '0.5.9', created_at: '2026-09-16T00:00:00Z' },
       { id: 'older-row', version: '0.5.10', created_at: '2026-09-15T00:00:00Z' },
+      { id: 'current-row', version: '0.6.3', created_at: '2026-09-14T00:00:00Z' },
     ]);
-    expect(release?.version).toBe('0.5.10');
+    expect(release?.version).toBe('0.6.3');
   });
 
   test('prefers stable over a prerelease of the same version', () => {

@@ -61,7 +61,7 @@ export function HomeConnectFeature(){
     <div className="home-connect-copy">
       <span className="eyebrow">04 / WINDI CONNECT</span>
       <h2 id="home-connect-title">Đừng để ý tưởng<br/><em>chết trong một tab.</em></h2>
-      <p>Prompt đã chốt đi thẳng từ workflow sang ChatGPT hoặc Google Flow của bạn. Ảnh về đúng cảnh, đúng project, sẵn sàng cho nhịp dựng kế tiếp.</p>
+      <p>Prompt đã chốt đi thẳng từ workflow sang ChatGPT hoặc Google Flow. Khi cần clip theo ảnh ref, Grok Imagine nhận 1–2 ảnh theo đúng thứ tự và lưu MP4 về project.</p>
       <Link className="retro-button primary" href="/video-kits">Xem Windi Connect hoạt động <ArrowUpRight size={18}/></Link>
     </div>
     <div className="home-connect-console" aria-label="Windi Connect đưa ảnh vào đúng cảnh của video">
@@ -71,7 +71,7 @@ export function HomeConnectFeature(){
       <div className="home-connect-route">
         <div className="connect-project"><Image size={19}/><span>Cảnh 04</span><small>prompt đã chốt</small></div>
         <Link2 className="connect-link" size={22} aria-hidden="true"/>
-        <div className="connect-provider"><Sparkles size={18}/><strong>ChatGPT</strong><span>hoặc Google Flow</span></div>
+        <div className="connect-provider"><Sparkles size={18}/><strong>ChatGPT · Flow</strong><span>hoặc Grok Imagine</span></div>
       </div>
       <div className="home-connect-result">
         <span>ẢNH ĐÃ THÊM</span>

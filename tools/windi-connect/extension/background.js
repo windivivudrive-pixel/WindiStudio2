@@ -48,6 +48,7 @@ async function ownedTab(tabId){
   const {managed={}}=await chrome.storage.session.get('managed');
   const tab=await chrome.tabs.get(tabId);
   if(!managedTabs.has(tabId)&&!managed[tabId]||!allowed(tab.url))throw new Error('TAB_NOT_OWNED_OR_WRONG_PROVIDER');
+  try{await chrome.tabs.update(tabId,{active:true});}catch{}
   managedTabs.add(tabId);
   return tab;
 }

@@ -25,8 +25,6 @@ type Account = {
     is_active: boolean;
     metadata: {
       release_ready?: boolean;
-      launch_price_vnd?: number;
-      launch_limit?: number;
       voice_trial_credits?: number;
       voice_trial_clone_limit?: number;
       voice_trial_duration_days?: number;
@@ -167,8 +165,7 @@ export function VideoKitCommerce() {
     (order) =>
       order.status === "PENDING" && Date.parse(order.expires_at) > Date.now(),
   );
-  const launchPrice = account?.product?.metadata.launch_price_vnd ?? 89000;
-  const originalPrice = account?.product?.price_vnd ?? 369000;
+  const price = account?.product?.price_vnd ?? 219000;
   const includedVoiceCredits=account?.product?.metadata.voice_trial_credits??10000;
   const includedCloneLimit=account?.product?.metadata.voice_trial_clone_limit??1;
   const includedVoiceDays=account?.product?.metadata.voice_trial_duration_days??30;
@@ -186,18 +183,17 @@ export function VideoKitCommerce() {
         <div>
           <span className="kit-price-kicker">Giấy phép trọn đời cho V1</span>
           <h2 id="kit-buy-title">Cài một lần. Làm video trong mọi project.</h2>
-          <p>Dùng theo tài khoản, không cần kích hoạt máy. Với 89K, bạn nhận:</p>
+          <p>Dùng theo tài khoản, không cần kích hoạt máy. Với {money(price)}đ, bạn nhận:</p>
           <ul className="kit-included-list">
             <li><strong>Automation Video Workflow</strong> — từ kịch bản đến video trong một quy trình.</li>
             <li><strong>{includedCloneLimit} giọng Clone Pro 2.1 miễn phí</strong> — tạo giọng riêng đầu tiên của bạn.</li>
             <li><strong>{money(includedVoiceCredits)} credit Voice</strong> — dùng trong {includedVoiceDays} ngày cùng gói clone.</li>
-            <li><strong>Extension tạo hình tự động</strong> — gửi prompt đúng cảnh sang Google Flow hoặc ChatGPT.</li>
+            <li><strong>Windi Connect: Flow, ChatGPT & Grok</strong> — gửi prompt đúng cảnh; Grok Imagine tạo video với 1–2 ảnh ref và tự lưu MP4 về project.</li>
           </ul>
         </div>
         <div className="kit-price-box">
-          <span>Giá dùng thử · 100 tài khoản đầu</span>
-          <strong>{money(launchPrice)}đ</strong>
-          <small>Giá gốc <s>{money(originalPrice)}đ</s></small>
+          <span>Thanh toán một lần · giấy phép trọn đời</span>
+          <strong>{money(price)}đ</strong>
           {loading ? (
             <button disabled>Đang kiểm tra...</button>
           ) : account?.entitlement ? (
@@ -238,7 +234,7 @@ export function VideoKitCommerce() {
           {account.release && <details><summary>Thông tin bản phát hành</summary><p>{account.release.changelog}</p><p style={{overflowWrap:'anywhere'}}>SHA-256 archive nguồn: {account.release.sha256}</p></details>}
           <div className="kit-quickstart">
             <h3>Bắt đầu nhanh</h3>
-            <p>Giải nén bộ cài đầy đủ, mở Cai Windi Windows.cmd trên Windows hoặc Cai Windi.command trên macOS. Nạp Windi Connect Extension ngay trong thư mục vừa giải nén. Voice tự kết nối theo tài khoản đã mua.</p>
+            <p>Giải nén bộ cài đầy đủ, mở Cai Windi Windows.cmd trên Windows hoặc Cai Windi.command trên macOS. Nạp Windi Connect Extension ngay trong thư mục vừa giải nén, rồi đăng nhập Flow, ChatGPT hoặc Grok trong trình duyệt đã chọn. Voice tự kết nối theo tài khoản đã mua.</p>
             <Link className="text-link" href="/video-kits/huong-dan">Xem hướng dẫn làm video đầu tiên →</Link>
             <p>
               Trong Codex hoặc Antigravity, bạn cũng có thể nói: “Dùng Windi làm

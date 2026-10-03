@@ -6,13 +6,16 @@ import {readFileSync} from 'node:fs';
 try {
   const setup=JSON.parse(readFileSync(new URL('../environment.json',import.meta.url),'utf8'));
   process.env.FFMPEG_PATH ||= setup.ffmpeg;
+  process.env.FFPROBE_PATH ||= setup.ffprobe;
   process.env.PATH=[setup.media,setup.pythonBin,process.env.PATH].filter(Boolean).join(path.delimiter);
   if(process.platform==='darwin')process.env.DYLD_LIBRARY_PATH=setup.media;
 } catch(error) {if((error as NodeJS.ErrnoException).code!=='ENOENT')throw error;}
 
 /** The local protocol is deliberately private to one macOS account. */
 export const VERSION = 2;
-export const providers = ["flow", "chatgpt"] as const;
+export const browserProviders = ["flow", "chatgpt"] as const;
+export type BrowserProvider = (typeof browserProviders)[number];
+export const providers = [...browserProviders, "grok"] as const;
 export type Provider = (typeof providers)[number];
 export const home = path.resolve(
   process.env.WINDI_HOME ||
@@ -28,13 +31,14 @@ export const socketPath = process.platform==='win32'?`\\\\.\\pipe\\windi-${creat
 export const databasePath = path.join(home, "state.sqlite");
 export const stagingRoot = path.join(home, "staging");
 export const providerUrl = (provider: Provider) =>
-  provider === "flow" ? "https://flow.google.com/" : "https://chatgpt.com/";
+  provider === "flow" ? "https://flow.google.com/" : provider === "chatgpt" ? "https://chatgpt.com/" : "https://grok.com/";
 export function validProvider(value: unknown): Provider {
   if (!providers.includes(value as Provider))
     throw new Error("INVALID_PROVIDER");
   return value as Provider;
 }
 export function allowedUrl(provider: Provider, value: string) {
+  if (provider === "grok") return false;
   try {
     const u = new URL(value);
     return (
@@ -103,6 +107,7 @@ export const userActionErrors = new Set([
   "FLOW_DIRECT_CAPTCHA_UNAVAILABLE",
   "FLOW_DIRECT_INPUT_UNSUPPORTED",
   "FLOW_WORKSPACE_REQUIRED",
+  "FLOW_BACKGROUND_UNAVAILABLE",
 ]);
 export function parseLines(
   onMessage: (message: any) => void,

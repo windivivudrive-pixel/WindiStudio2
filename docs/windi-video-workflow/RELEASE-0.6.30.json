@@ -1,0 +1,12 @@
+{
+  "version": "0.6.30",
+  "releaseId": "11a8eb4a-3c7f-494e-af89-765097307491",
+  "isPublished": true,
+  "sizeBytes": 695507,
+  "sha256": "a0b982584dfa96e40458a792ce9c5ae23a219ca05937b31c22f20ebb7d56f3bc",
+  "storageReadback": true,
+  "signedDownload": true,
+  "liveRowsSemanticSelector": true,
+  "anonymousDownloadStatus": 401,
+  "authenticatedWebDownload": "awaiting existing browser login"
+}
