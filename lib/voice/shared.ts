@@ -41,6 +41,8 @@ export const COMPARISON_VOICES: StudioVoice[] = [
   {id:'b30f58c7-3a20-4144-a8b2-ee64cf5ae28e',name:'T Nhi',description:'Nữ Vlog (T.Nhi) · Tươi sáng, linh hoạt, bắt nhịp nhanh',language:'vi',gender:'feminine',useCases:['advertising','entertainment'],kind:'public'},
   {id:'293e81de-ef7a-40ec-bdbc-3e641e76256c',name:'Truyện Ma',description:'Truyện Ma (Loc Thanh) · Kịch tính, kéo nhịp, tạo không khí',language:'vi',gender:'masculine',useCases:['entertainment'],kind:'public'},
 ];
+// Showcase voices are restricted to the static comparison recordings.
+export const isComparisonVoice = (id:string) => COMPARISON_VOICES.some(voice=>voice.id===id.toLowerCase());
 export type StudioVoice = {id:string; name:string; description:string; language:string; gender?:string; useCases?:VoiceUseCase[]; kind:'public'|'clone'};
 export type VoiceAccent = {id:string;name:string;language:string;locale:string;isLocaleDefault:boolean;isLocalizable:boolean};
 export type VoicePeriod = {id:string; plan_id:string; credits:number; used_credits:number; clone_limit:number; clones_used:number; starts_at:string; ends_at:string};

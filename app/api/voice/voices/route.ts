@@ -1,12 +1,11 @@
 import { failure, publicVoices, providerReady } from '@/lib/voice/server';
-import { COMPARISON_VOICES } from '@/lib/voice/shared';
 
 export async function GET() {
   try {
     const catalog = await publicVoices();
     const seen = new Set<string>();
     const voices = [];
-    for (const voice of [...COMPARISON_VOICES, ...catalog.voices]) {
+    for (const voice of catalog.voices) {
       if (!seen.has(voice.id)) {
         seen.add(voice.id);
         voices.push(voice);

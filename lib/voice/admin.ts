@@ -1,7 +1,7 @@
 import 'server-only';
 import {voiceDisplayText} from './branding';
 import { cartesia, VoiceError, writer } from './server';
-import { isUUID, type StudioVoice } from './shared';
+import { isComparisonVoice, isUUID, type StudioVoice } from './shared';
 
 export async function isVoiceAdmin(userId: string) {
   const {data,error}=await writer().from('windi_voice_admins').select('user_id').eq('user_id',userId).maybeSingle();
@@ -33,5 +33,5 @@ export async function adminVoicePage(cursor?:string) {
   if(!response.ok) throw new VoiceError('Chưa tải được thư viện Windi Clone Pro 2.1.',502);
   const body=await response.json();
   if(!Array.isArray(body.data)) throw new VoiceError('Dữ liệu thư viện không hợp lệ.',502);
-  return {voices:body.data.map(studioVoice),hasMore:body.has_more===true,nextPage:typeof body.next_page==='string'?body.next_page:null};
+  return {voices:body.data.map(studioVoice).filter((voice:StudioVoice)=>!isComparisonVoice(voice.id)),hasMore:body.has_more===true,nextPage:typeof body.next_page==='string'?body.next_page:null};
 }
