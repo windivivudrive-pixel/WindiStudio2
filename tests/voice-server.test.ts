@@ -98,40 +98,33 @@ test('tts selects main for an active paid period and a pool key for a welcome-on
   expect(['Bearer free-1','Bearer free-2']).toContain(new Headers(calls.at(-1)?.[1]?.headers).get('Authorization'));
 });
 
-test('public catalog accepts the current nested Cartesia access schema',async()=>{
+test('public catalog accepts nested access and excludes comparison voices',async()=>{
+  const { COMPARISON_VOICES, isComparisonVoice } = await import('../lib/voice/shared');
   fetchMock.mockImplementation(async(url:string)=>{
     const language=new URL(url).searchParams.get('language')||'en';
     return new Response(JSON.stringify({data:[{
       id:`00000000-0000-4000-8000-${String(['en','fr','es','ko','th','ja','zh','vi'].indexOf(language)+1).padStart(12,'0')}`,
       name:`Voice ${language}`,description:'Public voice',language,is_owner:false,is_public:true,status:'active',
       access:{type:'public',visibility:'all'},
-    }],has_more:false,next_page:null}),{headers:{'Content-Type':'application/json'}});
+    }, ...COMPARISON_VOICES.map(voice=>({...voice,is_owner:false,is_public:true,status:'active',access:{type:'public',visibility:'all'}}))],has_more:false,next_page:null}),{headers:{'Content-Type':'application/json'}});
   });
   const result=await publicVoices();
   expect(result.source).toBe('live');
   expect(result.voices).toHaveLength(8);
+  expect(result.voices.some(voice=>isComparisonVoice(voice.id))).toBe(false);
   expect(result.voices.some(voice=>voice.language==='vi')).toBe(true);
 });
 
-test('publicVoice resolves each of the 5 comparison showcase voice IDs', async () => {
-  const { publicVoice } = await import('../lib/voice/server');
+test('comparison voices cannot be resolved or generated, including uppercase IDs', async () => {
+  const { publicVoice, resolveVoice } = await import('../lib/voice/server');
   const { COMPARISON_VOICES } = await import('../lib/voice/shared');
-
   expect(COMPARISON_VOICES).toHaveLength(5);
-  const expectedVoices = [
-    { id: 'c61ed9bd-944a-40db-b302-410985821200', name: 'T Min' },
-    { id: 'b30f58c7-3a20-4144-a8b2-ee64cf5ae28e', name: 'T Nhi' },
-    { id: 'f2a05c6a-fc36-4d1a-b5c4-dd2e5af15af7', name: 'Khoa' },
-    { id: '6aee11c6-bef9-4fd0-9f45-1a1c25dcdcde', name: 'Chữa Lành' },
-    { id: '293e81de-ef7a-40ec-bdbc-3e641e76256c', name: 'Truyện Ma' },
-  ];
-
-  for (const expected of expectedVoices) {
-    const voice = await publicVoice(expected.id);
-    expect(voice).not.toBeNull();
-    expect(voice?.id).toBe(expected.id);
-    expect(voice?.name).toBe(expected.name);
-    expect(voice?.language).toBe('vi');
-    expect(voice?.kind).toBe('public');
+  for (const voice of COMPARISON_VOICES) {
+    for (const id of [voice.id, voice.id.toUpperCase()]) {
+      expect(await publicVoice(id)).toBeNull();
+      const callsBefore=fetchMock.mock.calls.length;
+      await expect(resolveVoice('any-user-including-admin', id)).rejects.toMatchObject({status:403});
+      expect(fetchMock.mock.calls).toHaveLength(callsBefore);
+    }
   }
 });

@@ -42,7 +42,7 @@ import { useAuth } from "./auth-context";
 import {
   countCredits,
   formatNumber,
-  COMPARISON_VOICES,
+  isComparisonVoice,
   STARTER_VOICES,
   VOICE_LANGUAGES,
   VOICE_CLONE_CLIP_LIMITS,
@@ -264,19 +264,14 @@ const voiceComparisons = [
   },
 ] as const;
 
-type ComparisonItem = (typeof voiceComparisons)[number];
 const comparisonWave = [
   9, 17, 12, 25, 31, 18, 36, 23, 15, 29, 20, 12, 26, 18, 8,
 ];
 
 function VoiceComparisonShowcase({
   onClone,
-  onTryVoice,
-  selectedVoiceId,
 }: {
   onClone: () => void;
-  onTryVoice: (item: ComparisonItem) => void;
-  selectedVoiceId?: string;
 }) {
   const [playing, setPlaying] = useState("");
   const [activeSampleIndex, setActiveSampleIndex] = useState(0);
@@ -331,6 +326,16 @@ function VoiceComparisonShowcase({
           <Check size={14} /> Sẵn sàng cho nhiều format
         </span>
       </div>
+      <section className="voice-usage-note" aria-labelledby="voice-sample-rights-title">
+        <h3 id="voice-sample-rights-title">Lưu ý về 5 giọng mẫu</h3>
+        <p>
+          Windi không sở hữu bản quyền đối với 5 giọng mẫu này. Các mẫu chỉ được
+          cung cấp để nghe và tham khảo chất lượng dịch vụ, không hỗ trợ tạo
+          nội dung mới bằng các giọng này và không cấp quyền sử dụng chúng cho
+          nội dung cá nhân hoặc thương mại. Vui lòng clone giọng nói của chính bạn để
+          sử dụng cho nội dung của mình.
+        </p>
+      </section>
       <div className="voice-compare-mobile-pills" role="tablist" aria-label="Chọn bài nghe thực tế">
         {voiceComparisons.map((sample, idx) => (
           <button
@@ -347,7 +352,6 @@ function VoiceComparisonShowcase({
       </div>
       <div className="voice-compare-list">
         {voiceComparisons.map((sample, index) => {
-          const isSelected = selectedVoiceId === sample.voiceId;
           return (
             <article className={`voice-compare-row ${activeSampleIndex === index ? "is-mobile-active" : ""}`} key={sample.id}>
               <div className="voice-compare-name">
@@ -407,20 +411,7 @@ function VoiceComparisonShowcase({
                       </span>
                       <strong>{active ? "Đang phát" : "Nghe thử"}</strong>
                     </button>
-                    {side.kind === "pro" && (
-                      <div className="voice-compare-pro-footer">
-                        <button
-                          type="button"
-                          className={`voice-compare-pro-action ${isSelected ? "is-selected" : ""}`}
-                          onClick={() => onTryVoice(sample)}
-                          aria-label={`Dùng thử giọng ${sample.voiceName}`}
-                        >
-                          {isSelected ? <Check size={13} /> : <Sparkles size={13} />}
-                          <span>{isSelected ? "Đang chọn thử" : "Dùng thử"}</span>
-                          <ArrowRight size={13} />
-                        </button>
-                      </div>
-                    )}
+
                   </div>
                 );
               })}
@@ -455,12 +446,9 @@ function VoiceComparisonShowcase({
 export function VoiceStudio() {
   const { user, isLoading } = useAuth();
   const [tab, setTab] = useState<Tab>("create");
-  const [voices, setVoices] = useState<StudioVoice[]>([
-    ...COMPARISON_VOICES,
-    ...STARTER_VOICES,
-  ]);
+  const [voices, setVoices] = useState<StudioVoice[]>(STARTER_VOICES);
   const [selected, setSelected] = useState<StudioVoice>(
-    COMPARISON_VOICES[0] || STARTER_VOICES[0],
+    STARTER_VOICES[0],
   );
   const [available, setAvailable] = useState(false);
   const [catalogLoading, setCatalogLoading] = useState(true);
@@ -527,7 +515,7 @@ export function VoiceStudio() {
   const activeCloneCount = (account?.clones || []).filter((c) =>
     ["ready", "reserved", "pending"].includes(c.status),
   ).length;
-  const allVoices = [...cloneVoices, ...voices];
+  const allVoices = [...cloneVoices, ...voices].filter(voice => !isComparisonVoice(voice.id));
   const currentPlan = VOICE_PLANS.find((p) => p.id === period?.plan_id);
   const trialEligible = account?.trialEligible === true;
   const canPurchasePlan = (planId: string) =>
@@ -688,30 +676,6 @@ export function VoiceStudio() {
     setSelected(v);
     setTab("create");
     setNotice(`Đã chọn giọng ${v.name}.`);
-  }
-  function handleTryVoice(item: ComparisonItem) {
-    stopPreview();
-    setSelected({
-      id: item.voiceId,
-      name: item.voiceName,
-      description: item.style,
-      language: "vi",
-      gender: item.gender,
-      kind: "public",
-    });
-    setLanguage("vi");
-    if (!text.trim()) {
-      setText(item.sampleText);
-    }
-    setTab("create");
-    setNotice(
-      `Đã chọn giọng ${item.voiceName} để dùng thử. Nhập nội dung hoặc dùng câu thoại mẫu bên dưới.`,
-    );
-    requestAnimationFrame(() => {
-      document
-        .getElementById("voice-panel")
-        ?.scrollIntoView({ behavior: "smooth", block: "start" });
-    });
   }
   async function previewVoice(voice: StudioVoice) {
     if (voice.kind !== "public" || previewLoadingId) return;
@@ -986,8 +950,6 @@ export function VoiceStudio() {
               ?.scrollIntoView({ behavior: "smooth", block: "start" }),
           );
         }}
-        selectedVoiceId={selected.id}
-        onTryVoice={handleTryVoice}
       />
       <section className="voice-workspace">
         <div className="voice-titlebar">
@@ -1663,6 +1625,26 @@ export function VoiceStudio() {
                         preload="metadata"
                       />
                     )}
+                    <section className="voice-usage-note" aria-labelledby="voice-usage-title">
+                      <h3 id="voice-usage-title">Sử dụng giọng clone có trách nhiệm</h3>
+                      <p>
+                        Chỉ tạo giọng clone từ giọng nói của chính bạn hoặc khi có
+                        sự đồng ý rõ ràng của chủ giọng cho việc tạo và sử dụng
+                        giọng AI. Bạn cần có quyền sử dụng bản ghi âm tải lên.
+                      </p>
+                      <p>
+                        Khi sử dụng cho mục đích thương mại, hãy bảo đảm quyền
+                        sử dụng giọng nói và bản ghi âm bao gồm phạm vi thương mại;
+                        lưu giữ thỏa thuận hoặc giấy phép liên quan để hạn chế
+                        tranh chấp về bản quyền và quyền cá nhân.
+                      </p>
+                      <p>
+                        Không dùng giọng clone để mạo danh, lừa đảo, gây hiểu lầm
+                        hoặc xâm phạm quyền, lợi ích hợp pháp của người khác.
+                        Bạn chịu trách nhiệm về nội dung tạo ra và việc sử dụng
+                        phù hợp với pháp luật hiện hành.
+                      </p>
+                    </section>
                     <label className="voice-consent">
                       <input
                         type="checkbox"
@@ -1672,8 +1654,9 @@ export function VoiceStudio() {
                       />
                       <span>
                         Tôi là chủ giọng nói hoặc đã được chủ giọng cho phép tạo
-                        và sử dụng giọng AI. Tôi đồng ý gửi mẫu để Windi Clone Pro 2.1
-                        xử lý.
+                        và sử dụng giọng AI, đồng thời có quyền sử dụng bản ghi âm
+                        tải lên. Tôi đã đọc chú thích trên và đồng ý gửi mẫu để
+                        Windi Clone Pro 2.1 xử lý.
                       </span>
                     </label>
                     <button

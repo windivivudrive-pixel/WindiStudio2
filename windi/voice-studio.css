@@ -166,3 +166,4 @@
 .voice-id-field small:empty{display:none}
 .voice-id-field button{cursor:pointer}
 .voice-payment-promise strong{color:var(--green)}
+.voice-usage-note{padding:16px 18px;border:1px solid color-mix(in srgb,var(--border) 25%,transparent);border-radius:9px;background:color-mix(in srgb,var(--yellow) 10%,var(--surface))}.voice-usage-note h3{font-size:12px;line-height:1.6;margin:0 0 10px}.voice-usage-note p{font-size:12px;line-height:1.8;color:var(--muted);margin:0}.voice-usage-note p+p{margin-top:10px}

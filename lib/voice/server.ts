@@ -2,7 +2,7 @@ import 'server-only';
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/server';
 import {voiceDisplayText} from './branding';
-import { DEFAULT_WORKFLOW_VOICE_ID, COMPARISON_VOICES, STARTER_VOICES, VOICE_LANGUAGES, VOICE_LIBRARY_LANGUAGES, isSampleLibraryLanguage, voiceLibraryLimit, voiceUseCases, type StudioVoice, type VoiceAccent } from './shared';
+import { DEFAULT_WORKFLOW_VOICE_ID, isComparisonVoice, STARTER_VOICES, VOICE_LANGUAGES, VOICE_LIBRARY_LANGUAGES, isSampleLibraryLanguage, voiceLibraryLimit, voiceUseCases, type StudioVoice, type VoiceAccent } from './shared';
 
 export class VoiceError extends Error { constructor(message:string, public status=400) {super(voiceDisplayText(message));} }
 export const bucket = 'windi-voice-audio';
@@ -125,7 +125,7 @@ async function catalogPage(language?:string, cursor?:string):Promise<CartesiaCat
         const publicVisibility=voice.visibility==='all'||(typeof voice.access==='object'&&voice.access?.visibility==='all');
         return publicAccess&&publicVisibility&&voice.is_owner===false&&voice.status==='active';
       })
-      .filter((voice:{language:string})=>isSampleLibraryLanguage(voice.language))
+      .filter((voice:{id:string;language:string})=>!isComparisonVoice(voice.id)&&isSampleLibraryLanguage(voice.language))
       .map((voice:{id:string;name:string;description?:string;tagline?:string;language:string;gender?:string})=>({id:voice.id,name:voiceDisplayText(voice.name),description:voiceDisplayText(voice.description||voice.tagline||''),language:voice.language,gender:voice.gender,useCases:voiceUseCases(voice.tagline,voice.description),kind:'public'})),
     hasMore:result.has_more===true,
     nextPage:typeof result.next_page==='string'?result.next_page:null,
@@ -151,8 +151,7 @@ export async function publicVoices():Promise<{voices:StudioVoice[]; source:strin
   return {voices,source:'live'};
 }
 export async function publicVoice(id:string) {
-  const comparison = COMPARISON_VOICES.find(voice => voice.id === id);
-  if (comparison) return comparison;
+  if(isComparisonVoice(id)) return null;
   return (await publicVoices()).voices.find(voice=>voice.id===id) ?? null;
 }
 
@@ -243,6 +242,7 @@ export async function previewPublicVoice(request:Request,id:string) {
   return {voice,audio};
 }
 export async function resolveVoice(userId:string,id:string) {
+  if(isComparisonVoice(id)) throw new VoiceError('Giọng mẫu chỉ để nghe tham khảo. Vui lòng clone giọng của bạn để tạo nội dung.',403);
   const { isVoiceAdmin, providerVoice } = await import('./admin');
   if(await isVoiceAdmin(userId)) return providerVoice(id);
   // A licensed Workflow can use the designated service voice. The provider
