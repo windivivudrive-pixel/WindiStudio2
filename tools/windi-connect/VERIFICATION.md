@@ -111,7 +111,7 @@ This is still `production-candidate`, not a claim that every release gate passed
   script v01, both returned: “Phản hồi timestamp từ nhà cung cấp không hợp lệ.
   Credit đã được hoàn lại.” No MP3/captions were returned. Refund is reported by
   the API, not independently checked against a balance ledger.
-- Local source `lib/voice/api.ts:parseCartesiaSse` rejects malformed JSON,
+- Local source the shared server-side SSE parser in `lib/voice/api.ts` rejects malformed JSON,
   unequal timestamp arrays, blank words and non-positive word durations.
   The specific provider response was not retained, so root cause is unconfirmed.
   Voice remains blocked pending timestamp-path diagnosis; no further paid trial

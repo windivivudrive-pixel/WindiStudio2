@@ -17,7 +17,7 @@
 
 - State machine, approval gate, artifact invalidation và manifest request key.
 - Project isolation, scheduler, duplicate request key, resume và file integrity.
-- Voice token, idempotency, Cartesia SSE parser và MP3 encoder.
+- Voice token, idempotency, Windi Clone Pro 2.1 SSE parser và MP3 encoder.
 - Windi Voice API đã bắt buộc `add_timestamps: true`, kiểm tra word timestamp
   trước khi hoàn tất job và hoàn credit nếu provider trả payload xác định là
   thiếu/hỏng. Mã kích hoạt Workflow dùng trực tiếp cho Voice API và entitlement
@@ -33,7 +33,7 @@
   hai Storage bucket là private, service role đọc được các bảng mới và anon bị
   từ chối đọc entitlement với HTTP 401.
 - Root application build/typecheck, Windi Connect tests và Remotion lint.
-- Request đọc danh sách giọng Cartesia trả HTTP 200 với key/version backend;
+- Request đọc danh sách giọng Windi Clone Pro 2.1 trả HTTP 200 với key/version backend;
   chưa gọi TTS thật ở lần kiểm tra này để không tiêu quota.
 - Installer packaging, bundled runtime và ZIP integrity.
 

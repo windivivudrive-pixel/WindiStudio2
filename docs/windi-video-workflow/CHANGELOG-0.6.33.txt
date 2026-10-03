@@ -1,0 +1,7 @@
+0.6.33 — Phụ đề tự động từ Windi Clone Pro 2.1
+
+- Tạo giọng trên web và API workflow luôn yêu cầu audio cùng word timestamp trong một lần tạo.
+- Workflow tạo phụ đề trực tiếp từ timestamp; không chạy nhận dạng giọng nói lại với audio do Windi tạo.
+- Kiểm tra timing đầy đủ, thứ tự từ và thời lượng rất ngắn để tránh mất từ khi tạo phụ đề.
+- Chuẩn hóa thương hiệu Windi Clone Pro 2.1 trên giao diện, lỗi, mô tả thư viện và hướng dẫn đi kèm.
+- Giữ cơ chế chống tạo trùng khi retry và lưu audio/timing riêng tư theo tài khoản.

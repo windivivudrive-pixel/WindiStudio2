@@ -173,8 +173,8 @@ function VoiceMetadata({ voice }: { voice: StudioVoice }) {
       {voice.useCases?.includes("advertising") && (
         <span
           className="voice-metadata-advertising"
-          title="Clone Pro 2.1 ghi chú: quảng cáo"
-          aria-label="Clone Pro 2.1 ghi chú: quảng cáo"
+          title="Windi Clone Pro 2.1 ghi chú: quảng cáo"
+          aria-label="Windi Clone Pro 2.1 ghi chú: quảng cáo"
         >
           <Megaphone size={15} />
         </span>
@@ -182,8 +182,8 @@ function VoiceMetadata({ voice }: { voice: StudioVoice }) {
       {voice.useCases?.includes("conversation") && (
         <span
           className="voice-metadata-conversation"
-          title="Clone Pro 2.1 ghi chú: hội thoại"
-          aria-label="Clone Pro 2.1 ghi chú: hội thoại"
+          title="Windi Clone Pro 2.1 ghi chú: hội thoại"
+          aria-label="Windi Clone Pro 2.1 ghi chú: hội thoại"
         >
           <MessageCircleMore size={15} />
         </span>
@@ -191,8 +191,8 @@ function VoiceMetadata({ voice }: { voice: StudioVoice }) {
       {voice.useCases?.includes("entertainment") && (
         <span
           className="voice-metadata-entertainment"
-          title="Clone Pro 2.1 ghi chú: giải trí"
-          aria-label="Clone Pro 2.1 ghi chú: giải trí"
+          title="Windi Clone Pro 2.1 ghi chú: giải trí"
+          aria-label="Windi Clone Pro 2.1 ghi chú: giải trí"
         >
           <PartyPopper size={15} />
         </span>
@@ -307,7 +307,7 @@ function VoiceComparisonShowcase({
             <span>Người nghe cần cảm thấy nó.</span>
           </h2>
           <p>
-            Clone Pro 2.1 kết hợp chất giọng riêng với khả năng đọc ngữ cảnh để
+            Windi Clone Pro 2.1 kết hợp chất giọng riêng với khả năng đọc ngữ cảnh để
             lời thoại tự tìm nhịp điệu, ngữ điệu và sắc thái phù hợp.
           </p>
         </div>
@@ -364,7 +364,7 @@ function VoiceComparisonShowcase({
                     label: "Dịch vụ clone khác",
                     src: sample.other,
                   },
-                  { kind: "pro", label: "Clone Pro 2.1", src: sample.pro },
+                  { kind: "pro", label: "Windi Clone Pro 2.1", src: sample.pro },
                 ] as const
               ).map((side) => {
                 const key = `${sample.id}-${side.kind}`;
@@ -441,7 +441,7 @@ function VoiceComparisonShowcase({
           type="button"
           onClick={onClone}
         >
-          Tạo giọng Clone Pro <ArrowRight size={16} />
+          Tạo giọng Windi Clone Pro 2.1 <ArrowRight size={16} />
         </button>
       </div>
       <p className="voice-compare-note">
@@ -837,7 +837,7 @@ export function VoiceStudio() {
   async function removeClone(id: string) {
     if (
       !window.confirm(
-        "Xóa giọng này khỏi thư viện Clone Pro 2.1? Slot clone sẽ được giải phóng, nhưng credit đã dùng không được hoàn lại.",
+        "Xóa giọng này khỏi thư viện Windi Clone Pro 2.1? Slot clone sẽ được giải phóng, nhưng credit đã dùng không được hoàn lại.",
       )
     )
       return;
@@ -928,7 +928,7 @@ export function VoiceStudio() {
             notice.includes("Thanh toán")
               ? "Thanh toán thành công"
               : notice.includes("Giọng riêng")
-                ? "Clone Pro 2.1 đã sẵn sàng"
+                ? "Windi Clone Pro 2.1 đã sẵn sàng"
                 : "Đã hoàn tất"
           }
         />
@@ -944,7 +944,7 @@ export function VoiceStudio() {
             <span>Cảm xúc tự động theo ngữ cảnh.</span>
           </h1>
           <p>
-            Không còn một giọng đọc đều đều cho mọi câu chữ. Clone Pro 2.1 giữ
+            Không còn một giọng đọc đều đều cho mọi câu chữ. Windi Clone Pro 2.1 giữ
             đúng chất giọng gốc, rồi tự thay đổi nhịp, ngữ điệu và sắc thái theo
             nội dung bạn viết.
           </p>
@@ -1050,7 +1050,7 @@ export function VoiceStudio() {
             {isLoading
               ? "Đang tải tài khoản…"
               : user
-                ? isAdmin ? "Admin · Clone Pro 2.1" : currentPlan
+                ? isAdmin ? "Admin · Windi Clone Pro 2.1" : currentPlan
                   ? `Gói ${currentPlan.name}`
                   : workflowBonusRemaining > 0
                     ? "10K credit từ Video Workflow"
@@ -1060,7 +1060,7 @@ export function VoiceStudio() {
           <div>
             {user && (
               <>
-                <strong>{isAdmin ? "Quota Clone Pro 2.1" : formatNumber(remaining)}</strong>
+                <strong>{isAdmin ? "Quota Windi Clone Pro 2.1" : formatNumber(remaining)}</strong>
                 <span>{isAdmin ? "· quản trị" : "credit còn lại"}</span>
                 {period && (
                   <span className="voice-period">
@@ -1152,7 +1152,7 @@ export function VoiceStudio() {
                       <small>
                         {selected.kind === "clone"
                           ? "Giọng riêng"
-                          : "Clone Pro 2.1"}
+                          : "Windi Clone Pro 2.1"}
                       </small>
                     </span>
                     <span className="voice-quick-change">
@@ -1254,7 +1254,7 @@ export function VoiceStudio() {
                     <small>
                       {selected.kind === "clone"
                         ? "Giọng riêng"
-                        : "Thư viện Clone Pro 2.1"}
+                        : "Thư viện Windi Clone Pro 2.1"}
                     </small>
                   </span>
                   <ArrowRight size={17} />
@@ -1359,7 +1359,7 @@ export function VoiceStudio() {
                   <span className="voice-step">VOICE LIBRARY</span>
                   <h2>Tìm tiếng nói cho câu chuyện.</h2>
                   <p>
-                    8 ngôn ngữ mẫu được tuyển chọn. Icon chỉ hiện khi Clone Pro
+                    8 ngôn ngữ mẫu được tuyển chọn. Icon chỉ hiện khi Windi Clone Pro
                     2.1 có ghi chú giới tính hoặc mục đích sử dụng rõ ràng.
                   </p>
                 </div>
@@ -1439,7 +1439,7 @@ export function VoiceStudio() {
                     <h3>{v.name}</h3>
                     <VoiceId id={v.id}/>
                     <p>
-                      {v.description || "Giọng đọc từ thư viện Clone Pro 2.1."}
+                      {v.description || "Giọng đọc từ thư viện Windi Clone Pro 2.1."}
                     </p>
                     <div className="voice-card-actions">
                       {v.kind === "public" && (
@@ -1495,7 +1495,7 @@ export function VoiceStudio() {
                   </p>
                 </div>
                 <span className="voice-quota">
-                  {isAdmin ? `${activeCloneCount} giọng · quota Clone Pro 2.1` : period
+                  {isAdmin ? `${activeCloneCount} giọng · quota Windi Clone Pro 2.1` : period
                     ? period.clone_limit
                       ? `${activeCloneCount} / ${period.clone_limit} giọng đang hoạt động`
                       : "Chọn Clone thử để tạo giọng riêng"
@@ -1672,7 +1672,7 @@ export function VoiceStudio() {
                       />
                       <span>
                         Tôi là chủ giọng nói hoặc đã được chủ giọng cho phép tạo
-                        và sử dụng giọng AI. Tôi đồng ý gửi mẫu để Clone Pro 2.1
+                        và sử dụng giọng AI. Tôi đồng ý gửi mẫu để Windi Clone Pro 2.1
                         xử lý.
                       </span>
                     </label>
@@ -2004,7 +2004,7 @@ export function VoiceStudio() {
                         </li>
                         <li>
                           <Check size={15} />
-                          Clone Pro 2.1 · xuất file MP3
+                          Windi Clone Pro 2.1 · xuất file MP3
                         </li>
                         <li>
                           <Check size={15} />

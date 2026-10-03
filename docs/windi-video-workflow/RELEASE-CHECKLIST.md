@@ -28,7 +28,7 @@
 - [ ] Login hết hạn, CAPTCHA, quota hết và UI provider đổi đều cần user action.
 - [ ] RLS, revoked token, path traversal, symlink và checksum sai bị chặn.
 - [ ] Chuyển máy làm máy cũ mất quyền dùng.
-- [ ] Không có service role key, Cartesia key hoặc token thật trong client/log.
+- [ ] Không có service role key, Windi Clone Pro 2.1 key hoặc token thật trong client/log.
 
 ## Commerce và clean install
 
