@@ -31,8 +31,8 @@ của script cùng mọi asset/render phía sau.
 - Voice order: `WINDI Vxxxxxxxx`.
 - Video Workflow order: `WINDI Kxxxxxxxx`.
 - Voice API: `/api/v1/voice/voices`, `/api/v1/voice/generations`, trạng thái,
-  word timestamp và audio theo generation ID. Backend gọi Cartesia SSE với
-  `add_timestamps: true`; đường Windi Voice không chạy Whisper lại.
+  word timestamp và audio theo generation ID. Backend gọi Windi Clone Pro 2.1 SSE với
+  `add_timestamps: true` và `use_normalized_timestamps: true`; cả API workflow và tạo giọng trên web dùng chung luồng audio + timing. Workflow tạo sub trực tiếp từ timestamp, không chạy Whisper lại.
 - Mã kết nối `windi_kit_…` đồng thời xác thực Voice API, nên người mua
   Workflow chạy `windi login` một lần với mã này, không cần tạo token Voice riêng. Người chỉ mua gói
   Voice vẫn tạo token riêng tại `/api/v1/voice/tokens`.

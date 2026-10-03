@@ -23,7 +23,7 @@ Use supplied recordings when they demonstrate the narration. Set clip timing rel
 
 Run `windi workflow run` without asking for a Voice ID unless the customer wants a different voice. The built-in default is `60cf30cf-dcad-4cb1-b2e9-b6c08a23569e`; explicit selection takes precedence, followed by channel configuration and saved selection. Personal installers configure the customer's Windi credential. Provider keys stay on the server.
 
-The workflow generation API requests audio plus word timestamps through SSE in the same generation. Reuse returned timestamps for captions and timing; do not transcribe generated speech again. Local transcription is for imported audio without timestamps. Customer UI, logs and messages must use `Clone Pro 2.1` for the voice service and never expose upstream names, URLs, keys or raw provider errors.
+The workflow generation API requests audio plus word timestamps through SSE in the same generation. Both the web generation API and the workflow generation API always enable `add_timestamps` and `use_normalized_timestamps`. Reuse returned timestamps for captions and timing; do not transcribe generated speech again. Missing or invalid timestamps must stop the generated-voice workflow; never fall back to speech recognition or guess word timings. Local transcription is for imported audio without timestamps. Customer UI, logs and messages must use `Windi Clone Pro 2.1` for the voice service and never expose upstream names, URLs, keys or raw provider errors.
 
 Use the installed `windi` CLI or the typed Windi MCP tools. The `.windi/workflow.json` file is the source of truth; chat history is not workflow state.
 

@@ -21,7 +21,7 @@ function studioVoice(v: Record<string,unknown>): StudioVoice {
 export async function providerVoice(id:string) {
   if(!isUUID(id)) throw new VoiceError('Voice ID không hợp lệ.');
   const response=await cartesia(`/voices/${encodeURIComponent(id)}`,{}, {purpose:'main'});
-  if(!response.ok) throw new VoiceError(response.status===404?'Không tìm thấy giọng trong tài khoản Clone Pro 2.1 đang kết nối.':'Clone Pro 2.1 chưa cho phép truy cập giọng này.',response.status===404?404:502);
+  if(!response.ok) throw new VoiceError(response.status===404?'Không tìm thấy giọng trong tài khoản Windi Clone Pro 2.1 đang kết nối.':'Windi Clone Pro 2.1 chưa cho phép truy cập giọng này.',response.status===404?404:502);
   return studioVoice(await response.json());
 }
 
@@ -30,7 +30,7 @@ export async function adminVoicePage(cursor?:string) {
   const params=new URLSearchParams({limit:'100'});
   if(cursor) params.set('starting_after',cursor);
   const response=await cartesia(`/voices?${params}`,{}, {purpose:'main'});
-  if(!response.ok) throw new VoiceError('Chưa tải được thư viện Clone Pro 2.1.',502);
+  if(!response.ok) throw new VoiceError('Chưa tải được thư viện Windi Clone Pro 2.1.',502);
   const body=await response.json();
   if(!Array.isArray(body.data)) throw new VoiceError('Dữ liệu thư viện không hợp lệ.',502);
   return {voices:body.data.map(studioVoice),hasMore:body.has_more===true,nextPage:typeof body.next_page==='string'?body.next_page:null};

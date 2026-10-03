@@ -193,7 +193,7 @@ export function parseCartesiaSse(payload: string) {
         const word = value.words[index];
         const start = Number(value.start[index]);
         const end = Number(value.end[index]);
-        if (typeof word !== 'string' || !word.trim() || !Number.isFinite(start) || !Number.isFinite(end) || start < 0 || end < start) {
+        if (typeof word !== 'string' || !word.trim() || !Number.isFinite(start) || !Number.isFinite(end) || start < 0 || end < start || start < (timestamps.start.at(-1) ?? 0)) {
           throw new VoiceError('Phản hồi timestamp từ nhà cung cấp không hợp lệ.', 502);
         }
         timestamps.words.push(word);
@@ -268,13 +268,19 @@ export async function createVoiceGeneration(identity: AutomationIdentity, input:
   if (claim.error) throw claim.error;
   if (!claim.data) throw new VoiceError('Yêu cầu đang được xử lý. Hãy kiểm tra trạng thái thay vì gửi lại.', 409);
 
+  return completeVoiceGeneration(identity.userId, input, { ...claim.data, id: job.id, voice_id: voice.id });
+}
+
+// Both browser and automation requests use the same audio + timing generation.
+export async function completeVoiceGeneration(userId: string, input: VoiceApiInput, job: { id: string; voice_id: string }) {
+  const db = writer();
   let response: Response;
   try {
     response = await cartesia('/tts/sse', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Accept: 'text/event-stream' },
-      body: JSON.stringify(cartesiaTtsPayload(input, voice.id, job.id)),
-    }, {userId:identity.userId,purpose:voice.id===DEFAULT_WORKFLOW_VOICE_ID?'main':'tts'});
+      body: JSON.stringify(cartesiaTtsPayload(input, job.voice_id, job.id)),
+    }, {userId,purpose:job.voice_id===DEFAULT_WORKFLOW_VOICE_ID?'main':'tts'});
   } catch {
     await db.from('windi_voice_jobs').update({ status: 'unknown', provider_context_id: job.id }).eq('id', job.id).eq('status', 'pending');
     throw new VoiceError('Kết nối bị gián đoạn sau khi gửi. Yêu cầu đang chờ đối soát và sẽ không tự tạo lại.', 503);
@@ -306,8 +312,8 @@ export async function createVoiceGeneration(identity: AutomationIdentity, input:
     const detail = parseError instanceof VoiceError ? parseError.message : 'Phản hồi từ nhà cung cấp không hợp lệ.';
     throw new VoiceError(`${detail} Credit đã được hoàn lại.`, 502);
   }
-  const audioPath = `${identity.userId}/${job.id}.mp3`;
-  const timingPath = `${identity.userId}/${job.id}.json`;
+  const audioPath = `${userId}/${job.id}.mp3`;
+  const timingPath = `${userId}/${job.id}.json`;
   const audioUpload = await db.storage.from('windi-voice-audio').upload(audioPath, mp3, { contentType: 'audio/mpeg', upsert: false });
   if (audioUpload.error) {
     const refund = await db.rpc('windi_voice_finish', { p_job: job.id, p_success: false });
@@ -336,5 +342,5 @@ export async function createVoiceGeneration(identity: AutomationIdentity, input:
     await db.from('windi_voice_jobs').update({ status: 'unknown', provider_context_id: job.id }).eq('id', job.id).eq('status', 'pending');
     throw new VoiceError('Kết quả đã lưu nhưng chưa xác nhận được credit. Yêu cầu đang chờ đối soát.', 503);
   }
-  return { ...claim.data, status: 'ready', storage_path: audioPath, timing_path: timingPath };
+  return { ...job, status: 'ready', storage_path: audioPath, timing_path: timingPath };
 }

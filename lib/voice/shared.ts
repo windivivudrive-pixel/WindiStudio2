@@ -26,7 +26,7 @@ export function voiceUseCases(tagline?:string|null,description?:string|null):Voi
   const source=[tagline,description].filter((value):value is string=>typeof value==='string').join(' ');
   return USE_CASE_RULES.filter(rule=>rule.pattern.test(source)).map(rule=>rule.tag);
 }
-// Verified IDs used by the Clone Pro 2.1 public voice library.
+// Verified IDs used by the Windi Clone Pro 2.1 public voice library.
 export const STARTER_VOICES: StudioVoice[] = [
   {id:'db6b0ed5-d5d3-463d-ae85-518a07d3c2b4',name:'Skylar',description:'Giọng nữ Mỹ • thân thiện',language:'en',gender:'feminine',kind:'public'},
   {id:'47c38ca4-5f35-497b-b1a3-415245fb35e1',name:'Daniel',description:'Giọng nam Mỹ',language:'en',gender:'masculine',kind:'public'},

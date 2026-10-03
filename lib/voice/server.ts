@@ -51,7 +51,7 @@ let freeKeyCursor = 0;
 
 export function mainCartesiaKey() {
   const key = process.env.CARTESIA_API_KEY_MAIN || process.env.CARTESIA_API_KEY || process.env.VITE_CARTESIA_API_KEY;
-  if (!key) throw new VoiceError('Clone Pro 2.1 chưa được cấu hình cho tài khoản trả phí.',503);
+  if (!key) throw new VoiceError('Windi Clone Pro 2.1 chưa được cấu hình cho tài khoản trả phí.',503);
   return key;
 }
 
@@ -64,7 +64,7 @@ export function freeCartesiaKeys() {
 
 function freeCartesiaKey(userId?:string) {
   const keys = freeCartesiaKeys();
-  if (!keys.length) throw new VoiceError('Clone Pro 2.1 chưa được cấu hình cho tài khoản miễn phí.',503);
+  if (!keys.length) throw new VoiceError('Windi Clone Pro 2.1 chưa được cấu hình cho tài khoản miễn phí.',503);
   if (userId) {
     let hash = 0;
     for (const char of userId) hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
@@ -95,7 +95,7 @@ export async function cartesia(path:string, init:RequestInit={}, options:Cartesi
     if(useMain||![402,429].includes(response.status)||index===keys.length-1)return response;
     await response.body?.cancel();
   }
-  throw new VoiceError('Clone Pro 2.1 tạm thời không khả dụng.',503);
+  throw new VoiceError('Windi Clone Pro 2.1 tạm thời không khả dụng.',503);
 }
 const PUBLIC_VOICE_TARGET_MAX = 12;
 const PREVIEW_CACHE_MS = 60 * 60 * 1000;
@@ -167,7 +167,7 @@ export async function voiceAccents(language:string):Promise<VoiceAccent[]> {
   const accents=result.accents
     .filter((accent:unknown):accent is {id:string;name:string;language:string;locale:string;is_locale_default?:boolean;is_localizable?:boolean}=>!!accent&&typeof accent==='object'&&typeof (accent as {id?:unknown}).id==='string'&&typeof (accent as {name?:unknown}).name==='string'&&typeof (accent as {language?:unknown}).language==='string'&&typeof (accent as {locale?:unknown}).locale==='string')
     .filter(accent=>accent.language===language)
-    .map(accent=>({id:accent.id,name:accent.name,language:accent.language,locale:accent.locale,isLocaleDefault:accent.is_locale_default===true,isLocalizable:accent.is_localizable===true}));
+    .map(accent=>({id:accent.id,name:voiceDisplayText(accent.name),language:accent.language,locale:accent.locale,isLocaleDefault:accent.is_locale_default===true,isLocalizable:accent.is_localizable===true}));
   accentCache.set(language,{expires:Date.now()+300000,accents});
   return accents;
 }

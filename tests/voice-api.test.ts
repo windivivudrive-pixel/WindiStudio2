@@ -7,19 +7,25 @@ import {POST as clone} from '../app/api/voice/clone/route';
 import {POST as createOrder} from '../app/api/voice/orders/route';
 import {POST as pay} from '../app/api/voice/payment-webhook/route';
 import {GET as preview} from '../app/api/voice/preview/route';
+import {GET as timestamps} from '../app/api/voice/timestamps/route';
 import {GET as accents} from '../app/api/voice/accents/route';
 import {VoiceError} from '../lib/voice/server';
 const uid='00000000-0000-4000-8000-000000000011',id='00000000-0000-4000-8000-000000000022';
 const payload={text:'Xin chào',voiceId:id,requestKey:id,language:'vi',speed:1};
 const request=(body:unknown)=>new Request('http://localhost/api/voice/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
-let rpc:ReturnType<typeof vi.fn>,upload:ReturnType<typeof vi.fn>,claim:ReturnType<typeof vi.fn>;
+let rpc:ReturnType<typeof vi.fn>,upload:ReturnType<typeof vi.fn>,claim:ReturnType<typeof vi.fn>,remove:ReturnType<typeof vi.fn>,download:ReturnType<typeof vi.fn>,from:ReturnType<typeof vi.fn>;
+const timing={words:['Xin','chào'],start:[0,0.2],end:[0.18,0.5]};
+function sse(withTiming=true) {
+ return new Response(`data: ${JSON.stringify({type:'chunk',data:Buffer.alloc(8820).toString('base64')})}\n\n${withTiming?`data: ${JSON.stringify({type:'timestamps',word_timestamps:timing})}\n\n`:''}data: [DONE]\n\n`,{headers:{'Content-Type':'text/event-stream'}});
+}
 beforeEach(()=>{
  vi.resetAllMocks();
  state.identity.mockResolvedValue({user:{id:uid}});state.providerReady.mockReturnValue(true);state.resolveVoice.mockResolvedValue({id,name:'Voice'});state.resolveCloneAccent.mockResolvedValue(null);state.voiceAccents.mockResolvedValue([]);state.audioUrl.mockResolvedValue('https://example.test/signed');
  rpc=vi.fn().mockImplementation(async(name)=>({data:name==='windi_voice_reserve'||name==='windi_voice_clone_reserve'?{id,status:'reserved'}:null,error:null}));
  upload=vi.fn().mockResolvedValue({error:null});claim=vi.fn().mockResolvedValue({data:{id},error:null});
- const query={update:()=>query,eq:()=>query,select:()=>query,maybeSingle:claim};
- state.writer.mockReturnValue({rpc,from:()=>query,storage:{from:()=>({upload})}});
+ const query={update:()=>query,eq:vi.fn(()=>query),select:()=>query,maybeSingle:claim};
+ remove=vi.fn().mockResolvedValue({error:null});download=vi.fn().mockResolvedValue({data:new Blob([JSON.stringify(timing)]),error:null});from=vi.fn(()=>query);
+ state.writer.mockReturnValue({rpc,from,storage:{from:()=>({upload,remove,download})}});
  state.paymentConfig.mockReturnValue({bank:'TEST',account:'1234',name:'Example'});
  state.previewPublicVoice.mockResolvedValue({voice:{id,name:'Linh'},audio:new Uint8Array([73,68,51]).buffer});
  process.env.SEPAY_API_KEY='test-webhook-secret';
@@ -37,13 +43,42 @@ test('foreign voice is rejected before debit',async()=>{
  state.resolveVoice.mockRejectedValue(new VoiceError('Foreign voice',403));
  expect((await generate(request(payload))).status).toBe(403);expect(rpc).not.toHaveBeenCalled();
 });
-test('actual request uses Sonic 3.6; MP3 is stored privately before success',async()=>{
- state.cartesia.mockResolvedValue(new Response(new Uint8Array([73,68,51,1,2,3]),{headers:{'Content-Type':'audio/mpeg'}}));
- const response=await generate(request(payload));expect(response.status).toBe(200);
- const upstream=JSON.parse(state.cartesia.mock.calls[0][1].body);
- expect(upstream).toMatchObject({model_id:'sonic-3.6',voice:id,transcript:'Xin chào',language:'vi'});
- expect(upload).toHaveBeenCalledWith(`${uid}/${id}.mp3`,expect.any(ArrayBuffer),{contentType:'audio/mpeg',upsert:false});
+test('web generation always requests audio and timestamps together, even if caller disables timing',async()=>{
+ state.cartesia.mockResolvedValue(sse());
+ const response=await generate(request({...payload,add_timestamps:false,use_normalized_timestamps:false}));expect(response.status).toBe(200);
+ expect(state.cartesia.mock.calls[0][0]).toBe('/tts/sse');
+ expect(JSON.parse(state.cartesia.mock.calls[0][1].body)).toMatchObject({model_id:'sonic-3.6',voice:{mode:'id',id},transcript:'Xin chào',language:'vi',add_timestamps:true,use_normalized_timestamps:true});
+ expect(upload).toHaveBeenCalledWith(`${uid}/${id}.mp3`,expect.any(Uint8Array),{contentType:'audio/mpeg',upsert:false});
+ expect(upload).toHaveBeenCalledWith(`${uid}/${id}.json`,JSON.stringify(timing),{contentType:'application/json',upsert:false});
  expect(rpc).toHaveBeenCalledWith('windi_voice_finish',{p_job:id,p_success:true,p_path:`${uid}/${id}.mp3`});
+ expect(await response.json()).toEqual({id,url:'https://example.test/signed',timestamps_url:`/api/voice/timestamps?id=${id}`});
+});
+test('missing word timing fails and refunds rather than returning audio-only success',async()=>{
+ state.cartesia.mockResolvedValue(sse(false));
+ expect((await generate(request(payload))).status).toBe(502);expect(upload).not.toHaveBeenCalled();
+ expect(rpc).toHaveBeenCalledWith('windi_voice_finish',{p_job:id,p_success:false});
+});
+test('timing storage failure cleans up the audio, refunds, and returns no result',async()=>{
+ state.cartesia.mockResolvedValue(sse());upload.mockResolvedValueOnce({error:null}).mockResolvedValueOnce({error:new Error('timing unavailable')});
+ expect((await generate(request(payload))).status).toBe(503);expect(remove).toHaveBeenCalledWith([`${uid}/${id}.mp3`]);expect(state.audioUrl).not.toHaveBeenCalled();
+ expect(rpc).toHaveBeenCalledWith('windi_voice_finish',{p_job:id,p_success:false});
+});
+test('ready retries reuse timing and legacy audio never triggers another paid generation',async()=>{
+ rpc.mockResolvedValue({data:{id,status:'ready',timing_path:`${uid}/${id}.json`},error:null});
+ expect(await (await generate(request(payload))).json()).toMatchObject({timestamps_url:`/api/voice/timestamps?id=${id}`});
+ rpc.mockResolvedValue({data:{id,status:'ready'},error:null});
+ expect(await (await generate(request(payload))).json()).toMatchObject({timestamps_url:null});expect(state.cartesia).not.toHaveBeenCalled();
+});
+test('browser timing download requires sign-in and filters by job owner',async()=>{
+ state.identity.mockRejectedValueOnce(new VoiceError('Sign in',401));
+ const req=new Request(`http://localhost/api/voice/timestamps?id=${id}`);
+ expect((await timestamps(req)).status).toBe(401);expect(from).not.toHaveBeenCalled();
+ claim.mockResolvedValue({data:{id,status:'ready',timing_path:`${uid}/${id}.json`},error:null});
+ const result=await timestamps(req);expect(result.status).toBe(200);expect(await result.json()).toEqual({id,timestamps:timing});
+ expect(result.headers.get('cache-control')).toBe('no-store');
+ expect(from.mock.results.at(-1)?.value.eq).toHaveBeenCalledWith('user_id',uid);
+ claim.mockResolvedValue({data:null,error:null});download.mockClear();
+ expect((await timestamps(req)).status).toBe(404);expect(download).not.toHaveBeenCalled();
 });
 test('duplicate claim does not generate twice',async()=>{
  claim.mockResolvedValue({data:null,error:null});
@@ -58,9 +93,9 @@ test('known provider rejection refunds; ambiguous timeout preserves reservation'
  expect(rpc.mock.calls.some(c=>c[0]==='windi_voice_finish')).toBe(false);
 });
 test('storage failure never returns a fake audio URL or claims completed',async()=>{
- state.cartesia.mockResolvedValue(new Response(new Uint8Array([1,2,3])));upload.mockResolvedValue({error:new Error('storage unavailable')});
+ state.cartesia.mockResolvedValue(sse());upload.mockResolvedValue({error:new Error('storage unavailable')});
  expect((await generate(request(payload))).status).toBe(503);expect(state.audioUrl).not.toHaveBeenCalled();
- expect(rpc.mock.calls.some(c=>c[0]==='windi_voice_finish')).toBe(false);
+ expect(rpc).toHaveBeenCalledWith('windi_voice_finish',{p_job:id,p_success:false});
 });
 test('clone requires explicit voice rights confirmation before provider use',async()=>{
  const form=new FormData();form.set('clip',new File(['test'],'voice.mp3',{type:'audio/mpeg'}));form.set('name','My voice');form.set('requestKey',id);form.set('language','vi');

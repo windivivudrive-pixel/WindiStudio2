@@ -1,0 +1,93 @@
+{
+  "version": "0.6.33",
+  "publishedAtLocal": "2026-10-03 Asia/Ho_Chi_Minh",
+  "release": {
+    "selectedVersion": "0.6.33",
+    "releaseId": "40261a23-ba73-4da6-ba7b-4105d2dce755",
+    "isPublished": true,
+    "sizeBytes": 735047,
+    "sha256": "50398834d1ff1b30f1235a7f8cf6d122dd503f63756690046b7f7ad64ed59817",
+    "signedDownloadStatus": 200
+  },
+  "archive": {
+    "version": "0.6.33",
+    "size_bytes": 735047,
+    "sha256": "50398834d1ff1b30f1235a7f8cf6d122dd503f63756690046b7f7ad64ed59817",
+    "zip_crc": true,
+    "sourceFilesCompared": 80,
+    "forbiddenFiles": 0,
+    "embeddedVersions": [
+      "0.6.33",
+      "0.6.33",
+      "0.6.33",
+      "0.6.33",
+      "0.6.33"
+    ]
+  },
+  "web": {
+    "domain": "https://windistudio.app",
+    "pages": [
+      {
+        "path": "/voice-studio",
+        "status": 200,
+        "windiVoiceBrand": true
+      },
+      {
+        "path": "/video-kits",
+        "status": 200,
+        "windiVoiceBrand": false
+      },
+      {
+        "path": "/video-kits/huong-dan",
+        "status": 200,
+        "windiVoiceBrand": false
+      }
+    ],
+    "clientChunksScanned": 16,
+    "backendBrandingLeaks": 0,
+    "timingRoute": {
+      "status": 401,
+      "error": "Đăng nhập để sử dụng Voice Studio."
+    },
+    "productionDeployment": "dpl_BFoseSeUbK177r5SXMAKB6vx27FS"
+  },
+  "voice": {
+    "generationStatus": 201,
+    "jobStatus": "ready",
+    "generationId": "80678614-2608-44a7-bc17-ce940c328e44",
+    "timestampWords": 10,
+    "captionCount": 10,
+    "firstCaption": {
+      "text": "Windi",
+      "startMs": 120,
+      "endMs": 600,
+      "timestampMs": 120,
+      "confidence": null
+    },
+    "lastCaption": {
+      "text": "đọc.",
+      "startMs": 2520,
+      "endMs": 2760,
+      "timestampMs": 2520,
+      "confidence": null
+    },
+    "audioBytes": 46811,
+    "audioSha256": "fdebe2b4969cff5aba74f28f5eb17930714641dbbd2baa042bac7b3d3847c618",
+    "captionSource": "Windi Clone Pro 2.1 word timestamps",
+    "transcriptionUsed": false,
+    "callerDisabledTimestamps": true,
+    "timestampEnforcedByServer": true
+  },
+  "isolatedInstallerPrepared": true,
+  "tests": {
+    "voiceApi": 51,
+    "windiConnect": 126,
+    "build": "passed",
+    "typecheck": "passed"
+  },
+  "limitations": [
+    "Website-button session download was not invoked; signed archive download and production semantic selector were verified.",
+    "No new Flow/ChatGPT/Grok image generation was performed for this voice-only release.",
+    "The wider web test suite has one unrelated existing News lookup failure."
+  ]
+}

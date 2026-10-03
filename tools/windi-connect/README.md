@@ -346,7 +346,7 @@ Hai layout đi kèm là `paper-editorial` và `dark-cinematic`; layout tham chi�
 thể định nghĩa palette, caption, pacing và các scene composition `full-bleed`,
 `framed`, `split`, `text-led`, `quote`, `comparison`, `cta`. Renderer dùng thật
 scene ID của từng beat thay vì bỏ qua trường `layout`. Khi dùng Windi
-Voice, backend yêu cầu Cartesia trả audio và word timestamp trong cùng một lần
+Voice, backend yêu cầu Windi Clone Pro 2.1 trả audio và word timestamp trong cùng một lần
 tạo; CLI không chạy Whisper lại. Timestamp cuối lấy từ voice thật, không dùng
 thời lượng dự kiến ở bước script.
 
