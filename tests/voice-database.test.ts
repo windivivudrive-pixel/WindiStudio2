@@ -24,6 +24,7 @@ beforeAll(async()=>{
  await db.exec(await readFile('supabase/migrations/20260909082654_voice_payment_transaction_time.sql','utf8'));
  await db.exec(await readFile('supabase/migrations/20260914155122_starter_full_price_after_trial.sql','utf8'));
  await db.exec(await readFile('supabase/migrations/20261003164817_voice_plan_advance_purchase.sql','utf8'));
+ await db.exec(await readFile('supabase/migrations/20261005020616_voice_trial_credit_3k.sql','utf8'));
 },30000);
 afterAll(()=>db.close());
 test('five plans, private storage, and no client money/credit mutation',async()=>{
@@ -160,7 +161,7 @@ test('a delayed webhook settles an expired order when the bank transfer occurred
  await db.query("update windi_voice_orders set status='expired' where id=$1",[trial.id]);
  expect((await db.query('select windi_voice_pay($1,$2,$3,$4)',[trial.payment_code,'gateway-delayed',29000,paidAt])).rows).toEqual([{windi_voice_pay:'paid'}]);
  expect((await db.query('select status,paid_at is not null as has_paid_at from windi_voice_orders where id=$1',[trial.id])).rows).toEqual([{status:'paid',has_paid_at:true}]);
- expect((await db.query('select plan_id,credits,clone_limit from windi_voice_periods where order_id=$1',[trial.id])).rows).toEqual([{plan_id:'trial',credits:10000,clone_limit:1}]);
+ expect((await db.query('select plan_id,credits,clone_limit from windi_voice_periods where order_id=$1',[trial.id])).rows).toEqual([{plan_id:'trial',credits:3000,clone_limit:1}]);
 });
 test('period expiry blocks TTS and clone until another verified payment',async()=>{
  await db.query("update windi_voice_periods set starts_at=now()-interval '2 months',ends_at=now()-interval '1 month' where user_id=$1",[a]);
@@ -183,7 +184,7 @@ test('public sample library only keeps the eight requested languages and explici
 test('historical accounts receive one welcome grant without replacing an active paid period',async()=>{
  await db.exec(await readFile('supabase/migrations/20260907214817_backfill_voice_welcome_credits.sql','utf8'));
  expect((await db.query('select plan_id,credits from windi_voice_periods where user_id=$1 and ends_at>now() order by ends_at desc',[a])).rows).toEqual([{plan_id:'welcome',credits:1500}]);
- expect((await db.query('select plan_id,credits from windi_voice_periods where user_id=$1 and ends_at>now() order by plan_id',[b])).rows).toEqual([{plan_id:'starter',credits:30000},{plan_id:'trial',credits:11500}]);
+ expect((await db.query('select plan_id,credits from windi_voice_periods where user_id=$1 and ends_at>now() order by plan_id',[b])).rows).toEqual([{plan_id:'starter',credits:30000},{plan_id:'trial',credits:4500}]);
  expect((await db.query("select count(*)::int n from windi_voice_orders where user_id=$1 and plan_id='welcome'",[c])).rows).toEqual([{n:1}]);
  await db.exec(await readFile('supabase/migrations/20260907214817_backfill_voice_welcome_credits.sql','utf8'));
  expect((await db.query("select count(*)::int n from windi_voice_ledger where user_id=$1 and kind='grant'",[a])).rows).toEqual([{n:2}]);

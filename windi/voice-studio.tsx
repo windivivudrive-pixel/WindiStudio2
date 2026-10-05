@@ -1471,7 +1471,7 @@ export function VoiceStudio() {
                   <div>
                     <strong>Chưa có gói clone</strong>
                     <p>
-                      Mở 1 slot clone và 10.000 credit trong 14 ngày với gói
+                      Mở 1 slot clone và 3.000 credit trong 14 ngày với gói
                       dùng thử một lần.
                     </p>
                   </div>
@@ -1985,7 +1985,9 @@ export function VoiceStudio() {
                         </li>
                         <li>
                           <Check size={15} />
-                          Windi Clone Pro 2.1 · xuất file MP3
+                          {p.id === "welcome"
+                            ? "Không bao gồm clone giọng riêng"
+                            : "Windi Clone Pro 2.1 · xuất file MP3"}
                         </li>
                         <li>
                           <Check size={15} />
