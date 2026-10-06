@@ -25,6 +25,8 @@ beforeAll(async()=>{
  await db.exec(await readFile('supabase/migrations/20260914155122_starter_full_price_after_trial.sql','utf8'));
  await db.exec(await readFile('supabase/migrations/20261003164817_voice_plan_advance_purchase.sql','utf8'));
  await db.exec(await readFile('supabase/migrations/20261005020616_voice_trial_credit_3k.sql','utf8'));
+ await db.exec(await readFile('supabase/migrations/20261006074333_voice_plan_price_adjustment.sql','utf8'));
+ await db.exec(await readFile('supabase/migrations/20261006084017_voice_trial_price_39k.sql','utf8'));
 },30000);
 afterAll(()=>db.close());
 test('five plans, private storage, and no client money/credit mutation',async()=>{
@@ -32,7 +34,7 @@ test('five plans, private storage, and no client money/credit mutation',async()=
  expect((await db.query('select id,public from storage.buckets order by id')).rows).toEqual([{id:'windi-voice-audio',public:false},{id:'windi-voice-previews',public:false}]);
  await db.exec(`set role authenticated;set request.jwt.claim.sub='${a}'`);
  await expect(db.query('select windi_voice_order($1,$2)',[a,'starter'])).rejects.toThrow('permission denied');
- await expect(db.query('select windi_voice_pay($1,$2,$3)',['UNKNOWN','browser-attempt',29000])).rejects.toThrow('permission denied');
+ await expect(db.query('select windi_voice_pay($1,$2,$3)',['UNKNOWN','browser-attempt',39000])).rejects.toThrow('permission denied');
  await expect(db.exec("update windi_voice_plans set price_vnd=1")).rejects.toThrow('permission denied');
  await expect(db.exec("insert into windi_voice_periods(user_id) values('00000000-0000-4000-8000-000000000011')")).rejects.toThrow('permission denied');
  await db.exec('set role service_role');
@@ -46,20 +48,20 @@ test('new registrations receive a seven-day welcome credit grant without clone a
 test('orders have authoritative prices, pending-order deduplication, and no free generation',async()=>{
  await expect(reserve(1)).rejects.toThrow('NO_SUBSCRIPTION');
  order=(await db.query<{id:string;payment_code:string}>('select * from windi_voice_order($1,$2)',[a,'starter'])).rows[0];
- expect((await db.query('select * from windi_voice_order($1,$2)',[a,'starter'])).rows[0]).toEqual(expect.objectContaining({id:order.id,amount_vnd:129000}));
+ expect((await db.query('select * from windi_voice_order($1,$2)',[a,'starter'])).rows[0]).toEqual(expect.objectContaining({id:order.id,amount_vnd:99000}));
  const studioOrder=(await db.query<{id:string;plan_id:string}>('select * from windi_voice_order($1,$2)',[a,'studio'])).rows[0];
  expect(studioOrder.plan_id).toBe('studio');
  expect((await db.query<{status:string}>('select status from windi_voice_orders where id=$1',[order.id])).rows[0].status).toBe('expired');
  order=(await db.query<{id:string;payment_code:string}>('select * from windi_voice_order($1,$2)',[a,'starter'])).rows[0];
 });
 test('verified payment creates exactly one monthly grant, webhook retries do not reset credits',async()=>{
- await db.query('select windi_voice_pay($1,$2,$3)',[order.payment_code,'gateway-1',129000]);
+ await db.query('select windi_voice_pay($1,$2,$3)',[order.payment_code,'gateway-1',99000]);
  job=(await reserve(2)).rows[0];
- await db.query('select windi_voice_pay($1,$2,$3)',[order.payment_code,'gateway-1',129000]);
+ await db.query('select windi_voice_pay($1,$2,$3)',[order.payment_code,'gateway-1',99000]);
  expect((await db.query('select credits,used_credits,clone_limit from windi_voice_periods where user_id=$1',[a])).rows).toEqual([{credits:30000,used_credits:10,clone_limit:1}]);
  expect((await db.query("select count(*)::int n from windi_voice_ledger where user_id=$1 and kind='grant'",[a])).rows).toEqual([{n:1}]);
  const advance=(await db.query<{amount_vnd:number}>('select * from windi_voice_order($1,$2)',[a,'creator'])).rows[0];
- expect(advance.amount_vnd).toBe(299000);
+ expect(advance.amount_vnd).toBe(269000);
 });
 test('idempotent reservations, payload conflict and single in-flight job enforced',async()=>{
  expect((await reserve(2)).rows[0].id).toBe(job.id);
@@ -107,19 +109,19 @@ test('RLS isolates audio, transcripts, clones, payments and ledger between users
 });
 test('wrong amounts and reused gateway IDs never grant a subscription',async()=>{
  const other=(await db.query<{payment_code:string}>('select * from windi_voice_order($1,$2)',[b,'creator'])).rows[0];
- await expect(db.query('select windi_voice_pay($1,$2,$3)',[other.payment_code,'gateway-1',299000])).rejects.toThrow('DUPLICATE_PAYMENT');
+ await expect(db.query('select windi_voice_pay($1,$2,$3)',[other.payment_code,'gateway-1',269000])).rejects.toThrow('DUPLICATE_PAYMENT');
  expect((await db.query('select windi_voice_pay($1,$2,$3)',[other.payment_code,'gateway-2',1000])).rows).toEqual([{windi_voice_pay:'review'}]);
  expect((await db.query('select * from windi_voice_periods where user_id=$1',[b])).rows).toHaveLength(0);
 });
-test('trial gives one clone slot and Starter keeps its full 129.000đ price',async()=>{
+test('trial gives one clone slot and Starter keeps its full 99.000đ price',async()=>{
  const trial=(await db.query<{payment_code:string;amount_vnd:number}>('select * from windi_voice_order($1,$2)',[b,'trial'])).rows[0];
- expect(trial.amount_vnd).toBe(29000);
- await db.query('select windi_voice_pay($1,$2,$3)',[trial.payment_code,'gateway-trial',29000]);
+ expect(trial.amount_vnd).toBe(39000);
+ await db.query('select windi_voice_pay($1,$2,$3)',[trial.payment_code,'gateway-trial',39000]);
  const trialClone=(await db.query<{id:string}>('select * from windi_voice_clone_reserve($1,$2,$3,$4)',[b,key(21),'Trial voice','vi'])).rows[0];
  await db.query('select windi_voice_clone_finish($1,$2)',[trialClone.id,'trial-provider-voice']);
  const starter=(await db.query<{payment_code:string;amount_vnd:number}>('select * from windi_voice_order($1,$2)',[b,'starter'])).rows[0];
- expect(starter.amount_vnd).toBe(129000);
- await db.query('select windi_voice_pay($1,$2,$3)',[starter.payment_code,'gateway-starter-upgrade',129000]);
+ expect(starter.amount_vnd).toBe(99000);
+ await db.query('select windi_voice_pay($1,$2,$3)',[starter.payment_code,'gateway-starter-upgrade',99000]);
  expect((await db.query('select plan_id,clone_limit,clones_used from windi_voice_periods where user_id=$1 and starts_at<=now() and ends_at>now()',[b])).rows).toEqual([{plan_id:'trial',clone_limit:1,clones_used:1}]);
  expect((await db.query('select plan_id,credits from windi_voice_periods where user_id=$1 and starts_at>now()',[b])).rows).toEqual([{plan_id:'starter',credits:30000}]);
  await expect(db.query('select windi_voice_clone_reserve($1,$2,$3,$4)',[b,key(22),'Second voice','vi'])).rejects.toThrow('CLONE_LIMIT');
@@ -131,23 +133,23 @@ test('trial is one-time only after successful payment, while expired orders can 
  const expired=(await db.query<{id:string}>('select * from windi_voice_order($1,$2)',[d,'trial'])).rows[0];
  await db.query("update windi_voice_orders set status='expired' where id=$1",[expired.id]);
  const trial=(await db.query<{payment_code:string;amount_vnd:number}>('select * from windi_voice_order($1,$2)',[d,'trial'])).rows[0];
- expect(trial.amount_vnd).toBe(29000);
- await db.query('select windi_voice_pay($1,$2,$3)',[trial.payment_code,'gateway-trial-d',29000]);
+ expect(trial.amount_vnd).toBe(39000);
+ await db.query('select windi_voice_pay($1,$2,$3)',[trial.payment_code,'gateway-trial-d',39000]);
  await expect(db.query('select * from windi_voice_order($1,$2)',[d,'trial'])).rejects.toThrow('TRIAL_ALREADY_USED');
  const starter=(await db.query<{payment_code:string}>('select * from windi_voice_order($1,$2)',[e,'starter'])).rows[0];
- await db.query('select windi_voice_pay($1,$2,$3)',[starter.payment_code,'gateway-starter-e',129000]);
+ await db.query('select windi_voice_pay($1,$2,$3)',[starter.payment_code,'gateway-starter-e',99000]);
  await expect(db.query('select * from windi_voice_order($1,$2)',[e,'trial'])).rejects.toThrow('TRIAL_ALREADY_USED');
 });
 test('paid Creator starts after an active Starter period without interrupting it',async()=>{
  await db.query('insert into auth.users values($1)',[g]);
  const first=(await db.query<{payment_code:string}>('select * from windi_voice_order($1,$2)',[g,'starter'])).rows[0];
- expect((await db.query('select windi_voice_pay($1,$2,$3)',[first.payment_code,'gateway-queue-starter',129000])).rows).toEqual([{windi_voice_pay:'paid'}]);
+ expect((await db.query('select windi_voice_pay($1,$2,$3)',[first.payment_code,'gateway-queue-starter',99000])).rows).toEqual([{windi_voice_pay:'paid'}]);
  await db.query("update windi_voice_periods set starts_at=now()-interval '8 days',ends_at=now()-interval '1 second' where user_id=$1 and plan_id='welcome'",[g]);
  await db.query("update windi_voice_periods set starts_at=now()-interval '1 day',ends_at=now()+interval '29 days' where user_id=$1 and plan_id='starter'",[g]);
  const current=(await db.query<{ends_at:string}>('select ends_at from windi_voice_periods where user_id=$1 and plan_id=$2',[g,'starter'])).rows[0];
  const next=(await db.query<{payment_code:string;amount_vnd:number}>('select * from windi_voice_order($1,$2)',[g,'creator'])).rows[0];
- expect(next.amount_vnd).toBe(299000);
- expect((await db.query('select windi_voice_pay($1,$2,$3)',[next.payment_code,'gateway-queue-creator',299000])).rows).toEqual([{windi_voice_pay:'paid'}]);
+ expect(next.amount_vnd).toBe(269000);
+ expect((await db.query('select windi_voice_pay($1,$2,$3)',[next.payment_code,'gateway-queue-creator',269000])).rows).toEqual([{windi_voice_pay:'paid'}]);
  expect((await db.query('select plan_id,credits from windi_voice_periods where user_id=$1 and starts_at<=now() and ends_at>now()',[g])).rows).toEqual([{plan_id:'starter',credits:30000}]);
  const queued=(await db.query<{plan_id:string;credits:number;starts_at:string}>('select plan_id,credits,starts_at from windi_voice_periods where user_id=$1 and plan_id=$2',[g,'creator'])).rows[0];
  expect(queued.plan_id).toBe('creator');
@@ -159,7 +161,7 @@ test('a delayed webhook settles an expired order when the bank transfer occurred
  const trial=(await db.query<{id:string;payment_code:string;created_at:string}>('select * from windi_voice_order($1,$2)',[f,'trial'])).rows[0];
  const paidAt=new Date(new Date(trial.created_at).getTime()+60_000).toISOString();
  await db.query("update windi_voice_orders set status='expired' where id=$1",[trial.id]);
- expect((await db.query('select windi_voice_pay($1,$2,$3,$4)',[trial.payment_code,'gateway-delayed',29000,paidAt])).rows).toEqual([{windi_voice_pay:'paid'}]);
+ expect((await db.query('select windi_voice_pay($1,$2,$3,$4)',[trial.payment_code,'gateway-delayed',39000,paidAt])).rows).toEqual([{windi_voice_pay:'paid'}]);
  expect((await db.query('select status,paid_at is not null as has_paid_at from windi_voice_orders where id=$1',[trial.id])).rows).toEqual([{status:'paid',has_paid_at:true}]);
  expect((await db.query('select plan_id,credits,clone_limit from windi_voice_periods where order_id=$1',[trial.id])).rows).toEqual([{plan_id:'trial',credits:3000,clone_limit:1}]);
 });

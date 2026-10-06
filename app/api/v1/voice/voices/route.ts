@@ -13,7 +13,7 @@ export async function GET(request: Request) {
     }
     const [library, clones] = await Promise.all([
       publicVoices(),
-      writer().from('windi_voice_clones').select('provider_id,name,language').eq('user_id', identity.userId).eq('status', 'ready'),
+      writer().from('windi_voice_clones').select('provider_id,name,language').eq('user_id', identity.userId).eq('status', 'ready').eq('is_demo', false),
     ]);
     if (clones.error) throw clones.error;
     return Response.json({

@@ -59,7 +59,7 @@ export async function publishFromQueue(_previous: QueuePublishState, form: FormD
       console.error('publishFromQueue review_windi_resource error:', publishError);
       return {
         status: 'error',
-        message: publishError.code === '40001'
+        message: ['PT409', '40001'].includes(publishError.code)
           ? 'Hồ sơ vừa được sửa ở phiên khác. Hãy tải lại rồi thử lại.'
           : (publishError.message || 'Chưa lưu được. Hãy thử lại sau ít phút.'),
         destination: null,
@@ -123,7 +123,7 @@ export async function rejectFromQueue(_previous: QueuePublishState, form: FormDa
       console.error('rejectFromQueue review_windi_resource error:', rejectError);
       return {
         status: 'error',
-        message: rejectError.code === '40001'
+        message: ['PT409', '40001'].includes(rejectError.code)
           ? 'Hồ sơ vừa được sửa ở phiên khác. Hãy tải lại rồi thử lại.'
           : (rejectError.message || 'Chưa lưu được. Hãy thử lại sau ít phút.'),
         destination: null,

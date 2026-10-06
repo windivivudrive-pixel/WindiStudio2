@@ -29,8 +29,11 @@ const messages:Record<string,string>={
   INVALID_PLAN:'Gói này không còn khả dụng.',NO_SUBSCRIPTION:'Chọn gói dịch vụ để bắt đầu tạo giọng.',
   INSUFFICIENT_CREDITS:'Credit còn lại không đủ cho nội dung này.',CLONE_LIMIT:'Bạn đã dùng hết hạn mức clone hoặc số giọng được lưu của gói.',
   CLONE_REQUIRES_TRIAL:'Gói Chào mừng dùng được thư viện giọng. Chọn Clone thử đầu tiên để tạo giọng riêng.',
-  TRIAL_ALREADY_USED:'Gói Clone thử 29.000đ chỉ dành cho tài khoản chưa từng thanh toán gói clone.',
+  TRIAL_ALREADY_USED:'Gói Clone thử 39.000đ chỉ dành cho tài khoản chưa từng thanh toán gói clone.',
   CLONE_NOT_FOUND:'Không tìm thấy giọng có thể xóa.',
+  DEMO_LIMIT:'Bạn đã dùng 2 lượt clone nghe thử miễn phí. Dùng thử đầy đủ chỉ 39.000đ hoặc chọn gói trả phí.',
+  DEMO_EXPIRED:'Giọng nghe thử đã hết hạn hoặc bị thay thế. Thanh toán vẫn mở gói để bạn tạo giọng mới.',
+  DEMO_LISTEN_ONLY:'Giọng miễn phí chỉ nghe được các câu mẫu cố định. Mua gói 39.000đ để sử dụng giọng này.',
   ACTIVE_PERIOD:'Gói hiện tại còn hiệu lực. Bạn có thể mua chu kỳ tiếp theo khi gói hết hạn.',
   PENDING_ORDER:'Bạn đã có đơn chờ thanh toán. Kiểm tra đơn trong mục Gói dịch vụ.',
   REQUEST_PENDING:'Một yêu cầu đang xử lý hoặc chờ đối soát. Xem lại trong Lịch sử.',
@@ -91,7 +94,7 @@ export async function cartesia(path:string, init:RequestInit={}, options:Cartesi
   for(let index=0;index<keys.length;index++) {
     // Only explicit rejection can move a free request to another account.
     // Never retry a timeout, successful stream, or ambiguous server error.
-    const response=await fetch(`https://api.cartesia.ai${path}`,{...init,cache:'no-store',signal:AbortSignal.timeout(90000),headers:{...init.headers,Authorization:`Bearer ${keys[index]}`,'Cartesia-Version':'2026-08-14'}});
+    const response=await fetch(`https://api.cartesia.ai${path}`,{...init,cache:'no-store',signal:init.signal ? AbortSignal.any([init.signal,AbortSignal.timeout(90000)]) : AbortSignal.timeout(90000),headers:{...init.headers,Authorization:`Bearer ${keys[index]}`,'Cartesia-Version':'2026-08-14'}});
     if(useMain||![402,429].includes(response.status)||index===keys.length-1)return response;
     await response.body?.cancel();
   }
@@ -252,8 +255,9 @@ export async function resolveVoice(userId:string,id:string) {
     if(licenseError) throw licenseError;
     if(license) return providerVoice(id);
   }
-  const {data,error}=await writer().from('windi_voice_clones').select('provider_id,name').eq('user_id',userId).eq('provider_id',id).eq('status','ready').maybeSingle();
+  const {data,error}=await writer().from('windi_voice_clones').select('provider_id,name,is_demo').eq('user_id',userId).eq('provider_id',id).eq('status','ready').maybeSingle();
   if(error) throw error;
+  if(data?.is_demo) throw new VoiceError(messages.DEMO_LISTEN_ONLY,403);
   if(data) return {id:data.provider_id,name:data.name};
   const v=await publicVoice(id);
   if(!v) throw new VoiceError('Giọng này không khả dụng với tài khoản của bạn.',403);
