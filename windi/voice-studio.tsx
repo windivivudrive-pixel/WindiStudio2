@@ -46,6 +46,9 @@ import {
   STARTER_VOICES,
   VOICE_LANGUAGES,
   VOICE_CLONE_CLIP_LIMITS,
+  VOICE_CLONE_DEMO_SAMPLES,
+  type VoiceClone,
+  type VoiceCloneSample,
   VOICE_LIBRARY_LANGUAGES,
   VOICE_PLANS,
   type StudioVoice,
@@ -482,7 +485,14 @@ export function VoiceStudio() {
   const [checkout, setCheckout] = useState<{
     order: VoiceOrder;
     bank: { bank: string; account: string; name: string } | null;
+    cloneRetained?: boolean;
   } | null>(null);
+  const [demoNow, setDemoNow] = useState(() => Date.now());
+  const demoPreviewUrl = useRef<string | null>(null);
+  const demoPreviewRequest = useRef(0);
+  const demoAudioRef = useRef<HTMLAudioElement>(null);
+  const [demoPlaying, setDemoPlaying] = useState("");
+  const [demoLoading, setDemoLoading] = useState("");
   const [secondsRemaining, setSecondsRemaining] = useState<number>(0);
   const dialogRef = useRef<HTMLDialogElement>(null);
   const previewAudioRef = useRef<HTMLAudioElement>(null);
@@ -502,7 +512,7 @@ export function VoiceStudio() {
   const largestBalance = Math.max(planRemaining, workflowBonusRemaining);
   const credits = countCredits(text);
   const cloneVoices: StudioVoice[] = (account?.clones || [])
-    .filter((c) => c.status === "ready" && c.provider_id)
+    .filter((c) => c.status === "ready" && c.provider_id && !c.is_demo)
     .map((c) => ({
       id: c.provider_id!,
       name: c.name,
@@ -513,11 +523,15 @@ export function VoiceStudio() {
       kind: "clone",
     }));
   const activeCloneCount = (account?.clones || []).filter((c) =>
-    ["ready", "reserved", "pending"].includes(c.status),
+    !c.is_demo && ["ready", "reserved", "pending"].includes(c.status),
   ).length;
   const allVoices = [...cloneVoices, ...voices].filter(voice => !isComparisonVoice(voice.id));
   const currentPlan = VOICE_PLANS.find((p) => p.id === period?.plan_id);
   const trialEligible = account?.trialEligible === true;
+  const freeDemo = !isAdmin && account?.cloneDemo?.eligible === true;
+  const demoRemaining = account?.cloneDemo?.remaining ?? 0;
+  const canClone = isAdmin || (freeDemo ? demoRemaining > 0 : !!period?.clone_limit && activeCloneCount < period.clone_limit);
+  const visibleClones = (account?.clones ?? []).filter(c => !c.is_demo || Date.parse(c.demo_expires_at!) > demoNow);
   const canPurchasePlan = (planId: string) =>
     planId === "trial"
       ? trialEligible && (!period || period.plan_id === "welcome")
@@ -617,7 +631,11 @@ export function VoiceStudio() {
         );
         setCheckout(data);
         if (data?.order.status === "paid") {
-          setNotice("Thanh toán thành công. Gói của bạn đã sẵn sàng!");
+          setNotice(data.order.demo_clone_id
+            ? data.cloneRetained
+              ? "Thanh toán thành công. Giọng vừa clone đã được giữ lại và sẵn sàng sử dụng."
+              : "Thanh toán thành công. Giọng nghe thử đã hết hạn hoặc bị thay thế; bạn có thể tạo giọng mới bằng gói vừa mua."
+            : "Thanh toán thành công. Gói của bạn đã sẵn sàng!");
           void refresh();
         }
       } catch {
@@ -718,6 +736,64 @@ export function VoiceStudio() {
       setPreviewLoadingId("");
     }
   }
+  function stopDemoPreview() {
+    demoPreviewRequest.current++;
+    demoAudioRef.current?.pause();
+    demoAudioRef.current?.removeAttribute("src");
+    if (demoPreviewUrl.current) URL.revokeObjectURL(demoPreviewUrl.current);
+    demoPreviewUrl.current = null;
+    setDemoPlaying("");
+    setDemoLoading("");
+  }
+  useEffect(() => {
+    if (!account?.clones.some(c => c.is_demo)) return;
+    setDemoNow(Date.now());
+    const timer = window.setInterval(() => setDemoNow(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, [account]);
+  useEffect(() => {
+    const [cloneId] = (demoPlaying || demoLoading).split(":");
+    const clone = account?.clones.find(c => c.id === cloneId);
+    if (cloneId && (!clone || (clone.is_demo && Date.parse(clone.demo_expires_at!) <= demoNow))) stopDemoPreview();
+  }, [account, demoNow, demoPlaying, demoLoading]);
+  useEffect(() => {
+    stopDemoPreview();
+    return () => {
+      demoPreviewRequest.current++;
+      demoAudioRef.current?.pause();
+      if (demoPreviewUrl.current) URL.revokeObjectURL(demoPreviewUrl.current);
+    };
+  }, [user?.id, tab]);
+  async function previewClone(clone: VoiceClone, preset: VoiceCloneSample) {
+    const key = `${clone.id}:${preset}`;
+    const wasPlaying = demoPlaying === key;
+    stopPreview();
+    stopDemoPreview();
+    if (wasPlaying) return;
+    const requestId = demoPreviewRequest.current;
+    setDemoLoading(key);
+    setError("");
+    try {
+      const response = await fetch("/api/voice/clone-preview", jsonPost({cloneId:clone.id, preset}));
+      if (!response.ok) {
+        const body = await response.json().catch(() => ({}));
+        throw new Error(body.error || "Chưa tải được mẫu nghe thử.");
+      }
+      const blob = await response.blob();
+      if (requestId !== demoPreviewRequest.current || (clone.is_demo && Date.parse(clone.demo_expires_at!) <= Date.now())) return;
+      const url = URL.createObjectURL(blob);
+      demoPreviewUrl.current = url;
+      const player = demoAudioRef.current;
+      if (!player) return;
+      player.src = url;
+      await player.play();
+      if (requestId === demoPreviewRequest.current) setDemoPlaying(key);
+    } catch (error) {
+      if (requestId === demoPreviewRequest.current) setError((error as Error).message);
+    } finally {
+      if (requestId === demoPreviewRequest.current) setDemoLoading("");
+    }
+  }
   async function generate() {
     if (!canGenerate) return;
     setBusy("generate");
@@ -781,8 +857,11 @@ export function VoiceStudio() {
     form.set("consent", "true");
     form.set("requestKey", cloneKey.current);
     try {
-      await api<{voice_id?:string}>("clone", { method: "POST", body: form });
-      setNotice("Giọng riêng đã được tạo thành công. Bạn có thể dùng ngay trong Voice Studio hoặc mở mục Giọng của tôi để sao chép Voice ID.");
+      stopDemoPreview();
+      const result = await api<{voice_id?:string;is_demo?:boolean}>("clone", { method: "POST", body: form });
+      setNotice(result.is_demo
+        ? "Giọng nghe thử đã sẵn sàng. Nghe hai câu mẫu bên dưới; mua 39.000đ trước khi hết hạn để giữ và sử dụng giọng này."
+        : "Giọng riêng đã được tạo thành công. Bạn có thể dùng ngay trong Voice Studio hoặc mở mục Giọng của tôi để sao chép Voice ID.");
       setClip(null);
       setCloneName("");
       setCloneAccent("");
@@ -817,13 +896,16 @@ export function VoiceStudio() {
       await refresh();
     }
   }
-  async function purchase(planId: string) {
+  async function purchase(planId: string, demoCloneId?: string) {
+    if (planId === "trial" && !demoCloneId) {
+      demoCloneId = visibleClones.find(c => c.is_demo && c.status === "ready")?.id;
+    }
     setBusy(planId);
     setError("");
     try {
       const data = await api<NonNullable<typeof checkout>>(
         "orders",
-        jsonPost({ planId }),
+        jsonPost({ planId, ...(demoCloneId ? {demoCloneId} : {}) }),
       );
       setCheckout(data);
       await refresh();
@@ -882,6 +964,7 @@ export function VoiceStudio() {
 
   return (
     <div className="voice-page">
+      <audio ref={demoAudioRef} preload="none" onEnded={() => setDemoPlaying("")} onPause={() => setDemoPlaying("")} />
       {notice && (
         <FeedbackToast
           message={notice}
@@ -1142,7 +1225,7 @@ export function VoiceStudio() {
                     requestKey.current = null;
                   }}
                   placeholder={
-                    "Một câu chuyện hay bắt đầu từ một dòng chữ…\n\nNhập hoặc dán nội dung của bạn vào đây."
+                    "Một câu chuyện hay bắt đầu từ một dòng chữ… Nhập hoặc dán nội dung của bạn vào đây."
                   }
                   maxLength={20000}
                 />
@@ -1455,51 +1538,27 @@ export function VoiceStudio() {
                   </p>
                 </div>
                 <span className="voice-quota">
-                  {isAdmin ? `${activeCloneCount} giọng · quota Windi Clone Pro 2.1` : period
-                    ? period.clone_limit
-                      ? `${activeCloneCount} / ${period.clone_limit} giọng đang hoạt động`
-                      : "Chọn Clone thử để tạo giọng riêng"
-                    : "1 / 5 / 20 slot theo gói"}
+                  {freeDemo ? `${demoRemaining} / 2 lượt nghe thử còn lại` : isAdmin ? `${activeCloneCount} giọng · quota Windi Clone Pro 2.1` : period?.clone_limit
+                    ? `${activeCloneCount} / ${period.clone_limit} giọng đang hoạt động` : user ? "Chọn gói để tạo giọng riêng" : "Đăng nhập để clone nghe thử miễn phí"}
                 </span>
               </div>
-              {user &&
-              account &&
-              !isAdmin &&
-              (!period || period.plan_id === "welcome") &&
-              trialEligible ? (
+              {freeDemo && (
                 <div className="voice-clone-unlock">
                   <div>
-                    <strong>Chưa có gói clone</strong>
-                    <p>
-                      Mở 1 slot clone và 3.000 credit trong 14 ngày với gói
-                      dùng thử một lần.
-                    </p>
+                    <strong>{demoRemaining ? "Clone nghe thử miễn phí" : "Bạn đã dùng 2 lượt clone miễn phí"}</strong>
+                    <p>Chỉ nghe hai câu mẫu cố định. Giọng được xóa trong vòng 20 phút, hoặc ngay khi bạn clone giọng khác. Dùng thử đầy đủ chỉ 39.000đ.</p>
                   </div>
-                  <button
-                    className="voice-btn voice-primary"
-                    disabled={!!busy || !payments || !available}
-                    onClick={() => void purchase("trial")}
-                  >
-                    Mua Clone thử · 29.000đ <ArrowRight size={15} />
+                  <button className="voice-btn voice-primary" disabled={!!busy || !payments || !available} onClick={() => void purchase("trial")}>
+                    Dùng thử · 39.000đ <ArrowRight size={15} />
                   </button>
                 </div>
-              ) : user &&
-                account &&
-                (!period || period.plan_id === "welcome") &&
-                !trialEligible ? (
+              )}
+              {user && account && !isAdmin && !freeDemo && !period?.clone_limit ? (
                 <div className="voice-clone-unlock">
-                  <div>
-                    <strong>Gói Clone thử không còn khả dụng</strong>
-                    <p>
-                      Bạn đã từng thanh toán gói clone. Chọn một gói chính để
-                      tiếp tục tạo giọng riêng.
-                    </p>
-                  </div>
-                  <button className="voice-btn" onClick={() => setTab("plans")}>
-                    Xem gói dịch vụ <ArrowRight size={15} />
-                  </button>
+                  <div><strong>Chọn gói để tiếp tục clone</strong><p>Gói hiện tại đã hết hạn. Chọn gói trả phí để tạo và sử dụng giọng riêng.</p></div>
+                  <button className="voice-btn" onClick={() => setTab("plans")}>Xem gói dịch vụ <ArrowRight size={15} /></button>
                 </div>
-              ) : (
+              ) : freeDemo && !demoRemaining ? null : (
                 <div className="voice-clone-layout">
                   <form className="voice-clone-form" onSubmit={cloneVoice}>
                     <label>
@@ -1662,14 +1721,13 @@ export function VoiceStudio() {
                       disabled={
                         !user ||
                         !available ||
-                        (!isAdmin && !period) ||
+                        !canClone ||
                         !clip ||
                         clipChecking ||
                         clipDuration === null ||
                         !consent ||
                         !cloneName.trim() ||
-                        !!busy ||
-                        (!isAdmin && (!period?.clone_limit || activeCloneCount >= period.clone_limit))
+                        !!busy
                       }
                     >
                       {busy === "clone" ? (
@@ -1679,9 +1737,7 @@ export function VoiceStudio() {
                       )}{" "}
                       {busy === "clone"
                         ? "Đang clone giọng…"
-                        : (isAdmin || period?.clone_limit)
-                          ? "Tạo giọng riêng"
-                          : "Chọn Clone thử để tạo giọng riêng"}
+                        : freeDemo ? "Clone nghe thử miễn phí" : "Tạo giọng riêng"}
                     </button>
                   </form>
                   <aside className="voice-clone-guide">
@@ -1725,7 +1781,7 @@ export function VoiceStudio() {
               <div className="voice-section-heading voice-my-clones">
                 <div>
                   <h2>
-                    Giọng của tôi <small>({cloneVoices.length})</small>
+                    Giọng của tôi <small>({visibleClones.length})</small>
                   </h2>
                   <p>
                     Xóa giọng sẽ giải phóng slot clone, nhưng không hoàn credit
@@ -1737,7 +1793,7 @@ export function VoiceStudio() {
                   Làm mới
                 </button>
               </div>
-              {!account?.clones.length ? (
+              {!visibleClones.length ? (
                 <Empty
                   icon={Mic2}
                   title="Một giọng nói đang chờ được tạo"
@@ -1745,13 +1801,13 @@ export function VoiceStudio() {
                 />
               ) : (
                 <div className="voice-grid">
-                  {account.clones.map((c) => (
+                  {visibleClones.map((c) => (
                     <article className="voice-card" key={c.id}>
                       <span className="voice-avatar">
                         <Mic2 size={23} />
                       </span>
                       <h3>{c.name}</h3>
-                      {c.status==='ready' && <VoiceId id={c.provider_id}/>}
+                      {c.status==='ready' && !c.is_demo && <VoiceId id={c.provider_id}/>}
                       <p>
                         {c.language.toUpperCase()}
                         {c.accent ? ` · ${c.accent}` : ""} ·{" "}
@@ -1759,30 +1815,28 @@ export function VoiceStudio() {
                           ? "Thất bại · đã hoàn lượt"
                           : statusName(c.status)}
                       </p>
+                      {c.is_demo && c.demo_expires_at && <p className="voice-demo-expiry">Nghe thử · còn {Math.max(0, Math.ceil((Date.parse(c.demo_expires_at) - demoNow) / 60000))} phút. Thanh toán trước khi hết hạn để giữ giọng.</p>}
                       {c.status === "ready" && (
-                        <div className="voice-card-actions">
-                          <button
-                            className="voice-btn"
-                            onClick={() =>
-                              choose(
-                                cloneVoices.find(
-                                  (v) => v.id === c.provider_id,
-                                )!,
-                              )
-                            }
-                          >
-                            Sử dụng
-                            <ArrowRight size={14} />
-                          </button>
-                          <button
-                            className="voice-icon-btn"
-                            aria-label={`Xóa giọng ${c.name}`}
-                            disabled={!!busy}
-                            onClick={() => void removeClone(c.id)}
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                        </div>
+                        <>
+                          <div className="voice-demo-samples">
+                            {(c.is_demo ? ["greeting", "news"] : ["paid"]).map(preset => {
+                              const key = `${c.id}:${preset}`;
+                              return <div key={key}>
+                                <p>{VOICE_CLONE_DEMO_SAMPLES[preset as VoiceCloneSample]}</p>
+                                <button type="button" className="voice-btn voice-preview-btn" disabled={!!demoLoading} aria-pressed={demoPlaying === key} aria-busy={demoLoading === key} onClick={() => void previewClone(c, preset as VoiceCloneSample)}>
+                                  {demoLoading === key ? <LoaderCircle size={15} className="voice-spin" /> : demoPlaying === key ? <Pause size={15} /> : <Play size={15} />}
+                                  {demoLoading === key ? "Đang tạo mẫu…" : demoPlaying === key ? "Dừng" : preset === "news" ? "Nghe mẫu tin tức" : "Nghe mẫu chào mừng"}
+                                </button>
+                              </div>;
+                            })}
+                          </div>
+                          <div className="voice-card-actions">
+                            {c.is_demo ? <button className="voice-btn voice-primary" disabled={!!busy || !payments || !available} onClick={() => void purchase("trial", c.id)}>
+                              Sử dụng voice clone này · 39.000đ <ArrowRight size={14} />
+                            </button> : <button className="voice-btn" onClick={() => choose(cloneVoices.find(v => v.id === c.provider_id)!)}>Sử dụng <ArrowRight size={14} /></button>}
+                            <button className="voice-icon-btn" aria-label={`Xóa giọng ${c.name}`} disabled={!!busy} onClick={() => void removeClone(c.id)}><Trash2 size={16} /></button>
+                          </div>
+                        </>
                       )}
                     </article>
                   ))}
@@ -1986,7 +2040,7 @@ export function VoiceStudio() {
                         <li>
                           <Check size={15} />
                           {p.id === "welcome"
-                            ? "Không bao gồm clone giọng riêng"
+                            ? "2 lượt clone nghe mẫu · tự xóa trong 20 phút"
                             : "Windi Clone Pro 2.1 · xuất file MP3"}
                         </li>
                         <li>
@@ -2189,6 +2243,9 @@ export function VoiceStudio() {
                       thành công.
                     </span>
                   </div>
+                  {checkout.order.demo_clone_id && (
+                    <p>Thanh toán trước khi giọng nghe thử hết hạn để giữ lại giọng này. Nếu giọng đã bị xóa, gói vừa mua vẫn cho phép bạn tạo giọng mới.</p>
+                  )}
                   <div
                     style={{
                       display: "inline-flex",

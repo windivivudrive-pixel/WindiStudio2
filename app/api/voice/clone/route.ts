@@ -1,5 +1,6 @@
 import {boundedBody,cartesia,failure,identity,providerReady,resolveCloneAccent,VoiceError,writer} from '@/lib/voice/server';
 import {isUUID,VOICE_CLONE_CLIP_LIMITS,VOICE_LANGUAGES} from '@/lib/voice/shared';
+import {cleanupVoiceDemos} from '@/lib/voice/clone-demo';
 export const runtime='nodejs';
 export const maxDuration=120;
 
@@ -62,12 +63,16 @@ export async function POST(request:Request) {
   }
   const {data:clone,error}=reservation;
   if(error) throw error;
-  if(clone.status==='ready') return Response.json({id:clone.id,voice_id:clone.provider_id});
+  if(clone.status==='ready') {
+   if(clone.is_demo&&Date.parse(clone.demo_expires_at)<=Date.now()) throw new VoiceError('Giọng nghe thử đã hết hạn.',410);
+   return Response.json({id:clone.id,voice_id:clone.is_demo?null:clone.provider_id,is_demo:!!clone.is_demo,demo_expires_at:clone.demo_expires_at});
+  }
   const claim=await db.from('windi_voice_clones').update({status:'pending'}).eq('id',clone.id).eq('status','reserved').select('id').maybeSingle();
   if(claim.error) throw claim.error;
   if(!claim.data) throw new VoiceError('Mẫu này đã được tiếp nhận. Kiểm tra danh sách giọng clone.',409);
   cloneId=clone.id;
   reservationActive=true;
+  if(clone.is_demo) await cleanupVoiceDemos(user.id);
   const upload=new FormData();
   upload.set('clip',clip);upload.set('name',`WV ${clone.id}`);upload.set('description',name);upload.set('language',language);upload.set('access','private');if(accent) upload.set('accent',accent);
   let response:Response;
@@ -85,8 +90,17 @@ export async function POST(request:Request) {
   providerVoiceId=voice.id;
   const finish=await db.rpc('windi_voice_clone_finish',{p_clone:clone.id,p_provider:providerVoiceId});
   if(finish.error) throw finish.error;
+  if(clone.is_demo) {
+   const {data:finished,error}=await db.from('windi_voice_clones').select('status,demo_expires_at').eq('id',clone.id).maybeSingle();
+   if(error)throw error;
+   if(finished?.status!=='ready') {
+    reservationActive=false;
+    await cleanupVoiceDemos(user.id);
+    throw new VoiceError('Giọng nghe thử đã hết hạn. Vui lòng làm mới.',410);
+   }
+  }
   reservationActive=false;
-  return Response.json({id:clone.id,voice_id:providerVoiceId});
+  return Response.json({id:clone.id,voice_id:clone.is_demo?null:providerVoiceId,is_demo:!!clone.is_demo,demo_expires_at:clone.demo_expires_at});
  }catch(error){
   if(reservationActive) {
     if(providerVoiceId&&userId) await cartesia(`/voices/${encodeURIComponent(providerVoiceId)}`,{method:'DELETE'},{userId,purpose:'clone'}).catch(()=>undefined);
@@ -101,9 +115,15 @@ export async function DELETE(request:Request) {
   const {user}=await identity(request); const id=new URL(request.url).searchParams.get('id');
   if(!isUUID(id)) throw new VoiceError('Giọng không hợp lệ.');
   const db=writer();
-  const {data:clone,error}=await db.from('windi_voice_clones').select('provider_id,status').eq('id',id).eq('user_id',user.id).maybeSingle();
+  const {data:clone,error}=await db.from('windi_voice_clones').select('provider_id,status,is_demo').eq('id',id).eq('user_id',user.id).maybeSingle();
   if(error) throw error;
   if(!clone || clone.status!=='ready') throw new VoiceError('Không tìm thấy giọng có thể xóa.',404);
+  if(clone.is_demo) {
+   const removed=await db.rpc('windi_voice_clone_remove',{p_user:user.id,p_clone:id});
+   if(removed.error)throw removed.error;
+   await cleanupVoiceDemos(user.id);
+   return Response.json({success:true});
+  }
   const response=await cartesia(`/voices/${encodeURIComponent(clone.provider_id)}`,{method:'DELETE'},{userId:user.id,purpose:'clone'});
   if(!response.ok && response.status!==404) throw new VoiceError('Chưa xóa được giọng. Vui lòng thử lại.',502);
   const removed=await db.rpc('windi_voice_clone_remove',{p_user:user.id,p_clone:id});
