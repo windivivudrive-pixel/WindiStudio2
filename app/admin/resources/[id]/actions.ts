@@ -10,7 +10,7 @@ export async function reviewResource(_state:{message:string;ok:boolean},form:For
   if(Object.values(content).some(value=>value.length>30000)) return {ok:false,message:'Nội dung quá dài.'};
   const nextState=String(form.get('status')||'');
   const {error}=await editorialWriter().rpc('review_windi_resource',{target_id:id,actor:user.id,expected_revision:revision,next_state:nextState,content,review_reason:'',source_checked:false,content_checked:false});
-  if(error) return {ok:false,message:error.code==='40001'?'Tool đã được sửa ở phiên khác. Tải lại trang trước khi lưu.':error.code==='42501'?'Không có quyền ghi biên tập.':'Chưa lưu được. Tải lại hồ sơ rồi thử lại; nếu lỗi lặp lại, kiểm tra kết nối danh mục.'};
+  if(error) return {ok:false,message:['PT409','40001'].includes(error.code)?'Tool đã được sửa ở phiên khác. Tải lại trang trước khi lưu.':error.code==='42501'?'Không có quyền ghi biên tập.':'Chưa lưu được. Tải lại hồ sơ rồi thử lại; nếu lỗi lặp lại, kiểm tra kết nối danh mục.'};
 
   // Update editorial flags
   const isEditorPick = form.get('is_editor_pick') === 'on';

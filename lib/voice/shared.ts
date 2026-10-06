@@ -2,9 +2,9 @@ export const DEFAULT_WORKFLOW_VOICE_ID = '60cf30cf-dcad-4cb1-b2e9-b6c08a23569e';
 export const VOICE_PLANS = [
   { id: 'welcome', name: 'Chào mừng', price_vnd: 0, credits: 1500, clone_limit: 0, duration_days: 7, billing: 'one_time', purchasable: false, description: '1.500 credit miễn phí khi bạn đăng ký.' },
   { id: 'trial', name: 'Clone thử đầu tiên', price_vnd: 29000, credits: 3000, clone_limit: 1, duration_days: 14, billing: 'one_time', purchasable: true, description: 'Tạo giọng riêng đầu tiên và dùng thử trong 14 ngày.' },
-  { id: 'starter', name: 'Starter', price_vnd: 129000, credits: 30000, clone_limit: 1, duration_days: 30, billing: 'monthly', purchasable: true, description: 'Bắt đầu với giọng nói của riêng bạn.' },
-  { id: 'creator', name: 'Creator', price_vnd: 299000, credits: 100000, clone_limit: 5, duration_days: 30, billing: 'monthly', purchasable: true, description: 'Cho nhà sáng tạo xuất bản đều đặn.' },
-  { id: 'studio', name: 'Studio', price_vnd: 1399000, credits: 500000, clone_limit: 20, duration_days: 30, billing: 'monthly', purchasable: true, description: 'Nhiều giọng kể. Nhiều câu chuyện hơn.' },
+  { id: 'starter', name: 'Starter', price_vnd: 99000, credits: 30000, clone_limit: 1, duration_days: 30, billing: 'monthly', purchasable: true, description: 'Bắt đầu với giọng nói của riêng bạn.' },
+  { id: 'creator', name: 'Creator', price_vnd: 269000, credits: 100000, clone_limit: 5, duration_days: 30, billing: 'monthly', purchasable: true, description: 'Cho nhà sáng tạo xuất bản đều đặn.' },
+  { id: 'studio', name: 'Studio', price_vnd: 1169000, credits: 500000, clone_limit: 20, duration_days: 30, billing: 'monthly', purchasable: true, description: 'Nhiều giọng kể. Nhiều câu chuyện hơn.' },
 ] as const;
 export const VOICE_LANGUAGES = [{id:'vi',name:'Tiếng Việt'},{id:'en',name:'English'},{id:'ko',name:'한국어'},{id:'ja',name:'日本語'},{id:'zh',name:'中文'},{id:'fr',name:'Français'},{id:'de',name:'Deutsch'},{id:'es',name:'Español'},{id:'th',name:'ไทย'},{id:'id',name:'Bahasa Indonesia'}];
 export const VOICE_LIBRARY_LANGUAGES = [{id:'en',name:'English'},{id:'fr',name:'Français'},{id:'es',name:'Español'},{id:'ko',name:'한국어'},{id:'th',name:'ไทย'},{id:'ja',name:'日本語'},{id:'zh',name:'中文'},{id:'vi',name:'Tiếng Việt'}] as const;

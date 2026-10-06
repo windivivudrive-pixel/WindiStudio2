@@ -1978,7 +1978,7 @@ export function VoiceStudio() {
                         <li>
                           <Check size={15} />
                           {p.id === "trial"
-                            ? "Gói thử độc lập; Starter vẫn 129.000đ"
+                            ? "Gói thử độc lập; Starter vẫn 99.000đ"
                             : p.clone_limit
                               ? "Xóa giọng để giải phóng slot"
                               : "Không cần thanh toán để bắt đầu"}
@@ -2019,7 +2019,7 @@ export function VoiceStudio() {
                           ) : !p.purchasable ? (
                             "Tự cấp khi đăng ký"
                           ) : upgradeFromTrial ? (
-                    "Mua sau gói thử · 129.000đ"
+                    "Mua sau gói thử · 99.000đ"
                           ) : !canBuy ? (
                             "Chưa đủ điều kiện mua"
                           ) : !payments || !available ? (

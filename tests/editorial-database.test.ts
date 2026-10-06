@@ -19,6 +19,7 @@ beforeAll(async()=>{
   await db.exec(await readFile('supabase/migrations/20260903084313_windi_catalog_media_import.sql','utf8'));
   await db.exec(await readFile('supabase/migrations/20260903131154_windi_editorial_review.sql','utf8'));
   await db.exec(await readFile('supabase/migrations/20260903221133_simplify_editorial_publish.sql','utf8'));
+  await db.exec(await readFile('supabase/migrations/20261005033743_editorial_conflict_no_retry.sql','utf8'));
   expect((await db.query('select count(*)::int n from editorial_members')).rows).toEqual([{n:0}]);
   await db.query('insert into editorial_members(user_id,role) values($1,$2)',[admin,'admin']);
   const rows=importRows(JSON.parse(await readFile('data/catalog/candidates.json','utf8')),[]);
@@ -38,9 +39,9 @@ test('admin can review all 200 candidates; ordinary members and anonymous visito
 test('quick publication requires editor identity, an imported source and current revision',async()=>{
   await db.exec('set role service_role');
   await expect(review(user)).rejects.toThrow('Editor access');
-  await expect(review(admin,null)).rejects.toThrow('Resource changed');
+  await expect(review(admin,null)).rejects.toMatchObject({code:'PT409',message:'Resource changed; reload before saving'});
   await review(admin,0,'PUBLISHED',false,{...content,tagline:'',description:'Mô tả ngắn.',long_description:'',license:''});
-  await expect(review()).rejects.toThrow('Resource changed');
+  await expect(review()).rejects.toMatchObject({code:'PT409',message:'Resource changed; reload before saving'});
   await db.exec('reset role');
   expect((await db.query('select count(*)::int n from resource_editorial_actions')).rows).toEqual([{n:1}]);
   expect((await db.query('select is_sponsored,editorial_revision,description,license from resources where id=$1',[id])).rows).toEqual([{is_sponsored:false,editorial_revision:1,description:'Mô tả ngắn.',license:''}]);
