@@ -23,7 +23,7 @@ export default function Page() {
       <WorkflowHero detail />
       <nav className={dubbingStyles.links} aria-label="Khám phá Video Kits">
         <Link className="text-link" href="/video-kits/huong-dan">Xem hướng dẫn làm video đầu tiên →</Link>
-        <Link className="text-link" href="#local-dubbing">Skill dub video local · 169k →</Link>
+        <Link className="text-link" href="#local-dubbing">Bộ kit lồng tiếng Việt · 169k →</Link>
       </nav>
       <AmbientMotion />
       <section className="kit-truth-strip">

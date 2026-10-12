@@ -40,6 +40,8 @@ const messages:Record<string,string>={
   REQUEST_CONFLICT:'Mã yêu cầu đã được sử dụng cho nội dung khác.',
   VIDEO_KIT_NOT_RELEASED:'Windi Video Workflow đang hoàn tất kiểm chứng trước khi mở bán.',
   VIDEO_KIT_ALREADY_OWNED:'Tài khoản đã sở hữu Windi Video Workflow V1.',
+  DUBBING_KIT_NOT_RELEASED:'Bộ Windi Dubbing Kit đang được chuẩn bị. Vui lòng quay lại sau.',
+  DUBBING_KIT_ALREADY_OWNED:'Bạn đã mua Windi Dubbing Kit. Hãy tải bộ kit trong tài khoản.',
   DEVICE_REPLACE_REQUIRED:'Giấy phép đang hoạt động trên máy khác. Xác nhận chuyển máy để tiếp tục.',
   ENTITLEMENT_NOT_FOUND:'Không tìm thấy giấy phép đang hoạt động.',
 };

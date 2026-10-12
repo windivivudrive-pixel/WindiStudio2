@@ -1,0 +1,1 @@
+Windi Dubbing Kit beta.5: nhập video, kiểm tra và sửa bản dịch, chọn giọng theo người nói, nghe thử, xuất MP4 và SRT. Hỗ trợ giọng local và cấu hình dịch vụ TTS riêng. Bản beta; chưa kiểm chứng đầy đủ mọi cấu hình Windows/macOS. Tài khoản AI và phí dịch vụ bên ngoài do người dùng tự chuẩn bị.

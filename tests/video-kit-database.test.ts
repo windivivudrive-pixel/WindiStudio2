@@ -25,6 +25,7 @@ beforeAll(async()=>{
  await db.exec(await readFile('supabase/migrations/20261003164817_voice_plan_advance_purchase.sql','utf8'));
  await db.exec(await readFile('supabase/migrations/20261003165824_workflow_voice_credit_5k.sql','utf8'));
  await db.exec(await readFile('supabase/migrations/20261003170239_workflow_voice_credit_3k.sql','utf8'));
+ await db.exec(await readFile('supabase/migrations/20261012045316_local_dubbing_commerce.sql','utf8'));
  await db.exec("set role service_role;update products set is_active=true,metadata=jsonb_set(metadata,'{release_ready}','true') where metadata->>'sku'='windi-video-workflow-v1'");
  productId=(await db.query<{id:string}>("select id from products where metadata->>'sku'='windi-video-workflow-v1'")).rows[0].id;
  await db.exec('reset role');
@@ -92,4 +93,36 @@ test('RLS exposes only the owner and blocks client-side entitlement mutation',as
  await expect(db.exec(`insert into product_entitlements(user_id,product_id,kind) values('${b}','${productId}','video_workflow_v1')`)).rejects.toThrow('permission denied');
  await db.exec(`set request.jwt.claim.sub='${a}'`);
  expect((await db.query('select * from product_entitlements')).rows).toHaveLength(1);
+});
+
+
+test('Dubbing cannot take payment before a published downloadable release exists', async () => {
+ await db.exec('reset role');
+ await expect(db.query('select * from windi_dubbing_kit_order($1)', [b])).rejects.toThrow('DUBBING_KIT_NOT_RELEASED');
+ await db.exec("update products set is_active=true,metadata=jsonb_set(metadata,'{release_ready}','true') where metadata->>'sku'='windi-dubbing-kit-v1'");
+ await expect(db.query('select * from windi_dubbing_kit_order($1)', [b])).rejects.toThrow('DUBBING_KIT_NOT_RELEASED');
+ await db.exec("insert into product_releases(product_id,version,storage_path,sha256,size_bytes,is_published) select id,'0.1.0-beta.5','dubbing/test.zip',repeat('a',64),100,true from products where metadata->>'sku'='windi-dubbing-kit-v1'");
+});
+
+test('Dubbing payment grants only Dubbing, is idempotent and does not grant Workflow Voice credit', async () => {
+ const order=(await db.query<{id:string;payment_code:string;total_amount_vnd:number}>('select * from windi_dubbing_kit_order($1)',[b])).rows[0];
+ expect(order.total_amount_vnd).toBe(169000);
+ expect((await db.query<{id:string}>('select * from windi_dubbing_kit_order($1)',[b])).rows[0].id).toBe(order.id);
+ for(let i=0;i<2;i++) expect((await db.query('select windi_video_kit_pay($1,$2,$3,$4)',[order.payment_code,'dubbing-b',169000,{}])).rows).toEqual([{windi_video_kit_pay:'paid'}]);
+ expect((await db.query('select kind,voice_credits from product_entitlements where user_id=$1',[b])).rows).toEqual([{kind:'local_dubbing_v1',voice_credits:0}]);
+ expect((await db.query('select count(*)::int n from windi_voice_periods where user_id=$1',[b])).rows).toEqual([{n:0}]);
+ await expect(db.query('select * from windi_dubbing_kit_order($1)',[b])).rejects.toThrow('DUBBING_KIT_ALREADY_OWNED');
+});
+
+test('Dubbing underpaid, overpaid and expired orders grant no access; RPC is service-only',async()=>{
+ for(const [amount,expired,result] of [[168000,false,'underpaid'],[170000,false,'overpaid'],[169000,true,'review']] as const){
+  const user=(await db.query<{id:string}>('insert into auth.users values(gen_random_uuid()) returning id')).rows[0].id;
+  const order=(await db.query<{id:string;payment_code:string}>('select * from windi_dubbing_kit_order($1)',[user])).rows[0];
+  if(expired) await db.query("update orders set expires_at=now()-interval '1 minute' where id=$1",[order.id]);
+  expect((await db.query('select windi_video_kit_pay($1,$2,$3,$4)',[order.payment_code,'dubbing-'+user,amount,{}])).rows).toEqual([{windi_video_kit_pay:result}]);
+  expect((await db.query('select count(*)::int n from product_entitlements where user_id=$1',[user])).rows).toEqual([{n:0}]);
+ }
+ await db.exec('set role authenticated');
+ await expect(db.query('select * from windi_dubbing_kit_order($1)',[a])).rejects.toThrow('permission denied');
+ await db.exec('reset role');
 });
