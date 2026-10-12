@@ -67,6 +67,8 @@ def main():
                     with contextlib.redirect_stdout(sys.__stdout__):
                         emit(done=True)
                     return
+                if mode != 'standard':
+                    raise ValueError('Danh sách giọng local thiếu trong SDK. Cập nhật môi trường trước; chưa tải model.')
             else:
                 # Replaying a saved sentence must not initialize a large model again.
                 segments = request['segments'] if action == 'tts' else [{'id': 'sample', 'translation': request['text']}]

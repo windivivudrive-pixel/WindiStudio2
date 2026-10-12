@@ -1,83 +1,57 @@
 <!doctype html>
 <html lang="vi" data-theme="dark">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#25272b" />
-    <title>Dub Video · Windi Studio</title>
-    <link rel="stylesheet" href="/styles.css" />
-  </head>
-  <body>
-    <div class="app-shell">
-      <header class="topbar">
-        <a class="brand" href="/" aria-label="Windi Studio, trang chủ">
-          <span class="brand-mark">W</span>
-          <span>WINDI <i>STUDIO</i></span>
-        </a>
-        <div class="topbar-title"><span class="live-dot"></span><span>LOCAL DUBBING STUDIO</span><span class="sep">/</span><span>BETA 0.1</span></div>
-        <button class="topbar-help" data-toast="Hướng dẫn dùng nằm trong README.md đi kèm kit.">Hỗ trợ <span aria-hidden="true">↗</span></button>
-      </header>
-
-      <main class="workspace">
-        <aside class="rail" aria-label="Các bước lồng tiếng">
-          <div class="rail-heading">DỰ ÁN MỚI <span>01 / 06</span></div>
-          <nav id="stepNav" class="step-nav">
-            <button class="step-button is-active" data-step="environment"><span class="step-icon">✓</span><span><b>Kiểm tra máy</b><small>Chuẩn bị lần đầu</small></span><span class="step-arrow">›</span></button>
-            <button class="step-button" data-step="video"><span class="step-icon">01</span><span><b>Chọn video</b><small>File hoặc đường dẫn</small></span><span class="step-arrow">›</span></button>
-            <button class="step-button" data-step="transcript"><span class="step-icon">02</span><span><b>Lời thoại</b><small>Nhận diện bằng Windi Decode</small></span><span class="step-arrow">›</span></button>
-            <button class="step-button" data-step="translation"><span class="step-icon">03</span><span><b>Dịch lời thoại</b><small>Codex hoặc Antigravity</small></span><span class="step-arrow">›</span></button>
-            <button class="step-button" data-step="voice"><span class="step-icon">04</span><span><b>Giọng đọc & phụ đề</b><small>Chọn voice, chỉnh style</small></span><span class="step-arrow">›</span></button>
-            <button class="step-button" data-step="export"><span class="step-icon">05</span><span><b>Xem thử & xuất</b><small>MP4, SRT</small></span><span class="step-arrow">›</span></button>
-          </nav>
-          <div class="rail-bottom"><span class="local-lock">⌂</span><span><b>Chạy trên máy bạn</b><small>Chọn giọng local hoặc API riêng</small></span></div>
-        </aside>
-
-        <section class="main-panel" aria-live="polite">
-          <div class="project-toolbar"><label for="projectSelect">Dự án</label><select id="projectSelect" aria-label="Chọn dự án đã lưu"></select><button id="newProject" class="button secondary">+ Dự án mới</button></div><div class="crumb"><span>WINDI STUDIO</span><span>/</span><span>DỰ ÁN MỚI</span><span>/</span><span id="crumbCurrent">KIỂM TRA MÁY</span></div>
-          <div class="page-head"><div><p class="eyebrow">BẮT ĐẦU TẠI ĐÂY</p><h1 id="pageTitle">Kiểm tra môi trường</h1><p id="pageDescription" class="page-description">Mình kiểm tra các công cụ cần thiết để bạn biết máy đã sẵn sàng lồng tiếng chưa.</p></div><span class="preview-stamp">LOCAL<br/>CHECK</span></div>
-
-          <div id="jobPanel" class="job-panel" hidden><span id="jobMessage"></span><progress id="jobProgress" max="100" value="0"></progress><button id="cancelJob" class="button secondary">Hủy tác vụ</button></div><div id="workflowPanel" hidden></div>
-          <div id="environmentPanel" class="environment-panel">
-            <div class="panel-heading"><div><span class="heading-icon">01</span><div><h2>Máy của bạn</h2><p>Kiểm tra nhanh, không thay đổi cài đặt.</p></div></div><span id="machineSummary" class="machine-chip">Đang kiểm tra…</span></div>
-            <div id="machineFacts" class="machine-facts"><span>Đang đọc thông tin máy…</span></div>
-            <div class="check-list" id="checkList" aria-label="Trạng thái công cụ">
-              <div class="check-row"><span class="tool-icon">Py</span><span><b>Python</b><small>Chạy công cụ xử lý video</small></span><span class="status loading"><i></i>Đang kiểm tra</span></div>
-              <div class="check-row"><span class="tool-icon ff">F</span><span><b>FFmpeg</b><small>Tách âm thanh và ghép video</small></span><span class="status loading"><i></i>Đang kiểm tra</span></div>
-              <div class="check-row"><span class="tool-icon wh">WD</span><span><b>Windi Decode</b><small>Nhận diện lời thoại và thời gian</small></span><span class="status loading"><i></i>Đang kiểm tra</span></div>
-              <div class="check-row"><span class="tool-icon vi">WT</span><span><b>Windi TTS</b><small>Tạo giọng Việt trên máy</small></span><span class="status loading"><i></i>Đang kiểm tra</span></div>
-              <div class="check-row"><span class="tool-icon ai">AI</span><span><b>Codex / Antigravity</b><small>Kiểm tra CLI; đăng nhập xác nhận riêng</small></span><span class="status loading"><i></i>Đang kiểm tra</span></div>
-            </div>
-            <details class="runtime-settings"><summary>Cấu hình máy đề xuất <span>Windows và macOS</span></summary><div class="hardware-note"><p><b>Windows:</b> Windows 11 x64, i5 gen 10/Ryzen 5, RAM 16GB, SSD trống 25GB.</p><p><b>Mac:</b> Apple Silicon M1, macOS 14+, RAM 16GB, SSD trống 25GB.</p><p>Khuyến nghị RAM 24–32GB và SSD trống 50GB. Đây là cấu hình để bắt đầu thử, chưa phải benchmark bảo đảm tốc độ. Máy 8GB chỉ nên thử Local Decode Quick/Base và 720p. Dịch qua subscription cần internet.</p></div></details><details class="runtime-settings">
-              <summary>Đã cài ở project khác? <span>Liên kết môi trường có sẵn</span></summary>
-              <form id="runtimeForm">
-                <p>Dán đường dẫn project, thư mục môi trường hoặc file Python. Hai công cụ có thể dùng chung hoặc dùng hai môi trường riêng.</p>
-                <label for="decodeRuntime">Windi Decode <small>Nhận diện lời thoại</small></label>
-                <input id="decodeRuntime" name="decode" type="text" placeholder="Để trống để dùng Python mặc định" spellcheck="false" autocomplete="off" aria-describedby="runtimeHint runtimeResult" />
-                <label for="ttsRuntime">Windi TTS <small>Tạo giọng Việt</small></label>
-                <input id="ttsRuntime" name="voice" type="text" placeholder="Để trống để dùng Python mặc định" spellcheck="false" autocomplete="off" aria-describedby="runtimeHint runtimeResult" />
-                <p id="runtimeHint">Ví dụ macOS: /Users/ban/project-cu · Windows: C:\\DuAn\\project-cu. App tìm trong .venv, venv hoặc env. Với Conda, chọn trực tiếp thư mục môi trường hoặc file Python.</p>
-                <div class="runtime-actions"><button id="saveRuntime" class="button secondary" type="submit">Kiểm tra & liên kết</button><button id="resetRuntime" class="button secondary" type="button">Dùng mặc định</button></div>
-                <p id="runtimeResult" role="status" aria-live="polite">Chỉ lưu liên kết trên máy; không sao chép hay cài lại thư viện.</p>
-              </form>
-            </details>
-            <div id="environmentNotice" class="environment-notice"><span class="notice-glyph">i</span><span><b>Chỉ đang kiểm tra.</b> Kiểm tra nhanh nhận diện thư viện; model và GPU được xác minh khi chạy engine. Lần đầu chạy có thể tải model.</span></div>
-            <div class="panel-actions"><p id="checkSummary">Chờ kiểm tra xong để xem máy cần chuẩn bị gì.</p><button id="checkAgain" class="button secondary">Kiểm tra lại</button><button id="continueButton" class="button primary">Tiếp tục <span aria-hidden="true">→</span></button></div>
-          </div>
-
-          <div class="privacy-note"><span aria-hidden="true">◉</span><span><b>Riêng tư theo từng bước.</b> File được lưu trên máy. Nếu chọn API voice, bản dịch được gửi sang dịch vụ đó.</span><a href="#details" data-toast="Bước dịch gửi lời thoại cho LLM. Bước voice chỉ gửi bản dịch ra ngoài khi bạn chọn API và bấm tạo tiếng.">Chi tiết</a></div>
-        </section>
-
-        <aside class="preview-panel" aria-label="Xem trước giao diện">
-          <div class="preview-top"><span>KHUNG XEM TRƯỚC</span><span class="preview-menu">•••</span></div>
-          <video id="realPreview" controls playsinline hidden></video><div id="demoPreview" class="video-canvas"><div class="video-window-top"><span>CLIP_01.MP4</span><span>00:01:34</span></div><div class="play-surface"><div class="sun-disc"></div><div class="hill hill-back"></div><div class="hill hill-front"></div><div class="sample-caption">Giọng Việt<br/><em>tự nhiên hơn.</em></div><div class="play-button" aria-hidden="true">▶</div><span class="frame-chip">XEM THỬ STYLE SUB</span></div><div class="video-controls"><span>▶</span><span class="timeline"><i></i><b></b></span><span>00:12 / 01:34</span><span>⛶</span></div></div>
-          <div class="caption-card"><div class="caption-card-head"><span>PHỤ ĐỀ MẪU</span><span class="tone-pill">BETA 0.1</span></div><p>Giọng Việt <strong>tự nhiên hơn.</strong></p><div class="caption-options"><span class="selected"><i class="swatch cream"></i> Chữ viền</span><span><i class="swatch green"></i> Highlight</span><button data-step="voice" aria-label="Đi tới thiết lập style phụ đề">Chỉnh →</button></div></div>
-          <div class="engine-card"><span class="engine-mark">◎</span><div><b>Trạng thái dự án</b><small id="previewStatus">Đang kiểm tra công cụ trên máy…</small></div><span id="engineIndicator" class="engine-indicator pending"></span></div>
-          <div class="preview-foot"><span>LOCAL DUBBING</span><span>WINDI TOOLS · 2026</span></div>
-        </aside>
-      </main>
-      <footer class="statusbar"><span><i></i> Giao diện chỉ chạy trên máy này</span><span>HỖ TRỢ WINDOWS · macOS</span><span>BETA 0.1 · LOCAL</span></footer>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#25272b" />
+  <title>Thiết lập giọng · Windi Dubbing</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/" aria-label="Windi Dubbing"><span class="brand-mark">W</span><span>WINDI <em>DUBBING</em></span></a>
+    <span class="local-label"><i></i> Thiết lập trên máy bạn</span>
+    <button id="machineButton" class="button quiet" type="button">Kết nối máy</button>
+  </header>
+  <main class="shell">
+    <section class="intro">
+      <p class="eyebrow">GIỌNG CỦA BẠN. CÁCH KỂ CỦA BẠN.</p>
+      <h1>Chọn giọng. Lưu là xong.</h1>
+      <p>Chọn giọng và cách diễn đạt tại đây. Nhận diện, dịch và xử lý video tiếp trong chat Gemini của bạn.</p>
+    </section>
+    <div class="project-toolbar"><label for="projectSelect">Thiết lập cho</label><select id="projectSelect"></select><button id="newProject" class="button quiet" type="button">+ Dự án mới</button></div>
+    <div class="workspace">
+      <section class="settings-panel" aria-label="Thiết lập lồng tiếng">
+        <nav class="tabs" aria-label="Nhóm thiết lập">
+          <button type="button" data-tab="voice" aria-current="page">Giọng đọc</button>
+          <button type="button" data-tab="translation">Cách dịch & ngữ điệu</button>
+          <button type="button" data-tab="appearance">Giao diện & phụ đề</button>
+        </nav>
+        <div id="settingsContent" class="settings-content"><p>Đang tải thiết lập…</p></div>
+        <div id="jobPanel" class="job-panel" role="status" hidden><span id="jobMessage"></span><progress id="jobProgress" max="100"></progress><button id="cancelJob" class="button quiet" type="button">Hủy</button></div>
+        <div class="savebar"><div><strong id="saveState" role="status">Đang tải…</strong><small>Áp dụng cho dự án này và dùng mặc định cho dự án mới.</small></div><button id="saveAll" class="button primary" type="button" disabled>Lưu thiết lập <span aria-hidden="true">↗</span></button></div>
+      </section>
+      <aside class="summary-panel" aria-label="Bản xem trước thiết lập">
+        <p class="eyebrow">BẢN THIẾT LẬP CỦA BẠN</p>
+        <div class="sound-art" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+        <h2 id="summaryVoice">Giọng đọc của bạn</h2>
+        <p id="summaryStyle" class="muted"></p>
+        <div class="subtitle-preview" id="subtitlePreview"><span id="captionPreview">Một câu chuyện hay,<br>qua giọng kể của bạn.</span></div>
+        <p class="preview-label">Mẫu kiểu phụ đề · chưa phải video xuất</p>
+        <div class="chat-note"><span class="note-icon" aria-hidden="true">↗</span><div><h3>Phần còn lại, tiếp trong chat.</h3><p>Gửi video cho Gemini hoặc agent đang dùng skill Windi Dubbing. Chat đọc thiết lập đã lưu để nhận diện, dịch và chuẩn bị lời đọc.</p><button id="copyChat" class="text-button" type="button">Sao chép lời nhắn cho chat →</button><p id="copyResult" role="status"></p></div></div>
+        <p class="privacy">Giọng local xử lý trên máy. Nghe thử bằng API gửi câu mẫu đến nhà cung cấp và có thể dùng credit.</p>
+      </aside>
     </div>
-    <div id="toast" class="toast" role="status" aria-live="polite"></div>
-    <script src="/app.js" defer></script>
-  </body>
+  </main>
+  <dialog id="machineDialog" aria-labelledby="machineTitle">
+    <div class="dialog-head"><h2 id="machineTitle">Kết nối giọng local</h2><button id="closeMachine" class="button quiet" type="button" aria-label="Đóng kết nối máy">✕</button></div>
+    <p class="muted">Liên kết môi trường đã cài. Không sao chép model hay cài lại thư viện.</p>
+    <label for="ttsRuntime">Môi trường Windi TTS</label><input id="ttsRuntime" placeholder="Đường dẫn project, môi trường hoặc file Python" autocomplete="off" spellcheck="false">
+    <details><summary>Nhận diện local dự phòng cho chat</summary><label for="decodeRuntime">Môi trường Windi Decode</label><input id="decodeRuntime" placeholder="Để trống để dùng Python mặc định" autocomplete="off" spellcheck="false"><p class="muted">Chỉ dùng khi chat yêu cầu chạy nhận diện trên máy.</p></details>
+    <div id="machineFacts" class="machine-facts"></div><p id="hardwareRecommendation" class="hint"></p><button id="applyHardware" class="button secondary" type="button" disabled>Áp dụng model đề xuất</button><p id="runtimeResult" role="status"></p>
+    <button id="saveRuntime" class="button primary" type="button">Kiểm tra & liên kết</button>
+  </dialog>
+  <div id="toast" class="toast" role="status"></div>
+  <script src="/app.js" defer></script>
+</body>
 </html>

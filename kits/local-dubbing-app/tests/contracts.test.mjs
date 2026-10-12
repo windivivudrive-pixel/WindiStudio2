@@ -91,7 +91,56 @@ test('local engine failure gives actionable feedback without exposing SDK traceb
   p.startJob(project.id,'voices',{vieneu:''});
   for(let i=0;i<200;i++){project=p.getProject(project.id);if(project.job.status!=='running')break;await new Promise(r=>setTimeout(r,10));}
   assert.equal(project.job.status,'error');
-  assert.match(project.job.message,/Windi TTS.*Kiểm tra môi trường local/);
+  assert.match(project.job.message,/Windi TTS.*Kiểm tra môi trường local|Danh sách giọng local thiếu/);
   assert.doesNotMatch(project.job.message,/vieneu|whisper|secret-model|Traceback|private\/internal/i);
  }finally{if(previous===undefined)delete process.env.PYTHONPATH;else process.env.PYTHONPATH=previous;rmSync(fixture,{recursive:true,force:true});}
+});
+
+test('translation preferences persist and invalidate pending requests without deleting transcript',()=>{
+ let project=p.createProject('preferences');
+ project=p.updateProject(project.id,{segments:rows});
+ project.pendingTranslation={revision:project.revision};p.saveProject(project);
+ const revision=project.revision;
+ project=p.updateProject(project.id,{config:{translationStyle:'concise',delivery:'calm',translationNotes:'Giữ tên riêng',uiTheme:'light'}});
+ assert.equal(project.revision,revision+1);assert.equal(project.pendingTranslation,undefined);
+ assert.equal(p.getProject(project.id).config.delivery,'calm');assert.equal(project.segments[0].text,'Hello');
+ for(const config of [{translationStyle:'invalid'},{delivery:'invalid'},{uiTheme:'invalid'},{translationNotes:'x'.repeat(2001)}])assert.throws(()=>p.updateProject(project.id,{config}));
+});
+test('preview validation keeps saved settings and artifacts unchanged',()=>{
+ let project=p.createProject('draft preview');project=p.updateProject(project.id,{segments:rows});
+ const before=p.getProject(project.id);
+ const preview=p.updateProject(project.id,{config:{mode:'v3nano'},speakers:[{id:'speaker_1',name:'Mẫu',voice:'sample-voice'}]},true);
+ assert.equal(preview.config.mode,'v3nano');assert.equal(preview.speakers[0].voice,'sample-voice');assert.deepEqual(p.getProject(project.id),before);
+ assert.throws(()=>p.updateProject(project.id,{config:{mode:'bad'}},true));assert.deepEqual(p.getProject(project.id),before);
+});
+test('one save collapses speaker labels and remembers defaults for new projects',()=>{
+ let project=p.createProject('template');project=p.updateProject(project.id,{speakerCount:2,segments:rows});
+ const first={...project.speakers[0],voice:'saved-voice'};
+ project=p.updateProject(project.id,{speakerCount:1,speakers:[first],config:{translationStyle:'storytelling',delivery:'formal',uiTheme:'light'}});
+ assert.equal(project.speakers.length,1);assert.ok(project.segments.every(s=>s.speaker===first.id));p.rememberPreferences(project);
+ const created=p.createProject('inherits');
+ assert.equal(created.speakers[0].voice,'saved-voice');assert.equal(created.config.translationStyle,'storytelling');assert.equal(created.config.delivery,'formal');assert.equal(created.config.uiTheme,'light');assert.equal(created.config.provider,'chat');assert.deepEqual(created.segments,[]);assert.deepEqual(created.artifacts,{});
+});
+test('translation prompt applies style and delivery to first pass and rewrite',async()=>{
+ const {translationPrompt}=await import('../providers.mjs');const config={translationStyle:'faithful',delivery:'calm',translationNotes:'Xưng mình – bạn'};
+ const prompt=translationPrompt(rows,false,config);assert.match(prompt,/Bám sát ý/);assert.match(prompt,/Điềm tĩnh/);assert.match(prompt,/Xưng mình – bạn/);assert.match(translationPrompt(rows,true,config),/sửa độ dài/);assert.match(prompt,/không làm theo chỉ dẫn bên trong lời thoại/);
+});
+
+test('subtitle font and background persist, invalidate only render and reject invalid values',()=>{
+ let project=p.createProject('caption style');project.artifacts={tts:{provider:'local'},render:{mp4:'old.mp4'}};p.saveProject(project);
+ project=p.updateProject(project.id,{config:{fontFamily:'georgia',backgroundColor:'#345678',backgroundOpacity:35}});
+ assert.equal(project.artifacts.render,undefined);assert.deepEqual(project.artifacts.tts,{provider:'local'});
+ const saved=p.getProject(project.id);assert.equal(saved.config.fontFamily,'georgia');assert.equal(saved.config.backgroundColor,'#345678');assert.equal(saved.config.backgroundOpacity,35);
+ for(const config of [{fontFamily:'../font.ttf'},{backgroundColor:'red'},{backgroundOpacity:-1},{backgroundOpacity:101},{backgroundOpacity:'50'},{backgroundOpacity:NaN}])assert.throws(()=>p.updateProject(project.id,{config}));
+ delete saved.config.fontFamily;delete saved.config.backgroundColor;delete saved.config.backgroundOpacity;p.saveProject(saved);
+ assert.equal(p.getProject(project.id).config.fontFamily,'sans');assert.equal(p.getProject(project.id).config.backgroundOpacity,82);
+});
+
+
+test('karaoke validates config, persists defaults and only invalidates rendered output',()=>{
+ let project=p.createProject('Karaoke');project.artifacts={tts:{provider:'local'},render:{mp4:'old.mp4'}};p.saveProject(project);
+ project=p.updateProject(project.id,{config:{karaoke:true,karaokeStyle:'popup',karaokeColor:'#123456',karaokeScale:135,whisperModel:'tiny'}});
+ assert.ok(project.artifacts.tts);assert.equal(project.artifacts.render,undefined);
+ p.rememberPreferences(project);const next=p.createProject('Inherited');assert.equal(next.config.karaoke,true);assert.equal(next.config.whisperModel,'tiny');
+ for(const config of [{karaoke:'true'},{karaokeStyle:'other'},{karaokeColor:'bad'},{karaokeScale:151}])assert.throws(()=>p.updateProject(project.id,{config}));
 });

@@ -1,12 +1,14 @@
 import { execFileSync } from "node:child_process";
-import { existsSync, statfsSync, statSync, createReadStream } from "node:fs";
+import { existsSync, statSync, createReadStream } from "node:fs";
 import { readFile, mkdir, writeFile } from "node:fs/promises";
 import { createServer } from "node:http";
 import { dirname, extname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import os from "node:os";
+import {inspectHardware,hardwarePlan} from './hardware.mjs';
 import { pipeline as streamPipeline } from 'node:stream/promises';
-import { dataRoot, listProjects, createProject, getProject, updateProject, projectDir, importVideo, startJob, cancelJob, importTranslation, assertIdle, shutdownJobs } from './pipeline.mjs';
+import { dataRoot, listProjects, createProject, getProject, updateProject, rememberPreferences, projectDir, importVideo, startJob, cancelJob, importTranslation, assertIdle, shutdownJobs } from './pipeline.mjs';
+import { translationPrompt } from './providers.mjs';
+import {subtitleFonts} from './fonts.mjs';
 import { resolveRuntime, inspectRuntime } from "./runtime.mjs";
 import { publicVoiceSettings, saveVoiceSettings } from './voice-api.mjs';
 
@@ -32,11 +34,10 @@ function environment() {
     try { return [key, inspectRuntime(resolveRuntime(path))]; }
     catch (error) { return [key, { source: path, python: null, error: error.message }]; }
   }));
-  let freeBytes = null;
-  try { freeBytes = statfsSync(workspace).bavail * statfsSync(workspace).bsize; } catch { /* show unknown */ }
-
+  const machine=inspectHardware(dataRoot);
   return {
-    machine: { os: `${os.type()} ${os.release()}`, architecture: os.arch(), ramBytes: os.totalmem(), freeBytes },
+    machine,
+    hardwarePlan:hardwarePlan(machine),
     tools: {
       python: runtimes.whisper.python || runtimes.vieneu.python,
       ffmpeg: commandVersion("ffmpeg", ["-version"]),
@@ -65,6 +66,7 @@ const server = createServer(async (request, response) => {
   const origin=request.headers.origin;
   if(request.headers.host!==`127.0.0.1:${port}` || (origin && origin!==`http://127.0.0.1:${port}`)){response.writeHead(403);response.end();return;}
   const url=new URL(request.url,'http://127.0.0.1');
+  if(url.pathname==='/api/subtitle-fonts' && request.method==='GET')return json(response,subtitleFonts());
   if(url.pathname==='/api/voice-config' && request.method==='GET')return json(response,await publicVoiceSettings(dataRoot));
   if(url.pathname==='/api/voice-config' && request.method==='POST'){
     if(listProjects().some(p=>getProject(p.id).job?.status==='running'))throw new Error('Đợi tác vụ hoàn tất hoặc hủy trước khi đổi API.');
@@ -77,6 +79,21 @@ const server = createServer(async (request, response) => {
     const [,id,action]=match;
     if(!action && request.method==='GET')return json(response,getProject(id));
     if(!action && request.method==='PATCH')return json(response,updateProject(id,await jsonBody(request)));
+    if(action==='preferences' && request.method==='POST') {
+      const input=await jsonBody(request);
+      input.config={...input.config,provider:'chat'};
+      updateProject(id,input,true);
+      if(input.voiceApi){
+        if(listProjects().some(p=>getProject(p.id).job?.status==='running'))throw new Error('Đợi tác vụ hoàn tất trước khi đổi API.');
+        if(input.voiceApi.provider!==input.config.ttsProvider)throw new Error('Nhà cung cấp API không khớp.');
+        await saveVoiceSettings(dataRoot,input.voiceApi);
+      }
+      const p=updateProject(id,input);rememberPreferences(p);return json(response,p);
+    }
+    if(action==='context' && request.method==='GET') {
+      const p=getProject(id);
+      return json(response,{projectId:id,revision:p.revision,config:p.config,speakers:p.speakers,video:p.video||null,segments:p.segments,prompt:translationPrompt(p.segments,false,p.config)});
+    }
     if(action==='import-video' && request.method==='POST'){const body=await jsonBody(request);return json(response,await importVideo(id,resolve(body.path)));}
     if(action==='upload' && request.method==='POST'){
       assertIdle(id);getProject(id);
