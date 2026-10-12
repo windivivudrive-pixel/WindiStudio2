@@ -116,3 +116,7 @@
   .pipeline li { padding: 12px 10px; font-size: 11px; }
   .setup { margin: 18px 18px 24px; }
 }
+
+.offer .buy:disabled { cursor: not-allowed; opacity: .65; transform: none; box-shadow: none; }
+.offer :global(.kit-payment-promise) { margin-top: 16px; text-align: center; }
+.offer :global(.kit-checkout header button) { min-width: 48px; min-height: 48px; }
