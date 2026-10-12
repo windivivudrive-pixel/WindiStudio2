@@ -1,0 +1,118 @@
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px 28px;
+  margin-bottom: 24px;
+}
+
+.section {
+  margin: 0 0 64px;
+  scroll-margin-top: 96px;
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.titlebar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 24px;
+  border-bottom: 2px solid var(--border);
+  background: var(--blue);
+  color: #1d2924;
+  font: 800 11px/1.5 var(--font-geist-mono);
+}
+
+.titlebar svg { flex: none; }
+
+.body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, .56fr);
+  gap: 40px;
+  padding: 38px;
+}
+
+.copy h2 {
+  margin: 18px 0;
+  font-size: clamp(28px, 3.5vw, 43px);
+  line-height: 1.15;
+  letter-spacing: -.055em;
+  text-wrap: balance;
+}
+
+.intro, .benefits p, .offerCopy, .setup {
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.intro { margin: 0; max-width: 590px; }
+
+.benefits { list-style: none; padding: 0; margin: 26px 0 0; }
+.benefits li { display: flex; gap: 14px; padding: 15px 0; }
+.benefits li + li { border-top: 1px dashed color-mix(in srgb, var(--ink) 25%, transparent); }
+.benefits svg { flex: none; margin-top: 3px; color: var(--ink); }
+.benefits h3 { font-size: 15px; line-height: 1.5; margin: 0 0 4px; }
+.benefits p { margin: 0; }
+
+.offer {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 28px;
+  border-left: 2px solid var(--border);
+  background: color-mix(in srgb, var(--blue) 12%, var(--surface));
+}
+
+.offerLabel { font: 800 11px/1.5 var(--font-geist-mono); }
+.price { display: flex; flex-direction: column; margin: 20px 0 12px; }
+.only { font-size: 13px; color: var(--muted); }
+.price strong { font-size: clamp(38px, 4.7vw, 58px); line-height: 1.2; letter-spacing: -.07em; white-space: nowrap; }
+.price strong span { font-size: .6em; margin-left: 3px; }
+.offerCopy { margin: 0; }
+.localNote { display: grid; gap: 8px; margin: 24px 0; }
+.localNote strong { font-size: 14px; }
+.localNote span { font-size: 12px; line-height: 1.7; color: var(--muted); }
+.offer .buy { width: 100%; font-size: 14px; text-align: center; }
+.contactNote { margin-top: 14px; font-size: 11px; line-height: 1.6; color: var(--muted); }
+
+.pipeline {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  list-style: none;
+  padding: 0;
+  margin: 0 38px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--surface-2);
+}
+
+.pipeline li { display: flex; gap: 9px; align-items: center; padding: 16px 14px; font-size: 12px; line-height: 1.5; }
+.pipeline li + li { border-left: 1.5px solid var(--border); }
+.pipeline span { font-size: 10px; font-weight: 800; color: var(--muted); }
+.setup { margin: 20px 38px 30px; font-size: 12px; }
+.setup strong { color: var(--ink); }
+
+@media (max-width: 900px) {
+  .body { grid-template-columns: minmax(0, 1fr); gap: 24px; padding: 28px; }
+  .offer { border-left: 0; border-top: 2px solid var(--border); }
+  .pipeline { margin: 0 28px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .pipeline li:nth-child(3) { border-left: 0; }
+  .pipeline li:nth-child(n+3) { border-top: 1.5px solid var(--border); }
+  .setup { margin: 20px 28px 28px; }
+}
+
+@media (max-width: 560px) {
+  .titlebar { padding: 12px 18px; font-size: 10px; }
+  .body { padding: 24px 18px; }
+  .copy h2 { font-size: clamp(25px, 6.6vw, 36px); }
+  .offer { padding: 24px 18px; }
+  .pipeline { margin: 0 18px; }
+  .pipeline li { padding: 12px 10px; font-size: 11px; }
+  .setup { margin: 18px 18px 24px; }
+}

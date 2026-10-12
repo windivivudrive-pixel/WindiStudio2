@@ -9,6 +9,7 @@ lerna-debug.log*
 
 # Dependencies
 node_modules/
+.local/
 .pnp
 .pnp.js
 
@@ -41,6 +42,8 @@ windi/manifests/
 windi/prompts/
 windi/scripts/
 visual-checks/
+graphify-out/
+windi/editor-exports/
 
 # Environment files & Secrets
 .env

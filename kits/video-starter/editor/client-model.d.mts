@@ -1,0 +1,10 @@
+import type {EditorDocument, CaptionGroup, LayoutValues, WindowTransform, TimelineItemKey, WindowMedia} from './types';
+export function moveBoundary(doc: EditorDocument, index: number, frame: number): EditorDocument;
+export function editCaption(caption: CaptionGroup, text: string): CaptionGroup;
+export function resolveLayout(doc: EditorDocument, index: number, id: string): LayoutValues;
+export function patchLayout(doc: EditorDocument, index: number, id: string, values: LayoutValues | null, scope?: 'scene' | 'all'): EditorDocument;
+export function resolveWindowTransform(doc: EditorDocument, index: number): {x: number; y: number; scale: number};
+export function patchWindowTransform(doc: EditorDocument, index: number, values: WindowTransform | null, scope?: 'scene' | 'all'): EditorDocument;
+export function shiftTimelineItems(doc: EditorDocument, keys: TimelineItemKey[], deltaFrames: number): EditorDocument;
+export function addMediaClip(doc: EditorDocument, media: WindowMedia, at: number, duration: number, id: string): EditorDocument;
+export function trimMediaClip(doc: EditorDocument, id: string, edge: 'start' | 'end', target: number, sourceFrames?: number): EditorDocument;

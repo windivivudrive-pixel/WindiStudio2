@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "title": "One useful idea",
+  "brand": "FIELD NOTES",
+  "format": "portrait",
+  "accent": "#a6efcb",
+  "background": "#142b27",
+  "audio": null,
+  "scenes": [
+    {
+      "id": "scene-01",
+      "duration": 4,
+      "eyebrow": "The question",
+      "headline": "Why does this small step matter?",
+      "caption": "Start with a specific question your audience asks.",
+      "visualPrompt": "Generate a portrait 9:16 image. Original editorial illustration of a person comparing two everyday workflows; no text embedded in the image. Keep important content away from the bottom 20 percent.",
+      "media": null,
+      "mediaKind": "image"
+    },
+    {
+      "id": "scene-02",
+      "duration": 4,
+      "eyebrow": "The context",
+      "headline": "Here is what changes.",
+      "caption": "Explain one cause using a source you can verify.",
+      "visualPrompt": "Generate a portrait 9:16 image. Simple original diagram illustrating an input and its outcome, with room for code-rendered labels. Keep important content away from the bottom 20 percent.",
+      "media": null,
+      "mediaKind": "image"
+    },
+    {
+      "id": "scene-03",
+      "duration": 4,
+      "eyebrow": "An example",
+      "headline": "Make it visible.",
+      "caption": "Use one concrete example, with a source when needed.",
+      "visualPrompt": "Generate a portrait 9:16 image. Original close-up illustration of the example; consistent palette and 9:16 portrait framing. Keep important content away from the bottom 20 percent.",
+      "media": null,
+      "mediaKind": "image"
+    },
+    {
+      "id": "scene-04",
+      "duration": 4,
+      "eyebrow": "The takeaway",
+      "headline": "Try one small change.",
+      "caption": "Offer a practical action, without guaranteed outcomes.",
+      "visualPrompt": "Generate a portrait 9:16 image. Single clear action with minimal props and space for the title. Keep important content away from the bottom 20 percent.",
+      "media": null,
+      "mediaKind": "image"
+    }
+  ]
+}

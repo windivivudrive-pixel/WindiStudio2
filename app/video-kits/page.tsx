@@ -3,6 +3,8 @@ import Link from "next/link";
 import { WorkflowHero } from "@/windi/workflow-hero";
 import { VideoKitCommerce } from "@/windi/video-kit-commerce";
 import { AmbientMotion } from "@/windi/ambient-motion";
+import { LocalDubbingSection } from "@/windi/local-dubbing-section";
+import dubbingStyles from "@/windi/local-dubbing-section.module.css";
 
 export const metadata: Metadata = {
   title: "Windi Video Workflow",
@@ -19,7 +21,10 @@ export default function Page() {
         <span>Video Workflow</span>
       </nav>
       <WorkflowHero detail />
-      <Link className="text-link" href="/video-kits/huong-dan">Xem hướng dẫn làm video đầu tiên →</Link>
+      <nav className={dubbingStyles.links} aria-label="Khám phá Video Kits">
+        <Link className="text-link" href="/video-kits/huong-dan">Xem hướng dẫn làm video đầu tiên →</Link>
+        <Link className="text-link" href="#local-dubbing">Skill dub video local · 169k →</Link>
+      </nav>
       <AmbientMotion />
       <section className="kit-truth-strip">
         <span>1080 × 1920</span>
@@ -106,6 +111,7 @@ export default function Page() {
           quota cho một layout hoặc kịch bản chưa chốt.
         </p>
       </section>
+      <LocalDubbingSection />
       <Link className="text-link" href="/discover">
         ← Trở lại danh mục công cụ
       </Link>

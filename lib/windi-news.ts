@@ -25,6 +25,30 @@ export type WindiNewsItem = {
  */
 export const latestNews: WindiNewsItem[] = [
   {
+    slug: 'huong-dan-loc-tin-tu-dong-0-dong-laya-ai',
+    category: 'AI AGENTS',
+    sourceName: 'Laya Open Source / WindiStudio',
+    sourceUrl: 'https://github.com/NandhaKishorM/laya',
+    originalTitle: 'Laya: Fast Local Decision Model for Autonomous Agents (421M Parameters)',
+    title: 'Bí quyết xây dựng "Tòa soạn tin tự động 24/7" giá 0 đồng: Hướng dẫn người không rành công nghệ lọc 10.000 tin tức mỗi ngày',
+    summary: 'Không cần biết lập trình hay sở hữu máy tính tiền triệu, bạn vẫn có thể biến chiếc laptop cá nhân thành một trợ lý đọc báo và chọn lọc tin tức nóng hổi tự động, tiết kiệm hàng triệu đồng tiền phí AI mỗi tháng nhờ mô hình 2 tầng thông minh.',
+    imageUrl: 'https://zpjphixcttehkkgxlmsn.supabase.co/storage/v1/object/public/windi-bucket/news/laya-banner.png',
+    imageAlt: 'Mô hình 2 tầng lọc tin tự động 0 đồng bằng Laya AI và Claude',
+    takeaways: [
+      'Mã nguồn mở miễn phí 100%: Tải trực tiếp mã nguồn tại GitHub (github.com/NandhaKishorM/laya) hoặc tải file ZIP về máy để dùng ngay mà không cần cài Git.',
+      'Không cần máy tính khủng hay card đồ họa rời: Chiếc máy tính làm việc bình thường của bạn đã đủ sức tự động đọc và lọc hàng ngàn bài viết mỗi ngày hoàn toàn miễn phí.',
+      'Chấm dứt nỗi lo "cháy ví" tiền AI: Thay vì gửi tất cả bài viết lên ChatGPT hay Claude gây tốn kém hàng triệu đồng mỗi tháng, hãy để mô hình tí hon trên máy gạn sạch 99% tin rác trước.',
+      'Mô hình 2 người làm việc thông minh: Một "cô thư ký" miễn phí trên máy tính lo việc đọc lướt nhặt rác; một "tổng biên tập" ChatGPT cao cấp chỉ nhận đúng 10 bài hay nhất để viết bản tin tóm tắt.',
+      'Tiết kiệm 2 đến 3 tiếng lướt mạng mỗi sáng: Bạn không còn phải ngụp lặn giữa biển thông tin; mở mắt ra là đã có sẵn bản tin tóm tắt cô đọng những gì đắt giá nhất trong lĩnh vực của mình.'
+    ],
+    nontechGuide: 'Hãy tưởng tượng bạn đang điều hành một văn phòng: Thay vì thuê một chuyên gia tư vấn lương 100 triệu chỉ để ngồi bóc thư rác và quảng cáo, bạn giao việc phân loại thư thô cho một trợ lý gác cổng làm việc tại chỗ không tốn phí. Sau khi đã vứt bỏ 9.990 lá thư quảng cáo vô bổ, bạn mới đưa đúng 10 lá thư quan trọng nhất cho chuyên gia đọc và tóm tắt. Đó chính là cách vận hành của mô hình 2 tầng: cực kỳ thông minh, chính xác mà chi phí gần như bằng 0.',
+    actionableTip: 'Dành cho người không biết lập trình: Bạn có thể bấm tải trực tiếp mã nguồn tại https://github.com/NandhaKishorM/laya hoặc tải file ZIP về máy. Kết hợp mô hình nhỏ chạy trên máy qua LM Studio/Ollama với các công cụ kéo-thả như Make/n8n để tự động gom bài từ RSS và gửi báo cáo về Telegram mỗi sáng!',
+    ticker: 'WindiStudio: Hướng dẫn người không rành kỹ thuật lọc 10.000 tin tức tự động giá 0 đồng',
+    publishedAt: '2026-10-08T12:00:00Z',
+    shortDate: '08.10',
+    readingTimeMinutes: 4,
+  },
+  {
     slug: 'google-ra-mat-google-pics-canh-tranh-canva',
     category: 'THIẾT KẾ AI',
     sourceName: 'Google Workspace',
