@@ -9,12 +9,12 @@ Tạo series **WindiStudio — Repo đáng thử** cho người Việt muốn á
 
 ## Luồng và quyền duyệt
 
-`DISCOVERY → AWAITING_IDEA_APPROVAL → APPROVED → SCRIPTED → PRODUCING → QA → DELIVERED`
+`DISCOVERY → AWAITING_IDEA_APPROVAL → APPROVED → SCRIPTED → PRODUCING → EDITOR_READY → EXPORTING → QA → DELIVERED`
 
 - Đầu vào là yêu cầu tìm repo hoặc URL repo do người dùng gửi. URL chỉ là ứng viên, chưa tự động là idea được duyệt. Phân biệt repo công cụ sản xuất (như claude-video) với repo làm chủ đề tập.
 - Trước khi có duyệt: được nghiên cứu nguồn, phân tích video tham khảo, soạn thẻ idea, hook ngắn và kế hoạch demo. **Chờ người dùng duyệt idea/repo + góc kể trước khi viết kịch bản tập đầy đủ, tạo voice, tạo asset tập hoặc render tập.** Đây là bước duyệt do người dùng yêu cầu.
 - Một câu rõ nghĩa như “duyệt idea 2”, “chọn Archify theo góc này, làm đi” đủ để chạy tiếp. Nếu phiên trước đã duyệt, đọc trạng thái và tiếp tục, không hỏi lại.
-- Sau duyệt: tự hoàn thành kịch bản → voice → hình/demo → dựng → kiểm tra → MP4. Không thêm vòng duyệt script, voice hoặc storyboard trừ khi người dùng yêu cầu. “Video hoàn chỉnh” là quyền render, không phải quyền đăng mạng xã hội, gửi tin, hay cập nhật website.
+- Sau duyệt: tự hoàn thành kịch bản → voice → hình/demo → composition và kiểm tra preview → mở Windi Timeline, lưu `EDITOR_READY` rồi chờ người dùng chỉnh/xem. Chỉ nút “Xuất video” do người dùng bấm mới bắt đầu render MP4. Đây là bước xuất người dùng yêu cầu; không thêm vòng duyệt script, voice hoặc storyboard. Render thành công vẫn cần QA; đăng mạng xã hội, gửi tin và cập nhật website cần quyền riêng.
 - Nếu thay repo hoặc thay lời hứa cốt lõi sau duyệt, trình idea mới. Sửa câu chữ, timing, lỗi demo thông thường trong cùng ý đã duyệt thì tự xử lý.
 
 ## 1. Idea trước, sản xuất sau
@@ -81,6 +81,10 @@ Kịch bản chỉ được gọi là hoàn chỉnh khi có cả `script.md` và
 
 ## 4. Dựng và kiểm tra
 
+### Timeline trước render
+
+Đọc [timeline-editor.md](references/timeline-editor.md) khi dựng hoặc sửa tập. Dùng editor cục bộ của workspace để xem/chỉnh cảnh, chữ, caption, media, timing và âm lượng mà không render MP4. Chuẩn bị composition nhận dữ liệu editor, mở editor sau khi asset/voice/timing sẵn sàng và dừng tại `EDITOR_READY`. Không tự render từ “tiếp tục” hoặc từ quyền duyệt idea. Nút “Xuất video” chụp bản draft rồi render đúng bản đó; chỉ ghi `DELIVERED` sau QA MP4 thật. Phase này chưa tích hợp vào gói `$windi-video-workflow` bán trên web.
+
 ### Visual mặc định: WS20 V1 — retro + 3D vừa đủ
 
 Người dùng đã chọn **WS20 V1** sau khi so sánh V2 và V3: “v1 vẫn ổn nhất animation vừa đủ 3D đúng vibe”. Dùng V1 làm mốc thẩm mỹ cho các tập sau: giữ cửa sổ retro, Calling Code và grid vuông chuyển động nhẹ; 3D có chọn lọc, animation theo lời đọc và trạng thái công việc. Điều chỉnh visual theo nội dung từng tập, không chép nguyên mô hình/vòng cung của WS20 hoặc mặc định nâng lên phong cách V2/V3. Trước khi thiết kế scene, đọc [visual-ws20-v1.md](references/visual-ws20-v1.md) để nhận diện đúng bản đã chọn và cách áp dụng.
@@ -107,7 +111,7 @@ Quy tắc này chỉ áp dụng cho series **WindiStudio — Repo đáng thử**
 
 - `$windistudio-repo-video tìm 5 repo hot cho người làm nội dung` → nghiên cứu và chờ duyệt idea.
 - `$windistudio-repo-video https://github.com/owner/repo` → kiểm tra repo và trình góc kể để duyệt.
-- `Duyệt idea 1, làm video hoàn chỉnh` → chạy hết từ kịch bản đến MP4.
+- `Duyệt idea 1, làm video hoàn chỉnh` → chuẩn bị bản dựng, mở timeline; người dùng bấm “Xuất video” để tạo MP4.
 - `Sửa hook tập đang làm mạnh hơn` → sửa trong idea đã duyệt, cập nhật voice/timing/render có liên quan.
 
 ## Dung lượng sau bàn giao

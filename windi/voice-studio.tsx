@@ -1546,7 +1546,7 @@ export function VoiceStudio() {
                 <div className="voice-clone-unlock">
                   <div>
                     <strong>{demoRemaining ? "Clone nghe thử miễn phí" : "Bạn đã dùng 2 lượt clone miễn phí"}</strong>
-                    <p>Chỉ nghe hai câu mẫu cố định. Giọng được xóa trong vòng 20 phút, hoặc ngay khi bạn clone giọng khác. Dùng thử đầy đủ chỉ 39.000đ.</p>
+                    <p>Nghe thử giọng của bạn qua 2 đoạn demo ngắn. Muốn tạo thêm nội dung với giọng này? Dùng thử đầy đủ chỉ 39.000đ.</p>
                   </div>
                   <button className="voice-btn voice-primary" disabled={!!busy || !payments || !available} onClick={() => void purchase("trial")}>
                     Dùng thử · 39.000đ <ArrowRight size={15} />

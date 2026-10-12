@@ -1,0 +1,22 @@
+Windi Flow Video Lite — Buyer License v1
+Copyright 2026 WindiStudio. All rights reserved in Windi-authored files.
+
+With a valid purchase, one buyer (individual or legal entity) may use and modify
+the Windi-authored kit files for their own projects and client work, and distribute
+finished rendered media commercially. Collaborators may access the files only
+while working for that buyer and may not reuse them independently.
+
+This license does not permit selling, sharing, sublicensing or redistributing the
+kit source, adapted templates, skill instructions or installation package as a
+competing or standalone downloadable product. It does not transfer ownership.
+
+These restrictions apply only to Windi-authored material. Third-party components
+retain their own licenses and rights. No rights in Remotion, React, customer
+media, voices, music, AI subscriptions, provider accounts or trademarks are
+granted by this purchase. Any required third-party license must be obtained
+separately. No exclusive rights in AI-generated output are promised.
+
+The kit is provided as-is, to the extent permitted by applicable law. There is no
+guarantee of views, sales, monetization, provider availability or compatibility
+with every environment. Support, refund and update terms are those disclosed
+on the product page at purchase. Mandatory consumer rights remain unaffected.

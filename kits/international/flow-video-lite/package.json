@@ -1,0 +1,26 @@
+{
+  "name": "@windistudio/flow-video-lite",
+  "version": "0.1.0-beta.1",
+  "private": true,
+  "type": "module",
+  "license": "SEE LICENSE IN LICENSE.txt",
+  "description": "English-first, agent-assisted short-video starter. Bring your own media and audio.",
+  "engines": {"node": ">=20"},
+  "scripts": {
+    "doctor": "node scripts/kit.mjs doctor",
+    "check": "node scripts/kit.mjs check",
+    "preview": "node scripts/kit.mjs preview",
+    "render": "node scripts/kit.mjs render",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test scripts/kit.test.mjs",
+    "package": "python3 scripts/package.py"
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.520",
+    "@remotion/media": "4.0.520",
+    "remotion": "4.0.520",
+    "react": "19.2.3",
+    "react-dom": "19.2.3"
+  },
+  "devDependencies": {"@types/react": "19.2.7", "typescript": "5.9.3"}
+}

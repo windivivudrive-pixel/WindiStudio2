@@ -71,10 +71,12 @@ Chuyển cảnh 6–10 frame, reveal khoảng 5–8 frame, stagger nhẹ nếu n
 
 ## QA và export
 
+Luồng repo-video hiện dừng ở editor trước render: đọc [timeline-editor.md](timeline-editor.md), xem/chỉnh trực tiếp bằng Remotion Player và chỉ render MP4 khi người dùng bấm “Xuất video”. Không tạo preview MP4 tự động. Các yêu cầu xem/nghe và kiểm tra MP4 dưới đây thực hiện sau thao tác xuất.
+
 1. Đọc script đối chiếu claim sources + kiểm CTA thật. Nguồn mâu thuẫn thì nói rõ điều kiện hoặc bỏ claim.
 2. Render still đầu, hook, proof, demo, cảnh nhiều chữ, CTA. Xem ở 1080 và 360px rộng: dấu, overflow, độ đọc, caption và watermark không đè nhau.
-3. Render preview, xem/nghe đầy đủ. Đối chiếu từng spoken anchor với cue; mục tiêu lệch caption ≤120ms, không cắt mất âm cuối, không đen giữa cảnh. Không khẳng định nghe nếu mới chỉ xem ảnh.
-4. Render final; `ffprobe` xác minh kích thước, fps, duration, audio/video stream. FFmpeg kiểm clipping/silence đầu-cuối; đo loudness, mục tiêu thường khoảng -14..-16 LUFS, true peak ≤-1dBTP; ưu tiên giọng rõ và điều chỉnh khi cần.
+3. Xem/nghe trực tiếp trong editor. Đối chiếu từng spoken anchor với cue; mục tiêu lệch caption ≤120ms, không cắt mất âm cuối, không đen giữa cảnh. Không khẳng định nghe nếu mới chỉ xem ảnh.
+4. Sau khi người dùng bấm “Xuất video”, kiểm tra MP4 final; `ffprobe` xác minh kích thước, fps, duration, audio/video stream. FFmpeg kiểm clipping/silence đầu-cuối; đo loudness, mục tiêu thường khoảng -14..-16 LUFS, true peak ≤-1dBTP; ưu tiên giọng rõ và điều chỉnh khi cần.
 5. Mở MP4 xuất thật và chạy watch/khung hình toàn timeline lần cuối, đặc biệt frame đầu/cuối. Lưu QA record và file size. Có thể tạo cover ở một frame đã QA, không lấy frame chuyển cảnh trắng/đen.
 
 Đầu ra: `final.mp4`, `cover.png`, `captions.srt`, `script.md`, `episode.json`, `qa.md`, dự án Remotion và asset manifest. Các file này chỉ sinh cho tập đã duyệt; tài liệu skill không phải bằng chứng renderer đã chạy.

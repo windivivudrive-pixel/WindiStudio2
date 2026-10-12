@@ -1,0 +1,61 @@
+{
+  "schemaVersion": 1,
+  "title": "Everyday product demo",
+  "brand": "YOUR BRAND",
+  "format": "portrait",
+  "accent": "#f8d258",
+  "background": "#151719",
+  "audio": null,
+  "scenes": [
+    {
+      "id": "scene-01",
+      "duration": 4,
+      "eyebrow": "A familiar problem",
+      "headline": "Still packing three separate bags?",
+      "caption": "Show the everyday problem your product addresses.",
+      "visualPrompt": "Generate a portrait 9:16 image. User-owned footage of a cluttered desk and everyday carry items. No brand marks or invented customer testimony. Keep important content away from the bottom 20 percent.",
+      "media": null,
+      "mediaKind": "image"
+    },
+    {
+      "id": "scene-02",
+      "duration": 4,
+      "eyebrow": "Show the product",
+      "headline": "One place for the small essentials.",
+      "caption": "Replace this example with a verified product feature.",
+      "visualPrompt": "Generate a portrait 9:16 image. Close-up of the actual product opening; match the supplied product reference exactly. Keep important content away from the bottom 20 percent.",
+      "media": null,
+      "mediaKind": "image"
+    },
+    {
+      "id": "scene-03",
+      "duration": 4,
+      "eyebrow": "Demonstrate",
+      "headline": "Show it working.",
+      "caption": "Use a real demonstration, not a promised result.",
+      "visualPrompt": "Generate a portrait 9:16 image. Overhead product demonstration, hands only, accurate size and contents. Keep important content away from the bottom 20 percent.",
+      "media": null,
+      "mediaKind": "image"
+    },
+    {
+      "id": "scene-04",
+      "duration": 4,
+      "eyebrow": "Handle a question",
+      "headline": "Will it fit your routine?",
+      "caption": "Show dimensions, compatibility or a real limitation.",
+      "visualPrompt": "Generate a portrait 9:16 image. Actual product next to common objects for scale; no fabricated certifications. Keep important content away from the bottom 20 percent.",
+      "media": null,
+      "mediaKind": "image"
+    },
+    {
+      "id": "scene-05",
+      "duration": 4,
+      "eyebrow": "A clear next step",
+      "headline": "See the details.",
+      "caption": "Visit your product page for specifications and pricing.",
+      "visualPrompt": "Generate a portrait 9:16 image. Clean product end frame with empty space for the creator\u2019s call to action. Keep important content away from the bottom 20 percent.",
+      "media": null,
+      "mediaKind": "image"
+    }
+  ]
+}

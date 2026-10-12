@@ -1,0 +1,30 @@
+import path from 'node:path';
+import {fileURLToPath} from 'node:url';
+import {readFile,copyFile,mkdir,realpath,writeFile} from 'node:fs/promises';
+import {createRequire} from 'node:module';
+import {execFileSync} from 'node:child_process';
+import {buildManifest} from './manifest.mjs';
+const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../..');
+const runtime=path.join(root,'.local/opencut-classic/apps/web');
+const args=process.argv.slice(2), project=args.includes('--project')?args[args.indexOf('--project')+1]:'videos/windistudio-repo/ws25-esp32-adblock';
+const episode=await realpath(path.resolve(root,project));
+if(!episode.startsWith(path.join(root,'videos/windistudio-repo')+path.sep))throw new Error('Chỉ chuẩn bị tập repo-video cục bộ.');
+const publicDir=await realpath(path.join(episode,'public'));
+const timeline=JSON.parse(await readFile(path.join(episode,'src/timeline.json'),'utf8'));
+const captions=JSON.parse(await readFile(path.join(episode,'src/captions.json'),'utf8'));
+const require=createRequire(path.join(root,'kits/video-starter/package.json'));
+const {getVideoMetadata}=require('@remotion/renderer');
+const output=path.join(runtime,'public/windi-media');await mkdir(output,{recursive:true});
+const assets=[];
+const mediaNames = timeline.beats.map((_, i) => `clip_beat${i + 1}.mp4`).concat(['voice.mp3', 'musicbg.mp3']);
+for(const name of mediaNames) {
+  const source=await realpath(path.join(publicDir,name));if(!source.startsWith(publicDir+path.sep))throw new Error('Media ở ngoài public.');
+  const metadata=name.endsWith('.mp4') ? await getVideoMetadata(source) : {durationInSeconds:Number(execFileSync('ffprobe',['-v','error','-show_entries','format=duration','-of','default=noprint_wrappers=1:nokey=1',source],{encoding:'utf8'}).trim())};
+  assets.push({name,type:name.endsWith('.mp4')?'video':'audio',width:metadata.width,height:metadata.height,duration:metadata.durationInSeconds});
+  await copyFile(source,path.join(output,name));
+}
+await writeFile(path.join(output,'manifest.json'),JSON.stringify(buildManifest({episodeId:path.basename(episode),timeline,captions,assets}),null,2)+'\n');
+const fonts=path.join(runtime,'public/windi-fonts');await mkdir(fonts,{recursive:true});
+await copyFile(path.join(root,'public/SVN-Calling Code Regular.otf'),path.join(fonts,'regular.otf'));
+await copyFile(path.join(root,'public/SVN-Calling Code Bold.otf'),path.join(fonts,'bold.otf'));
+console.log('Đã chuẩn bị '+path.basename(episode)+'. Chỉ sao chép asset + tạo layer manifest; không render hay đổi source gốc.');
