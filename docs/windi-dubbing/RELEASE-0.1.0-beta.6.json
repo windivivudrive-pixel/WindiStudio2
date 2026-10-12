@@ -1,0 +1,17 @@
+{
+  "verified_at": "2026-10-12T13:39:11.726Z",
+  "version": "0.1.0-beta.6",
+  "release_id": "e4391765-b77a-438e-9914-dc9a02d7dab9",
+  "product_id": "3296529a-f550-42eb-9cdc-95a646b5dcfa",
+  "storage_bucket": "windi-releases",
+  "storage_path": "windi-dubbing-kit/0.1.0-beta.6/windi-dubbing-kit-0.1.0-beta.6.zip",
+  "sha256": "0c5414e9b6348a5e07daf19d1640a293fa866f25c0a7940973d534e6f62af8c9",
+  "size_bytes": 94166,
+  "is_published": true,
+  "latest_selected": "0.1.0-beta.6",
+  "signed_download_http": 200,
+  "signed_download_matches_local": true,
+  "kit_tests": "31/31 passed including extracted ZIP",
+  "download_and_selector_tests": "5/5 passed",
+  "known_issue": "Raw voice slowdown on another Mac remains unconfirmed; investigation deferred by user."
+}

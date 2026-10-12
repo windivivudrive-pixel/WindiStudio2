@@ -99,7 +99,7 @@ test('tts selects main for an active paid period and a pool key for a welcome-on
 });
 
 test('public catalog accepts nested access and excludes comparison voices',async()=>{
-  const { COMPARISON_VOICES, isComparisonVoice } = await import('../lib/voice/shared');
+  const { COMPARISON_VOICES, CURATED_PUBLIC_VOICES, isComparisonVoice } = await import('../lib/voice/shared');
   fetchMock.mockImplementation(async(url:string)=>{
     const language=new URL(url).searchParams.get('language')||'en';
     return new Response(JSON.stringify({data:[{
@@ -110,7 +110,10 @@ test('public catalog accepts nested access and excludes comparison voices',async
   });
   const result=await publicVoices();
   expect(result.source).toBe('live');
-  expect(result.voices).toHaveLength(8);
+  expect(result.voices).toHaveLength(8 + CURATED_PUBLIC_VOICES.length);
+  expect(result.voices).toEqual(expect.arrayContaining(CURATED_PUBLIC_VOICES));
+  const cached=await publicVoices();
+  expect(cached.voices).toEqual(result.voices);
   expect(result.voices.some(voice=>isComparisonVoice(voice.id))).toBe(false);
   expect(result.voices.some(voice=>voice.language==='vi')).toBe(true);
 });

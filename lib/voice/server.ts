@@ -154,7 +154,7 @@ export async function publicVoices():Promise<{voices:StudioVoice[]; source:strin
   }
   const curatedIds=new Set(CURATED_PUBLIC_VOICES.map(voice=>voice.id));
   catalog={expires:Date.now()+300000,voices:[...CURATED_PUBLIC_VOICES,...voices.filter(voice=>!curatedIds.has(voice.id))]};
-  return {voices,source:'live'};
+  return {voices:catalog.voices,source:'live'};
 }
 export async function publicVoice(id:string) {
   if(isComparisonVoice(id)) return null;

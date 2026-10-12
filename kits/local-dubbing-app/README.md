@@ -90,7 +90,7 @@ node agent.mjs wait PROJECT_ID
 node agent.mjs inspect PROJECT_ID
 ```
 
-Ratio ngoài 0.8–1.2 cần viết lại/tạo tiếng lại; không ép tốc độ mạnh để bỏ qua. Khi người dùng yêu cầu xuất, `node agent.mjs job PROJECT_ID render`, rồi `wait`/`inspect`. Render beta dùng FFmpeg, phụ đề PNG trong suốt và SRT, không phụ thuộc Remotion. MP4/SRT/WAV nằm trong thư mục dự án; agent báo đường dẫn sau khi kiểm tra. Giữ âm thanh gốc giữ cả lời nói gốc, chưa tách nhạc. Xuất có thể đổi nhẹ độ dài do cross time-stretch. API TTS không cần model local; gắn sub cần Python/Pillow và font tương thích.
+Ratio ngoài 0.8–1.2 cần viết lại/tạo tiếng lại; không ép tốc độ mạnh để bỏ qua. Khi người dùng yêu cầu xuất, `node agent.mjs job PROJECT_ID render`, rồi `wait`/`inspect`. Render beta dùng FFmpeg, phụ đề PNG trong suốt và SRT, không phụ thuộc Remotion. MP4/SRT/WAV nằm trong thư mục dự án; agent báo đường dẫn sau khi kiểm tra. Giữ âm thanh gốc giữ cả lời nói gốc, chưa tách nhạc. Voice ngắn giữ tốc độ tự nhiên và đệm cuối slot, không atempo <1. Voice dài mới dùng cross time-stretch, có thể đổi nhẹ độ dài video. API TTS không cần model local; gắn sub cần Python/Pillow và font tương thích.
 
 Mỗi lần một tác vụ nặng. `node agent.mjs cancel PROJECT_ID` hủy; retry trong chat, không xóa dữ liệu để chữa lỗi. `.windi-dubbing/` giữ cấu hình, defaults, dự án và media; đóng app không xóa. Không chia sẻ toàn bộ thư mục vì có key nếu đã cấu hình.
 
@@ -106,6 +106,17 @@ Model giọng hiện trực tiếp ở tab Giọng đọc; model nhận diện d
 
 Chạy `node setup.mjs --check` trước khi cài: chỉ kiểm tra CPU, RAM, kiến trúc, dung lượng và NVIDIA nếu có, không tải model. `--engines` kiểm tra trước pip/venv, yêu cầu dự phòng 4 GB RAM và 6 GB ổ đĩa; chỉ cài thư viện. Model được tải khi dùng lần đầu và mỗi tác vụ kiểm tra lại dung lượng trên ổ cache thực tế (Decode trong dữ liệu kit; giọng theo HF_HOME/XDG_CACHE_HOME hoặc cache mặc định Hugging Face). Catalog v3 đọc file SDK, không tải model; thiếu preset yêu cầu cập nhật SDK.
 
-Đề xuất cho CPU: RAM dưới 12 GB hoặc ≤4 luồng dùng Lite; máy còn lại dùng Pro. Decode: RAM dưới 8 GB dùng Quick, dưới 20 GB dùng Base, cao hơn dùng Balanced. Ngưỡng chặn bảo thủ trước nạp/tải: Decode Quick/Base/Balanced/Accurate lần lượt 4/6/8/16 GB RAM; Voice Lite/Pro/Standard 4/8/16 GB. Cần dung lượng dự phòng model 1/1/2/4 GB (Decode) hoặc 1/3/4 GB (Voice), cộng 1 GB. Đây là chính sách dự phòng của kit, không phải yêu cầu tối thiểu nhà cung cấp hay benchmark; không đảm bảo tốc độ/chất lượng. Không tự bật CUDA hoặc int8 khi chưa kiểm chứng runtime/CPU.
+Đề xuất cho CPU: Ưu tiên Pro khi RAM từ 8 GB; dưới 8 GB đề xuất Lite. CPU ít luồng chỉ hiện cảnh báo tạo tiếng lâu, không tự hạ xuống Lite khi đủ RAM. Decode: RAM dưới 8 GB dùng Quick, dưới 20 GB dùng Base, cao hơn dùng Balanced. Ngưỡng chặn bảo thủ trước nạp/tải: Decode Quick/Base/Balanced/Accurate lần lượt 4/6/8/16 GB RAM; Voice Lite/Pro/Standard 4/8/16 GB. Cần dung lượng dự phòng model 1/1/2/4 GB (Decode) hoặc 1/3/4 GB (Voice), cộng 1 GB. Đây là chính sách dự phòng của kit, không phải yêu cầu tối thiểu nhà cung cấp hay benchmark; không đảm bảo tốc độ/chất lượng. Không tự bật CUDA hoặc int8 khi chưa kiểm chứng runtime/CPU.
 
 Căn cứ lựa chọn Lite và hạn chế tiếng Anh: [tài liệu VieNeu](https://github.com/pnnbao97/VieNeu-TTS#v3-nano-preview--for-edge-devices--weak-cpus-only-). Các mức VRAM tham khảo của nhận diện tại [OpenAI Whisper](https://github.com/openai/whisper#available-models-and-languages); không đồng nhất VRAM với RAM hệ thống. Chưa kiểm thử cài sạch hoặc tải/chạy model mới trên máy yếu trong lần sửa này.
+
+
+### Chẩn đoán voice chậm — beta.6
+
+Chạy `node agent.mjs diagnose PROJECT_ID` trên đúng máy có lỗi. Lệnh chỉ đọc tối đa 50 file TTS cùng các mẫu, không nạp/tải model hoặc tạo tiếng. Kết quả có version kit/SDK, kiến trúc Python, model đã lưu, sample rate thật, số mẫu/thời lượng, ratio đo lại, tempo dự kiến và metadata backend của file mới. Sample đã tạo từ bản nháp dùng model của mẫu, không gán nhầm model dự án. Metadata thiếu ở file cũ được báo null; header đúng không chứng minh giọng/cadence đúng. So sánh cùng model, preset và câu đọc; máy yếu có thể tạo tiếng lâu nhưng không vì vậy mà phải đổi tốc độ phát.
+
+Trên Mac, Pro dùng rõ ONNX/CPU FP32, ghi bằng `tts.save` theo sample rate SDK (Pro 48 kHz; Lite 24 kHz). Kiểm tra header và số mẫu khớp waveform trước khi công bố WAV. Không sửa header hay ép tốc độ để che lỗi. Cache mới gắn phiên bản SDK, model, cấu hình backend và kiểm tra WAV; audio cache cũ cần tạo lại một lần để có metadata và validation. Không tự sinh voice khi nâng cấp.
+
+Độ lệch >10% được đánh dấu ưu tiên rewrite trong chat, >20% chặn xuất. Đo lại WAV trước xuất thay vì tin ratio cũ. Không kéo chậm voice ngắn để lấp slot; nối H.264 + PCM qua MKV rồi mã hoá AAC một lần, tránh encoder delay tích luỹ từng đoạn. Timestamp SRT theo thời lượng đoạn thực đo; sub kết thúc khi voice kết thúc. Font phụ đề co theo cả chiều rộng/chiều cao: mặc định 22 px ở 576×1024 thay vì 63 px; tối đa 3 dòng/22% chiều cao và kiểm tra chiều rộng, yêu cầu chia câu nếu vẫn quá dài.
+
+Bản sửa local chưa xác nhận lỗi voice gốc trên máy Mac khác khi chưa có file WAV/diagnostics của máy đó. Chưa thử sinh giọng thật hay cài sạch trong lần sửa logic này.

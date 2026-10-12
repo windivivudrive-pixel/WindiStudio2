@@ -7,7 +7,7 @@ export const VOICE_PLANS = [
   { id: 'studio', name: 'Studio', price_vnd: 1169000, credits: 500000, clone_limit: 20, duration_days: 30, billing: 'monthly', purchasable: true, description: 'Nhiều giọng kể. Nhiều câu chuyện hơn.' },
 ] as const;
 export const VOICE_LANGUAGES = [{id:'vi',name:'Tiếng Việt'},{id:'en',name:'English'},{id:'ko',name:'한국어'},{id:'ja',name:'日本語'},{id:'zh',name:'中文'},{id:'fr',name:'Français'},{id:'de',name:'Deutsch'},{id:'es',name:'Español'},{id:'th',name:'ไทย'},{id:'id',name:'Bahasa Indonesia'}];
-export const VOICE_LIBRARY_LANGUAGES = [{id:'en',name:'English'},{id:'fr',name:'Français'},{id:'es',name:'Español'},{id:'ko',name:'한국어'},{id:'th',name:'ไทย'},{id:'ja',name:'日本語'},{id:'zh',name:'中文'},{id:'vi',name:'Tiếng Việt'}] as const;
+export const VOICE_LIBRARY_LANGUAGES = [{id:'vi',name:'Tiếng Việt'},{id:'en',name:'English'},{id:'fr',name:'Français'},{id:'es',name:'Español'},{id:'ko',name:'한국어'},{id:'th',name:'ไทย'},{id:'ja',name:'日本語'},{id:'zh',name:'中文'}] as const;
 export const VOICE_LIBRARY_VOICE_LIMITS = {default:5,en:12} as const;
 export const VOICE_CLONE_CLIP_LIMITS = {maxBytes:3*1024*1024,maxDurationMs:60*1000} as const;
 export const VOICE_CLONE_DEMO_LIMIT = 2;
@@ -45,7 +45,10 @@ export const CURATED_PUBLIC_VOICES: StudioVoice[] = [
   {id:'4499b44b-5180-4d65-9d76-e24405138493',name:'Đức Bảo',description:'Giọng nam tiếng Việt',language:'vi',gender:'masculine',kind:'public'},
   {id:'094e72c3-97d3-439a-9e64-39ac3d3fa897',name:'Minh Dự',description:'Giọng nam tiếng Việt',language:'vi',gender:'masculine',kind:'public'},
   {id:'60cf30cf-dcad-4cb1-b2e9-b6c08a23569e',name:'Ngô Đình',description:'Giọng nam tiếng Việt',language:'vi',gender:'masculine',kind:'public'},
+  {id:'aac29502-cd10-4767-93c3-196ff83db354',name:'Kim Ánh',description:'Giọng nữ tiếng Việt',language:'vi',gender:'feminine',kind:'public'},
+  {id:'467b7271-7d3d-4509-ab95-7cb4be6f5ef3',name:'Tố My',description:'Giọng nữ tiếng Việt',language:'vi',gender:'feminine',kind:'public'},
 ];
+export const DEFAULT_STUDIO_VOICE = CURATED_PUBLIC_VOICES.find(voice=>voice.id==='094e72c3-97d3-439a-9e64-39ac3d3fa897')!;
 export const COMPARISON_VOICES: StudioVoice[] = [
   {id:'6aee11c6-bef9-4fd0-9f45-1a1c25dcdcde',name:'Chữa Lành',description:'Voice Podcast Chữa Lành · Ấm áp, chậm rãi, giàu khoảng lặng',language:'vi',gender:'feminine',useCases:['conversation'],kind:'public'},
   {id:'f2a05c6a-fc36-4d1a-b5c4-dd2e5af15af7',name:'Khoa',description:'Giọng Nam Vlog (Khoa) · Tự nhiên, gần gũi, giàu năng lượng',language:'vi',gender:'masculine',useCases:['entertainment'],kind:'public'},

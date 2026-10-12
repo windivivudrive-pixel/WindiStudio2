@@ -11,6 +11,7 @@ let result;
 if(action==='projects')result=await api('/api/projects');
 else if(action==='create')result=await api('/api/projects',{name:id||'Dự án mới'});
 else if(action==='inspect')result=await api(path);
+else if(action==='diagnose')result=await api(path+'/diagnostics');
 else if(action==='context')result=await api(path+'/context');
 else if(action==='pending')result=await api(path+'/request');
 else if(action==='submit')result=await api(path+'/translation',JSON.parse(await readFile(file,'utf8')));
@@ -26,7 +27,7 @@ else if(action==='wait'){
   do{result=await api(path);if(result.job?.status!=='running')break;await new Promise(r=>setTimeout(r,1000));}while(Date.now()<deadline);
 }else result={usage:[
   'node agent.mjs projects | create "Tên dự án"',
-  'node agent.mjs inspect|context|pending PROJECT_ID',
+  'node agent.mjs inspect|context|pending|diagnose PROJECT_ID',
   'node agent.mjs import-video PROJECT_ID /absolute/video.mp4',
   'node agent.mjs import-transcript|configure|submit PROJECT_ID FILE.json',
   'node agent.mjs job PROJECT_ID transcribe|translate|rewrite|tts|render [OPTIONS.json]',

@@ -17,7 +17,7 @@ test('caption PNG uses selected font and background color/alpha, including trans
   const render=(name,opacity,fontPath=font.path,options={})=>{
    const directory=join(root,name);mkdirSync(directory);
    const file=join(directory,'request.json');writeFileSync(file,JSON.stringify({width:640,height:360,fontSize:44,fontPath,subtitle:'box',color:'#ffffff',backgroundColor:'#345678',backgroundOpacity:opacity,directory,segments:[{id:'caption',translation:'Một câu chuyện tiếng Việt.',start:0,end:5}],...options}));
-   execFileSync(python,[join(dirname(fileURLToPath(import.meta.url)),'../workers/captions.py'),file]);
+   execFileSync(python,[join(dirname(fileURLToPath(import.meta.url)),'../workers/captions.py'),file],{stdio:['ignore','pipe','pipe']});
    return join(directory,options.karaoke?'caption-k0.png':'caption.png');
   };
   for(const opacity of [0,35,100]){
@@ -31,6 +31,12 @@ test('caption PNG uses selected font and background color/alpha, including trans
   const second=join(root,'color-only','caption-k1.png');
   const sameShape=execFileSync(python,['-c',"from PIL import Image;import sys; a=Image.open(sys.argv[1]);b=Image.open(sys.argv[2]);assert a.getchannel('A').tobytes()==b.getchannel('A').tobytes();assert a.tobytes()!=b.tobytes();print('same geometry, different color')",first,second],{encoding:'utf8'});
   assert.match(sameShape,/same geometry/);
+  for(const [width,height,expected] of [[576,1024,22],[405,720,15],[1280,720,44]]){
+   render('shape-'+width,35,font.path,{width,height});
+   const layout=JSON.parse(readFileSync(join(root,'shape-'+width,'layout.json'),'utf8')).caption;
+   assert.equal(layout.fontSize,expected);assert.ok(layout.textWidth<=width*.87);assert.ok(layout.textHeight<=height*.22);assert.ok(layout.lines<=3);
+  }
+  assert.throws(()=>render('too-long',35,font.path,{width:405,height:720,segments:[{id:'caption',translation:'W'.repeat(400)}]}));
   assert.ok(fonts.every(f=>!('path' in f)));assert.throws(()=>resolveSubtitleFont('../secret.ttf'));
  }finally{rmSync(root,{recursive:true,force:true});}
 });
