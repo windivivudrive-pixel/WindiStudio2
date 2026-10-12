@@ -45,6 +45,8 @@ export const CURATED_PUBLIC_VOICES: StudioVoice[] = [
   {id:'4499b44b-5180-4d65-9d76-e24405138493',name:'Đức Bảo',description:'Giọng nam tiếng Việt',language:'vi',gender:'masculine',kind:'public'},
   {id:'094e72c3-97d3-439a-9e64-39ac3d3fa897',name:'Minh Dự',description:'Giọng nam tiếng Việt',language:'vi',gender:'masculine',kind:'public'},
   {id:'60cf30cf-dcad-4cb1-b2e9-b6c08a23569e',name:'Ngô Đình',description:'Giọng nam tiếng Việt',language:'vi',gender:'masculine',kind:'public'},
+  {id:'aac29502-cd10-4767-93c3-196ff83db354',name:'Kim Ánh',description:'Giọng nữ tiếng Việt',language:'vi',gender:'feminine',kind:'public'},
+  {id:'467b7271-7d3d-4509-ab95-7cb4be6f5ef3',name:'Tố My',description:'Giọng nữ tiếng Việt',language:'vi',gender:'feminine',kind:'public'},
 ];
 export const COMPARISON_VOICES: StudioVoice[] = [
   {id:'6aee11c6-bef9-4fd0-9f45-1a1c25dcdcde',name:'Chữa Lành',description:'Voice Podcast Chữa Lành · Ấm áp, chậm rãi, giàu khoảng lặng',language:'vi',gender:'feminine',useCases:['conversation'],kind:'public'},

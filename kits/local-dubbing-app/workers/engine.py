@@ -3,7 +3,10 @@ import contextlib
 import json
 import sys
 import hashlib
+import wave
 import importlib.util
+import importlib.metadata
+from audio_meta import inspect_wav
 from pathlib import Path
 
 
@@ -35,6 +38,37 @@ def installed_voices(mode):
         entries.sort(key=lambda pair: (pair[1].get('featured') is None, pair[1].get('featured') or 0))
     return [{'id': name, 'label': name + (' — ' + entry['description'] if entry.get('description') else ''),
              'default': name == data.get('default_voice')} for name, entry in entries]
+
+
+def engine_options(mode):
+    if mode == 'v3turbo':
+        return {'backend': 'onnx', 'device': 'cpu', 'precision': 'fp32'} if sys.platform == 'darwin' else {'precision': 'fp32'}
+    return {}
+
+
+def sdk_version():
+    try:
+        return importlib.metadata.version('vieneu')
+    except importlib.metadata.PackageNotFoundError:
+        return 'unknown'
+
+
+def fingerprint(mode, voice, text):
+    return hashlib.sha256(json.dumps(['validated-pcm-v1', sys.executable, sdk_version(), mode, engine_options(mode), voice, text], ensure_ascii=False).encode()).hexdigest()
+
+
+def valid_cache(output, signature, mode):
+    output = Path(output)
+    marker = Path(str(output) + '.json')
+    metadata = Path(str(output) + '.audio.json')
+    if not output.exists() or not marker.exists() or not metadata.exists() or marker.read_text() != signature:
+        return False
+    try:
+        saved = json.loads(metadata.read_text(encoding='utf-8'))
+        inspect_wav(output, mode, saved['sampleRate'], saved['frames'])
+        return True
+    except (ValueError, KeyError, OSError, EOFError, wave.Error):
+        return False
 
 
 def main():
@@ -77,8 +111,8 @@ def main():
                     voice = segment.get('voice', request.get('voice')) or None
                     output = Path(request['directory']) / (segment['id'] + '.wav')
                     marker = Path(str(output) + '.json')
-                    signature = hashlib.sha256(json.dumps([sys.executable, mode, voice, segment['translation']], ensure_ascii=False).encode()).hexdigest()
-                    if not output.exists() or not marker.exists() or marker.read_text() != signature:
+                    signature = fingerprint(mode, voice, segment['translation'])
+                    if not valid_cache(output, signature, mode):
                         cached_batch = False
                         break
                 if cached_batch:
@@ -86,7 +120,7 @@ def main():
                         emit(progress=len(segments), total=len(segments), done=True)
                     return
             from vieneu import Vieneu
-            tts = Vieneu(mode=mode)
+            tts = Vieneu(mode=mode, **engine_options(mode))
             voices = tts.list_preset_voices()
             if action == 'voices':
                 Path(request['output']).write_text(json.dumps([{'label': str(label), 'id': str(vid)} for label, vid in voices], ensure_ascii=False), encoding='utf-8')
@@ -100,15 +134,18 @@ def main():
                 for i, segment in enumerate(segments):
                     voice = segment.get('voice', request.get('voice')) or None
                     output = str(Path(request['directory']) / (segment['id'] + '.wav'))
-                    signature = hashlib.sha256(json.dumps([sys.executable, mode, voice, segment['translation']], ensure_ascii=False).encode()).hexdigest()
+                    signature = fingerprint(mode, voice, segment['translation'])
                     marker = Path(output + '.json')
-                    cached = Path(output).exists() and marker.exists() and marker.read_text() == signature
+                    cached = valid_cache(output, signature, mode)
                     if not cached:
                         kwargs = {'voice': voice} if voice else {}
                         audio = tts.infer(segment['translation'], **kwargs)
                         temp = output + '.tmp.wav'
                         tts.save(audio, temp)
+                        info = inspect_wav(temp, mode, getattr(tts, 'sample_rate', None), len(audio))
+                        info.update({'mode':mode,'sdkVersion':sdk_version(),'backend':getattr(tts,'backend',type(getattr(tts,'engine',tts)).__name__),'precision':engine_options(mode).get('precision'),'voice':voice,'backbone':getattr(tts,'backbone_repo',None)})
                         Path(temp).replace(output)
+                        Path(output + '.audio.json').write_text(json.dumps(info,ensure_ascii=False),encoding='utf-8')
                         marker.write_text(signature)
                         Path(output + '.api.json').unlink(missing_ok=True)
                     with contextlib.redirect_stdout(sys.__stdout__):

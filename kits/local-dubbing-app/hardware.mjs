@@ -12,9 +12,10 @@ export function inspectHardware(path=process.cwd()){
 }
 // Conservative CPU planning thresholds, not benchmarked minimum requirements.
 export function hardwarePlan(machine){
-  const ram=machine.ramBytes/GB,weak=ram<12||machine.cores<=4;
+  const ram=machine.ramBytes/GB,weak=ram<8;
   const config={mode:weak?'v3nano':'v3turbo',whisperModel:ram<8?'tiny':ram<20?'base':'small',resolution:720};
   const warnings=[];
+  if(machine.cores<=4)warnings.push('CPU ít luồng có thể tạo voice lâu; thử Pro trước, chỉ chuyển Lite nếu tốc độ xử lý không đáp ứng.');
   if(ram<4)warnings.push('RAM dưới 4 GB: ưu tiên nhận diện trong chat và giọng API.');
   if(machine.freeBytes===null)warnings.push('Chưa đo được dung lượng trống; kiểm tra ổ lưu model trước khi chạy.');
   else if(machine.freeBytes<6*GB)warnings.push('Ổ lưu model còn dưới 6 GB; có thể thiếu chỗ cho môi trường và model.');

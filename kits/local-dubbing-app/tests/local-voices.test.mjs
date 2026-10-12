@@ -8,21 +8,34 @@ import { run } from '../process.mjs';
 test('local worker routes and caches each speaker voice (stub model)',async()=>{
  const root=await mkdtemp(join(tmpdir(),'windi-local-voices-')),out=join(root,'audio');await mkdir(out);
  try{
-  await writeFile(join(root,'vieneu.py'),`import pathlib\nclass Vieneu:\n def __init__(self, **kwargs): pass\n def list_preset_voices(self): return [('Host', 'host'), ('Guest', 'guest')]\n def infer(self, text, **kwargs): return kwargs.get('voice', '') + ':' + text\n def save(self, audio, output): pathlib.Path(output).write_text(audio)\n`);
+  await writeFile(join(root,'vieneu.py'),`import wave,struct
+class Vieneu:
+ def __init__(self, mode='v3turbo', **kwargs): self.sample_rate=48000 if mode=='v3turbo' else 24000
+ def list_preset_voices(self): return [('Host', 'host'), ('Guest', 'guest')]
+ def infer(self, text, **kwargs): return [0]*4800
+ def save(self, audio, output):
+  with wave.open(output,'wb') as w:
+   w.setnchannels(1);w.setsampwidth(2);w.setframerate(self.sample_rate);w.writeframes(struct.pack('<h',1000)*len(audio))
+`);
   const request=join(root,'request.json');
   const input={mode:'v3turbo',directory:out,segments:[{id:'a',voice:'host',translation:'Xin chào'},{id:'b',voice:'guest',translation:'Chào bạn'}]};
   await writeFile(request,JSON.stringify(input));
   const worker=join(dirname(fileURLToPath(import.meta.url)),'../workers/engine.py');
   const execute=()=>run(process.platform==='win32'?'python':'python3',[worker,'tts',request],{env:{...process.env,PYTHONPATH:root}});
   await writeFile(join(out,'a.wav.api.json'),'cloud-marker');await execute();
-  assert.equal(await readFile(join(out,'a.wav'),'utf8'),'host:Xin chào');assert.equal(await readFile(join(out,'b.wav'),'utf8'),'guest:Chào bạn');await assert.rejects(readFile(join(out,'a.wav.api.json')));
-  input.segments[0].voice='guest';await writeFile(request,JSON.stringify(input));await execute();assert.equal(await readFile(join(out,'a.wav'),'utf8'),'guest:Xin chào');
+  const meta=async name=>JSON.parse(await readFile(join(out,name+'.wav.audio.json'),'utf8'));assert.equal((await meta('a')).voice,'host');assert.equal((await meta('b')).voice,'guest');assert.equal((await meta('a')).sampleRate,48000);await assert.rejects(readFile(join(out,'a.wav.api.json')));
+  input.segments[0].voice='guest';await writeFile(request,JSON.stringify(input));await execute();assert.equal((await meta('a')).voice,'guest');
   const sampleRequest={mode:'v3turbo',directory:out,voice:'host',text:'Câu nghe thử'};await writeFile(request,JSON.stringify(sampleRequest));
   const sample=()=>run(process.platform==='win32'?'python':'python3',[worker,'sample',request],{env:{...process.env,PYTHONPATH:root}});
-  await sample();assert.equal(await readFile(join(out,'sample.wav'),'utf8'),'host:Câu nghe thử');
+  await sample();assert.equal((await meta('sample')).voice,'host');
   const sdk=await readFile(join(root,'vieneu.py'),'utf8');await writeFile(join(root,'vieneu.py'),'raise RuntimeError("A cached preview must not load the model again")');
-  await sample();assert.equal(await readFile(join(out,'sample.wav'),'utf8'),'host:Câu nghe thử');await writeFile(join(root,'vieneu.py'),sdk);
-  sampleRequest.voice='guest';await writeFile(request,JSON.stringify(sampleRequest));await sample();assert.equal(await readFile(join(out,'sample.wav'),'utf8'),'guest:Câu nghe thử');
+  await sample();assert.equal((await meta('sample')).voice,'host');await writeFile(join(root,'vieneu.py'),sdk);
+  sampleRequest.voice='guest';await writeFile(request,JSON.stringify(sampleRequest));await sample();assert.equal((await meta('sample')).voice,'guest');
+  // Switching models must use its own sample rate and never reuse another model's cache.
+  sampleRequest.mode='v3nano';await writeFile(request,JSON.stringify(sampleRequest));await sample();assert.equal((await meta('sample')).sampleRate,24000);
+  // Simulate a broken SDK saving Pro data under a Lite-rate WAV header.
+  await writeFile(join(root,'vieneu.py'),sdk.replace('w.setframerate(self.sample_rate)','w.setframerate(24000)'));
+  sampleRequest.mode='v3turbo';sampleRequest.text='Uncached rate mismatch';await writeFile(request,JSON.stringify(sampleRequest));await assert.rejects(sample(),/Sample rate/);await writeFile(join(root,'vieneu.py'),sdk);
   input.segments[1].voice='missing';await writeFile(request,JSON.stringify(input));await assert.rejects(execute(),/Giọng đã chọn/);
  }finally{await rm(root,{recursive:true,force:true});}
 });

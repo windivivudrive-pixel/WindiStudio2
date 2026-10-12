@@ -469,6 +469,13 @@ export function VoiceStudio() {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
   const [gender, setGender] = useState("all");
+  const [voicePickerOpen, setVoicePickerOpen] = useState(false);
+  const [pickerSearch, setPickerSearch] = useState("");
+  const [pickerLanguage, setPickerLanguage] = useState("all");
+  const [pickerGender, setPickerGender] = useState("all");
+  const [pickerMine, setPickerMine] = useState(false);
+  const voicePickerRef = useRef<HTMLDialogElement>(null);
+  const previewRequest = useRef(0);
   const [audio, setAudio] = useState<{ url: string; id: string } | null>(null);
   const [previewingId, setPreviewingId] = useState("");
   const [previewLoadingId, setPreviewLoadingId] = useState("");
@@ -696,8 +703,10 @@ export function VoiceStudio() {
     [],
   );
   function stopPreview() {
+    previewRequest.current += 1;
     previewAudioRef.current?.pause();
     setPreviewingId("");
+    setPreviewLoadingId("");
   }
   function choose(v: StudioVoice) {
     stopPreview();
@@ -712,6 +721,7 @@ export function VoiceStudio() {
       return;
     }
     stopPreview();
+    const requestId = previewRequest.current;
     setPreviewLoadingId(voice.id);
     setError("");
     try {
@@ -735,17 +745,20 @@ export function VoiceStudio() {
           previewUrls.current.set(voice.id, url);
         }
       }
+      if (requestId !== previewRequest.current) return;
       const player = previewAudioRef.current;
       if (!player) throw new Error("Trình phát đang chưa sẵn sàng.");
       player.src = url;
       await player.play();
+      if (requestId !== previewRequest.current) return;
       setPreviewingId(voice.id);
     } catch (error) {
+      if (requestId !== previewRequest.current) return;
       setError(
         error instanceof Error ? error.message : "Chưa tạo được bản nghe thử.",
       );
     } finally {
-      setPreviewLoadingId("");
+      if (requestId === previewRequest.current) setPreviewLoadingId("");
     }
   }
   function stopDemoPreview() {
@@ -979,6 +992,12 @@ export function VoiceStudio() {
       (gender === "all" || v.gender === gender) &&
       `${v.name} ${v.description}`.toLowerCase().includes(search.toLowerCase()),
   );
+  const pickerVoices = allVoices.filter(voice =>
+    (!pickerMine || voice.kind === "clone") &&
+    (pickerLanguage === "all" || voice.language === pickerLanguage) &&
+    (pickerGender === "all" || voice.gender === pickerGender) &&
+    `${voice.name} ${voice.description}`.toLocaleLowerCase("vi").includes(pickerSearch.trim().toLocaleLowerCase("vi")),
+  );
   const todayJobs = (account?.jobs ?? []).filter((job) => {
     const created = new Date(job.created_at);
     const today = new Date();
@@ -1211,16 +1230,22 @@ export function VoiceStudio() {
                 </div>
                 <div className="voice-toolbar">
                   <div className="voice-toolbar-voice">
-                    <label htmlFor="voice-choice">Giọng đọc</label>
+                    <label id="voice-choice-label" htmlFor="voice-choice">Giọng đọc</label>
                     <div className="voice-voice-control">
                       <span className="voice-avatar" aria-hidden="true"><AudioLines size={20} /></span>
-                      <select id="voice-choice" value={selected.id} onChange={event => {
-                        const voice = allVoices.find(v => v.id === event.target.value);
-                        if (voice) { stopPreview(); setSelected(voice); }
+                      <button id="voice-choice" type="button" className="voice-choice-trigger" aria-labelledby="voice-choice-label voice-choice-name" aria-haspopup="dialog" aria-expanded={voicePickerOpen} aria-controls="voice-picker" onClick={() => {
+                        stopPreview();
+                        setError("");
+                        setPickerSearch("");
+                        setPickerLanguage("all");
+                        setPickerGender("all");
+                        setPickerMine(false);
+                        voicePickerRef.current?.showModal();
+                        setVoicePickerOpen(true);
                       }}>
-                        {!allVoices.some(v => v.id === selected.id) && <option value={selected.id}>{selected.name}</option>}
-                        {allVoices.map(v => <option key={v.id} value={v.id}>{v.name}{v.kind === "clone" ? " · Giọng của tôi" : ""}</option>)}
-                      </select>
+                        <span id="voice-choice-name">{selected.name}</span>
+                        <ChevronDown size={17} aria-hidden="true" />
+                      </button>
                       {selected.kind === "public" && <button type="button" className="voice-toolbar-preview" disabled={!!previewLoadingId} aria-label={`Nghe thử giọng ${selected.name}`} aria-pressed={previewingId === selected.id} onClick={() => void previewVoice(selected)}>
                         {previewLoadingId === selected.id ? <LoaderCircle size={17} className="voice-spin" /> : previewingId === selected.id ? <Pause size={17} /> : <Play size={17} />}
                       </button>}
@@ -2133,6 +2158,57 @@ export function VoiceStudio() {
           Bạn cần hỗ trợ? <ArrowRight size={14} />
         </Link>
       </div>
+      <dialog
+        ref={voicePickerRef}
+        id="voice-picker"
+        className="voice-picker"
+        aria-labelledby="voice-picker-title"
+        aria-describedby="voice-picker-description"
+        onClose={() => { stopPreview(); setVoicePickerOpen(false); }}
+        onClick={event => { if (event.target === event.currentTarget) voicePickerRef.current?.close(); }}
+      >
+        <div className="voice-picker-header">
+          <div>
+            <h2 id="voice-picker-title">Chọn giọng đọc</h2>
+            <p id="voice-picker-description">Tìm giọng phù hợp, nghe thử rồi chọn để bắt đầu.</p>
+          </div>
+          <button type="button" className="voice-icon-btn" aria-label="Đóng bộ chọn giọng" onClick={() => voicePickerRef.current?.close()}><X size={20} aria-hidden="true" /></button>
+        </div>
+        <div className="voice-picker-tools">
+          <label className="voice-search">
+            <Search size={18} aria-hidden="true" />
+            <input autoFocus aria-label="Tìm giọng trong popup" placeholder="Tìm tên hoặc mô tả giọng…" value={pickerSearch} onChange={event => setPickerSearch(event.target.value)} />
+          </label>
+          <div className="voice-picker-filters">
+            <label>Ngôn ngữ<select value={pickerLanguage} onChange={event => setPickerLanguage(event.target.value)}>
+              <option value="all">Tất cả</option>
+              {VOICE_LANGUAGES.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}
+            </select></label>
+            <label>Chất giọng<select value={pickerGender} onChange={event => setPickerGender(event.target.value)}>
+              <option value="all">Tất cả</option><option value="masculine">Nam</option><option value="feminine">Nữ</option><option value="gender_neutral">Trung tính</option>
+            </select></label>
+          </div>
+          <div className="voice-picker-sources">
+            <button type="button" aria-pressed={!pickerMine} onClick={() => setPickerMine(false)}>Tất cả giọng</button>
+            <button type="button" aria-pressed={pickerMine} onClick={() => setPickerMine(true)}><Mic2 size={15} aria-hidden="true" /> Giọng của tôi</button>
+            <span role="status">{catalogLoading ? "Đang tải…" : `${pickerVoices.length} giọng`}</span>
+          </div>
+          {error && <p className="voice-picker-error" role="alert">{error}</p>}
+        </div>
+        <div className="voice-picker-results">
+          {pickerVoices.map((voice, index) => (
+            <article className="voice-picker-row" key={voice.id}>
+              <span className={`voice-avatar voice-avatar-${index % 4}`} aria-hidden="true"><AudioLines size={21} /></span>
+              <div className="voice-picker-info"><h3>{voice.name}</h3><div className="voice-picker-meta">{voice.kind === "clone" ? "Giọng của tôi" : VOICE_LANGUAGES.find(item => item.id === voice.language)?.name || voice.language} <VoiceMetadata voice={voice} /></div><p>{voice.description || "Giọng riêng của bạn"}</p></div>
+              <div className="voice-picker-row-actions">
+                {voice.kind === "public" && <button type="button" className="voice-icon-btn" aria-label={`Nghe thử ${voice.name}`} aria-pressed={previewingId === voice.id} disabled={!!previewLoadingId} onClick={() => void previewVoice(voice)}>{previewLoadingId === voice.id ? <LoaderCircle size={18} className="voice-spin" /> : previewingId === voice.id ? <Pause size={18} /> : <Play size={18} />}</button>}
+                <button type="button" className="voice-btn voice-picker-select" aria-label={`Chọn giọng ${voice.name}`} onClick={() => { choose(voice); voicePickerRef.current?.close(); }}>{selected.id === voice.id ? <><Check size={16} aria-hidden="true" /> Đang chọn</> : "Chọn"}</button>
+              </div>
+            </article>
+          ))}
+          {!pickerVoices.length && !catalogLoading && <div className="voice-picker-empty"><Search size={26} aria-hidden="true" /><h3>{pickerMine ? "Chưa có giọng của bạn phù hợp" : "Chưa tìm thấy giọng phù hợp"}</h3><p>Thử đổi bộ lọc hoặc tìm bằng tên khác.</p><button type="button" className="voice-btn" onClick={() => { setPickerSearch(""); setPickerLanguage("all"); setPickerGender("all"); setPickerMine(false); }}>Xem tất cả giọng</button></div>}
+        </div>
+      </dialog>
       <dialog
         ref={dialogRef}
         className="voice-checkout"

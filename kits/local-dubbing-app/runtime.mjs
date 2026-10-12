@@ -23,7 +23,12 @@ export function resolveRuntime(input = '', platform = process.platform) {
 
 export function inspectRuntime(runtime) {
   try {
-    const script = "import sys,json,importlib.util as u; print(json.dumps({'python':sys.version.split()[0],'executable':sys.executable,'whisper':bool(u.find_spec('whisper')),'vieneu':bool(u.find_spec('vieneu'))}))";
+    const script = `import sys,json,platform,importlib.util as u,importlib.metadata as m
+v={}
+for name in ['vieneu','onnxruntime','openai-whisper']:
+ try:v[name]=m.version(name)
+ except m.PackageNotFoundError:v[name]=None
+print(json.dumps({'python':sys.version.split()[0],'executable':sys.executable,'architecture':platform.machine(),'versions':v,'whisper':bool(u.find_spec('whisper')),'vieneu':bool(u.find_spec('vieneu'))}))`;
     const output = execFileSync(runtime.python, ['-c', script], { cwd: runtime.cwd, encoding: 'utf8', timeout: 4000, maxBuffer: 16384, stdio: ['ignore', 'pipe', 'ignore'] });
     const details = JSON.parse(output.trim().split('\n').at(-1));
     return { ...runtime, ...details, error: null };

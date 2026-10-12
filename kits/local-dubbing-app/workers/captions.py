@@ -10,10 +10,16 @@ width, height = r['width'], r['height']
 font_path = Path(r['fontPath'])
 if not font_path.is_file():
     raise RuntimeError('Font phụ đề đã chọn chưa có trên máy.')
+layouts = {}
+
+def base_size():
+    # Match the compact 22px/576px-wide reference while retaining 44px at 720p landscape.
+    return max(8, round(r['fontSize'] * min(height / 720, width / 1152)))
+
 def static_caption(s):
     image = Image.new('RGBA', (width, height))
     draw = ImageDraw.Draw(image)
-    size = max(16, round(r['fontSize'] * height / 720))
+    size = base_size()
     while True:
         font = ImageFont.truetype(str(font_path), size)
         lines, line = [], ''
@@ -28,9 +34,12 @@ def static_caption(s):
             lines.append(line)
         text = '\n'.join(lines)
         box = draw.multiline_textbbox((0, 0), text, font=font, spacing=6, stroke_width=2)
-        if box[3]-box[1] < height * .4 or size <= 16:
+        if (box[3]-box[1] <= height * .22 and box[2]-box[0] <= width*.87 and len(lines)<=3) or size <= 8:
             break
-        size -= 2
+        size = max(8, size-1)
+    if box[3]-box[1] > height*.22 or box[2]-box[0] > width*.87 or len(lines)>3:
+        raise ValueError('Phụ đề câu quá dài để đọc trong khung hình. Chia câu ngắn hơn trong chat trước khi xuất.')
+    layouts[s['id']] = {'fontSize':size,'lines':len(lines),'textWidth':box[2]-box[0],'textHeight':box[3]-box[1],'canvasWidth':width,'canvasHeight':height}
     text_width, text_height = box[2]-box[0], box[3]-box[1]
     x, y = (width-text_width)/2-box[0], height*.92-text_height-box[1]
     if r['subtitle'] == 'box':
@@ -44,7 +53,7 @@ def karaoke_caption(s):
     # Bound rasterization work even for imported very long captions.
     if len(words) > 300:
         raise ValueError('Karaoke tối đa 300 từ mỗi câu. Chia câu ngắn hơn trước khi xuất.')
-    size = max(16, round(r['fontSize'] * height / 720))
+    size = base_size()
     scale = 1 if r.get('karaokeStyle') == 'color' else r.get('karaokeScale', 120) / 100
     directory = Path(r['directory'])
     frames = []
@@ -78,6 +87,7 @@ def karaoke_caption(s):
         name = s['id'] + '-k' + str(index) + '.png'
         image.save(str(directory/name))
         frames.append(name)
+    layouts[s['id']] = {'fontSize':size,'canvasWidth':width,'canvasHeight':height,'karaoke':True}
     duration = float(s.get('captionDuration', s.get('end',1)-s.get('start',0))) / max(1,len(frames))
     # Relative filenames contain only validated segment IDs and generated suffixes.
     manifest = 'ffconcat version 1.0\n' + ''.join("file '"+name+"'\nduration "+str(duration)+"\n" for name in frames)
@@ -90,4 +100,5 @@ for segment in r['segments']:
         karaoke_caption(segment)
     else:
         static_caption(segment)
+(Path(r['directory'])/'layout.json').write_text(json.dumps(layouts,ensure_ascii=False),encoding='utf-8')
 print(json.dumps({'done': True}))

@@ -1,12 +1,12 @@
 import { execFileSync } from "node:child_process";
-import { existsSync, statSync, createReadStream } from "node:fs";
+import { existsSync, statfsSync, statSync, createReadStream } from "node:fs";
 import { readFile, mkdir, writeFile } from "node:fs/promises";
 import { createServer } from "node:http";
 import { dirname, extname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import {inspectHardware,hardwarePlan} from './hardware.mjs';
 import { pipeline as streamPipeline } from 'node:stream/promises';
-import { dataRoot, listProjects, createProject, getProject, updateProject, rememberPreferences, projectDir, importVideo, startJob, cancelJob, importTranslation, assertIdle, shutdownJobs } from './pipeline.mjs';
+import { dataRoot, listProjects, createProject, getProject, updateProject, rememberPreferences, projectDir, importVideo, startJob, cancelJob, importTranslation, assertIdle, shutdownJobs, diagnoseProject } from './pipeline.mjs';
 import { translationPrompt } from './providers.mjs';
 import {subtitleFonts} from './fonts.mjs';
 import { resolveRuntime, inspectRuntime } from "./runtime.mjs";
@@ -15,6 +15,7 @@ import { publicVoiceSettings, saveVoiceSettings } from './voice-api.mjs';
 if(Number(process.versions.node.split('.')[0])<20)throw new Error('Windi Dubbing cần Node.js 20 trở lên.');
 const directory = dirname(fileURLToPath(import.meta.url));
 const workspace = directory;
+const kitVersion=JSON.parse(await readFile(join(directory,'package.json'),'utf8')).version;
 const port = Number(process.env.LOCAL_DUBBING_PORT || 8787);
 const settingsFile = join(dataRoot, 'settings.json');
 let runtimeSettings = { whisper: '', vieneu: '' };
@@ -53,7 +54,7 @@ function environment() {
     runtimes,
     runtimeSettings,
     previewOnly: false,
-    version: "0.1.0-beta.5",
+    version: kitVersion,
   };
 }
 
@@ -90,6 +91,7 @@ const server = createServer(async (request, response) => {
       }
       const p=updateProject(id,input);rememberPreferences(p);return json(response,p);
     }
+    if(action==='diagnostics' && request.method==='GET')return json(response,{...await diagnoseProject(id,runtimeSettings),kitVersion});
     if(action==='context' && request.method==='GET') {
       const p=getProject(id);
       return json(response,{projectId:id,revision:p.revision,config:p.config,speakers:p.speakers,video:p.video||null,segments:p.segments,prompt:translationPrompt(p.segments,false,p.config)});

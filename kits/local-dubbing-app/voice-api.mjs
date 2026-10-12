@@ -172,6 +172,7 @@ export async function apiSpeech({ root, config, segments, directory, signal, exe
       await execute('ffmpeg', ['-y', '-v', 'error', '-i', source, '-ar', '48000', '-ac', '1', output + '.tmp.wav']);
       await rename(output + '.tmp.wav', output); await writeFile(marker, signature);
       await rm(output + '.json', { force: true });
+      await rm(output + '.audio.json', { force: true });
     }
     report(`Đã tạo ${i + 1}/${segments.length} câu bằng API`, Math.round(100 * (i + 1) / segments.length));
   }

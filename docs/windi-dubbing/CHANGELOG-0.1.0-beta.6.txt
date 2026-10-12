@@ -1,0 +1,10 @@
+Windi Dubbing Kit beta.6
+
+- Giao diện tập trung chọn và lưu giọng, ngữ điệu, phong cách dịch và thiết lập; nhận diện, dịch và sửa lời đọc tiếp tục trong chat Gemini hoặc agent.
+- Phụ đề chọn font, màu chữ, màu và độ mờ nền; bật/tắt popup/karaoke, chọn kiểu hiện chữ hoặc chỉ tô từ đang đọc. Sửa khoảng cách từ trong preview.
+- Phụ đề tự co theo chiều rộng và chiều cao khung hình, giới hạn câu tối đa 3 dòng để tránh chữ quá khổ trong video dọc.
+- Kiểm tra RAM, CPU và dung lượng trước khi cài môi trường; cho chọn model local phù hợp. Không tự hạ xuống Lite chỉ vì ít nhân CPU.
+- Giữ tốc độ tự nhiên của voice ngắn, đo lại WAV trước khi xuất và sửa độ trễ tích luỹ khi nối audio.
+- Mac dùng Local Voice Pro với ONNX/CPU FP32; kiểm tra sample rate, số mẫu và cache theo SDK/model. Thêm lệnh diagnose để đối chiếu môi trường và WAV mà không tạo tiếng hoặc tải model.
+
+31/31 kiểm thử kit qua, gồm bản ZIP giải nén và kiểm tra FFmpeg với WAV tổng hợp 24/48 kHz. Bản beta; chưa kiểm chứng đầy đủ mọi cấu hình Windows/macOS. Hiện tượng voice gốc đọc chậm trên một máy Mac khác chưa xác định nguyên nhân và sẽ được điều tra tiếp; bản này không cam kết đã xử lý hết hiện tượng đó. Tài khoản AI và phí dịch vụ bên ngoài do người dùng tự chuẩn bị.

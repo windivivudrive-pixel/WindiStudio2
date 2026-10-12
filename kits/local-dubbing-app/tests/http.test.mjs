@@ -41,6 +41,7 @@ test('HTTP persistence, chat handoff, stale revision, origin guard and private f
   assert.equal(r.status,400);
   assert.deepEqual((await api('/api/projects/'+p.id))[1],beforeInvalid);
   assert.equal((await api('/api/voice-config'))[1].openai.configured,true);
+  const [,diagnostics]=await api('/api/projects/'+p.id+'/diagnostics');assert.equal(diagnostics.projectId,p.id);assert.ok(!JSON.stringify(diagnostics).includes(secret));
   const [,fonts]=await api('/api/subtitle-fonts');assert.ok(Array.isArray(fonts));assert.ok(fonts.every(f=>!('path' in f)));
   [r,p]=await api('/api/projects/'+p.id+'/preferences',{config:{fontFamily:'sans',backgroundColor:'#345678',backgroundOpacity:35}});
   assert.equal(r.status,200);assert.equal(p.config.backgroundOpacity,35);

@@ -3,6 +3,8 @@ import { copyFile, readFile, writeFile, mkdir } from 'node:fs/promises';
 import { join, dirname, resolve, extname } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
+import {audioInfo,timingPlan,assertLocalSampleRate} from './timing.mjs';
+import {inspectRuntime} from './runtime.mjs';
 import { run } from './process.mjs';
 import { resolveRuntime } from './runtime.mjs';
 import { apiVoices, apiSpeech, voiceFingerprint } from './voice-api.mjs';
@@ -60,7 +62,7 @@ export function voicedSegments(p) {
 }
 function invalidateVoice(p) {
   delete p.artifacts.tts; delete p.artifacts.sample; delete p.artifacts.samples; delete p.artifacts.sampleSettings; delete p.artifacts.render;
-  for (const s of p.segments) { delete s.ratio; delete s.ttsDuration; }
+  for (const s of p.segments) { delete s.ratio; delete s.ttsDuration; delete s.audio; delete s.timing; }
 }
 export function assertIdle(id) { if (active.has(id)) throw new Error('Đợi tác vụ hoàn tất hoặc hủy trước khi thay đổi.'); }
 export function validateSegments(input, duration) {
@@ -176,7 +178,7 @@ export function startJob(id, step, runtimeSettings, options={}) {
     }});}catch(error){
       if(signal.aborted)throw error;
       // Third-party tracebacks contain package/model names and local paths.
-      const safe=/^(?:Giọng đã chọn không có|Chưa có bộ giọng local|Danh sách giọng local)/.test(validationError);
+      const safe=/^(?:Giọng đã chọn không có|Chưa có bộ giọng local|Danh sách giọng local|Sample rate của voice|Số mẫu audio)/.test(validationError);
       throw new Error(safe?validationError:`${kind==='whisper'?'Windi Decode':'Windi TTS'} chưa hoàn tất tác vụ. Kiểm tra môi trường local, kết nối tải model và dung lượng máy rồi thử lại.`);
     }
   };
@@ -246,14 +248,16 @@ export function startJob(id, step, runtimeSettings, options={}) {
       const segments=voicedSegments(p);
       if(p.config.ttsProvider==='local'){report('Windi TTS đang tạo giọng theo từng người nói…');await engine('vieneu','tts',{mode:p.config.mode,segments,directory:ttsDir});}
       else {report('Đang tạo giọng API theo từng người nói…');await apiSpeech({root:dataRoot,config:p.config,segments,directory:ttsDir,signal,execute,report});}
-      for(const s of p.segments){ const info=await probe(join(ttsDir,s.id+'.wav'),signal);s.ttsDuration=Number(info.format.duration);s.ratio=s.ttsDuration/(s.end-s.start); }
-      p.artifacts.tts=p.config.ttsProvider==='local'?{runtime:runtimeSettings.vieneu,provider:'local'}:{provider:p.config.ttsProvider,fingerprint:await voiceFingerprint(dataRoot,p.config)};await writeFile(join(dir,'timing.json'),JSON.stringify(p.segments,null,2));report('Đã tạo voice. Kiểm tra các câu lệch thời lượng trước khi xuất.',100);return;
+      for(const s of p.segments){s.audio=audioInfo(await probe(join(ttsDir,s.id+'.wav'),signal));assertLocalSampleRate(p.config,s.audio);s.ttsDuration=s.audio.duration;s.timing=timingPlan(s.end-s.start,s.ttsDuration);s.ratio=s.timing.ratio;}
+      p.artifacts.tts=p.config.ttsProvider==='local'?{runtime:runtimeSettings.vieneu,provider:'local'}:{provider:p.config.ttsProvider,fingerprint:await voiceFingerprint(dataRoot,p.config)};await writeFile(join(dir,'timing.json'),JSON.stringify(p.segments,null,2));report(p.segments.some(s=>s.timing.rewriteRecommended)?'Đã tạo voice. Có câu lệch trên 10%; ưu tiên viết lại lời đọc trong chat trước khi xuất.':'Đã tạo voice ở tốc độ tự nhiên. Sẵn sàng kiểm tra và xuất.',100);return;
     }
     if(step==='render'){
       if(!p.artifacts.tts)throw new Error('Tạo giọng đọc trước.');
       if(p.config.ttsProvider!=='local' && p.artifacts.tts.fingerprint!==await voiceFingerprint(dataRoot,p.config))throw new Error('Cấu hình API đã đổi. Tạo lại giọng trước khi xuất.');
       if(p.config.ttsProvider==='local' && p.artifacts.tts.runtime!==runtimeSettings.vieneu)throw new Error('Môi trường Windi TTS đã đổi. Tạo lại giọng trước khi xuất.');
-      if(p.segments.some(s=>!Number.isFinite(s.ratio)||s.ratio<.8||s.ratio>1.2))throw new Error('Có câu lệch thời lượng trên 20%. Sửa hoặc bấm Viết lại cho khớp rồi tạo tiếng lại.');
+      // Re-measure the actual files; old project ratios must never drive export.
+      for(const s of p.segments){s.audio=audioInfo(await probe(join(dir,'tts',s.id+'.wav'),signal));assertLocalSampleRate(p.config,s.audio);s.ttsDuration=s.audio.duration;s.timing=timingPlan(s.end-s.start,s.ttsDuration);s.ratio=s.timing.ratio;}
+      if(p.segments.some(s=>s.timing.requiresRewrite))throw new Error('Có câu lệch thời lượng trên 20%. Sửa hoặc bấm Viết lại cho khớp rồi tạo tiếng lại.');
       delete p.artifacts.render;
       const pieces=[];let originalCursor=0,outputCursor=0;const adjusted=[];
       const height=p.config.resolution;
@@ -262,7 +266,7 @@ export function startJob(id, step, runtimeSettings, options={}) {
       if(p.config.subtitle!=='none'){
         await mkdir(captionDir,{recursive:true});
         const requestFile=join(dir,'request-captions.json');
-        await writeFile(requestFile,JSON.stringify({...p.config,fontPath:resolveSubtitleFont(p.config.fontFamily).path,width,height,segments:p.segments.map(s=>({...s,captionDuration:(s.end-s.start)*Math.sqrt(s.ratio)})),directory:captionDir}));
+        await writeFile(requestFile,JSON.stringify({...p.config,fontPath:resolveSubtitleFont(p.config.fontFamily).path,width,height,segments:p.segments.map(s=>({...s,captionDuration:s.timing.voiceDuration})),directory:captionDir}));
         const runtime=resolveRuntime(runtimeSettings.vieneu);
         await execute(runtime.python,[join(kit,'workers/captions.py'),requestFile],{cwd:runtime.cwd});
       }
@@ -270,7 +274,7 @@ export function startJob(id, step, runtimeSettings, options={}) {
       const pieceDir=join(dir,'pieces');await mkdir(pieceDir,{recursive:true});
       async function piece(start,duration,segment){
         if(duration<.03)return;
-        const file=join(pieceDir,`${pieces.length}.mp4`), k=segment?Math.sqrt(segment.ratio):1, outDuration=duration*k;
+        const file=join(pieceDir,`${pieces.length}.mkv`), k=segment?segment.timing.videoStretch:1, outDuration=duration*k;
         const args=['-y','-v','error','-ss',String(start),'-t',String(duration),'-i',video];
         if(segment) args.push('-i',join(dir,'tts',segment.id+'.wav'));
         else args.push('-f','lavfi','-i','anullsrc=r=48000:cl=stereo');
@@ -278,23 +282,25 @@ export function startJob(id, step, runtimeSettings, options={}) {
           if(p.config.karaoke)args.push('-f','concat','-safe','0','-i',join(captionDir,segment.id+'.ffconcat'));
           else args.push('-i',join(captionDir,segment.id+'.png'));
         }
-        const audio=segment?`[1:a]atempo=${k},apad,atrim=duration=${outDuration},aformat=sample_rates=48000:channel_layouts=stereo[voice]`:`[1:a]atrim=duration=${outDuration}[voice]`;
-        const videoFilter=segment&&p.config.subtitle!=='none'?`[0:v]setpts=${k}*(PTS-STARTPTS),${scale}[basev];[basev][2:v]overlay=0:0[v]`:`[0:v]setpts=${k}*(PTS-STARTPTS),${scale}[v]`;
+        const audio=segment?`[1:a]asetpts=PTS-STARTPTS,atempo=${segment.timing.audioTempo},apad,atrim=duration=${outDuration},aformat=sample_rates=48000:channel_layouts=stereo[voice]`:`[1:a]atrim=duration=${outDuration}[voice]`;
+        const videoFilter=segment&&p.config.subtitle!=='none'?`[0:v]setpts=${k}*(PTS-STARTPTS),${scale}[basev];[basev][2:v]overlay=0:0:enable='lt(t,${segment.timing.voiceDuration})'[v]`:`[0:v]setpts=${k}*(PTS-STARTPTS),${scale}[v]`;
         let filters=`${videoFilter};${audio}`;
         if(p.video.audio&&p.config.backgroundVolume>0)filters+=`;[0:a]atempo=${1/k},volume=${p.config.backgroundVolume},apad,atrim=duration=${outDuration}[bg];[voice][bg]amix=inputs=2:duration=first:normalize=0[a]`;
         else filters+=';[voice]anull[a]';
-        args.push('-filter_complex',filters,'-map','[v]','-map','[a]','-t',String(outDuration),'-c:v','libx264','-preset','veryfast','-crf','21','-c:a','aac','-b:a','160k',file);
+        args.push('-filter_complex',filters,'-map','[v]','-map','[a]','-t',String(outDuration),'-c:v','libx264','-preset','veryfast','-crf','21','-c:a','pcm_s16le',file);
         await execute('ffmpeg',args);pieces.push(file);
-        if(segment)adjusted.push({...segment,start:outputCursor,end:outputCursor+outDuration});outputCursor+=outDuration;
+        const actualDuration=Number((await probe(file,signal)).format.duration);
+        if(!Number.isFinite(actualDuration)||actualDuration<=0)throw new Error('Không đo được thời lượng đoạn đã ghép.');
+        if(segment)adjusted.push({...segment,start:outputCursor,end:outputCursor+Math.min(segment.timing.voiceDuration,actualDuration)});outputCursor+=actualDuration;
       }
       for(let i=0;i<p.segments.length;i++){const s=p.segments[i];report(`Đang ghép câu ${i+1}/${p.segments.length}`,Math.round(i/p.segments.length*85));await piece(originalCursor,s.start-originalCursor,null);await piece(s.start,s.end-s.start,s);originalCursor=s.end;}
       await piece(originalCursor,p.video.duration-originalCursor,null);
       await writeFile(join(dir,'concat.txt'),pieces.map(f=>`file '${f.replace(/\\/g,'/').replace(/'/g,"'\\''")}'`).join('\n'));
       await writeFile(join(dir,'subtitles.srt'),srt(adjusted));await writeFile(join(dir,'subtitles.ass'),ass(adjusted,p.config));
-      await execute('ffmpeg',['-y','-v','error','-f','concat','-safe','0','-i',join(dir,'concat.txt'),'-c','copy',join(dir,'joined.mp4')]);
+      await execute('ffmpeg',['-y','-v','error','-f','concat','-safe','0','-i',join(dir,'concat.txt'),'-c','copy',join(dir,'joined.mkv')]);
       report('Đang ghép phụ đề và hoàn tất MP4…',90);
       const final=join(dir,'dubbed.mp4');
-      await execute('ffmpeg',['-y','-v','error','-i',join(dir,'joined.mp4'),'-c','copy','-movflags','+faststart',final]);
+      await execute('ffmpeg',['-y','-v','error','-i',join(dir,'joined.mkv'),'-c:v','copy','-c:a','aac','-b:a','160k','-movflags','+faststart',final]);
       await execute('ffmpeg',['-y','-v','error','-i',final,'-vn','-c:a','pcm_s16le',join(dir,'dubbed.wav')]);
       const info=await probe(final,signal);p.artifacts.render={mp4:'dubbed.mp4',srt:'subtitles.srt',wav:'dubbed.wav',duration:Number(info.format.duration)};return;
     }
@@ -304,3 +310,23 @@ export function startJob(id, step, runtimeSettings, options={}) {
   return p;
 }
 export function importTranslation(id,input){assertIdle(id);const p=getProject(id);if(!p.pendingTranslation||input.revision!==p.revision)throw new Error('Yêu cầu dịch đã cũ hoặc không còn chờ. Tạo lại yêu cầu dịch.');p.segments=validateTranslations(p.segments,input);p.revision++;delete p.pendingTranslation;delete p.artifacts.tts;delete p.artifacts.render;p.job={status:'done',step:'translate',message:'Đã nhận bản dịch từ chat.',progress:100};return saveProject(p);}
+
+export async function diagnoseProject(id,runtimeSettings){
+  const p=getProject(id),dir=projectDir(id),local=p.config.ttsProvider==='local';
+  const expectedRate=local?({v3turbo:48000,v3nano:24000})[p.config.mode]||null:null;
+  const rows=[];
+  const files=[...p.segments.slice(0,50).map(s=>({id:s.id,file:join(dir,'tts',s.id+'.wav'),slot:s.end-s.start})),...Object.entries(p.artifacts.samples||{}).map(([id,file])=>({id:'sample:'+id,file:join(dir,file)}))];
+  for(const row of files){
+    if(!existsSync(row.file)){rows.push({id:row.id,status:'missing'});continue;}
+    try{
+      const audio=audioInfo(await probe(row.file));let generation=null;
+      try{generation=JSON.parse(await readFile(row.file+'.audio.json','utf8'));}catch{}
+      const sample=row.id.startsWith('sample:')?p.artifacts.sampleSettings?.[row.id.slice(7)]:null;
+      const selectedRate=sample?(sample.provider==='local'?({v3turbo:48000,v3nano:24000})[sample.mode]||null:null):expectedRate;
+      const rateMismatch=Boolean(selectedRate&&audio.sampleRate!==selectedRate);
+      if((sample?.provider||p.config.ttsProvider)!=='local')generation=null;
+      rows.push({id:row.id,audio,generation,expectedSampleRate:selectedRate,rateMismatch,...(row.slot?{slot:row.slot,timing:timingPlan(row.slot,audio.duration)}:{})});
+    }catch(error){rows.push({id:row.id,error:error.message});}
+  }
+  return {projectId:id,provider:p.config.ttsProvider,mode:p.config.mode,expectedSampleRate:expectedRate,runtime:local?inspectRuntime(resolveRuntime(runtimeSettings.vieneu)):null,files:rows,limitedToFirst:50,note:'Không tạo voice hoặc nạp model. Chẩn đoán không thể xác nhận nhịp đọc/cao độ chỉ từ header WAV; cần nghe file gốc để kết luận.'};
+}
