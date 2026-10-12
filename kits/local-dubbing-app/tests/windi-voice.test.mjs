@@ -7,6 +7,7 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { randomUUID } from 'node:crypto';
 import { apiVoices, apiSpeech, saveVoiceSettings, publicVoiceSettings } from '../voice-api.mjs';
+import {execFileSync} from 'node:child_process';
 import { run } from '../process.mjs';
 const host='11111111-1111-4111-8111-111111111111',guest='22222222-2222-4222-8222-222222222222';
 const secret='windi_voice_'+ 'fixture'.repeat(8);
@@ -73,7 +74,7 @@ test('Windi Voice persists idempotency before POST, handles pending, unknown and
   const controller=new AbortController();controller.abort();await assert.rejects(apiSpeech({...input,directory:join(f.root,'cancel'),signal:controller.signal}));
  }finally{await f.close();}
 });
-test('Windi Voice pipeline loads named voices and renders two speakers without a local TTS runtime',{timeout:15000},async()=>{
+test('Windi Voice pipeline loads named voices and renders two speakers without a local TTS runtime',{timeout:30000},async()=>{
  const f=await fixture();try{
   process.env.WINDI_DUBBING_DATA=f.root;
   const pipeline=await import('../pipeline.mjs');
@@ -81,12 +82,28 @@ test('Windi Voice pipeline loads named voices and renders two speakers without a
   await run('ffmpeg',['-y','-v','error','-f','lavfi','-i','color=c=blue:s=160x90:r=30','-t','2','-c:v','libx264','-pix_fmt','yuv420p',clip]);
   let project=pipeline.createProject('Windi talkshow');await pipeline.importVideo(project.id,clip);
   project=pipeline.updateProject(project.id,{config:{ttsProvider:'windi',apiModel:'',subtitle:'none'},speakers:[{id:'host',name:'MC',voice:host},{id:'guest',name:'Khách mời',voice:guest}],segments:[{id:'a',start:0,end:1,text:'Hello',translation:'Xin chào',speaker:'host'},{id:'b',start:1,end:2,text:'Hi',translation:'Chào bạn',speaker:'guest'}]});
-  async function job(step){pipeline.startJob(project.id,step,{vieneu:''});for(let i=0;i<500;i++){project=pipeline.getProject(project.id);if(project.job.status!=='running'){assert.equal(project.job.status,'done',project.job.message);return;}await new Promise(resolve=>setTimeout(resolve,10));}throw new Error('Job timed out');}
+  async function job(step,options={}){pipeline.startJob(project.id,step,{vieneu:''},options);for(let i=0;i<500;i++){project=pipeline.getProject(project.id);if(project.job.status!=='running'){assert.equal(project.job.status,'done',project.job.message);return;}await new Promise(resolve=>setTimeout(resolve,10));}throw new Error('Job timed out');}
   await job('voices');assert.deepEqual(project.voices.map(v=>v.id),[host,guest]);
   await job('tts');assert.ok(project.segments.every(s=>Math.abs(s.ratio-1)<.01));
   assert.deepEqual(f.calls.filter(c=>c.method==='POST').map(c=>c.body.voice_id),[host,guest]);
   await job('render');assert.ok(project.artifacts.render.duration>=2);
   assert.ok((await stat(join(pipeline.projectDir(project.id),'dubbed.mp4'))).size>1000);
   assert.match(await readFile(join(pipeline.projectDir(project.id),'subtitles.srt'),'utf8'),/Chào bạn/);
+  const savedConfig=structuredClone(project.config),savedSpeakers=structuredClone(project.speakers),savedRender=structuredClone(project.artifacts.render),revision=project.revision;
+  await job('sample',{speaker:'host',text:'Câu mẫu khác',preview:{config:{mode:'v3nano'},speakers:savedSpeakers.map(s=>({...s,voice:s.id==='host'?guest:host}))}});
+  assert.deepEqual(project.config,savedConfig);assert.deepEqual(project.speakers,savedSpeakers);assert.deepEqual(project.artifacts.render,savedRender);assert.equal(project.revision,revision);
+  assert.equal(project.artifacts.sampleSettings.host.voice,guest);assert.equal(project.artifacts.sampleSettings.host.text,'Câu mẫu khác');assert.equal(project.artifacts.sampleSettings.host.mode,'v3nano');
+  assert.equal(f.calls.filter(c=>c.method==='POST').at(-1).body.voice_id,guest);
+  for(const style of ['color','highlight','popup']){
+    pipeline.updateProject(project.id,{config:{subtitle:'box',karaoke:true,karaokeStyle:style,karaokeColor:'#00ff00',karaokeScale:125}});
+    await job('render');
+    const manifest=await readFile(join(pipeline.projectDir(project.id),'captions/a.ffconcat'),'utf8');
+    assert.match(manifest,/a-k0.png/);assert.match(manifest,/a-k1.png/);
+    const frame=at=>execFileSync('ffmpeg',['-v','error','-ss',at,'-i',join(pipeline.projectDir(project.id),'dubbed.mp4'),'-frames:v','1','-f','image2pipe','-vcodec','png','-']);
+    assert.notDeepEqual(frame('0.1'),frame('0.7'),'Karaoke frame must change within the same sentence');
+    assert.ok(project.artifacts.render.duration>=1.95&&project.artifacts.render.duration<2.2);
+    assert.match(await readFile(join(pipeline.projectDir(project.id),'subtitles.srt'),'utf8'),/Xin chào/);
+  }
+
  }finally{await f.close();}
 });

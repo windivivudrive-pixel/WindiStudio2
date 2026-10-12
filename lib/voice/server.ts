@@ -2,7 +2,7 @@ import 'server-only';
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/server';
 import {voiceDisplayText} from './branding';
-import { DEFAULT_WORKFLOW_VOICE_ID, isComparisonVoice, STARTER_VOICES, VOICE_LANGUAGES, VOICE_LIBRARY_LANGUAGES, isSampleLibraryLanguage, voiceLibraryLimit, voiceUseCases, type StudioVoice, type VoiceAccent } from './shared';
+import { CURATED_PUBLIC_VOICES, DEFAULT_WORKFLOW_VOICE_ID, isComparisonVoice, STARTER_VOICES, VOICE_LANGUAGES, VOICE_LIBRARY_LANGUAGES, isSampleLibraryLanguage, voiceLibraryLimit, voiceUseCases, type StudioVoice, type VoiceAccent } from './shared';
 
 export class VoiceError extends Error { constructor(message:string, public status=400) {super(voiceDisplayText(message));} }
 export const bucket = 'windi-voice-audio';
@@ -138,7 +138,7 @@ async function catalogPage(language?:string, cursor?:string):Promise<CartesiaCat
 }
 
 export async function publicVoices():Promise<{voices:StudioVoice[]; source:string}> {
-  if(!providerReady()) return {voices:STARTER_VOICES,source:'documented'};
+  if(!providerReady()) return {voices:[...CURATED_PUBLIC_VOICES,...STARTER_VOICES],source:'documented'};
   if(catalog && catalog.expires>Date.now()) return {voices:catalog.voices,source:'live'};
   const pages=await Promise.all(VOICE_LIBRARY_LANGUAGES.map(async language=>({language:language.id,page:await catalogPage(language.id)})));
   const seen=new Set<string>();
@@ -152,7 +152,8 @@ export async function publicVoices():Promise<{voices:StudioVoice[]; source:strin
       }
     }
   }
-  catalog={expires:Date.now()+300000,voices};
+  const curatedIds=new Set(CURATED_PUBLIC_VOICES.map(voice=>voice.id));
+  catalog={expires:Date.now()+300000,voices:[...CURATED_PUBLIC_VOICES,...voices.filter(voice=>!curatedIds.has(voice.id))]};
   return {voices,source:'live'};
 }
 export async function publicVoice(id:string) {

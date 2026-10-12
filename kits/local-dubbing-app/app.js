@@ -1,194 +1,175 @@
-const labels={environment:{crumb:'KIỂM TRA MÁY',title:'Kiểm tra môi trường',desc:'Mình kiểm tra các công cụ cần thiết để bạn biết máy đã sẵn sàng lồng tiếng chưa.'},video:{crumb:'CHỌN VIDEO',title:'Chọn video cần lồng tiếng',desc:'Chọn file trên máy hoặc dán đường dẫn video. App kiểm tra định dạng và thời lượng trước khi chạy.'},transcript:{crumb:'LỜI THOẠI',title:'Nghe lại lời thoại gốc',desc:'Windi Decode tạo các câu có thời gian bắt đầu và kết thúc. Bạn có thể sửa nội dung và thời gian từng câu trước khi dịch.'},translation:{crumb:'DỊCH LỜI THOẠI',title:'Dịch bằng subscription của bạn',desc:'Chọn Codex hoặc Antigravity. App gửi lời thoại cần dịch, nhận từng câu về và giữ các mốc thời gian của video.'},voice:{crumb:'GIỌNG ĐỌC & PHỤ ĐỀ',title:'Chọn giọng và style phụ đề',desc:'Gán giọng riêng cho MC và khách mời. Nghe thử từng vai trước khi tạo tiếng toàn bộ video.'},export:{crumb:'XEM THỬ & XUẤT',title:'Kiểm tra video trước khi xuất',desc:'Xem lại tiếng, phụ đề và độ khớp. Chọn MP4, SRT hoặc file WAV để lưu trên máy.'}};
-const stepButtons=[...document.querySelectorAll('[data-step]')];
-const checkList=document.querySelector('#checkList');
-const toast=document.querySelector('#toast');
-let toastTimer;
-
-function tell(message){toast.textContent=message;toast.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>toast.classList.remove('show'),2800)}
-
-const toolSpecs=[
-  ['python','Python','Python có sẵn trong PATH'],
-  ['ffmpeg','FFmpeg','Xử lý âm thanh và video'],
-  ['ffprobe','Kiểm tra video','Đọc định dạng và thời lượng'],
-  ['ytDlp','Tải video từ link','Tùy chọn — cần khi dùng YouTube/TikTok/X'],
-  ['whisper','Windi Decode','Nhận diện lời thoại và thời gian'],
-  ['vieneu','Windi TTS','Tạo giọng Việt trên máy'],
-  ['ai','Codex / Antigravity','Đã tìm thấy ít nhất một CLI'],
-];
-
-async function refreshEnvironment(){
-  document.querySelector('#checkSummary').textContent='Đang kiểm tra công cụ và môi trường đã chọn.';
-  document.querySelector('#machineSummary').textContent='Đang kiểm tra…';
-  try{
-    const response=await fetch('/api/system-check',{cache:'no-store'});
-    if(!response.ok) throw new Error('Không nhận được kết quả kiểm tra.');
-    const result=await response.json();
-    displayEnvironment(result);
-  }catch(error){
-    document.querySelector('#checkSummary').textContent='Chưa kết nối được bridge local. '+error.message;
-    document.querySelector('#machineSummary').textContent='Bridge chưa sẵn sàng';
-    document.querySelector('#previewStatus').textContent='Chưa kết nối được bridge local.';
-  }
-}
-
-const escapeHtml=value=>String(value).replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
-function displayEnvironment(result){
-    document.querySelector('#decodeRuntime').value=result.runtimeSettings.whisper;
-    document.querySelector('#ttsRuntime').value=result.runtimeSettings.vieneu;
-    const t=result.tools;
-    const rows=[t.python,t.ffmpeg,t.ffprobe,t.whisper,t.vieneu,t.codex||t.antigravity];
-    checkList.innerHTML=toolSpecs.map(([key,title,description])=>{
-      const ready=key==='ai'?Boolean(t.codex||t.antigravity):Boolean(t[key]);
-      const value=key==='ai'?[t.codex&&'Codex CLI',t.antigravity&&'Antigravity CLI'].filter(Boolean).join(' · '):t[key];
-      const status=ready?'found':'missing';
-      const runtime=result.runtimes[key];
-      const detail=runtime?.error || (ready?(value||description):description);
-      return `<div class="check-row"><span class="tool-icon ${key==='ffmpeg'?'ff':key==='whisper'?'wh':key==='vieneu'?'vi':key==='ai'?'ai':''}">${key==='python'?'Py':key==='ffmpeg'?'F':key==='ffprobe'?'FP':key==='ytDlp'?'DL':key==='whisper'?'WD':key==='vieneu'?'WT':'AI'}</span><span><b>${title}</b><small>${escapeHtml(detail)}</small>${runtime?.executable?`<small class="runtime-path" title="${escapeHtml(runtime.executable)}">${escapeHtml(runtime.executable)}</small>`:''}</span><span class="status ${status}"><i></i>${ready?'Đã tìm thấy':key==='ytDlp'?'Tùy chọn':'Cần chuẩn bị'}</span></div>`;
-    }).join('');
-    const facts=[result.machine.os,result.machine.architecture,`${Math.round(result.machine.ramBytes/1024**3)} GB RAM`,result.machine.freeBytes===null?'Ổ đĩa: chưa đọc được':`${Math.round(result.machine.freeBytes/1024**3)} GB trống`];
-    document.querySelector('#machineFacts').innerHTML=facts.map(item=>`<span>${escapeHtml(item)}</span>`).join('');
-    const missing=rows.filter(item=>!item).length;
-    document.querySelector('#machineSummary').textContent=missing?`${missing} mục cần chuẩn bị`:'Đủ công cụ cơ bản';
-    document.querySelector('#checkSummary').textContent=`${missing?`${missing} mục đang thiếu hoặc cần xác minh.`:'Các công cụ được nhận diện.'} Model được kiểm tra khi chạy tác vụ.`;
-    document.querySelector('#previewStatus').textContent=missing?'Cần chuẩn bị công cụ còn thiếu ở bước kiểm tra.':'Đã phát hiện công cụ cơ bản. Sẵn sàng chọn video.';
-    document.querySelector('#engineIndicator').className=`engine-indicator ${missing?'pending':'ok'}`;
-}
-
-async function saveRuntimes(reset=false){
-  const buttons=[...document.querySelectorAll('#runtimeForm button')];
-  buttons.forEach(button=>button.disabled=true);
-  const feedback=document.querySelector('#runtimeResult');
-  feedback.textContent='Đang kiểm tra môi trường…';feedback.classList.remove('error');
-  try{
-    const response=await fetch('/api/runtime-config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({whisper:reset?'':document.querySelector('#decodeRuntime').value,vieneu:reset?'':document.querySelector('#ttsRuntime').value})});
-    const result=await response.json();
-    if(!response.ok)throw new Error(result.error||'Chưa lưu được môi trường.');
-    displayEnvironment(result);
-    feedback.textContent=reset?'Đã chuyển về Python mặc định.':'Đã lưu liên kết. Các lần kiểm tra sau sẽ dùng môi trường đã chọn; các tác vụ tiếp theo sẽ dùng môi trường này.';
-  }catch(error){feedback.textContent=error.message;feedback.classList.add('error');}
-  finally{buttons.forEach(button=>button.disabled=false);}
-}
-document.querySelector('#runtimeForm').addEventListener('submit',event=>{event.preventDefault();saveRuntimes();});
-document.querySelector('#resetRuntime').addEventListener('click',()=>saveRuntimes(true));
-
-let voiceSettings={}, sourceStop, localVoiceAttempt='', pendingSampleSpeaker='', lastApiProvider='windi';
-let project, currentStep='environment', polling=false, lastJobStatus='', dirty=false, voiceSettingsBusy=false;
+const $=selector=>document.querySelector(selector);
+const escapeHtml=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const styles={natural:'Tự nhiên, dễ nghe',faithful:'Sát nghĩa, chính xác',concise:'Ngắn gọn, rõ ý',storytelling:'Kể chuyện, có nhịp'};
+const deliveries={conversational:'Gần gũi',calm:'Điềm tĩnh',energetic:'Năng lượng',formal:'Chuyên nghiệp'};
+const providerNames={local:'Giọng local',windi:'Windi Voice API',elevenlabs:'ElevenLabs API',openai:'OpenAI / API tương thích'};
+const defaults={windi:'https://windistudio.app',elevenlabs:'https://api.elevenlabs.io/v1',openai:'https://api.openai.com/v1'};
+let hardware,previewTimer,fonts=[],project,draft,tab='voice',voiceSettings={},apiDrafts={},catalogs=new Map(),busy=false,polling=false,dirty=false,lastJob='',toastTimer,runtimeSettings={whisper:'',vieneu:''};
+let lastApi='windi',savedMessage='Đã tải thiết lập đã lưu';
+const endpoint=action=>`/api/projects/${project.id}${action?'/'+action:''}`;
+const catalogKey=()=>draft.config.ttsProvider+':'+draft.config.mode;
+const catalog=()=>catalogs.get(catalogKey())||[];
 async function api(path,body,method='POST'){
-  const response=await fetch(path,body!==undefined?{method,headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}:{});
-  const result=await response.json();if(!response.ok)throw new Error(result.error||'Không kết nối được bridge.');return result;
+  const r=await fetch(path,body===undefined?{cache:'no-store'}:{method,headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  const data=await r.json();if(!r.ok)throw new Error(data.error||'Chưa kết nối được Windi Dubbing.');return data;
 }
-const projectApi=action=>`/api/projects/${project.id}${action?'/'+action:''}`;
-const artifactUrl=file=>projectApi('file/'+encodeURIComponent(file));
-async function loadProjects(preferred){
-  const projects=await api('/api/projects');
-  if(!projects.length){const created=await api('/api/projects',{name:'Dự án đầu tiên'});return loadProjects(created.id);}
-  const select=document.querySelector('#projectSelect');select.innerHTML=projects.map(p=>`<option value="${p.id}">${escapeHtml(p.name)}</option>`).join('');
-  const wanted=preferred||localStorage.getItem('windiProject');select.value=projects.some(p=>p.id===wanted)?wanted:projects[0].id;
-  project=await api('/api/projects/'+select.value);voiceSettings=await api('/api/voice-config');localVoiceAttempt='';if(project.config.ttsProvider!=='local')lastApiProvider=project.config.ttsProvider;localStorage.setItem('windiProject',project.id);dirty=false;renderStep();updateStatus();
-}
-function selectConfig(key,options){return `<select data-config="${key}" id="config-${key}">${options.map(([value,label])=>`<option value="${escapeHtml(value)}" ${String(project.config[key])===String(value)?'selected':''}>${escapeHtml(label)}</option>`).join('')}</select>`;}
-function button(step,label){return `<button class="button primary" data-job="${step}">${label}</button>`;}
-function segmentTable(){return `<div class="table-scroll"><table class="segments-table"><thead><tr><th>Câu / thời gian</th><th>Người nói</th><th>Lời thoại gốc</th><th>Bản dịch Việt</th></tr></thead><tbody>${project.segments.map(s=>`<tr data-segment="${escapeHtml(s.id)}"><td><b>${escapeHtml(s.id)}</b><label>Bắt đầu<input type="number" min="0" step="0.01" data-field="start" value="${s.start}"></label><label>Kết thúc<input type="number" min="0" step="0.01" data-field="end" value="${s.end}"></label>${s.ratio?`<small class="${s.ratio<.8||s.ratio>1.2?'timing-bad':'timing-ok'}">Tỷ lệ ${s.ratio.toFixed(2)}×</small>`:''}</td><td><label>Người nói<select data-field="speaker" aria-label="Người nói câu ${escapeHtml(s.id)}">${project.speakers.map(v=>`<option value="${escapeHtml(v.id)}" ${s.speaker===v.id?'selected':''}>${escapeHtml(v.name)}</option>`).join('')}</select></label>${project.video?.audio?`<button class="button secondary" data-source="${escapeHtml(s.id)}">Nghe gốc</button>`:''}</td><td><textarea data-field="text" aria-label="Lời thoại câu ${escapeHtml(s.id)}">${escapeHtml(s.text)}</textarea></td><td><textarea data-field="translation" aria-label="Bản dịch câu ${escapeHtml(s.id)}">${escapeHtml(s.translation)}</textarea></td></tr>`).join('')}</tbody></table></div><audio id="sourceAudio" controls hidden aria-label="Nghe câu gốc"></audio><button class="button secondary" id="saveSegments">Lưu lời thoại & bản dịch</button>`;}
-function renderStep(){
-  if(!project)return;clearInterval(sourceStop);document.querySelector('#sourceAudio')?.pause();
-  const label=labels[currentStep];document.querySelector('#crumbCurrent').textContent=label.crumb;document.querySelector('#pageTitle').textContent=label.title;document.querySelector('#pageDescription').textContent=label.desc;
-  stepButtons.forEach(b=>{if(!b.classList.contains('step-button'))return;const active=b.dataset.step===currentStep;b.classList.toggle('is-active',active);if(active)b.setAttribute('aria-current','step');else b.removeAttribute('aria-current');});
-  document.querySelector('#environmentPanel').hidden=currentStep!=='environment';const panel=document.querySelector('#workflowPanel');panel.hidden=currentStep==='environment';
-  if(currentStep==='video')panel.innerHTML=`<div class="workflow-content"><h2>Video đầu vào</h2><label class="file-drop">Chọn video trên máy<input id="videoUpload" type="file" accept="video/*"></label><p>File tối đa 4GB. App tạo bản sao trong dữ liệu dự án.</p><label>Hoặc link YouTube / TikTok / X<input id="videoUrl" type="url" placeholder="https://..."></label>${button('download','Tải video từ link')}<details><summary>Dùng đường dẫn file có sẵn</summary><label>Đường dẫn đầy đủ<input id="videoPath" type="text" placeholder="/Users/ban/video.mp4 hoặc C:\\Video\\clip.mp4"></label><button id="importPath" class="button secondary">Nhập video</button></details>${project.video?`<p><b>Đã chọn:</b> ${escapeHtml(project.video.file)} · ${Math.round(project.video.duration)} giây · ${project.video.width}×${project.video.height}</p><button class="button primary" data-next="transcript">Tiếp tục →</button>`:''}</div>`;
-  if(currentStep==='transcript')panel.innerHTML=`<div class="workflow-content"><h2>Windi Decode</h2><label>Model nhận diện ${selectConfig('whisperModel',[['tiny','Local Decode Quick — thử nhanh'],['base','Local Decode Base'],['small','Local Decode Balanced — cân bằng'],['medium','Local Decode Accurate — cần nhiều RAM']])}</label><label>Ngôn ngữ gốc ${selectConfig('language',[['','Tự nhận diện'],['en','Tiếng Anh'],['zh','Tiếng Trung'],['ja','Tiếng Nhật'],['ko','Tiếng Hàn'],['vi','Tiếng Việt']])}</label>${button('transcribe','Nhận diện lời thoại')}<label class="import-json">Đã có timestamp? Nhập JSON<input id="transcriptUpload" type="file" accept=".json"></label><p>Nhận mảng câu hoặc JSON transcript gồm start, end, text. Nhập lại sẽ thay lời thoại và kết quả voice.</p>${project.segments.length?segmentTable():''}</div>`;
-  if(currentStep==='translation')panel.innerHTML=`<div class="workflow-content"><h2>Dịch qua tài khoản của bạn</h2><label>Cách dịch ${selectConfig('provider',[['codex','Codex CLI — ChatGPT subscription'],['antigravity','Antigravity CLI — tài khoản đã đăng nhập'],['chat','LLM trong chat hiện tại — qua skill']])}</label><p>Chỉ lời thoại và thời lượng từng câu được gửi cho LLM. Video và âm thanh xử lý trên máy. Tác vụ dùng quota tài khoản của bạn.</p><p>Codex: chạy <code>codex login</code>. Antigravity: đăng nhập bằng <code>agy</code>. App desktop đang mở chưa bảo đảm CLI đã đăng nhập.</p>${button('translate',project.config.provider==='chat'?'Tạo yêu cầu dịch':'Dịch lời thoại')}${button('rewrite','Viết lại cho khớp thời lượng')}${project.pendingTranslation?`<div class="handoff-note"><p>Yêu cầu đã sẵn sàng. Trong chat, nói: “Dùng skill Windi Dubbing dịch tiếp dự án ${project.id}”.</p><a href="${artifactUrl('translation-request.json')}" download>Tải yêu cầu dịch JSON</a><label>Nhập kết quả từ LLM<input id="translationUpload" type="file" accept=".json"></label></div>`:''}${project.segments.length?segmentTable():'<p>Nhận diện hoặc nhập lời thoại trước.</p>'}</div>`;
-  if(currentStep==='voice')panel.innerHTML=voicePanel();
-  if(currentStep==='export')panel.innerHTML=`<div class="workflow-content"><h2>Xem thử & xuất</h2><label>Độ phân giải ${selectConfig('resolution',[[720,'720p — nhẹ'],[1080,'1080p']])}</label><label>Giữ âm thanh gốc ${selectConfig('backgroundVolume',[[0,'Tắt — chỉ giọng Việt'],[.1,'10%'],[.2,'20%'],[.3,'30%']])}</label><p>Giữ âm thanh gốc sẽ giữ cả lời nói gốc ở âm lượng nhỏ; đây chưa phải tách nhạc nền. Cross time-stretch có thể thay đổi nhẹ thời lượng video.</p>${button('render','Xuất video MP4')}${project.artifacts.render?`<div class="download-actions">${['mp4','srt','wav'].map(k=>`<a class="button secondary" href="${artifactUrl(project.artifacts.render[k])}?download=1">Tải ${k.toUpperCase()}</a>`).join('')}</div><p>Video ${project.artifacts.render.duration.toFixed(2)} giây đã lưu. Mở player ngoài app để kiểm tra lần cuối.</p>`:'<p>Tạo giọng và xử lý câu lệch thời lượng trước khi xuất.</p>'}</div>`;
-  bindPanel();updatePreview();updateStatus();
-  if(currentStep==='voice')ensureLocalVoices();
-}
-function voiceApiForm(){
-  const isWindi=project.config.ttsProvider==='windi', settings=voiceSettings[project.config.ttsProvider]||{};
-  return `<details class="voice-api-settings"><summary>Cấu hình ${isWindi?'Windi Voice':'API voice'} · ${settings.configured?'Đã lưu key':'Chưa có key'}</summary><label>Base URL<input id="voiceBaseUrl" type="url" value="${escapeHtml(settings.baseUrl||'')}" autocomplete="off"></label><label>${isWindi?'API key Windi':'API key'}<input id="voiceApiKey" type="password" autocomplete="new-password" placeholder="${settings.configured?'Để trống để giữ key hiện tại':isWindi?'windi_voice_… hoặc windi_kit_…':'Dán key của bạn'}"></label><p>${isWindi?'URL mặc định https://windistudio.app (không thêm /v1). Dán key đã tạo trong tài khoản Windi. Cần gói Voice trả phí hoặc giấy phép Workflow hợp lệ.':'Base URL cần gồm /v1. Chỉ nhận API trả audio trực tiếp.'} Key lưu riêng trên máy, không trả lại cho trình duyệt.</p>${isWindi?'<p>Lưu key chưa tạo tiếng. Tải danh sách để chọn thư viện / giọng clone được phép dùng; mỗi lần tạo gửi bản dịch cho Windi. Audio và mã lượt tạo được lưu để nghe lại, retry không tạo trùng.</p>':''}<button id="saveVoiceApi" class="button secondary">Lưu API</button><button id="clearVoiceApi" class="button secondary">Xóa key đã lưu</button><p id="apiResult" role="status"></p></details>`;
-}
+function tell(message){$('#toast').textContent=message;$('#toast').classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('#toast').classList.remove('show'),4000);}
+function markDirty(){dirty=true;savedMessage='Có thay đổi chưa lưu';document.querySelectorAll('.speaker audio').forEach(a=>{a.pause();a.hidden=true;});updateSummary();updateStatus();}
+function select(key,options){return `<select data-config="${key}">${Object.entries(options).map(([value,label])=>`<option value="${escapeHtml(value)}" ${String(draft.config[key])===value?'selected':''}>${escapeHtml(label)}</option>`).join('')}</select>`;}
+function apiDraft(){const provider=draft.config.ttsProvider;return apiDrafts[provider]||={baseUrl:voiceSettings[provider]?.baseUrl||defaults[provider],apiKey:'',clearKey:false};}
 function voicePanel(){
-  const local=project.config.ttsProvider==='local', count=project.speakers.length;
-  return `<div class="workflow-content voice-workflow"><h2>Thiết lập giọng đọc</h2>
-    <div class="voice-setup-grid"><label for="speakerCount">Số lượng giọng<select id="speakerCount"><option value="1" ${count===1?'selected':''}>1 giọng — một người đọc</option><option value="2" ${count===2?'selected':''}>2 giọng — MC + khách mời</option>${count>2?`<option value="${count}" selected disabled>${count} người — dự án đã nhập</option>`:''}</select></label>
-    <label for="voiceSource">Dùng giọng<select id="voiceSource"><option value="local" ${local?'selected':''}>Local — chạy trên máy</option><option value="api" ${local?'':'selected'}>API — tài khoản của bạn</option></select></label></div>
-    <p class="field-hint">${count===1?'Toàn bộ lời thoại dùng một giọng.':'Chọn giọng riêng cho MC và khách mời, rồi gán vai cho từng câu ở bước Lời thoại.'} Chuyển về 1 giọng sẽ gán tất cả câu về người đọc đầu tiên.</p>
-    ${local?`<label>Model local ${selectConfig('mode',[['v3turbo','Local Voice Pro — chất lượng'],['v3nano','Local Voice Lite — nhẹ hơn'],['standard','Local Voice Standard']])}</label><p class="field-hint">Giọng có sẵn theo model local đã chọn. Lần đầu sử dụng có thể cần tải model.</p>`:
-    `<label>Nhà cung cấp API ${selectConfig('ttsProvider',[['windi','Windi Voice API'],['elevenlabs','ElevenLabs API'],['openai','OpenAI / API tương thích OpenAI']])}</label><p class="api-notice">Nghe thử / tạo tiếng gửi bản dịch sang API đã chọn và dùng credit hoặc quota riêng.</p>${voiceApiForm()}${project.config.ttsProvider==='windi'?'<p class="field-hint">Windi Clone Pro 2.1 · không cần nhập model ID.</p>':`<label>Model ID<input data-config="apiModel" value="${escapeHtml(project.config.apiModel)}" placeholder="${project.config.ttsProvider==='elevenlabs'?'eleven_v3':'gpt-4o-mini-tts'}"></label>`}`}
-    <div class="voice-library-heading"><span id="voiceCatalogStatus" role="status">${project.voices.length?`${project.voices.length} giọng ${local?'local':'API'} có thể chọn`:local?(project.job?.step==='voices'&&project.job.status==='error'?'Chưa lấy được giọng. Kiểm tra môi trường rồi bấm tải lại.':'Đang lấy danh sách giọng local…'):'Lưu API rồi tải danh sách giọng.'}</span>${button('voices',local?'Tải lại giọng local':'Tải danh sách giọng API')}</div>
-    <label for="sampleText">Câu nghe thử<textarea id="sampleText" data-config="sampleText" maxlength="1000">${escapeHtml(project.config.sampleText)}</textarea></label><p class="field-hint">Dùng cùng một câu để so sánh các giọng. Audio được lưu để nghe lại.</p>
-    <div class="speaker-list">${speakerRows()}</div><button class="button secondary" id="saveSpeakers">Lưu người nói & giọng</button><p id="voiceResult" role="status"></p>
-    <details class="subtitle-settings"><summary>Phụ đề · chỉnh style, màu và cỡ chữ</summary><label>Style ${selectConfig('subtitle',[['outline','Chữ viền'],['box','Nền hộp'],['none','Không gắn sub vào video']])}</label><div class="config-grid"><label>Màu chữ<input data-config="color" type="color" value="${project.config.color}"></label><label>Cỡ chữ<input data-config="fontSize" type="number" min="18" max="100" value="${project.config.fontSize}"></label></div></details>
-    <button id="saveConfig" class="button secondary">Lưu lựa chọn</button>${button('tts','Tạo giọng cho toàn bộ câu')}<p class="field-hint">Chưa tự tách người nói. Kiểm tra vai từng câu và tỷ lệ thời lượng trước khi xuất.</p></div>`;
+  const local=draft.config.ttsProvider==='local',voices=catalog(),count=draft.speakers.length;
+  const connection=local?null:apiDraft();
+  return `<div class="section-heading"><div><p class="eyebrow">01 / GIỌNG ĐỌC</p><h2>Ai sẽ kể câu chuyện?</h2></div><span class="tag">${local?'Trên máy':'API riêng'}</span></div>
+    <div class="field-grid"><label>Số lượng giọng<select id="speakerCount"><option value="1" ${count===1?'selected':''}>Một người đọc</option><option value="2" ${count===2?'selected':''}>Hai người · MC & khách mời</option>${count>2?`<option value="${count}" selected>${count} vai đã nhập</option>`:''}</select></label><label>Nguồn giọng<select id="voiceSource"><option value="local" ${local?'selected':''}>Local · chạy trên máy</option><option value="api" ${local?'':'selected'}>API · tài khoản của bạn</option></select></label></div>
+    ${local?'':`<label>Nhà cung cấp${select('ttsProvider',{windi:'Windi Voice API',elevenlabs:'ElevenLabs API',openai:'OpenAI / API tương thích'})}</label><details class="api-settings"><summary>Kết nối API <span>${voiceSettings[draft.config.ttsProvider]?.configured?'Đã có key':'Chưa có key'}</span></summary><label>Base URL<input id="voiceBaseUrl" type="url" value="${escapeHtml(connection.baseUrl)}" autocomplete="off" spellcheck="false"></label><label>API key<input id="voiceApiKey" type="password" autocomplete="new-password" value="${escapeHtml(connection.apiKey)}" placeholder="${voiceSettings[draft.config.ttsProvider]?.configured?'Để trống để giữ key hiện tại':'Nhập key của bạn'}"></label><label class="checkbox-label"><input id="clearApiKey" type="checkbox" ${connection.clearKey?'checked':''}> Xóa key đã lưu khi bấm Lưu thiết lập</label><p class="hint">${draft.config.ttsProvider==='windi'?'URL gốc không có /v1. Chọn thư viện hoặc giọng clone đã có trong tài khoản.':'Base URL có /v1. API cần trả audio trực tiếp.'} Key chỉ lưu riêng trên máy.</p></details>${draft.config.ttsProvider!=='windi'?`<label>Model ID<input data-config="apiModel" value="${escapeHtml(draft.config.apiModel)}" maxlength="200"></label>`:''}`}
+    ${local?`<div class="local-model-settings"><label>Model giọng trên máy${select('mode',{v3nano:'Local Voice Lite · nhẹ, cho máy yếu',v3turbo:'Local Voice Pro · ưu tiên chất lượng',standard:'Local Voice Standard · bản cũ, nặng'})}</label><p class="hint">Lite nhanh hơn, giảm chất lượng nhất là tiếng Anh. Đổi model cần chọn lại giọng. Kiểm tra RAM và ổ đĩa trước khi tải model lần đầu.</p><button id="recommendModels" class="button quiet" type="button">Kiểm tra máy & đề xuất model</button></div>`:''}
+    <div class="library-toolbar"><p id="catalogStatus" role="status">${voices.length?`${voices.length} giọng để lựa chọn`:local?'Tải danh sách từ môi trường đã liên kết.':'Lưu kết nối API, rồi tải danh sách giọng.'}</p><button id="loadVoices" class="button quiet" type="button">${voices.length?'Tải lại giọng':'Tải danh sách giọng'}</button></div>
+    <div class="speaker-list">${draft.speakers.map((s,i)=>{
+      const known=voices.some(v=>v.id===s.voice),file=project.artifacts.samples?.[s.id],meta=project.artifacts.sampleSettings?.[s.id];
+      const matching=meta&&meta.provider===draft.config.ttsProvider&&meta.mode===draft.config.mode&&meta.apiModel===draft.config.apiModel&&meta.voice===s.voice&&meta.text===draft.config.sampleText;
+      return `<section class="speaker" data-speaker="${escapeHtml(s.id)}"><div class="speaker-heading"><span class="speaker-number">${String(i+1).padStart(2,'0')}</span><label>Tên / vai<input data-speaker-field="name" value="${escapeHtml(s.name)}" maxlength="100"></label></div><label>Giọng đọc<select data-speaker-field="voice"><option value="">Chọn giọng${local?' local':''}</option>${s.voice&&!known?`<option value="${escapeHtml(s.voice)}" selected>${escapeHtml(s.voice)} · đã lưu</option>`:''}${voices.map(v=>`<option value="${escapeHtml(v.id)}" ${s.voice===v.id?'selected':''}>${escapeHtml(v.label)}</option>`).join('')}</select></label>${local?'':`<details><summary>Nhập voice ID thủ công</summary><label>Voice ID<input data-manual-voice value="${escapeHtml(s.voice)}" maxlength="200"></label></details>`}<div class="sample-actions"><button class="button secondary" data-sample="${escapeHtml(s.id)}" type="button" ${s.voice?'':'disabled'}><span aria-hidden="true">▷</span> Nghe thử${local?'':' · dùng credit'}</button><span class="hint">${local?'Tạo mẫu trên máy':'Gửi câu mẫu đến API'}</span></div>${file&&matching?`<audio controls aria-label="Nghe lại giọng ${escapeHtml(s.name)}" src="${endpoint('file/'+encodeURIComponent(file))}?v=${encodeURIComponent(project.updatedAt)}"></audio>`:''}</section>`;
+    }).join('')}</div>
+    <label>Câu nghe thử<textarea data-config="sampleText" maxlength="1000">${escapeHtml(draft.config.sampleText)}</textarea></label><p class="hint">Cùng một câu cho mọi giọng để dễ so sánh. Audio đã tạo có thể nghe lại.</p><p id="voiceResult" class="feedback" role="status"></p>`;
 }
-async function ensureLocalVoices(){
-  if(!project||currentStep!=='voice'||project.config.ttsProvider!=='local'||project.job?.status==='running'||dirty)return;
-  const key=project.id+':'+project.config.mode;
-  if(localVoiceAttempt===key)return;localVoiceAttempt=key;
-  try{project=await api(projectApi('job'),{step:'voices'});lastJobStatus='running';if(currentStep==='voice')renderStep();}
-  catch(e){const status=document.querySelector('#voiceCatalogStatus');if(status)status.textContent=e.message;}
+function translationPanel(){return `<div class="section-heading"><div><p class="eyebrow">02 / CÁCH DIỄN ĐẠT</p><h2>Dịch theo cách bạn muốn.</h2></div></div><label>Phong cách dịch${select('translationStyle',styles)}</label><label>Ngữ điệu lời đọc${select('delivery',deliveries)}</label><label>Ghi chú cho Gemini<textarea data-config="translationNotes" maxlength="2000" placeholder="Ví dụ: xưng mình – bạn, giữ nguyên tên sản phẩm, giải thích thuật ngữ ngắn gọn.">${escapeHtml(draft.config.translationNotes)}</textarea></label><p class="hint">Chat dùng các lựa chọn này để viết lời đọc và ngắt câu. Cảm xúc thực tế tùy giọng; giọng local sử dụng cách đọc của preset.</p><details><summary>Nhận diện local dự phòng · cho chat không đọc được video</summary><label>Model nhận diện trên máy${select('whisperModel',{tiny:'Local Decode Quick · nhẹ nhất',base:'Local Decode Base · máy phổ thông',small:'Local Decode Balanced · chính xác hơn',medium:'Local Decode Accurate · cần nhiều RAM'})}</label><p class="hint">Chỉ tải model đã chọn khi agent chạy nhận diện local. Nhận diện và dịch trong Gemini vẫn là luồng chính.</p><button id="recommendModels" class="button quiet" type="button">Kiểm tra máy & đề xuất model</button></details><div class="inline-note"><b>Nhận diện & dịch trong chat</b><p>Gửi video và yêu cầu trong chat Gemini. Agent có quyền dùng kit sẽ đọc thiết lập đã lưu, nhập lời thoại có thời gian và bản dịch vào dự án. Không cần chuyển qua các bước trong giao diện.</p></div>`;}
+function appearancePanel(){
+  const fontOptions=Object.fromEntries(fonts.map(f=>[f.id,f.label]));
+  if(!fontOptions[draft.config.fontFamily])fontOptions[draft.config.fontFamily]='Font đã lưu · chưa có trên máy';
+  return `<div class="section-heading"><div><p class="eyebrow">03 / GIAO DIỆN & PHỤ ĐỀ</p><h2>Vừa mắt, dễ đọc.</h2></div></div>
+    <label>Giao diện${select('uiTheme',{dark:'Tối · Windi',light:'Sáng · giấy ấm'})}</label>
+    <div class="field-grid"><label>Kiểu phụ đề${select('subtitle',{outline:'Chữ viền',box:'Nền hộp',none:'Không gắn vào video'})}</label><label>Font chữ${select('fontFamily',fontOptions)}</label></div>
+    <div class="field-grid"><label>Màu chữ<input data-config="color" type="color" value="${escapeHtml(draft.config.color)}"></label><label>Cỡ chữ · khung 720p<input data-config="fontSize" type="number" min="18" max="100" value="${draft.config.fontSize}"></label></div>
+    <div class="background-settings"><div class="field-grid"><label>Màu nền phụ đề<input data-background data-config="backgroundColor" type="color" value="${escapeHtml(draft.config.backgroundColor)}"></label><label for="backgroundOpacity">Độ mờ nền · <output id="backgroundOpacityValue" for="backgroundOpacity">${draft.config.backgroundOpacity}%</output><input id="backgroundOpacity" data-background data-config="backgroundOpacity" type="range" min="0" max="100" step="1" value="${draft.config.backgroundOpacity}" aria-describedby="opacityHint"></label></div><p class="hint" id="opacityHint">0% trong suốt · 100% nền đặc. Chọn kiểu Nền hộp để dùng màu và độ mờ nền.</p></div>
+    <div class="karaoke-settings"><label class="checkbox-label"><input data-config="karaoke" type="checkbox" ${draft.config.karaoke?'checked':''}> Bật chữ popup / karaoke</label><div class="field-grid"><label>Kiểu hiện chữ${select('karaokeStyle',{color:'Chỉ tô từ đang đọc · không phóng',highlight:'Tô từ + phóng chữ · cụm 5 từ',popup:'Popup · từng từ'})}</label><label>Màu từ đang đọc<input data-karaoke data-config="karaokeColor" type="color" value="${escapeHtml(draft.config.karaokeColor)}"></label></div><label>Độ phóng từ · <output id="karaokeScaleValue">${draft.config.karaokeScale}%</output><input data-karaoke data-config="karaokeScale" type="range" min="100" max="150" step="1" value="${draft.config.karaokeScale}"></label><p class="hint">Xem trước minh hoạ. Khi xuất MP4, nhịp từng từ ước lượng đều theo thời gian câu đã khớp giọng, chưa căn từng từ theo âm thanh. Font, viền và nền dùng thiết lập ở trên; SRT rời không có hiệu ứng.</p></div>
+    <p class="hint">Danh sách font lấy từ máy này, không tải font mới. Font đã chọn được dùng khi xuất video; SRT rời chỉ chứa lời và thời gian.</p>
+    <div class="field-grid"><label>Độ phân giải mặc định${select('resolution',{'720':'720p','1080':'1080p'})}</label><label>Âm thanh gốc${select('backgroundVolume',{'0':'Tắt · chỉ giọng Việt','0.1':'Giữ 10%','0.2':'Giữ 20%','0.3':'Giữ 30%'})}</label></div><p class="hint">Giữ âm thanh gốc bao gồm cả lời nói gốc ở mức nhỏ. Chat dùng thiết lập này khi bạn yêu cầu xuất video.</p>`;
 }
-function speakerRows(){return project.speakers.map(v=>{
-  const count=project.segments.filter(s=>s.speaker===v.id).length,local=project.config.ttsProvider==='local',known=project.voices.some(voice=>voice.id===v.voice);
-  return `<div class="speaker-row" data-speaker="${escapeHtml(v.id)}"><label>Tên / vai<input data-speaker-field="name" value="${escapeHtml(v.name)}" maxlength="100"></label><div class="speaker-voice"><label>Giọng cho ${escapeHtml(v.name)}<select data-voice-choice ${local&&!project.voices.length?'disabled':''}><option value="">${local?'Chọn giọng local':'Chọn giọng theo tên'}</option>${v.voice&&!known?`<option value="${escapeHtml(v.voice)}" selected>${escapeHtml(v.voice)} · đã chọn</option>`:''}${project.voices.map(voice=>`<option value="${escapeHtml(voice.id)}" ${voice.id===v.voice?'selected':''}>${escapeHtml(voice.label)}</option>`).join('')}</select></label>${local?`<input type="hidden" data-speaker-field="voice" value="${escapeHtml(v.voice)}">`:`<details class="manual-voice"><summary>Nhập voice ID thủ công</summary><label>Voice ID<input data-speaker-field="voice" value="${escapeHtml(v.voice)}" placeholder="Voice ID từ API của bạn" maxlength="200"></label></details>`}</div><small>${count} câu dùng giọng này</small><button class="button secondary" data-sample="${escapeHtml(v.id)}" ${!v.voice?'disabled':''}>Nghe thử ${escapeHtml(v.name)}</button>${project.artifacts.samples?.[v.id]?`<audio controls aria-label="Giọng thử ${escapeHtml(v.name)}" src="${artifactUrl(project.artifacts.samples[v.id])}?v=${encodeURIComponent(project.updatedAt)}"></audio>`:''}</div>`;
-}).join('');}
-function collectSpeakers(){return [...document.querySelectorAll('[data-speaker]')].map(row=>({id:row.dataset.speaker,...Object.fromEntries([...row.querySelectorAll('[data-speaker-field]')].map(el=>[el.dataset.speakerField,el.value]))}));}
-async function saveConfig(){
-  const config={};document.querySelectorAll('[data-config]').forEach(el=>config[el.dataset.config]=['fontSize','resolution','backgroundVolume'].includes(el.dataset.config)?Number(el.value):el.value);
-  const speakers=document.querySelector('[data-speaker]')?collectSpeakers():undefined;
-  if(Object.keys(config).length||speakers)project=await api(projectApi(),{config,...(speakers?{speakers}:{})},'PATCH');
+function render(){
+  if(!draft)return;
+  $('#settingsContent').innerHTML=tab==='voice'?voicePanel():tab==='translation'?translationPanel():appearancePanel();
+  document.querySelectorAll('[data-tab]').forEach(b=>{if(b.dataset.tab===tab)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');});
+  updateSummary();updateStatus();
 }
-async function changeVoiceSettings(work){
-  if(voiceSettingsBusy)return;voiceSettingsBusy=true;updateStatus();
-  try{await work();}catch(e){tell(e.message);}finally{voiceSettingsBusy=false;updateStatus();}
-}
-function bindPanel(){
-  const panel=document.querySelector('#workflowPanel');panel.querySelectorAll('input,textarea,select').forEach(el=>el.addEventListener('input',()=>{if(!['voiceApiKey','voiceBaseUrl'].includes(el.id))dirty=true;}));
-  panel.querySelectorAll('[data-voice-choice]').forEach(select=>select.addEventListener('change',()=>{select.closest('[data-speaker]').querySelector('[data-speaker-field="voice"]').value=select.value;dirty=true;updateStatus();}));
-  panel.querySelectorAll('[data-speaker-field="voice"]').forEach(input=>input.addEventListener('input',()=>{const select=input.closest('[data-speaker]').querySelector('[data-voice-choice]');if(select)select.value=input.value;updateStatus();}));
-  panel.querySelectorAll('[data-source]').forEach(b=>b.onclick=()=>{
-    const segment=project.segments.find(s=>s.id===b.dataset.source),video=document.querySelector('#sourceAudio');
-    clearInterval(sourceStop);video.hidden=false;const src=artifactUrl(project.video.file);if(video.getAttribute('src')!==src)video.src=src;video.currentTime=segment.start;video.play().catch(e=>tell(e.message));
-    sourceStop=setInterval(()=>{if(video.currentTime>=segment.end||video.paused){video.pause();clearInterval(sourceStop);}},50);
-  });
-  panel.querySelectorAll('[data-sample]').forEach(b=>b.onclick=async()=>{try{
-    const text=panel.querySelector('#sampleText').value;await saveConfig();pendingSampleSpeaker=b.dataset.sample;project=await api(projectApi('job'),{step:'sample',speaker:b.dataset.sample,text});dirty=false;lastJobStatus='running';renderStep();
-  }catch(e){panel.querySelector('#voiceResult').textContent=e.message;}});
-  panel.querySelector('#saveSpeakers')?.addEventListener('click',async()=>{try{await saveConfig();dirty=false;renderStep();tell('Đã lưu người nói và giọng.');}catch(e){panel.querySelector('#voiceResult').textContent=e.message;}});
-  panel.querySelector('#speakerCount')?.addEventListener('change',e=>changeVoiceSettings(async()=>{
-    const count=Number(e.target.value);await saveConfig();project=await api(projectApi(),{speakerCount:count},'PATCH');dirty=false;renderStep();
-  }));
-  async function changeVoiceProvider(value){
-    await saveConfig();project=await api(projectApi(),{config:{ttsProvider:value,apiModel:value==='elevenlabs'?'eleven_v3':value==='openai'?'gpt-4o-mini-tts':''}},'PATCH');
-    if(value!=='local')lastApiProvider=value;localVoiceAttempt='';dirty=false;renderStep();
+function updateSummary(){
+  if(!draft)return;
+  document.documentElement.dataset.theme=draft.config.uiTheme;
+  $('meta[name="theme-color"]').content=draft.config.uiTheme==='light'?'#f3f1e8':'#25272b';
+  const voices=catalog();
+  $('#summaryVoice').textContent=draft.speakers.map(s=>voices.find(v=>v.id===s.voice)?.label||s.name).join(' + ');
+  $('#summaryStyle').textContent=`${styles[draft.config.translationStyle]} · ${deliveries[draft.config.delivery]}`;
+  const caption=$('#captionPreview');caption.style.color=draft.config.color;caption.style.fontSize=Math.min(34,Math.max(16,draft.config.fontSize*.5))+'px';
+  caption.style.fontFamily='"'+(fonts.find(f=>f.id===draft.config.fontFamily)?.family||'Arial')+'", sans-serif';
+  const bg=draft.config.backgroundColor;
+  caption.style.backgroundColor=draft.config.subtitle==='box'?`rgba(${parseInt(bg.slice(1,3),16)},${parseInt(bg.slice(3,5),16)},${parseInt(bg.slice(5,7),16)},${draft.config.backgroundOpacity/100})`:'transparent';
+  const output=$('#backgroundOpacityValue');if(output)output.textContent=draft.config.backgroundOpacity+'%';
+  clearInterval(previewTimer);
+  const scaleOutput=$('#karaokeScaleValue');if(scaleOutput)scaleOutput.textContent=draft.config.karaokeScale+'%';
+  caption.dataset.style=draft.config.subtitle;caption.textContent=draft.config.subtitle==='none'?'Phụ đề SRT rời':'Một câu chuyện hay,\nqua giọng kể của bạn.';
+  if(draft.config.karaoke&&draft.config.subtitle!=='none'){
+    let index=0;const words=['Một','câu','chuyện','hay,','qua','giọng','kể','của','bạn.'];
+    const paint=()=>{const start=Math.floor(index/5)*5;caption.replaceChildren(...(draft.config.karaokeStyle==='popup'?[words[index]]:words.slice(start,start+5)).flatMap((word,i)=>{const span=document.createElement('span');span.textContent=word;const active=draft.config.karaokeStyle==='popup'||i+start===index;if(active){span.style.color=draft.config.karaokeColor;if(draft.config.karaokeStyle!=='color')span.style.fontSize=draft.config.karaokeScale+'%';}return [span,document.createTextNode(' ')];}));index=(index+1)%words.length;};
+    paint();if(!matchMedia('(prefers-reduced-motion: reduce)').matches)previewTimer=setInterval(paint,420);
   }
-  panel.querySelector('#voiceSource')?.addEventListener('change',e=>changeVoiceSettings(()=>changeVoiceProvider(e.target.value==='local'?'local':lastApiProvider)));
-  for(const [id,clearKey] of [['saveVoiceApi',false],['clearVoiceApi',true]])panel.querySelector('#'+id)?.addEventListener('click',async()=>{
-    const result=panel.querySelector('#apiResult');try{result.textContent='Đang lưu…';voiceSettings=await api('/api/voice-config',{provider:project.config.ttsProvider,baseUrl:panel.querySelector('#voiceBaseUrl').value,apiKey:panel.querySelector('#voiceApiKey').value,clearKey});panel.querySelector('#voiceApiKey').value='';panel.querySelector('.voice-api-settings summary').textContent='Cấu hình '+(project.config.ttsProvider==='windi'?'Windi Voice':'API voice')+' · '+(voiceSettings[project.config.ttsProvider]?.configured?'Đã lưu key':'Chưa có key');result.textContent=clearKey?'Đã xóa key.':'Đã lưu API. Chưa gọi tạo tiếng.';}catch(e){result.textContent=e.message;}
-  });
-  panel.querySelector('[data-config="ttsProvider"]')?.addEventListener('change',e=>changeVoiceSettings(async()=>{
-    const value=e.target.value;e.target.value=project.config.ttsProvider;await changeVoiceProvider(value);
-  }));
-  panel.querySelector('[data-config="mode"]')?.addEventListener('change',e=>changeVoiceSettings(async()=>{
-    const value=e.target.value;e.target.value=project.config.mode;await saveConfig();project=await api(projectApi(),{config:{mode:value}},'PATCH');localVoiceAttempt='';dirty=false;renderStep();
-  }));
-  panel.querySelectorAll('[data-job]').forEach(b=>b.onclick=async()=>{try{await saveConfig();project=await api(projectApi('job'),{step:b.dataset.job,...(b.dataset.job==='download'?{url:panel.querySelector('#videoUrl').value}:{})});dirty=false;lastJobStatus='running';renderStep();}catch(e){tell(e.message);}});
-  panel.querySelectorAll('[data-next]').forEach(b=>b.onclick=()=>showStep(b.dataset.next));
-  panel.querySelector('#saveConfig')?.addEventListener('click',async()=>{try{await saveConfig();dirty=false;renderStep();tell('Đã lưu lựa chọn.');}catch(e){tell(e.message);}});
-  panel.querySelector('[data-config="provider"]')?.addEventListener('change',async()=>{try{await saveConfig();renderStep();}catch(e){tell(e.message);}});
-  panel.querySelector('#saveSegments')?.addEventListener('click',async()=>{try{const segments=[...panel.querySelectorAll('[data-segment]')].map(row=>{const s={id:row.dataset.segment};row.querySelectorAll('[data-field]').forEach(el=>s[el.dataset.field]=['start','end'].includes(el.dataset.field)?Number(el.value):el.value);return s;});project=await api(projectApi(),{segments},'PATCH');dirty=false;renderStep();tell('Đã lưu. Voice và video cũ cần tạo lại.');}catch(e){tell(e.message);}});
-  panel.querySelector('#importPath')?.addEventListener('click',async()=>{try{project=await api(projectApi('import-video'),{path:panel.querySelector('#videoPath').value});dirty=false;renderStep();}catch(e){tell(e.message);}});
-  panel.querySelector('#videoUpload')?.addEventListener('change',async e=>{const file=e.target.files[0];if(!file)return;try{tell('Đang nhập video…');const r=await fetch(projectApi('upload'),{method:'POST',headers:{'Content-Type':'application/octet-stream','X-File-Name':encodeURIComponent(file.name)},body:file});const x=await r.json();if(!r.ok)throw new Error(x.error);project=x;dirty=false;renderStep();}catch(e){tell(e.message);}});
-  for(const kind of ['transcript','translation'])panel.querySelector('#'+kind+'Upload')?.addEventListener('change',async e=>{try{const input=JSON.parse(await e.target.files[0].text());project=kind==='translation'?await api(projectApi('translation'),input):await api(projectApi(),{segments:(Array.isArray(input)?input:input.segments).map((s,i)=>({...s,id:String(s.id??i)}))},'PATCH');dirty=false;renderStep();}catch(e){tell(e.message);}});
+
 }
-function showStep(id){if(!labels[id])return;if(dirty){tell('Hãy lưu thay đổi trước khi chuyển bước.');return;}currentStep=id;renderStep();}
-function updatePreview(){if(!project)return;const video=document.querySelector('#realPreview'),demo=document.querySelector('#demoPreview');const file=project.artifacts.render?.mp4||project.video?.file;video.hidden=!file;demo.hidden=Boolean(file);if(file){const src=artifactUrl(file)+'?v='+encodeURIComponent(project.updatedAt);if(video.dataset.file!==file||video.dataset.revision!==String(project.revision)){video.src=src;video.dataset.file=file;video.dataset.revision=project.revision;}}const caption=document.querySelector('.caption-card>p');caption.textContent=project.segments.find(s=>s.translation)?.translation||'Giọng Việt tự nhiên hơn.';caption.style.color=project.config.color;caption.style.background=project.config.subtitle==='box'?'#18241d':'#3f4c45';}
-function updateStatus(){if(!project)return;const job=project.job,busy=job?.status==='running'||voiceSettingsBusy,panel=document.querySelector('#jobPanel');panel.hidden=!job;if(job){document.querySelector('#jobMessage').textContent=job.message;document.querySelector('#jobProgress').value=job.progress||0;document.querySelector('#cancelJob').hidden=job.status!=='running';panel.dataset.status=job.status;}document.querySelectorAll('[data-sample],#speakerCount,#voiceSource,[data-voice-choice],[data-config=ttsProvider],[data-config=mode],#saveSpeakers,#saveVoiceApi,#clearVoiceApi,[data-remove-speaker],[data-job],#saveSegments,#saveConfig,#videoUpload,#importPath,#projectSelect,#newProject,[data-speaker-field],#sampleText').forEach(b=>b.disabled=busy);document.querySelectorAll('[data-sample]').forEach(b=>b.disabled=busy||!b.closest('[data-speaker]').querySelector('[data-speaker-field=voice]').value);document.querySelectorAll('[data-voice-choice]').forEach(b=>b.disabled=busy||(project.config.ttsProvider==='local'&&!project.voices.length));document.querySelector('#previewStatus').textContent=job?job.message:'Dữ liệu được lưu tự động trên máy.';}
-async function poll(){if(!project||polling||voiceSettingsBusy)return;polling=true;try{const next=await api(projectApi());const completed=lastJobStatus==='running'&&next.job?.status!=='running';project=next;lastJobStatus=next.job?.status||'';if(completed&&!dirty){renderStep();if(pendingSampleSpeaker){const audio=document.querySelector('[data-speaker="'+pendingSampleSpeaker+'"] audio');pendingSampleSpeaker='';audio?.play().catch(()=>tell('Audio đã sẵn sàng. Bấm phát để nghe thử.'));}}else updateStatus();}catch{}finally{polling=false;}}
-stepButtons.forEach(button=>button.addEventListener('click',()=>showStep(button.dataset.step)));
-document.querySelector('#checkAgain').addEventListener('click',refreshEnvironment);
-document.querySelector('#continueButton').addEventListener('click',()=>showStep('video'));
-document.querySelector('#newProject').onclick=async()=>{if(dirty){tell('Hãy lưu thay đổi trước khi tạo dự án khác.');return;}try{const p=await api('/api/projects',{name:'Dự án '+new Date().toLocaleString('vi-VN')});await loadProjects(p.id);}catch(e){tell(e.message);}};
-document.querySelector('#projectSelect').onchange=()=>{const select=document.querySelector('#projectSelect');if(dirty){select.value=project.id;tell('Hãy lưu thay đổi trước khi chuyển dự án.');return;}loadProjects(select.value).catch(e=>tell(e.message));};
-document.querySelector('#cancelJob').onclick=async()=>{try{await api(projectApi('cancel'),{});tell('Đang hủy tác vụ…');}catch(e){tell(e.message);}};
-document.querySelectorAll('[data-toast]').forEach(button=>button.addEventListener('click',()=>tell('Hướng dẫn dùng và cấu hình nằm trong README.md đi kèm kit.')));
-refreshEnvironment();loadProjects().catch(e=>tell(e.message));setInterval(poll,1500);
+function updateStatus(){
+  if(!project)return;const running=project.job?.status==='running',locked=busy||running;
+  document.querySelectorAll('#settingsContent input,#settingsContent select,#settingsContent textarea,#settingsContent button,#saveAll,#projectSelect,#newProject,#saveRuntime').forEach(el=>el.disabled=locked);
+  document.querySelectorAll('[data-background]').forEach(el=>el.disabled=locked||draft.config.subtitle!=='box');
+  document.querySelectorAll('[data-karaoke], [data-config=karaokeStyle]').forEach(el=>el.disabled=locked||!draft.config.karaoke||draft.config.subtitle==='none');
+  const scale=$('[data-config=karaokeScale]');if(scale){scale.disabled=locked||!draft.config.karaoke||draft.config.subtitle==='none'||draft.config.karaokeStyle==='color';scale.closest('label').hidden=draft.config.karaokeStyle==='color';}
+  document.querySelectorAll('[data-sample]').forEach(el=>el.disabled=locked||!draft.speakers.find(s=>s.id===el.dataset.sample)?.voice);
+  $('#saveAll').textContent=busy?'Đang lưu…':'Lưu thiết lập ↗';
+  $('#saveState').textContent=savedMessage;$('#saveState').classList.toggle('unsaved',dirty);
+  const job=project.job,visible=job&&['voices','sample'].includes(job.step);
+  $('#jobPanel').hidden=!visible;
+  if(visible){$('#jobMessage').textContent=job.message;$('#jobProgress').value=job.progress||0;$('#cancelJob').hidden=!running;$('#jobPanel').dataset.status=job.status;}
+}
+async function loadProjects(preferred){
+  let projects=await api('/api/projects');
+  if(!projects.length){const p=await api('/api/projects',{name:'Thiết lập đầu tiên'});projects=[p];preferred=p.id;}
+  const wanted=preferred||localStorage.getItem('windiProject'),id=projects.find(p=>p.id===wanted)?.id||projects[0].id;
+  $('#projectSelect').innerHTML=projects.map(p=>`<option value="${p.id}" ${p.id===id?'selected':''}>${escapeHtml(p.name)}</option>`).join('');
+  project=await api('/api/projects/'+id);voiceSettings=await api('/api/voice-config');fonts=await api('/api/subtitle-fonts');
+  draft={config:structuredClone(project.config),speakers:structuredClone(project.speakers)};
+  if(project.config.ttsProvider!=='local')lastApi=project.config.ttsProvider;
+  catalogs=new Map();if(project.voices.length)catalogs.set(catalogKey(),project.voices);
+  const result=project.job?.catalog;if(result)catalogs.set(result.provider+':'+result.mode,result.voices);
+  apiDrafts={};dirty=false;lastJob=project.job?.status||'';savedMessage='Đã tải thiết lập đã lưu';localStorage.setItem('windiProject',id);render();
+}
+function changeProvider(provider){draft.config.ttsProvider=provider;draft.config.apiModel=provider==='elevenlabs'?'eleven_v3':provider==='openai'?'gpt-4o-mini-tts':'';draft.config.voice='';draft.speakers.forEach(s=>s.voice='');if(provider!=='local')lastApi=provider;markDirty();render();}
+function draftPayload(){return {config:draft.config,speakers:draft.speakers,...(draft.speakers.length<=2?{speakerCount:draft.speakers.length}:{})};}
+function apiChanged(){if(draft.config.ttsProvider==='local')return false;const d=apiDraft();return Boolean(d.apiKey||d.clearKey||d.baseUrl!==(voiceSettings[draft.config.ttsProvider]?.baseUrl||defaults[draft.config.ttsProvider]));}
+async function save(){
+  if(busy||project.job?.status==='running')return;
+  busy=true;savedMessage='Đang lưu thiết lập…';updateStatus();
+  try{
+    const payload=draftPayload();if(apiChanged())payload.voiceApi={provider:draft.config.ttsProvider,...apiDraft()};
+    project=await api(endpoint('preferences'),payload);
+    draft={config:structuredClone(project.config),speakers:structuredClone(project.speakers)};
+    dirty=false;apiDrafts={};savedMessage='Đã lưu · sẵn sàng tiếp trong chat';render();
+    voiceSettings=await api('/api/voice-config');render();tell('Đã lưu giọng, cách dịch và giao diện.');
+  }catch(e){savedMessage='Chưa lưu được · '+e.message;tell(e.message);}finally{busy=false;updateStatus();}
+}
+async function runVoiceTool(step,speaker){
+  if(busy||project.job?.status==='running')return;
+  if(apiChanged()){tell('Bấm Lưu thiết lập để lưu kết nối API trước khi dùng giọng.');return;}
+  try{project=await api(endpoint('job'),{step,...(speaker?{speaker,text:draft.config.sampleText}:{}),preview:draftPayload()});lastJob='running';updateStatus();}
+  catch(e){tell(e.message);}
+}
+$('#settingsContent').addEventListener('input',e=>{
+  const el=e.target;
+  if(el.dataset.config){const key=el.dataset.config;draft.config[key]=['fontSize','resolution','backgroundVolume','backgroundOpacity','karaokeScale'].includes(key)?Number(el.value):el.type==='checkbox'?el.checked:el.value;}
+  if(el.dataset.speakerField){const s=draft.speakers.find(s=>s.id===el.closest('[data-speaker]').dataset.speaker);s[el.dataset.speakerField]=el.value;}
+  if(el.hasAttribute('data-manual-voice')){draft.speakers.find(s=>s.id===el.closest('[data-speaker]').dataset.speaker).voice=el.value;const select=el.closest('[data-speaker]').querySelector('[data-speaker-field=voice]');if(![...select.options].some(o=>o.value===el.value))select.add(new Option(el.value,el.value));select.value=el.value;}
+  if(el.id==='voiceBaseUrl')apiDraft().baseUrl=el.value;
+  if(el.id==='voiceApiKey')apiDraft().apiKey=el.value;
+  if(el.id==='clearApiKey')apiDraft().clearKey=el.checked;
+  if(!['voiceSource','speakerCount'].includes(el.id))markDirty();
+});
+$('#settingsContent').addEventListener('change',e=>{
+  const el=e.target;
+  if(el.id==='speakerCount'){
+    const n=Number(el.value);
+    if(n===2&&draft.speakers.length>2){tell('Chuyển về một giọng trước khi chọn hai giọng.');render();return;}
+    if(n!==draft.speakers.length){const first=draft.speakers[0];if(n===2&&['Người đọc','Người nói 1'].includes(first.name))first.name='MC';draft.speakers=n===1?[first]:[first,{id:first.id==='guest'?'guest_2':'guest',name:'Khách mời',voice:''}];markDirty();render();}
+  }
+  if(el.id==='voiceSource')changeProvider(el.value==='local'?'local':lastApi);
+  if(el.dataset.config==='ttsProvider')changeProvider(el.value);
+  if(el.dataset.config==='mode'){draft.config.voice='';draft.speakers.forEach(s=>s.voice='');markDirty();render();}
+  if(el.dataset.speakerField==='voice'){const input=el.closest('[data-speaker]').querySelector('[data-manual-voice]');if(input)input.value=el.value;render();}
+});
+$('#settingsContent').addEventListener('click',e=>{const b=e.target.closest('button');if(b?.id==='recommendModels'){$('#machineDialog').showModal();checkMachine();}if(b?.id==='loadVoices')runVoiceTool('voices');if(b?.dataset.sample)runVoiceTool('sample',b.dataset.sample);});
+document.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>{tab=b.dataset.tab;render();}));
+$('#saveAll').addEventListener('click',save);
+$('#projectSelect').addEventListener('change',()=>{if(dirty){$('#projectSelect').value=project.id;tell('Lưu thiết lập trước khi đổi dự án.');return;}loadProjects($('#projectSelect').value).catch(e=>tell(e.message));});
+$('#newProject').addEventListener('click',async()=>{if(dirty){tell('Lưu thiết lập trước khi tạo dự án.');return;}try{const p=await api('/api/projects',{name:'Dự án '+new Date().toLocaleString('vi-VN')});await loadProjects(p.id);}catch(e){tell(e.message);}});
+$('#cancelJob').addEventListener('click',async()=>{try{await api(endpoint('cancel'),{});}catch(e){tell(e.message);}});
+$('#copyChat').addEventListener('click',async()=>{
+  const c=project.config,voices=project.speakers.map(s=>`${s.name}: ${s.voice||'chưa chọn giọng'}`).join('; ');
+  const text=`Dùng skill Windi Dubbing cho dự án ${project.id}. Đọc thiết lập bằng node agent.mjs context ${project.id}. Giọng: ${providerNames[c.ttsProvider]} (${voices}). Phong cách: ${styles[c.translationStyle]}; ngữ điệu: ${deliveries[c.delivery]}.${c.translationNotes?' Ghi chú: '+c.translationNotes:''} Nhận diện và dịch video tôi gửi trong chat này, giữ timestamp và nhãn người nói; nhập kết quả vào kit. Nếu chat không có công cụ truy cập máy, trả JSON có id, start, end, text, translation, speaker để agent nhập. Chỉ xuất video khi tôi yêu cầu.`;
+  try{await navigator.clipboard.writeText(text);$('#copyResult').textContent=dirty?'Đã sao chép thiết lập cũ. Lưu thay đổi trước để chat đọc bản mới.':'Đã sao chép. Dán vào chat cùng video của bạn.';}catch{$('#copyResult').textContent=text;}
+});
+async function checkMachine(){
+  $('#runtimeResult').textContent='Đang kiểm tra…';
+  try{const r=await api('/api/system-check');hardware=r.hardwarePlan;$('#applyHardware').disabled=false;runtimeSettings=r.runtimeSettings;$('#ttsRuntime').value=runtimeSettings.vieneu;$('#decodeRuntime').value=runtimeSettings.whisper;$('#machineFacts').textContent=`${r.machine.architecture} · ${Math.round(r.machine.ramBytes/1024**3)} GB RAM · ${r.machine.cores} luồng CPU · ${r.machine.freeBytes===null?'chưa đo được ổ đĩa':Math.floor(r.machine.freeBytes/1024**3)+' GB trống'} · FFmpeg ${r.tools.ffmpeg?'đã có':'chưa có'}`;$('#hardwareRecommendation').textContent=`Đề xuất: ${hardware.config.mode==='v3nano'?'Local Voice Lite':'Local Voice Pro'} · Local Decode ${{tiny:'Quick',base:'Base',small:'Balanced',medium:'Accurate'}[hardware.config.whisperModel]} · 720p. ${hardware.description} ${hardware.warnings.join(' ')}`;$('#runtimeResult').textContent=r.tools.vieneu?'Đã tìm thấy bộ giọng local. Model được kiểm tra khi nghe thử.':'Chưa tìm thấy bộ giọng local. Liên kết môi trường đã cài hoặc chọn nguồn API.';}catch(e){$('#runtimeResult').textContent=e.message;}
+}
+$('#applyHardware').addEventListener('click',()=>{if(!hardware||busy||project.job?.status==='running')return;const changed=draft.config.mode!==hardware.config.mode;Object.assign(draft.config,hardware.config);if(changed){draft.config.voice='';draft.speakers.forEach(s=>s.voice='');}markDirty();render();$('#machineDialog').close();tell('Đã áp dụng đề xuất vào bản nháp. Chọn lại giọng nếu đổi model, rồi Lưu thiết lập.');});
+$('#machineButton').addEventListener('click',()=>{$('#machineDialog').showModal();checkMachine();});
+$('#closeMachine').addEventListener('click',()=>$('#machineDialog').close());
+$('#saveRuntime').addEventListener('click',async()=>{
+  $('#saveRuntime').disabled=true;
+  try{await api('/api/runtime-config',{whisper:$('#decodeRuntime').value,vieneu:$('#ttsRuntime').value});catalogs.clear();await checkMachine();render();tell('Đã lưu kết nối môi trường.');}catch(e){$('#runtimeResult').textContent=e.message;}finally{$('#saveRuntime').disabled=false;}
+});
+async function poll(){
+  if(!project||polling||busy)return;polling=true;
+  try{
+    const next=await api(endpoint()),completed=lastJob==='running'&&next.job?.status!=='running';
+    project=next;lastJob=next.job?.status||'';
+    if(completed){const c=next.job?.catalog;if(c)catalogs.set(c.provider+':'+c.mode,c.voices);if(next.job?.status==='error')tell(next.job.message);render();}
+    else updateStatus();
+  }catch{/* leave draft editable during temporary connection loss */}finally{polling=false;}
+}
+window.addEventListener('beforeunload',e=>{if(dirty){e.preventDefault();e.returnValue='';}});
+loadProjects().catch(e=>{$('#settingsContent').textContent=e.message;tell(e.message);});setInterval(poll,1500);

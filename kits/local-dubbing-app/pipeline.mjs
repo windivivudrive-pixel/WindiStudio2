@@ -7,6 +7,8 @@ import { run } from './process.mjs';
 import { resolveRuntime } from './runtime.mjs';
 import { apiVoices, apiSpeech, voiceFingerprint } from './voice-api.mjs';
 import { translate, translationPrompt, validateTranslations } from './providers.mjs';
+import {inspectHardware,hardwarePlan,assertModelCapacity,modelStorage} from './hardware.mjs';
+import {fontIds, resolveSubtitleFont, subtitleFonts} from './fonts.mjs';
 
 const kit = dirname(fileURLToPath(import.meta.url));
 export const dataRoot = resolve(process.env.WINDI_DUBBING_DATA || join(kit, '.windi-dubbing'));
@@ -17,7 +19,18 @@ export const projectDir = id => { if (!/^[a-f0-9-]{36}$/.test(id || '')) throw n
 export function saveProject(p) { p.updatedAt = new Date().toISOString(); const dir = projectDir(p.id); mkdirSync(dir, { recursive: true }); const file = join(dir, 'project.json'); writeFileSync(file + '.tmp', JSON.stringify(p, null, 2)); renameSync(file + '.tmp', file); return p; }
 export function getProject(id) { const p = JSON.parse(readFileSync(join(projectDir(id), 'project.json'), 'utf8')); migrateProject(p); if (p.job?.status === 'running' && !active.has(id)) { p.job.status = 'interrupted'; p.job.message = 'Tác vụ bị ngắt. Chọn chạy lại bước này.'; saveProject(p); } return p; }
 export function listProjects() { return readdirSync(join(dataRoot, 'projects')).flatMap(id => { try { const p = getProject(id); return [{ id, name: p.name, updatedAt: p.updatedAt }]; } catch { return []; } }).sort((a,b)=>b.updatedAt.localeCompare(a.updatedAt)); }
-export function createProject(name = 'Dự án mới') { return saveProject({ id: randomUUID(), name: String(name).slice(0,100), segments: [], revision: 0, voices: [], speakers: [{id:'speaker_1',name:'Người đọc',voice:''}], config: { whisperModel: 'small', language: '', provider: 'codex', mode: 'v3turbo', voice: '', ttsProvider: 'local', apiModel: '', sampleText: 'Xin chào, rất vui được trò chuyện cùng bạn hôm nay.', subtitle: 'outline', color: '#ffe083', fontSize: 44, backgroundVolume: 0, resolution: 720 }, artifacts: {}, job: null }); }
+const preferenceDefaults = { translationStyle: 'natural', delivery: 'conversational', translationNotes: '', uiTheme: 'dark', fontFamily:'sans', backgroundColor:'#0c1410', backgroundOpacity:82, karaoke:false, karaokeStyle:'highlight', karaokeColor:'#a8ed82', karaokeScale:120 };
+export function createProject(name = 'Dự án mới') {
+  let defaults = {};
+  try { defaults = JSON.parse(readFileSync(join(dataRoot, 'preferences.json'), 'utf8')); } catch { /* first run */ }
+  return saveProject({ id: randomUUID(), name: String(name).slice(0,100), segments: [], revision: 0, voices: [], speakers: defaults.speakers || [{id:'speaker_1',name:'Người đọc',voice:''}], config: { whisperModel: 'small', language: '', mode: 'v3turbo', voice: '', ttsProvider: 'local', apiModel: '', sampleText: 'Xin chào, rất vui được trò chuyện cùng bạn hôm nay.', subtitle: 'outline', color: '#ffe083', fontSize: 44, backgroundVolume: 0, resolution: 720, ...preferenceDefaults, ...hardwarePlan(inspectHardware(dataRoot)).config, ...defaults.config, provider: 'chat' }, artifacts: {}, job: null });
+}
+export function rememberPreferences(p) {
+  const { language, provider, ...config } = p.config;
+  const file = join(dataRoot, 'preferences.json');
+  writeFileSync(file + '.tmp', JSON.stringify({config, speakers:p.speakers}, null, 2));
+  renameSync(file + '.tmp', file);
+}
 function migrateProject(p) {
   if(p.job?.message){
     if(p.job.status==='error' && /vieneu|whisper|Traceback/i.test(p.job.message))p.job.message='Tác vụ local chưa hoàn tất. Kiểm tra môi trường và tải lại model rồi thử lại.';
@@ -25,6 +38,7 @@ function migrateProject(p) {
   }
   p.config.ttsProvider ||= 'local'; p.config.apiModel ||= '';
   p.config.sampleText ||= 'Xin chào, rất vui được trò chuyện cùng bạn hôm nay.';
+  for (const [key, value] of Object.entries(preferenceDefaults)) p.config[key] ??= value;
   p.speakers ||= [{ id: 'speaker_1', name: 'Người nói 1', voice: p.config.voice || '' }];
   for (const s of p.segments) s.speaker ||= 'speaker_1';
 }
@@ -45,7 +59,7 @@ export function voicedSegments(p) {
   });
 }
 function invalidateVoice(p) {
-  delete p.artifacts.tts; delete p.artifacts.sample; delete p.artifacts.samples; delete p.artifacts.render;
+  delete p.artifacts.tts; delete p.artifacts.sample; delete p.artifacts.samples; delete p.artifacts.sampleSettings; delete p.artifacts.render;
   for (const s of p.segments) { delete s.ratio; delete s.ttsDuration; }
 }
 export function assertIdle(id) { if (active.has(id)) throw new Error('Đợi tác vụ hoàn tất hoặc hủy trước khi thay đổi.'); }
@@ -61,21 +75,29 @@ export function validateSegments(input, duration) {
     return { id, start, end, speaker, text: s.text.trim(), translation: String(s.translation || '').trim() };
   });
 }
-export function updateProject(id, input) {
+export function updateProject(id, input, dryRun = false) {
   assertIdle(id); const p = getProject(id), c = input.config;
   if (c) {
-    const allowed = { whisperModel: ['tiny','base','small','medium'], provider: ['codex','antigravity','chat'], ttsProvider: ['local','windi','openai','elevenlabs'], mode: ['v3turbo','v3nano','standard'], subtitle: ['outline','box','none'], resolution: [720,1080] };
+    const allowed = { whisperModel: ['tiny','base','small','medium'], provider: ['codex','antigravity','chat'], ttsProvider: ['local','windi','openai','elevenlabs'], mode: ['v3turbo','v3nano','standard'], subtitle: ['outline','box','none'], resolution: [720,1080], translationStyle: ['natural','faithful','concise','storytelling'], delivery: ['conversational','calm','energetic','formal'], uiTheme: ['dark','light'], karaokeStyle:['color','highlight','popup'] };
     for (const [key,values] of Object.entries(allowed)) if (key in c && !values.includes(c[key])) throw new Error('Cấu hình '+key+' không hợp lệ.');
+    if('karaoke' in c && typeof c.karaoke!=='boolean')throw new Error('Bật/tắt karaoke không hợp lệ.');
+    if('karaokeScale' in c && (!Number.isInteger(c.karaokeScale)||c.karaokeScale<100||c.karaokeScale>150))throw new Error('Cỡ popup từ 100–150%.');
+    if('karaokeColor' in c && !/^#[0-9a-f]{6}$/i.test(c.karaokeColor))throw new Error('Màu karaoke không hợp lệ.');
+    if('fontFamily' in c && !fontIds.includes(c.fontFamily))throw new Error('Font phụ đề không hợp lệ.');
+    if('backgroundColor' in c && !/^#[0-9a-f]{6}$/i.test(c.backgroundColor))throw new Error('Màu nền phụ đề không hợp lệ.');
+    if('backgroundOpacity' in c && (!Number.isInteger(c.backgroundOpacity)||c.backgroundOpacity<0||c.backgroundOpacity>100))throw new Error('Độ mờ nền từ 0–100%.');
     if ('language' in c && !/^[a-z]{0,3}$/.test(c.language)) throw new Error('Ngôn ngữ không hợp lệ.');
     if ('apiModel' in c && (typeof c.apiModel !== 'string' || c.apiModel.length>200 || /[\r\n]/.test(c.apiModel))) throw new Error('Model API không hợp lệ.');
     if ('sampleText' in c && (typeof c.sampleText !== 'string' || !c.sampleText.trim() || c.sampleText.length>1000)) throw new Error('Câu nghe thử cần 1–1000 ký tự.');
+    if ('translationNotes' in c && (typeof c.translationNotes !== 'string' || c.translationNotes.length>2000)) throw new Error('Ghi chú dịch tối đa 2000 ký tự.');
     if ('voice' in c && (typeof c.voice !== 'string' || c.voice.length>200)) throw new Error('Giọng không hợp lệ.');
     if ('color' in c && !/^#[0-9a-f]{6}$/i.test(c.color)) throw new Error('Màu không hợp lệ.');
     if ('fontSize' in c && (!Number.isFinite(c.fontSize) || c.fontSize<18 || c.fontSize>100)) throw new Error('Cỡ chữ 18–100.');
     if ('backgroundVolume' in c && (![0,.1,.2,.3].includes(c.backgroundVolume))) throw new Error('Âm lượng nền không hợp lệ.');
     const next = Object.fromEntries(Object.entries(c).filter(([k])=>k in p.config));
     const voiceChanged = ['mode','voice','ttsProvider','apiModel'].some(k=>k in next && next[k]!==p.config[k]);
-    const renderChanged = ['subtitle','color','fontSize','backgroundVolume','resolution'].some(k=>k in next && next[k]!==p.config[k]);
+    const renderChanged = ['subtitle','color','fontSize','fontFamily','backgroundColor','backgroundOpacity','karaoke','karaokeStyle','karaokeColor','karaokeScale','backgroundVolume','resolution'].some(k=>k in next && next[k]!==p.config[k]);
+    if (['translationStyle','delivery','translationNotes'].some(k=>k in next && next[k]!==p.config[k])) { p.revision++; delete p.pendingTranslation; }
     if (voiceChanged) invalidateVoice(p);
     if ('ttsProvider' in next && next.ttsProvider!==p.config.ttsProvider) { p.voices=[]; p.config.voice=''; p.speakers=p.speakers.map(s=>({...s,voice:''})); }
     if ('mode' in next && next.mode!==p.config.mode) { p.voices=[]; p.config.voice=''; p.speakers=p.speakers.map(s=>({...s,voice:''})); }
@@ -91,6 +113,9 @@ export function updateProject(id, input) {
       p.speakers=validateSpeakers(p.speakers);
     }
     p.revision++; delete p.pendingTranslation; invalidateVoice(p);
+  }
+  if ('speakerCount' in input && input.speakerCount === 1 && input.speakers) {
+    p.segments=p.segments.map(s=>({...s,speaker:input.speakers[0]?.id}));
   }
   if (input.speakers) {
     const speakers=validateSpeakers(input.speakers);
@@ -109,7 +134,8 @@ export function updateProject(id, input) {
       invalidateVoice(p);p.revision++;delete p.pendingTranslation;
     }
   }
-  return saveProject(p);
+  if(input.voiceApi)invalidateVoice(p);
+  return dryRun ? p : saveProject(p);
 }
 async function probe(file, signal) { const result=await run('ffprobe',['-v','error','-show_format','-show_streams','-of','json',file],{signal,timeout:30_000}); return JSON.parse(result.stdout); }
 export async function importVideo(id, source, internalProject) {
@@ -126,17 +152,22 @@ function stamp(seconds, ass=false) { const ms=Math.round(seconds*1000); const h=
 export function srt(segments) { return segments.map((s,i)=>`${i+1}\n${stamp(s.start)} --> ${stamp(s.end)}\n${s.translation || s.text}\n`).join('\n'); }
 export function ass(segments,c) {
   const hex=c.color.slice(1), color='&H00'+hex.slice(4,6)+hex.slice(2,4)+hex.slice(0,2);
+  const bg=(c.backgroundColor||'#0c1410').slice(1), alpha=Math.round(255*(1-(c.backgroundOpacity??82)/100)).toString(16).padStart(2,'0');
+  const background='&H'+alpha+bg.slice(4,6)+bg.slice(2,4)+bg.slice(0,2);
+  const font=subtitleFonts().find(f=>f.id===(c.fontFamily||'sans'))?.family||'Arial';
   const text=s=>String(s).replace(/\\/g,'').replace(/[{}]/g,'').replace(/\r?\n/g,'\\N');
-  return `[Script Info]\nScriptType: v4.00+\nPlayResX: 1280\nPlayResY: 720\nWrapStyle: 0\n[V4+ Styles]\nFormat: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding\nStyle: Default,Arial,${c.fontSize},${color},&H00FFFFFF,&H00141414,&H90000000,-1,0,0,0,100,100,0,0,${c.subtitle==='box'?3:1},2,0,2,50,50,42,1\n[Events]\nFormat: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n`+segments.map(s=>`Dialogue: 0,${stamp(s.start,true)},${stamp(s.end,true)},Default,,0,0,0,,${text(s.translation||s.text)}`).join('\n');
+  return `[Script Info]\nScriptType: v4.00+\nPlayResX: 1280\nPlayResY: 720\nWrapStyle: 0\n[V4+ Styles]\nFormat: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding\nStyle: Default,${font},${c.fontSize},${color},&H00FFFFFF,&H00141414,${background},-1,0,0,0,100,100,0,0,${c.subtitle==='box'?3:1},2,0,2,50,50,42,1\n[Events]\nFormat: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n`+segments.map(s=>`Dialogue: 0,${stamp(s.start,true)},${stamp(s.end,true)},Default,,0,0,0,,${text(s.translation||s.text)}`).join('\n');
 }
 export function startJob(id, step, runtimeSettings, options={}) {
   assertIdle(id); if (heavyJob) throw new Error('Đang có tác vụ khác chạy. Mỗi lần chạy một tác vụ để tiết kiệm RAM.');
+  const preview = options.preview && ['voices','sample'].includes(step) ? updateProject(id, options.preview, true) : null;
   const p=getProject(id), controller=new AbortController(); active.set(id,controller);heavyJob=true;
   p.job={ step,status:'running',message:'Đang chuẩn bị…',progress:0,startedAt:new Date().toISOString() };saveProject(p);
   const report=(message,progress=0)=>{p.job.message=message;p.job.progress=progress;saveProject(p);};
   const signal=controller.signal, dir=projectDir(id);
   const execute=(name,args,extra={})=>run(name,args,{signal,...extra});
   const engine=async(kind,action,request)=>{
+    if(action!=='voices'||request.mode==='standard')assertModelCapacity(inspectHardware(modelStorage(kind,dataRoot)),kind,kind==='whisper'?request.model:request.mode);
     const runtime=resolveRuntime(runtimeSettings[kind]), file=join(dir,`request-${action}.json`);
     await writeFile(file,JSON.stringify(request));
     let validationError='';
@@ -152,13 +183,13 @@ export function startJob(id, step, runtimeSettings, options={}) {
   async function translationWork(rewrite=false) {
     if (!p.segments.length) throw new Error('Cần nhận diện hoặc nhập lời thoại trước.');
     if (p.config.provider==='chat') {
-      const request={ projectId:id,revision:p.revision,segments:p.segments,prompt:translationPrompt(p.segments,rewrite) };
+      const request={ projectId:id,revision:p.revision,segments:p.segments,preferences:p.config,speakers:p.speakers,prompt:translationPrompt(p.segments,rewrite,p.config) };
       await writeFile(join(dir,'translation-request.json'),JSON.stringify(request,null,2));
       p.pendingTranslation={revision:p.revision,file:'translation-request.json'};
       report('Đã tạo yêu cầu. Nhờ LLM trong chat dùng skill đọc translation-request.json và nhập bản dịch.');return;
     }
     const result=[];
-    for(let i=0;i<p.segments.length;i+=30){ report(`Dịch câu ${i+1}–${Math.min(i+30,p.segments.length)} bằng ${p.config.provider}`,Math.round(i/p.segments.length*100));const batch=await translate(p.config.provider,p.segments.slice(i,i+30),join(dir,'translation',String(i)),signal,rewrite);result.push(...batch);await writeFile(join(dir,'translation-partial.json'),JSON.stringify(result,null,2)); }
+    for(let i=0;i<p.segments.length;i+=30){ report(`Dịch câu ${i+1}–${Math.min(i+30,p.segments.length)} bằng ${p.config.provider}`,Math.round(i/p.segments.length*100));const batch=await translate(p.config.provider,p.segments.slice(i,i+30),join(dir,'translation',String(i)),signal,rewrite,p.config);result.push(...batch);await writeFile(join(dir,'translation-partial.json'),JSON.stringify(result,null,2)); }
     p.segments=result;p.revision++;delete p.artifacts.tts;delete p.artifacts.render;delete p.pendingTranslation;
   }
   async function work(){
@@ -176,23 +207,30 @@ export function startJob(id, step, runtimeSettings, options={}) {
     }
     if(step==='translate'||step==='rewrite')return translationWork(step==='rewrite');
     if(step==='voices'){
-      if(p.config.ttsProvider==='local') { report(p.config.mode==='standard'?'Đang lấy giọng Local Voice Standard; lần đầu có thể tải model…':'Đang đọc danh sách giọng local đã cài…'); await engine('vieneu','voices',{mode:p.config.mode,output:join(dir,'voices.json')}); p.voices=JSON.parse(await readFile(join(dir,'voices.json'),'utf8')); }
-      else { report('Đang lấy danh sách giọng API…'); p.voices=await apiVoices(dataRoot,p.config.ttsProvider,signal); }
+      const config=preview?.config || p.config;
+      let voices;
+      if(config.ttsProvider==='local') { report(config.mode==='standard'?'Đang lấy giọng Local Voice Standard; lần đầu có thể tải model…':'Đang đọc danh sách giọng local đã cài…'); await engine('vieneu','voices',{mode:config.mode,output:join(dir,'voices.json')}); voices=JSON.parse(await readFile(join(dir,'voices.json'),'utf8')); }
+      else { report('Đang lấy danh sách giọng API…'); voices=await apiVoices(dataRoot,config.ttsProvider,signal); }
+      p.job.catalog={provider:config.ttsProvider,mode:config.mode,voices};
+      if(config.ttsProvider===p.config.ttsProvider && config.mode===p.config.mode)p.voices=voices;
       return;
     }
     if(step==='sample'){
-      const speaker=p.speakers.find(s=>s.id===(options.speaker||p.speakers[0].id));
+      const settings=preview || p, config=settings.config;
+      const speaker=settings.speakers.find(s=>s.id===(options.speaker||settings.speakers[0].id));
       if(!speaker)throw new Error('Người nói không hợp lệ.');
       if(!speaker.voice)throw new Error(`Chọn giọng cho ${speaker.name} trước khi nghe thử.`);
-      const text=options.text ?? p.config.sampleText;
+      const text=options.text ?? config.sampleText;
       if(typeof text!=='string'||!text.trim()||text.length>1000)throw new Error('Câu nghe thử cần 1–1000 ký tự.');
       const sampleDir=join(dir,'sample',speaker.id);await mkdir(sampleDir,{recursive:true});
       p.artifacts.samples ||= {}; delete p.artifacts.samples[speaker.id];
       const voice=speaker.voice;
-      report(p.config.ttsProvider==='local'?'Đang tạo giọng thử trên máy…':'Đang tạo giọng thử bằng API…');
-      if(p.config.ttsProvider==='local')await engine('vieneu','sample',{mode:p.config.mode,voice,text,directory:sampleDir});
-      else await apiSpeech({root:dataRoot,config:p.config,segments:[{id:'sample',voice,translation:text}],directory:sampleDir,signal,execute,report});
-      p.artifacts.samples[speaker.id]=`sample/${speaker.id}/sample.wav`;return;
+      report(config.ttsProvider==='local'?'Đang tạo giọng thử trên máy…':'Đang tạo giọng thử bằng API…');
+      if(config.ttsProvider==='local')await engine('vieneu','sample',{mode:config.mode,voice,text,directory:sampleDir});
+      else await apiSpeech({root:dataRoot,config,segments:[{id:'sample',voice,translation:text}],directory:sampleDir,signal,execute,report});
+      p.artifacts.samples[speaker.id]=`sample/${speaker.id}/sample.wav`;
+      p.artifacts.sampleSettings ||= {};
+      p.artifacts.sampleSettings[speaker.id]={provider:config.ttsProvider,mode:config.mode,apiModel:config.apiModel,voice,text};return;
     }
     if(!p.video)throw new Error('Chọn video trước.');
     const video=join(dir,p.video.file);
@@ -224,7 +262,7 @@ export function startJob(id, step, runtimeSettings, options={}) {
       if(p.config.subtitle!=='none'){
         await mkdir(captionDir,{recursive:true});
         const requestFile=join(dir,'request-captions.json');
-        await writeFile(requestFile,JSON.stringify({...p.config,width,height,segments:p.segments,directory:captionDir}));
+        await writeFile(requestFile,JSON.stringify({...p.config,fontPath:resolveSubtitleFont(p.config.fontFamily).path,width,height,segments:p.segments.map(s=>({...s,captionDuration:(s.end-s.start)*Math.sqrt(s.ratio)})),directory:captionDir}));
         const runtime=resolveRuntime(runtimeSettings.vieneu);
         await execute(runtime.python,[join(kit,'workers/captions.py'),requestFile],{cwd:runtime.cwd});
       }
@@ -236,7 +274,10 @@ export function startJob(id, step, runtimeSettings, options={}) {
         const args=['-y','-v','error','-ss',String(start),'-t',String(duration),'-i',video];
         if(segment) args.push('-i',join(dir,'tts',segment.id+'.wav'));
         else args.push('-f','lavfi','-i','anullsrc=r=48000:cl=stereo');
-        if(segment&&p.config.subtitle!=='none')args.push('-i',join(captionDir,segment.id+'.png'));
+        if(segment&&p.config.subtitle!=='none'){
+          if(p.config.karaoke)args.push('-f','concat','-safe','0','-i',join(captionDir,segment.id+'.ffconcat'));
+          else args.push('-i',join(captionDir,segment.id+'.png'));
+        }
         const audio=segment?`[1:a]atempo=${k},apad,atrim=duration=${outDuration},aformat=sample_rates=48000:channel_layouts=stereo[voice]`:`[1:a]atrim=duration=${outDuration}[voice]`;
         const videoFilter=segment&&p.config.subtitle!=='none'?`[0:v]setpts=${k}*(PTS-STARTPTS),${scale}[basev];[basev][2:v]overlay=0:0[v]`:`[0:v]setpts=${k}*(PTS-STARTPTS),${scale}[v]`;
         let filters=`${videoFilter};${audio}`;

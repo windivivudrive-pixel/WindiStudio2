@@ -68,3 +68,30 @@ Skill được kiểm tra bằng quick_validate.py: hợp lệ. ZIP dùng whitel
 - Tải URL của từng nền tảng thực tế. Beta chỉ hỗ trợ URL HTTPS YouTube/TikTok/X; không nhập credential/cookie vào kit.
 
 Chưa triển khai hoặc public website. ZIP là bản beta để người dùng thử trước.
+
+## UI thiết lập và chat workflow — 2026-10-12
+
+- UI thay 6 bước bằng Giọng đọc / Cách dịch & ngữ điệu / Giao diện & phụ đề; một nút Lưu thiết lập. Browser kiểm tra hai vai, đổi phong cách/ngữ điệu, ghi chú, sáng/tối, phụ đề và giữ bản nháp qua tab. Lưu rồi tải lại giữ đủ lựa chọn.
+- Kiểm tra viewport 320×740, 390×844, 768×1024, 844×390, desktop 1280px: không tràn ngang; nút lưu cao 48px ở desktop. Không thấy console error/warning trên trang local thật.
+- Suite 25/25 qua trên macOS: HTTP lưu một lần cùng kết nối API, mặc định dự án mới, context/prompt không chứa key, revision theo phong cách dịch, validation bản nháp. Preview API bằng server fixture thành công với giọng/model khác và giữ nguyên cấu hình, người nói, revision, render đã lưu.
+- Skill đăng ký và SKILL.md trong kit dùng agent.mjs để import video/transcript, tạo request và submit trong chat; không yêu cầu nút decode/dịch trong UI. Không có kết nối tự động tới Gemini web.
+- Lần sửa UI này không gọi model/TTS/LLM hoặc quota thật, không xuất video người dùng. Fixture API/audio không thay QA nghe giọng, khả năng đọc video/timestamp của Gemini, Windows hay workflow video dài.
+
+### Font và nền phụ đề — 2026-10-12
+
+- Thêm catalog font hệ thống (không tải font), chọn font, màu chữ/nền và opacity 0–100%. Nền hộp bật điều khiển nền; preview Georgia + #345678/35% đọc được CSS rgba(52,86,120,0.35). Viewport 390px không tràn ngang.
+- 27/27 test kit qua, không skip: PNG Pillow thật kiểm tra màu/alpha tại 0%, 35%, 100% và hình khác khi đổi font; contract lưu/migrate/defaults/invalidation render. Không xuất MP4 hoặc dùng quota TTS trong lần sửa này.
+- Có chạy suite chung của repo: 206/208 qua; tests/news.test.ts và tests/workflow-default-access.test.ts thất bại ở mã ngoài phần phụ đề, không sửa trong tác vụ này. Chưa xác định baseline của hai lỗi đó.
+- Giữ tab người dùng có bản nháp giọng chưa lưu; mở giao diện mới trong tab khác, không lưu đè bản nháp.
+
+### Karaoke và kiểm tra phần cứng — 2026-10-12
+
+- 29/29 test kit qua, không skip. Hai kiểu highlight/popup qua pipeline thật với audio/video tổng hợp, Pillow và FFmpeg: manifest nhiều frame, hai khung hình trong cùng câu khác nhau, thời lượng MP4 và SRT giữ đúng. Không dùng quota/model thật hoặc xuất video người dùng.
+- Bật/tắt karaoke, chọn kiểu, nền hộp và preview đã kiểm tra trên browser; không tràn ngang ở 320×740, 390×844, 844×390 và desktop. Screenshot `/private/tmp/windi-dubbing-karaoke-settings.png`. Bản nháp demo chưa lưu.
+- `node setup.mjs --check` chạy thật trên M1 Pro / 16 GB / 10 luồng, đề xuất Pro + Decode Base + 720p; không tải model. Pure tests mô phỏng RAM thấp, ít CPU, thiếu ổ đĩa và không đo được ổ đĩa. Cài engine kiểm tra trước pip/venv; tác vụ model kiểm tra lại ổ cache thực tế. Ngưỡng là chính sách dự phòng CPU, chưa benchmark hay kiểm thử cài sạch máy yếu/Windows/CUDA.
+- Chưa forced alignment: karaoke chia nhịp đều theo câu sau cross time-stretch, tối đa 300 từ mỗi câu; SRT rời không mang hiệu ứng. Các file voice WindiStudio ngoài kit đang có thay đổi từ trước, không chỉnh trong tác vụ này.
+
+### Sửa chữ dính và thêm chỉ tô màu — 2026-10-12
+
+- Preview đặt khoảng trắng thành text node giữa các inline-block, tránh mất khoảng trắng ở cuối từng khối. Browser đo khoảng cách giữa các từ >6 px ở cỡ 22 px, toàn bộ từ cùng cỡ khi chọn chế độ chỉ tô màu.
+- Thêm `karaokeStyle: color`, chỉ đổi màu từ đang đọc và không áp dụng độ phóng; preview ẩn thanh độ phóng cho kiểu này. MP4 dùng cùng hành vi. Suite 29/29 qua với cả ba kiểu qua pipeline/FFmpeg; bổ sung kiểm tra alpha mask hai frame giống hệt nhau và RGB khác nhau ngay cả khi lưu độ phóng 150%, xác minh không đổi hình dạng/bố cục.

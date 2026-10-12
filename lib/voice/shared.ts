@@ -41,6 +41,11 @@ export const STARTER_VOICES: StudioVoice[] = [
   {id:'62ae83ad-4f6a-430b-af41-a9bede9286ca',name:'Gemma',description:'Giọng nữ Anh',language:'en',gender:'feminine',kind:'public'},
   {id:'ef191366-f52f-447a-a398-ed8c0f2943a1',name:'Archie',description:'Giọng nam Anh',language:'en',gender:'masculine',kind:'public'},
 ];
+export const CURATED_PUBLIC_VOICES: StudioVoice[] = [
+  {id:'4499b44b-5180-4d65-9d76-e24405138493',name:'Đức Bảo',description:'Giọng nam tiếng Việt',language:'vi',gender:'masculine',kind:'public'},
+  {id:'094e72c3-97d3-439a-9e64-39ac3d3fa897',name:'Minh Dự',description:'Giọng nam tiếng Việt',language:'vi',gender:'masculine',kind:'public'},
+  {id:'60cf30cf-dcad-4cb1-b2e9-b6c08a23569e',name:'Ngô Đình',description:'Giọng nam tiếng Việt',language:'vi',gender:'masculine',kind:'public'},
+];
 export const COMPARISON_VOICES: StudioVoice[] = [
   {id:'6aee11c6-bef9-4fd0-9f45-1a1c25dcdcde',name:'Chữa Lành',description:'Voice Podcast Chữa Lành · Ấm áp, chậm rãi, giàu khoảng lặng',language:'vi',gender:'feminine',useCases:['conversation'],kind:'public'},
   {id:'f2a05c6a-fc36-4d1a-b5c4-dd2e5af15af7',name:'Khoa',description:'Giọng Nam Vlog (Khoa) · Tự nhiên, gần gũi, giàu năng lượng',language:'vi',gender:'masculine',useCases:['entertainment'],kind:'public'},
