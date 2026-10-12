@@ -44,6 +44,8 @@ import {
   formatNumber,
   isComparisonVoice,
   STARTER_VOICES,
+  CURATED_PUBLIC_VOICES,
+  DEFAULT_STUDIO_VOICE,
   VOICE_LANGUAGES,
   VOICE_CLONE_CLIP_LIMITS,
   VOICE_CLONE_DEMO_SAMPLES,
@@ -450,9 +452,9 @@ export function VoiceStudio() {
   const { user, isLoading } = useAuth();
   const [tab, setTab] = useState<Tab>("create");
   const [verticalNavigation, setVerticalNavigation] = useState(false);
-  const [voices, setVoices] = useState<StudioVoice[]>(STARTER_VOICES);
+  const [voices, setVoices] = useState<StudioVoice[]>([...CURATED_PUBLIC_VOICES, ...STARTER_VOICES]);
   const [selected, setSelected] = useState<StudioVoice>(
-    STARTER_VOICES[0],
+    DEFAULT_STUDIO_VOICE,
   );
   const [available, setAvailable] = useState(false);
   const [catalogLoading, setCatalogLoading] = useState(true);
@@ -604,7 +606,7 @@ export function VoiceStudio() {
     setAudio(null);
     setAccount(null);
     setCheckout(null);
-    setSelected(STARTER_VOICES[0]);
+    setSelected(DEFAULT_STUDIO_VOICE);
     setHeardDemoIds([]);
     void refresh();
   }, [refresh]);
@@ -929,7 +931,7 @@ export function VoiceStudio() {
       await api(`clone?id=${id}`, { method: "DELETE" });
       setNotice("Đã xóa giọng và giải phóng slot clone.");
       if (account?.clones.find((c) => c.id === id)?.provider_id === selected.id)
-        setSelected(STARTER_VOICES[0]);
+        setSelected(DEFAULT_STUDIO_VOICE);
     } catch (e) {
       setError((e as Error).message);
     } finally {
