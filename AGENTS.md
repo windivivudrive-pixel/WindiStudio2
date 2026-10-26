@@ -20,3 +20,10 @@ Rules:
 - If graphify-out/wiki/index.md exists, use it for broad navigation instead of raw source browsing.
 - Read graphify-out/GRAPH_REPORT.md only for broad architecture review or when query/path/explain do not surface enough context.
 - After modifying code, run `npm run graph:update` to keep the code graph current (AST-only, no API cost). If `graphify-out/` is absent or the local environment has not been initialized, run `npm run graph:setup` then `npm run graph:build`.
+
+## WindiStudio Repo Video
+
+- **Quy trình chuẩn**: Luôn trình 3–5 thẻ idea cho người dùng duyệt trước ➔ Người dùng duyệt idea xong thì viết kịch bản ➔ Thu voice ➔ Dựng Remotion ➔ **Render thẳng video `final.mp4`**.
+- **KHÔNG tạo hoặc khởi chạy Windi Timeline Editor** (không cần `EditorComposition.tsx`, `editor.config.json`, hay server editor port 4318, không dừng lại ở `EDITOR_READY` để chờ duyệt giao diện nữa).
+- **Bàn giao trực tiếp file `final.mp4`** hoàn chỉnh kèm thumbnail `cover.png`, phụ đề `captions.srt`, cập nhật `script.md`, `qa.md`, `episode.json` cho người dùng kiểm tra ngay.
+

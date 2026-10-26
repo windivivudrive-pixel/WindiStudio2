@@ -2,12 +2,20 @@ import 'server-only';
 import {cartesia,previewBucket,VoiceError,writer} from './server';
 import {VOICE_CLONE_DEMO_SAMPLES,type VoiceCloneSample} from './shared';
 import {cleanVoiceDemos,cloneSamplePath} from '../../supabase/functions/_shared/voice-demo-cleanup';
+import {deleteHeyGenVoice,synthesizeHeyGen} from './heygen';
 
 export async function cleanupVoiceDemos(userId:string) {
  const db=writer();
  const result=await cleanVoiceDemos({
   claim:async()=>{const {data,error}=await db.rpc('windi_voice_demo_cleanup_claim',{p_user:userId});if(error)throw error;return data||[];},
-  deleteProvider:async row=>{const response=await cartesia(`/voices/${encodeURIComponent(row.provider_id!)}`,{method:'DELETE',signal:AbortSignal.timeout(15000)},{userId,purpose:'clone'});if(!response.ok&&response.status!==404)throw Error('Provider cleanup failed');},
+  deleteProvider:async row=>{
+    if (row.provider_id && /^[0-9a-f]{32}$/i.test(row.provider_id)) {
+      await deleteHeyGenVoice(row.provider_id);
+    } else {
+      const response=await cartesia(`/voices/${encodeURIComponent(row.provider_id!)}`,{method:'DELETE',signal:AbortSignal.timeout(15000)},{userId,purpose:'clone'});
+      if(!response.ok&&response.status!==404)throw Error('Provider cleanup failed');
+    }
+  },
   removeSamples:async paths=>{const {error}=await db.storage.from(previewBucket).remove(paths);if(error)throw error;},
   finish:async(row,success)=>{const {error}=await db.rpc('windi_voice_demo_cleanup_finish',{p_clone:row.id,p_token:row.cleanup_token,p_success:success});if(error)throw error;},
  });
@@ -35,9 +43,20 @@ export async function clonePreview(userId:string,cloneId:string,preset:VoiceClon
   if(!clone||clone.status!=='ready'||(clone.is_demo&&Date.parse(clone.demo_expires_at)<=Date.now()))throw new VoiceError('Giọng nghe thử đã hết hạn hoặc bị thay thế.',410);
  }
  try {
-  const response=await cartesia('/tts/bytes',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model_id:'sonic-3.6',transcript:VOICE_CLONE_DEMO_SAMPLES[preset],language:'vi',voice:{mode:'id',id:claim.provider},output_format:{container:'mp3',bit_rate:128000,sample_rate:44100}})},{userId,purpose:'clone'});
-  if(!response.ok)throw new VoiceError('Chưa tạo được bản nghe thử. Vui lòng thử lại.',502);
-  const audio=await response.arrayBuffer();
+  let audio: ArrayBuffer;
+  if (claim.provider && /^[0-9a-f]{32}$/i.test(claim.provider)) {
+    const hRes = await synthesizeHeyGen({
+      text: VOICE_CLONE_DEMO_SAMPLES[preset],
+      voiceId: claim.provider,
+      language: 'vi',
+      speed: 1,
+    }, claim.provider);
+    audio = hRes.mp3.buffer.slice(hRes.mp3.byteOffset, hRes.mp3.byteOffset + hRes.mp3.byteLength);
+  } else {
+    const response=await cartesia('/tts/bytes',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model_id:'sonic-3.6',transcript:VOICE_CLONE_DEMO_SAMPLES[preset],language:'vi',voice:{mode:'id',id:claim.provider},output_format:{container:'mp3',bit_rate:128000,sample_rate:44100}})},{userId,purpose:'clone'});
+    if(!response.ok)throw new VoiceError('Chưa tạo được bản nghe thử. Vui lòng thử lại.',502);
+    audio=await response.arrayBuffer();
+  }
   if(!audio.byteLength||audio.byteLength>5*1024*1024)throw new VoiceError('Bản nghe thử không hợp lệ.',502);
   await assertAvailable();
   const {error:uploadError}=await db.storage.from(previewBucket).upload(path,new Uint8Array(audio),{contentType:'audio/mpeg',upsert:true});

@@ -1,92 +1,120 @@
-# Logs
-logs
+# Website repository: include only the Next.js app and its supporting sources.
+# Everything else at the repository root stays local unless explicitly allowed.
+/*
+!/.gitignore
+!/.vercelignore
+!/.env.example
+!/AGENTS.md
+!/README.md
+!/README_PAYMENT.md
+!/README_CREATORFLOW_COMMERCE.md
+!/README-WINDI.md
+!/package.json
+!/package-lock.json
+!/next.config.ts
+!/next-env.d.ts
+!/proxy.ts
+!/middleware.ts
+!/tsconfig.json
+!/vitest.config.ts
+!/vercel.json
+!/postcss.config.*
+!/tailwind.config.*
+!/eslint.config.*
+!/.eslintrc*
+!/.prettierrc*
+!/.prettierignore
+!/.npmrc.example
+!/.github/
+!/app/
+!/windi/
+!/lib/
+!/public/
+!/data/
+!/supabase/
+!/scripts/
+!/tests/
+!/docs/
+!/ops/
+!/design-system/
+
+# The website's SePay webhook imports this shared payment module.
+# Desktop apps, video renderers and other kits remain local.
+!/kits/
+/kits/*
+!/kits/qr-payment/
+
+# Legacy downloadable tool source is not part of the Next.js application.
+# Published product ZIPs are delivered from Supabase Storage.
+/app/tool/extension/
+/app/voice lib/
+/windi/*.mp4
+/windi/*.mov
+/windi/*.webm
+/docs/channel/
+/docs/research/
+/docs/local-dubbing-app-spec.md
+/scripts/generate_sound_booki_voice.mjs
+/scripts/verify-qr-payment-package.mjs
+
+# Dependencies, builds, caches and deployment state at any depth.
+node_modules/
+.local/
+.pnp
+.pnp.js
+.next/
+dist/
+dist-ssr/
+build/
+out/
+.cache/
+.turbo/
+.backups/
+.vercel/
+.wrangler/
+*.tsbuildinfo
+next-env.d.ts.bak
+
+# Local workflow state and generated media. Public website assets stay included,
+# including Voice Studio audio samples and Soundbooki landing-page assets.
+.windi/
+/windi/renders/
+/windi/qa/
+/windi/timing/
+/windi/voice/
+/windi/cleaned/
+/windi/ideas/
+/windi/layouts/
+/windi/manifests/
+/windi/prompts/
+/windi/scripts/
+/windi/editor-exports/
+/data/ingestion/runs/
+/data/catalog/creator-research/
+
+# Environment files and private credentials. Keep the sanitized root example.
+.env
+.env.*
+!/.env.example
+.dev.vars
+*.pem
+*.key
+/supabase/.temp/
+/supabase/.branches/
+.supabase/
+
+# Logs, Python caches, editors and OS metadata.
+logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
-
-# Dependencies
-node_modules/
-.local/
-.pnp
-.pnp.js
-
-# Build outputs & Bundles
-dist/
-dist-ssr/
-build/
-out/
-.next/
-*.tsbuildinfo
-next-env.d.ts.bak
-
-# Caches
-.cache/
-.turbo/
-.backups/
-.next/
-
-# Local Windi workflow state and generated media. Source components under
-# windi/ remain tracked; these folders are regenerated per production run.
-.windi/
-windi/renders/
-windi/qa/
-windi/timing/
-windi/voice/
-windi/cleaned/
-windi/ideas/
-windi/layouts/
-windi/manifests/
-windi/prompts/
-windi/scripts/
-visual-checks/
-graphify-out/
-windi/editor-exports/
-
-# Environment files & Secrets
-.env
-.env*.local
-.env.development.local
-.env.test.local
-.env.production.local
-.dev.vars
-cloudflare-workers/.dev.vars
-*.pem
-*.key
-
-# Supabase CLI local cache & branches
-supabase/.temp/
-supabase/.branches/
-.supabase/
-
-# Cloudflare Wrangler cache
-.wrangler/
-cloudflare-workers/.wrangler/
-
-# Python cache
 __pycache__/
 *.py[cod]
 *$py.class
 .pytest_cache/
-
-# Video renders & heavy media outputs
-videos/
-# Generated reference-video analysis (frames, transcript exports, and audio)
-docs/channel/reference-watch/
-*.mp4
-*.MP3
-!public/music background.MP3
-*.mov
-*.webm
-*.avi
-
-# Data ingestion & research runs cache (keep curated catalog files)
-data/ingestion/runs/
-data/catalog/creator-research/
-
-# Editor & OS files
 .DS_Store
 .DS_Store?
 ._*
@@ -94,12 +122,9 @@ data/catalog/creator-research/
 .Trashes
 Thumbs.db
 .idea/
-.vscode/*
-!.vscode/extensions.json
+.vscode/
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
-.vercel
-.env*

@@ -100,7 +100,7 @@ export function VideoKitCommerce() {
     setLoading(false);
     const nextOrder = body.orders?.find((item: Order) => item.id === checkoutOrderIdRef.current);
     if (nextOrder?.status === "PAID" && checkoutStatusRef.current === "PENDING") {
-      setNotice("Thanh toán đã được xác nhận. Video Workflow, 3.000 credit Voice và 1 lượt Clone Pro 2.1 đã được cấp cho tài khoản.");
+      setNotice("Thanh toán đã được xác nhận. Video Workflow, 3.000 credit Voice và 1 lượt Clone Pro 3.0 đã được cấp cho tài khoản.");
     }
     if (nextOrder) checkoutStatusRef.current = nextOrder.status;
     setCheckout((current) => {
@@ -186,7 +186,7 @@ export function VideoKitCommerce() {
           <p>Dùng theo tài khoản, không cần kích hoạt máy. Với {money(price)}đ, bạn nhận:</p>
           <ul className="kit-included-list">
             <li><strong>Automation Video Workflow</strong> — từ kịch bản đến video trong một quy trình.</li>
-            <li><strong>{includedCloneLimit} giọng Clone Pro 2.1 miễn phí</strong> — tạo giọng riêng đầu tiên của bạn.</li>
+            <li><strong>{includedCloneLimit} giọng Clone Pro 3.0 miễn phí</strong> — tạo giọng riêng đầu tiên của bạn.</li>
             <li><strong>{money(includedVoiceCredits)} credit Voice</strong> — dùng trong {includedVoiceDays} ngày cùng gói clone.</li>
             <li><strong>Windi Connect: Flow, ChatGPT & Grok</strong> — gửi prompt đúng cảnh; Grok Imagine tạo video với 1–2 ảnh ref và tự lưu MP4 về project.</li>
           </ul>
@@ -246,7 +246,7 @@ export function VideoKitCommerce() {
               <KeyRound size={18} /> Windi Voice API
             </h3>
             <p>
-              Workflow dùng Clone Pro 2.1. Audio và word
+              Workflow dùng Clone Pro 3.0. Audio và word
               timestamp được tạo trong cùng một lần gọi, không chạy Whisper lại.
             </p>
             {account.voiceApi.bonus && (
@@ -260,7 +260,7 @@ export function VideoKitCommerce() {
               </p>
             ) : (
               <p className="kit-voice-plan">
-                Muốn dùng thêm sau gói Clone? <Link href="/voice-studio">Mua thêm Windi Voice credit</Link>
+                Muốn dùng thêm sau gói Clone? <Link href="/">Mua thêm Windi Voice credit</Link>
               </p>
             )}
             <p>

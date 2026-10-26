@@ -195,3 +195,10 @@ test('preview validates the voice ID and provider availability before provider w
  expect((await preview(new Request(`http://localhost/api/voice/preview?id=${id}`))).status).toBe(503);
  expect(state.previewPublicVoice).not.toHaveBeenCalled();
 });
+test('background preview loading requests stored audio only',async()=>{
+ const response=await preview(new Request(`http://localhost/api/voice/preview?id=${id}&storedOnly=1`));
+ expect(response.status).toBe(200);
+ expect(state.previewPublicVoice).toHaveBeenCalledWith(expect.any(Request),id,true);
+ expect(rpc).not.toHaveBeenCalled();
+ expect(state.cartesia).not.toHaveBeenCalled();
+});

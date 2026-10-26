@@ -1,5 +1,4 @@
 import {test,expect,vi} from 'vitest';
-import {readFileSync} from 'node:fs';
 import {createHash} from 'node:crypto';
 import JSZip from 'jszip';
 vi.mock('server-only',()=>({}));
@@ -51,8 +50,6 @@ test('delivers full release and account connection at the installer read path',a
  expect(guide).not.toContain('windi setup');
  expect(Object.keys(zip.files).filter(name=>/HUONG-DAN.*\.html$/i.test(name))).toEqual([]);
  expect(zip.file('Cai Windi.command')!.unixPermissions).toBe(0o100755);
- const installer=readFileSync('tools/windi-connect/scripts/install.mjs','utf8');
- expect(installer).toContain("path.join(root,'windi-account.json')");
 });
 test('checksum mismatch never issues an account token',async()=>{
  const {insert}=await setup(true);

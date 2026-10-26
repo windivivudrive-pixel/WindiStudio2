@@ -178,8 +178,8 @@ function VoiceMetadata({ voice }: { voice: StudioVoice }) {
       {voice.useCases?.includes("advertising") && (
         <span
           className="voice-metadata-advertising"
-          title="Windi Clone Pro 2.1 ghi chú: quảng cáo"
-          aria-label="Windi Clone Pro 2.1 ghi chú: quảng cáo"
+          title="Windi Clone Pro 3.0 ghi chú: quảng cáo"
+          aria-label="Windi Clone Pro 3.0 ghi chú: quảng cáo"
         >
           <Megaphone size={15} />
         </span>
@@ -187,8 +187,8 @@ function VoiceMetadata({ voice }: { voice: StudioVoice }) {
       {voice.useCases?.includes("conversation") && (
         <span
           className="voice-metadata-conversation"
-          title="Windi Clone Pro 2.1 ghi chú: hội thoại"
-          aria-label="Windi Clone Pro 2.1 ghi chú: hội thoại"
+          title="Windi Clone Pro 3.0 ghi chú: hội thoại"
+          aria-label="Windi Clone Pro 3.0 ghi chú: hội thoại"
         >
           <MessageCircleMore size={15} />
         </span>
@@ -196,8 +196,8 @@ function VoiceMetadata({ voice }: { voice: StudioVoice }) {
       {voice.useCases?.includes("entertainment") && (
         <span
           className="voice-metadata-entertainment"
-          title="Windi Clone Pro 2.1 ghi chú: giải trí"
-          aria-label="Windi Clone Pro 2.1 ghi chú: giải trí"
+          title="Windi Clone Pro 3.0 ghi chú: giải trí"
+          aria-label="Windi Clone Pro 3.0 ghi chú: giải trí"
         >
           <PartyPopper size={15} />
         </span>
@@ -307,7 +307,7 @@ function VoiceComparisonShowcase({
             <span>Người nghe cần cảm thấy nó.</span>
           </h2>
           <p>
-            Windi Clone Pro 2.1 kết hợp chất giọng riêng với khả năng đọc ngữ cảnh để
+            Windi Clone Pro 3.0 kết hợp chất giọng riêng với khả năng đọc ngữ cảnh để
             lời thoại tự tìm nhịp điệu, ngữ điệu và sắc thái phù hợp.
           </p>
         </div>
@@ -373,7 +373,7 @@ function VoiceComparisonShowcase({
                     label: "Dịch vụ clone khác",
                     src: sample.other,
                   },
-                  { kind: "pro", label: "Windi Clone Pro 2.1", src: sample.pro },
+                  { kind: "pro", label: "Windi Clone Pro 3.0", src: sample.pro },
                 ] as const
               ).map((side) => {
                 const key = `${sample.id}-${side.kind}`;
@@ -437,7 +437,7 @@ function VoiceComparisonShowcase({
           type="button"
           onClick={onClone}
         >
-          Tạo giọng Windi Clone Pro 2.1 <ArrowRight size={16} />
+          Tạo giọng Windi Clone Pro 3.0 <ArrowRight size={16} />
         </button>
       </div>
       <p className="voice-compare-note">
@@ -508,6 +508,7 @@ export function VoiceStudio() {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const previewAudioRef = useRef<HTMLAudioElement>(null);
   const previewUrls = useRef(new Map<string, string>());
+  const previewPreloads = useRef(new Map<string, Promise<string | undefined>>());
   const activeUser = useRef(user?.id);
   activeUser.current = user?.id;
   const requestKey = useRef<{ payload: string; key: string } | null>(null);
@@ -704,6 +705,37 @@ export function VoiceStudio() {
     },
     [],
   );
+  useEffect(() => {
+    if (catalogLoading) return;
+    const controller = new AbortController();
+    const owned = new Map<string, Promise<string | undefined>>();
+    const vietnamese = voices.filter(voice => voice.language === "vi" && voice.kind === "public" && !isComparisonVoice(voice.id));
+    // Warm only saved samples: entering the page must never generate paid audio.
+    for (const voice of vietnamese) {
+      if (previewUrls.current.has(voice.id) || previewPreloads.current.has(voice.id)) continue;
+      const pending = fetch(`/api/voice/preview?id=${encodeURIComponent(voice.id)}&storedOnly=1`, { cache: "force-cache", signal: controller.signal })
+        .then(async response => {
+          if (!response.ok) return undefined;
+          const blob = await response.blob();
+          if (controller.signal.aborted || !blob.size) return undefined;
+          const url = URL.createObjectURL(blob);
+          previewUrls.current.set(voice.id, url);
+          return url;
+        })
+        .catch(() => undefined);
+      previewPreloads.current.set(voice.id, pending);
+      owned.set(voice.id, pending);
+      void pending.finally(() => {
+        if (previewPreloads.current.get(voice.id) === pending) previewPreloads.current.delete(voice.id);
+      });
+    }
+    return () => {
+      controller.abort();
+      owned.forEach((pending, id) => {
+        if (previewPreloads.current.get(id) === pending) previewPreloads.current.delete(id);
+      });
+    };
+  }, [catalogLoading, voices]);
   function stopPreview() {
     previewRequest.current += 1;
     previewAudioRef.current?.pause();
@@ -728,6 +760,7 @@ export function VoiceStudio() {
     setError("");
     try {
       let url = previewUrls.current.get(voice.id);
+      if (!url) url = await previewPreloads.current.get(voice.id);
       if (!url) {
         const comparisonMatch = voiceComparisons.find(
           (c) => c.voiceId === voice.id,
@@ -921,7 +954,7 @@ export function VoiceStudio() {
   async function removeClone(id: string) {
     if (
       !window.confirm(
-        "Xóa giọng này khỏi thư viện Windi Clone Pro 2.1? Slot clone sẽ được giải phóng, nhưng credit đã dùng không được hoàn lại.",
+        "Xóa giọng này khỏi thư viện Windi Clone Pro 3.0? Slot clone sẽ được giải phóng, nhưng credit đã dùng không được hoàn lại.",
       )
     )
       return;
@@ -1039,7 +1072,7 @@ export function VoiceStudio() {
             notice.includes("Thanh toán")
               ? "Thanh toán thành công"
               : notice.includes("Giọng riêng")
-                ? "Windi Clone Pro 2.1 đã sẵn sàng"
+                ? "Windi Clone Pro 3.0 đã sẵn sàng"
                 : "Đã hoàn tất"
           }
         />
@@ -1094,7 +1127,7 @@ export function VoiceStudio() {
             <AudioLines size={15} /> voice_studio.exe
           </span>
           <div>
-            <span className="voice-model">CLONE PRO 2.1</span>
+            <span className="voice-model">CLONE PRO 3.0</span>
             <i />
             <i />
             <i />
@@ -1159,7 +1192,7 @@ export function VoiceStudio() {
             {isLoading
               ? "Đang tải tài khoản…"
               : user
-                ? isAdmin ? "Admin · Windi Clone Pro 2.1" : currentPlan
+                ? isAdmin ? "Admin · Windi Clone Pro 3.0" : currentPlan
                   ? `Gói ${currentPlan.name}`
                   : workflowBonusRemaining > 0
                     ? "3K credit từ Video Workflow"
@@ -1169,7 +1202,7 @@ export function VoiceStudio() {
           <div>
             {user && (
               <>
-                <strong>{isAdmin ? "Quota Windi Clone Pro 2.1" : formatNumber(remaining)}</strong>
+                <strong>{isAdmin ? "Quota Windi Clone Pro 3.0" : formatNumber(remaining)}</strong>
                 <span>{isAdmin ? "· quản trị" : "credit còn lại"}</span>
                 {period && (
                   <span className="voice-period">
@@ -1199,7 +1232,7 @@ export function VoiceStudio() {
             <span>
               Đăng nhập để quản lý credit, lưu audio và tạo giọng riêng.
             </span>
-            <Link href="/login?next=/voice-studio">
+            <Link href="/login?next=/">
               Đăng nhập <ArrowRight size={14} />
             </Link>
           </div>
@@ -1294,7 +1327,7 @@ export function VoiceStudio() {
                       {busy === "generate" ? <LoaderCircle size={18} className="voice-spin" /> : <AudioLines size={18} aria-hidden="true" />}
                       {busy === "generate" ? "Đang tạo âm thanh…" : "Tạo âm thanh"}
                       <span>{formatNumber(credits)} credit</span>
-                    </button> : <Link className="voice-btn voice-primary" href="/login?next=/voice-studio">Đăng nhập để tạo âm thanh <ArrowRight size={17} aria-hidden="true" /></Link>}
+                    </button> : <Link className="voice-btn voice-primary" href="/login?next=/">Đăng nhập để tạo âm thanh <ArrowRight size={17} aria-hidden="true" /></Link>}
                     <span>1 ký tự = 1 credit</span>
                   </div>
                 </div>
@@ -1349,7 +1382,7 @@ export function VoiceStudio() {
                   <h2>Tìm tiếng nói cho câu chuyện.</h2>
                   <p>
                     8 ngôn ngữ mẫu được tuyển chọn. Icon chỉ hiện khi Windi Clone Pro
-                    2.1 có ghi chú giới tính hoặc mục đích sử dụng rõ ràng.
+                    3.0 có ghi chú giới tính hoặc mục đích sử dụng rõ ràng.
                   </p>
                 </div>
                 <div className="voice-library-actions">
@@ -1441,7 +1474,7 @@ export function VoiceStudio() {
                     </div>
                     <h3>{v.name}</h3>
                     <p>
-                      {v.description || "Giọng đọc từ thư viện Windi Clone Pro 2.1."}
+                      {v.description || "Giọng đọc từ thư viện Windi Clone Pro 3.0."}
                     </p>
                     <div className="voice-card-actions">
                       {v.kind === "public" && (
@@ -1497,7 +1530,7 @@ export function VoiceStudio() {
                   </p>
                 </div>
                 <span className="voice-quota">
-                  {freeDemo ? `${demoRemaining} / 2 lượt nghe thử còn lại` : isAdmin ? `${activeCloneCount} giọng · quota Windi Clone Pro 2.1` : period?.clone_limit
+                  {freeDemo ? `${demoRemaining} / 2 lượt nghe thử còn lại` : isAdmin ? `${activeCloneCount} giọng · quota Windi Clone Pro 3.0` : period?.clone_limit
                     ? `${activeCloneCount} / ${period.clone_limit} giọng đang hoạt động` : user ? "Chọn gói để tạo giọng riêng" : "Đăng nhập để tạo giọng nghe thử"}
                 </span>
               </div>
@@ -1669,7 +1702,7 @@ export function VoiceStudio() {
                         Tôi là chủ giọng nói hoặc đã được chủ giọng cho phép tạo
                         và sử dụng giọng AI, đồng thời có quyền sử dụng bản ghi âm
                         tải lên. Tôi đã đọc chú thích trên và đồng ý gửi mẫu để
-                        Windi Clone Pro 2.1 xử lý.
+                        Windi Clone Pro 3.0 xử lý.
                       </span>
                     </label>
                     <button
@@ -2001,7 +2034,7 @@ export function VoiceStudio() {
                           <Check size={15} />
                           {p.id === "welcome"
                             ? "2 lượt clone nghe mẫu · tự xóa trong 20 phút"
-                            : "Windi Clone Pro 2.1 · xuất file MP3"}
+                            : "Windi Clone Pro 3.0 · xuất file MP3"}
                         </li>
                         <li>
                           <Check size={15} />
@@ -2010,7 +2043,7 @@ export function VoiceStudio() {
                       </ul>
                       {!user ? (
                         <Link
-                          href="/login?next=/voice-studio"
+                          href="/login?next=/"
                           className={`voice-btn ${featured ? "voice-primary" : ""}`}
                         >
                           Đăng nhập để chọn gói
@@ -2201,7 +2234,14 @@ export function VoiceStudio() {
           {pickerVoices.map((voice, index) => (
             <article className="voice-picker-row" key={voice.id}>
               <span className={`voice-avatar voice-avatar-${index % 4}`} aria-hidden="true"><AudioLines size={21} /></span>
-              <div className="voice-picker-info"><h3>{voice.name}</h3><div className="voice-picker-meta">{voice.kind === "clone" ? "Giọng của tôi" : VOICE_LANGUAGES.find(item => item.id === voice.language)?.name || voice.language} <VoiceMetadata voice={voice} /></div><p>{voice.description || "Giọng riêng của bạn"}</p></div>
+              <div className="voice-picker-info">
+                <h3>{voice.name}</h3>
+                <div className="voice-picker-meta">
+                  {voice.kind === "clone" ? "Giọng của tôi" : VOICE_LANGUAGES.find(item => item.id === voice.language)?.name || voice.language}
+                  <VoiceMetadata voice={voice} />
+                </div>
+                <p>{voice.description || "Giọng riêng của bạn"}</p>
+              </div>
               <div className="voice-picker-row-actions">
                 {voice.kind === "public" && <button type="button" className="voice-icon-btn" aria-label={`Nghe thử ${voice.name}`} aria-pressed={previewingId === voice.id} disabled={!!previewLoadingId} onClick={() => void previewVoice(voice)}>{previewLoadingId === voice.id ? <LoaderCircle size={18} className="voice-spin" /> : previewingId === voice.id ? <Pause size={18} /> : <Play size={18} />}</button>}
                 <button type="button" className="voice-btn voice-picker-select" aria-label={`Chọn giọng ${voice.name}`} onClick={() => { choose(voice); voicePickerRef.current?.close(); }}>{selected.id === voice.id ? <><Check size={16} aria-hidden="true" /> Đang chọn</> : "Chọn"}</button>

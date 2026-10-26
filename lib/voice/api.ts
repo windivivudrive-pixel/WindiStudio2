@@ -3,7 +3,8 @@ import 'server-only';
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
 import lamejs from '@breezystack/lamejs';
 import { cartesia, resolveVoice, VoiceError, writer } from './server';
-import { DEFAULT_WORKFLOW_VOICE_ID, countCredits, isUUID, VOICE_LANGUAGES } from './shared';
+import { DEFAULT_WORKFLOW_VOICE_ID, countCredits, isUUID, VOICE_LANGUAGES, CURATED_PUBLIC_VOICES } from './shared';
+import { synthesizeHeyGen } from './heygen';
 
 export const voiceTimingBucket = 'windi-voice-timing';
 const VOICE_TOKEN_PREFIX = 'windi_voice_';
@@ -26,6 +27,7 @@ export type VoiceApiInput = {
   voiceId: string;
   language: string;
   speed: number;
+  provider?: 'heygen' | 'cartesia';
 };
 
 export type WordTimestamps = {
@@ -137,15 +139,16 @@ export function validateVoiceApiInput(value: unknown): VoiceApiInput {
   if (!value || typeof value !== 'object') throw new VoiceError('Nội dung yêu cầu không hợp lệ.');
   const body = value as Record<string, unknown>;
   const text = typeof body.text === 'string' ? body.text.normalize('NFC').trim() : '';
-  const voiceId = typeof body.voice_id === 'string' ? body.voice_id : '';
+  const voiceId = typeof body.voice_id === 'string' ? body.voice_id : typeof body.voiceId === 'string' ? body.voiceId : '';
   const language = typeof body.language === 'string' ? body.language : 'vi';
   const speed = body.speed === undefined ? 1 : Number(body.speed);
+  const provider = body.provider === 'cartesia' ? ('cartesia' as const) : ('heygen' as const);
   if (
     !text || countCredits(text) > MAX_TEXT_LENGTH || !isUUID(voiceId) ||
     !VOICE_LANGUAGES.some((item) => item.id === language) ||
     !Number.isFinite(speed) || speed < 0.6 || speed > 1.5
   ) throw new VoiceError('Kiểm tra text, voice_id, language và speed. Tối đa 10.000 ký tự.');
-  return { text, voiceId, language, speed };
+  return { text, voiceId, language, speed, provider };
 }
 
 export function requestHash(input: VoiceApiInput) {
@@ -271,23 +274,18 @@ export async function createVoiceGeneration(identity: AutomationIdentity, input:
   return completeVoiceGeneration(identity.userId, input, { ...claim.data, id: job.id, voice_id: voice.id });
 }
 
-// Both browser and automation requests use the same audio + timing generation.
-export async function completeVoiceGeneration(userId: string, input: VoiceApiInput, job: { id: string; voice_id: string }) {
-  const db = writer();
+async function synthesizeCartesia(userId: string, input: VoiceApiInput, providerVoiceId: string, jobId: string) {
   let response: Response;
   try {
     response = await cartesia('/tts/sse', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Accept: 'text/event-stream' },
-      body: JSON.stringify(cartesiaTtsPayload(input, job.voice_id, job.id)),
-    }, {userId,purpose:job.voice_id===DEFAULT_WORKFLOW_VOICE_ID?'main':'tts'});
+      body: JSON.stringify(cartesiaTtsPayload(input, providerVoiceId, jobId)),
+    }, {userId,purpose:providerVoiceId===DEFAULT_WORKFLOW_VOICE_ID?'main':'tts'});
   } catch {
-    await db.from('windi_voice_jobs').update({ status: 'unknown', provider_context_id: job.id }).eq('id', job.id).eq('status', 'pending');
     throw new VoiceError('Kết nối bị gián đoạn sau khi gửi. Yêu cầu đang chờ đối soát và sẽ không tự tạo lại.', 503);
   }
   if (!response.ok) {
-    const refund = await db.rpc('windi_voice_finish', { p_job: job.id, p_success: false });
-    if (refund.error) throw refund.error;
     throw new VoiceError('Nhà cung cấp chưa tạo được âm thanh. Credit đã được hoàn lại.', 502);
   }
 
@@ -295,32 +293,76 @@ export async function completeVoiceGeneration(userId: string, input: VoiceApiInp
   try {
     payload = await response.text();
   } catch {
-    await db.from('windi_voice_jobs').update({ status: 'unknown', provider_context_id: job.id }).eq('id', job.id).eq('status', 'pending');
     throw new VoiceError('Kết nối bị gián đoạn khi nhận âm thanh. Yêu cầu đang chờ đối soát và sẽ không tự tạo lại.', 503);
   }
 
-  let parsed: ReturnType<typeof parseCartesiaSse>;
-  let mp3: Buffer;
+  const parsed = parseCartesiaSse(payload);
+  if (!parsed.pcm.byteLength) throw new VoiceError('Nhà cung cấp không trả dữ liệu âm thanh hợp lệ.', 502);
+  if (!parsed.timestamps.words.length) throw new VoiceError('Nhà cung cấp không trả word timestamp cho lần tạo giọng này.', 502);
+  const mp3 = pcm16ToMp3(parsed.pcm);
+  return { mp3, timestamps: parsed.timestamps };
+}
+
+async function synthesizeWithHeyGen(input: VoiceApiInput, providerVoiceId: string) {
+  const result = await synthesizeHeyGen(input, providerVoiceId);
+  return { mp3: result.mp3, timestamps: result.timestamps };
+}
+
+// Both browser and automation requests use the same audio + timing generation.
+export async function completeVoiceGeneration(userId: string, input: VoiceApiInput, job: { id: string; voice_id: string; provider?: 'heygen' | 'cartesia' }) {
+  const db = writer();
+  const curated = CURATED_PUBLIC_VOICES.find(v => v.id === job.voice_id || v.heygenId === job.voice_id || v.cartesiaId === job.voice_id);
+  const heygenId = curated?.heygenId || (/^[0-9a-f]{32}$/i.test(job.voice_id) ? job.voice_id : null);
+  const cartesiaId = curated?.cartesiaId || (/^[0-9a-f]{8}-[0-9a-f]{4}/i.test(job.voice_id) ? job.voice_id : null);
+
+  const preferCartesia = input.provider === 'cartesia' || (!heygenId && Boolean(cartesiaId));
+  let generated: { mp3: Buffer; timestamps: WordTimestamps };
+
   try {
-    parsed = parseCartesiaSse(payload);
-    if (!parsed.pcm.byteLength) throw new VoiceError('Nhà cung cấp không trả dữ liệu âm thanh hợp lệ.', 502);
-    if (!parsed.timestamps.words.length) throw new VoiceError('Nhà cung cấp không trả word timestamp cho lần tạo giọng này.', 502);
-    mp3 = pcm16ToMp3(parsed.pcm);
-  } catch (parseError) {
+    if (preferCartesia && cartesiaId) {
+      try {
+        generated = await synthesizeCartesia(userId, input, cartesiaId, job.id);
+      } catch (err) {
+        if (heygenId && !(err instanceof Error && err.message.includes('gián đoạn'))) {
+          generated = await synthesizeWithHeyGen(input, heygenId);
+        } else {
+          throw err;
+        }
+      }
+    } else if (heygenId) {
+      try {
+        generated = await synthesizeWithHeyGen(input, heygenId);
+      } catch (err) {
+        if (cartesiaId && !(err instanceof Error && err.message.includes('gián đoạn'))) {
+          generated = await synthesizeCartesia(userId, input, cartesiaId, job.id);
+        } else {
+          throw err;
+        }
+      }
+    } else {
+      generated = await synthesizeCartesia(userId, input, job.voice_id, job.id);
+    }
+  } catch (error) {
+    const isConnErr = error instanceof Error && error.message.includes('gián đoạn');
+    if (isConnErr) {
+      await db.from('windi_voice_jobs').update({ status: 'unknown', provider_context_id: job.id }).eq('id', job.id).eq('status', 'pending');
+      throw new VoiceError(error.message, 503);
+    }
     const refund = await db.rpc('windi_voice_finish', { p_job: job.id, p_success: false });
     if (refund.error) throw refund.error;
-    const detail = parseError instanceof VoiceError ? parseError.message : 'Phản hồi từ nhà cung cấp không hợp lệ.';
-    throw new VoiceError(`${detail} Credit đã được hoàn lại.`, 502);
+    const detail = error instanceof VoiceError ? error.message : 'Nhà cung cấp chưa tạo được âm thanh. Credit đã được hoàn lại.';
+    throw new VoiceError(detail.includes('Credit đã được hoàn lại') ? detail : `${detail} Credit đã được hoàn lại.`, error instanceof VoiceError ? error.status : 502);
   }
+
   const audioPath = `${userId}/${job.id}.mp3`;
   const timingPath = `${userId}/${job.id}.json`;
-  const audioUpload = await db.storage.from('windi-voice-audio').upload(audioPath, mp3, { contentType: 'audio/mpeg', upsert: false });
+  const audioUpload = await db.storage.from('windi-voice-audio').upload(audioPath, generated.mp3, { contentType: 'audio/mpeg', upsert: false });
   if (audioUpload.error) {
     const refund = await db.rpc('windi_voice_finish', { p_job: job.id, p_success: false });
     if (refund.error) throw refund.error;
     throw new VoiceError('Chưa lưu được âm thanh. Credit đã được hoàn lại.', 503);
   }
-  const timingUpload = await db.storage.from(voiceTimingBucket).upload(timingPath, JSON.stringify(parsed.timestamps), { contentType: 'application/json', upsert: false });
+  const timingUpload = await db.storage.from(voiceTimingBucket).upload(timingPath, JSON.stringify(generated.timestamps), { contentType: 'application/json', upsert: false });
   if (timingUpload.error) {
     await db.storage.from('windi-voice-audio').remove([audioPath]);
     const refund = await db.rpc('windi_voice_finish', { p_job: job.id, p_success: false });
