@@ -9,7 +9,7 @@ export function WorkflowHero({detail=false}:{detail?:boolean}) {
     <div className="workflow-copy"><div className="workflow-eyebrow"><span/> WINDI STUDIO / VIDEO WORKFLOW</div>
       <h1 id="workflow-title">Bạn chốt hướng.<br/>Windi làm <em>video.</em></h1>
       <p>Một video đáng xem không bắt đầu từ nút render.<br/>Nó bắt đầu từ một hướng kể đủ đúng để người ta muốn xem tiếp.</p>
-      <div className="workflow-actions"><Link className="retro-button primary" href={detail?'#kit-purchase':'/video-kits'}>{detail?'Sở hữu Video Kits':'Bắt đầu với Video Kits'} <ArrowUpRight size={18}/></Link><Link className="workflow-voice-link" href="/voice-studio">Nghe thử Voice Studio <ArrowRight size={16}/></Link></div>
+      <div className="workflow-actions"><Link className="retro-button primary" href={detail?'#kit-purchase':'/video-kits'}>{detail?'Sở hữu Video Kits':'Bắt đầu với Video Kits'} <ArrowUpRight size={18}/></Link><Link className="workflow-voice-link" href="/">Nghe thử Voice Studio <ArrowRight size={16}/></Link></div>
       <div className="workflow-proof"><span>CHỐT Ý TƯỞNG</span><span>CHỌN LAYOUT</span><span>DUYỆT KỊCH BẢN</span></div>
       <div className="workflow-note"><span className="workflow-note-arrow">↗</span><span>Không đốt quota vào một hướng chưa chốt.<br/><strong>Bạn duyệt ba điểm quan trọng. Windi lo phần còn lại.</strong></span></div>
     </div>
@@ -23,7 +23,7 @@ export function HomeVoiceFeature(){
       <span className="eyebrow">02 / WINDI VOICE STUDIO</span>
       <h2 id="home-voice-title">Đừng chỉ đọc.<br/><em>Hãy khiến người ta nghe tiếp.</em></h2>
       <p>Tạo hoặc clone giọng tiếng Việt có cảm xúc theo ngữ cảnh. Nghe thử, chọn chất giọng, rồi đưa thẳng vào video của bạn.</p>
-      <Link className="retro-button" href="/voice-studio">Khám phá Voice Studio <ArrowUpRight size={18}/></Link>
+      <Link className="retro-button" href="/">Khám phá Voice Studio <ArrowUpRight size={18}/></Link>
     </div>
     <div className="home-voice-player">
       <div className="home-voice-player-top"><span className="on-air-dot"/> WINDI RADIO <span>01 / CHỮA LÀNH</span></div>

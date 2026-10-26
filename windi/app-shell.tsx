@@ -14,8 +14,9 @@ import { BuyMeACoffeeButton } from './buy-me-a-coffee';
 
 type NavItem = { href: string; label: string; items?: { href: string; label: string }[] };
 const nav: NavItem[] = [
+  { href: '/', label: 'Voice Studio' },
   { href: '/video-kits', label: 'Video Kits' },
-  { href: '/voice-studio', label: 'Voice Studio' },
+  { href: '/gemini', label: 'Gemini 3 tháng' },
   { href: '/discover', label: 'Công cụ' },
   { href: '/news', label: 'Tin tức' },
 ];

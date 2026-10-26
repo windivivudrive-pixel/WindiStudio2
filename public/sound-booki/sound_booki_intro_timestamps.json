@@ -1,0 +1,325 @@
+{
+  "voiceId": "f5f2f741-c5e1-4982-b539-a6e6c6a8964d",
+  "modelId": "sonic-3.6",
+  "speed": 1.05,
+  "duration": 16.8,
+  "text": "Chào mừng bạn đến với Sound Booki - nơi những trang sách trở thành thanh âm, những con chữ khô khang trở nên giàu cảm xúc. \nHãy để tâm trí được thả lỏng, đôi tai được lắng nghe và tri thức nhẹ nhàng tìm đến bạn qua từng lời kể. Sound booki chúc bạn có một trải nghiệm nghe sách thật thú vị.",
+  "wordCount": 63,
+  "words": [
+    {
+      "word": "Chào",
+      "start": 0.12,
+      "end": 0.28
+    },
+    {
+      "word": "mừng",
+      "start": 0.36,
+      "end": 0.44
+    },
+    {
+      "word": "bạn",
+      "start": 0.52,
+      "end": 0.68
+    },
+    {
+      "word": "đến",
+      "start": 0.68,
+      "end": 0.84
+    },
+    {
+      "word": "với",
+      "start": 0.92,
+      "end": 1.08
+    },
+    {
+      "word": "Sound",
+      "start": 1.16,
+      "end": 1.24
+    },
+    {
+      "word": "Booki",
+      "start": 1.24,
+      "end": 1.52
+    },
+    {
+      "word": "-",
+      "start": 1.52,
+      "end": 1.8
+    },
+    {
+      "word": "nơi",
+      "start": 2.039,
+      "end": 2.2
+    },
+    {
+      "word": "những",
+      "start": 2.2,
+      "end": 2.36
+    },
+    {
+      "word": "trang",
+      "start": 2.44,
+      "end": 2.6
+    },
+    {
+      "word": "sách",
+      "start": 2.68,
+      "end": 2.84
+    },
+    {
+      "word": "trở",
+      "start": 2.84,
+      "end": 3
+    },
+    {
+      "word": "thành",
+      "start": 3.08,
+      "end": 3.24
+    },
+    {
+      "word": "thanh",
+      "start": 3.32,
+      "end": 3.48
+    },
+    {
+      "word": "âm,",
+      "start": 3.48,
+      "end": 3.8
+    },
+    {
+      "word": "những",
+      "start": 4.12,
+      "end": 4.2
+    },
+    {
+      "word": "con",
+      "start": 4.2,
+      "end": 4.44
+    },
+    {
+      "word": "chữ",
+      "start": 4.52,
+      "end": 4.6
+    },
+    {
+      "word": "khô",
+      "start": 4.68,
+      "end": 4.92
+    },
+    {
+      "word": "khang",
+      "start": 4.92,
+      "end": 5.24
+    },
+    {
+      "word": "trở",
+      "start": 5.32,
+      "end": 5.4
+    },
+    {
+      "word": "nên",
+      "start": 5.4,
+      "end": 5.64
+    },
+    {
+      "word": "giàu",
+      "start": 5.72,
+      "end": 5.88
+    },
+    {
+      "word": "cảm",
+      "start": 5.88,
+      "end": 6.12
+    },
+    {
+      "word": "xúc.",
+      "start": 6.2,
+      "end": 6.44
+    },
+    {
+      "word": "Hãy",
+      "start": 6.905,
+      "end": 7.08
+    },
+    {
+      "word": "để",
+      "start": 7.16,
+      "end": 7.16
+    },
+    {
+      "word": "tâm",
+      "start": 7.24,
+      "end": 7.4
+    },
+    {
+      "word": "trí",
+      "start": 7.48,
+      "end": 7.64
+    },
+    {
+      "word": "được",
+      "start": 7.64,
+      "end": 7.8
+    },
+    {
+      "word": "thả",
+      "start": 7.8,
+      "end": 8.04
+    },
+    {
+      "word": "lỏng,",
+      "start": 8.12,
+      "end": 8.44
+    },
+    {
+      "word": "đôi",
+      "start": 8.67,
+      "end": 8.84
+    },
+    {
+      "word": "tai",
+      "start": 8.92,
+      "end": 9.08
+    },
+    {
+      "word": "được",
+      "start": 9.16,
+      "end": 9.24
+    },
+    {
+      "word": "lắng",
+      "start": 9.24,
+      "end": 9.56
+    },
+    {
+      "word": "nghe",
+      "start": 9.64,
+      "end": 9.64
+    },
+    {
+      "word": "và",
+      "start": 9.72,
+      "end": 9.88
+    },
+    {
+      "word": "tri",
+      "start": 10.096,
+      "end": 10.44
+    },
+    {
+      "word": "thức",
+      "start": 10.52,
+      "end": 10.6
+    },
+    {
+      "word": "nhẹ",
+      "start": 10.68,
+      "end": 10.84
+    },
+    {
+      "word": "nhàng",
+      "start": 10.84,
+      "end": 11.24
+    },
+    {
+      "word": "tìm",
+      "start": 11.32,
+      "end": 11.48
+    },
+    {
+      "word": "đến",
+      "start": 11.48,
+      "end": 11.64
+    },
+    {
+      "word": "bạn",
+      "start": 11.64,
+      "end": 12.04
+    },
+    {
+      "word": "qua",
+      "start": 12.12,
+      "end": 12.2
+    },
+    {
+      "word": "từng",
+      "start": 12.28,
+      "end": 12.36
+    },
+    {
+      "word": "lời",
+      "start": 12.44,
+      "end": 12.6
+    },
+    {
+      "word": "kể.",
+      "start": 12.6,
+      "end": 13.08
+    },
+    {
+      "word": "Sound",
+      "start": 13.474,
+      "end": 13.72
+    },
+    {
+      "word": "booki",
+      "start": 13.8,
+      "end": 14.04
+    },
+    {
+      "word": "chúc",
+      "start": 14.04,
+      "end": 14.28
+    },
+    {
+      "word": "bạn",
+      "start": 14.36,
+      "end": 14.52
+    },
+    {
+      "word": "có",
+      "start": 14.52,
+      "end": 14.6
+    },
+    {
+      "word": "một",
+      "start": 14.68,
+      "end": 14.84
+    },
+    {
+      "word": "trải",
+      "start": 14.92,
+      "end": 14.92
+    },
+    {
+      "word": "nghiệm",
+      "start": 15,
+      "end": 15.24
+    },
+    {
+      "word": "nghe",
+      "start": 15.24,
+      "end": 15.4
+    },
+    {
+      "word": "sách",
+      "start": 15.48,
+      "end": 15.64
+    },
+    {
+      "word": "thật",
+      "start": 15.64,
+      "end": 15.88
+    },
+    {
+      "word": "thú",
+      "start": 15.96,
+      "end": 16.2
+    },
+    {
+      "word": "vị.",
+      "start": 16.2,
+      "end": 16.68
+    }
+  ]
+}

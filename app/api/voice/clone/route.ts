@@ -1,6 +1,7 @@
 import {boundedBody,cartesia,failure,identity,providerReady,resolveCloneAccent,VoiceError,writer} from '@/lib/voice/server';
 import {isUUID,VOICE_CLONE_CLIP_LIMITS,VOICE_LANGUAGES} from '@/lib/voice/shared';
 import {cleanupVoiceDemos} from '@/lib/voice/clone-demo';
+import {heygenReady,cloneHeyGenVoice,deleteHeyGenVoice} from '@/lib/voice/heygen';
 export const runtime='nodejs';
 export const maxDuration=120;
 
@@ -15,12 +16,12 @@ async function providerFailure(response:Response):Promise<ProviderFailure> {
 }
 
 function providerMessage(status:number,errorCode:string) {
-  if(status===402||errorCode==='plan_upgrade_required') return 'Tính năng clone phía Windi Clone Pro 2.1 chưa được kích hoạt cho gói API hiện tại. Vui lòng liên hệ hỗ trợ để nâng cấp nhà cung cấp.';
+  if(status===402||errorCode==='plan_upgrade_required') return 'Tính năng clone phía Windi Clone Pro 3.0 chưa được kích hoạt cho gói API hiện tại. Vui lòng liên hệ hỗ trợ để nâng cấp nhà cung cấp.';
   if(status===401||status===403) return 'Dịch vụ clone giọng chưa được cấp quyền. Vui lòng quay lại sau.';
   if(status===413) return 'Mẫu giọng vượt giới hạn. Hãy chọn file tối đa 3 MB và không quá 60 giây.';
   if(status===400||status===422) return 'Mẫu giọng chưa phù hợp để clone. Hãy dùng đoạn thu rõ tiếng, một người nói liên tục trong khoảng 10–30 giây.';
   if(status===429) return 'Dịch vụ clone đang bận. Hãy thử lại sau ít phút.';
-  if(status>=500) return 'Dịch vụ Windi Clone Pro 2.1 đang tạm gián đoạn. Vui lòng thử lại sau.';
+  if(status>=500) return 'Dịch vụ Windi Clone Pro 3.0 đang tạm gián đoạn. Vui lòng thử lại sau.';
   return 'Chưa clone được giọng lúc này. Hãy thử lại với mẫu thu rõ tiếng hơn.';
 }
 
@@ -73,21 +74,54 @@ export async function POST(request:Request) {
   cloneId=clone.id;
   reservationActive=true;
   if(clone.is_demo) await cleanupVoiceDemos(user.id);
-  const upload=new FormData();
-  upload.set('clip',clip);upload.set('name',`WV ${clone.id}`);upload.set('description',name);upload.set('language',language);upload.set('access','private');if(accent) upload.set('accent',accent);
-  let response:Response;
-  try {response=await cartesia('/voices/clone',{method:'POST',body:upload},{userId:user.id,purpose:'clone'});}
-  catch {await releaseReservation();throw new VoiceError('Không kết nối được với dịch vụ clone. Lượt clone đã được hoàn lại; vui lòng thử lại.',503);}
-  if(!response.ok) {
-    const providerError=await providerFailure(response);
-    console.error('Windi Clone Pro 2.1 clone rejected',{status:response.status});
-    const message=providerMessage(response.status,providerError.errorCode);
-    await releaseReservation();
-    throw new VoiceError(`${message} Lượt clone đã được hoàn lại.`,502);
+  const preferCartesia = form.get('provider') === 'cartesia';
+  const useHeyGen = heygenReady() && !preferCartesia;
+
+  if (useHeyGen) {
+    try {
+      providerVoiceId = await cloneHeyGenVoice(clip, name, clip.name || 'sample.mp3');
+    } catch (heygenErr) {
+      if (process.env.CARTESIA_API_KEY_MAIN || process.env.CARTESIA_API_KEY) {
+        try {
+          const upload=new FormData();
+          upload.set('clip',clip);upload.set('name',`WV ${clone.id}`);upload.set('description',name);upload.set('language',language);upload.set('access','private');if(accent) upload.set('accent',accent);
+          const response=await cartesia('/voices/clone',{method:'POST',body:upload},{userId:user.id,purpose:'clone'});
+          if(!response.ok) {
+            const providerError=await providerFailure(response);
+            const message=providerMessage(response.status,providerError.errorCode);
+            await releaseReservation();
+            throw new VoiceError(`${message} Lượt clone đã được hoàn lại.`,502);
+          }
+          const voice=await response.json().catch(()=>null);
+          if(!voice||!isUUID(voice.id)) {await releaseReservation();throw new VoiceError('Dịch vụ clone trả về kết quả không hợp lệ. Lượt clone đã được hoàn lại; vui lòng thử lại.',502);}
+          providerVoiceId=voice.id;
+        } catch (cartesiaErr) {
+          await releaseReservation();
+          throw cartesiaErr instanceof VoiceError ? cartesiaErr : heygenErr;
+        }
+      } else {
+        await releaseReservation();
+        throw heygenErr;
+      }
+    }
+  } else {
+    const upload=new FormData();
+    upload.set('clip',clip);upload.set('name',`WV ${clone.id}`);upload.set('description',name);upload.set('language',language);upload.set('access','private');if(accent) upload.set('accent',accent);
+    let response:Response;
+    try {response=await cartesia('/voices/clone',{method:'POST',body:upload},{userId:user.id,purpose:'clone'});}
+    catch {await releaseReservation();throw new VoiceError('Không kết nối được với dịch vụ clone. Lượt clone đã được hoàn lại; vui lòng thử lại.',503);}
+    if(!response.ok) {
+      const providerError=await providerFailure(response);
+      console.error('Windi Clone Pro 3.0 clone rejected',{status:response.status});
+      const message=providerMessage(response.status,providerError.errorCode);
+      await releaseReservation();
+      throw new VoiceError(`${message} Lượt clone đã được hoàn lại.`,502);
+    }
+    const voice=await response.json().catch(()=>null);
+    if(!voice||!isUUID(voice.id)) {await releaseReservation();throw new VoiceError('Dịch vụ clone trả về kết quả không hợp lệ. Lượt clone đã được hoàn lại; vui lòng thử lại.',502);}
+    providerVoiceId=voice.id;
   }
-  const voice=await response.json().catch(()=>null);
-  if(!voice||!isUUID(voice.id)) {await releaseReservation();throw new VoiceError('Dịch vụ clone trả về kết quả không hợp lệ. Lượt clone đã được hoàn lại; vui lòng thử lại.',502);}
-  providerVoiceId=voice.id;
+
   const finish=await db.rpc('windi_voice_clone_finish',{p_clone:clone.id,p_provider:providerVoiceId});
   if(finish.error) throw finish.error;
   if(clone.is_demo) {
@@ -103,7 +137,13 @@ export async function POST(request:Request) {
   return Response.json({id:clone.id,voice_id:clone.is_demo?null:providerVoiceId,is_demo:!!clone.is_demo,demo_expires_at:clone.demo_expires_at});
  }catch(error){
   if(reservationActive) {
-    if(providerVoiceId&&userId) await cartesia(`/voices/${encodeURIComponent(providerVoiceId)}`,{method:'DELETE'},{userId,purpose:'clone'}).catch(()=>undefined);
+    if(providerVoiceId) {
+      if (/^[0-9a-f]{32}$/i.test(providerVoiceId)) {
+        await deleteHeyGenVoice(providerVoiceId).catch(()=>undefined);
+      } else if (userId) {
+        await cartesia(`/voices/${encodeURIComponent(providerVoiceId)}`,{method:'DELETE'},{userId,purpose:'clone'}).catch(()=>undefined);
+      }
+    }
     try {await releaseReservation();}
     catch {return failure(new VoiceError('Chưa thể hoàn tất yêu cầu clone. Lượt clone đang được đối soát; vui lòng liên hệ hỗ trợ.',503));}
   }
@@ -124,8 +164,12 @@ export async function DELETE(request:Request) {
    await cleanupVoiceDemos(user.id);
    return Response.json({success:true});
   }
-  const response=await cartesia(`/voices/${encodeURIComponent(clone.provider_id)}`,{method:'DELETE'},{userId:user.id,purpose:'clone'});
-  if(!response.ok && response.status!==404) throw new VoiceError('Chưa xóa được giọng. Vui lòng thử lại.',502);
+  if (clone.provider_id && /^[0-9a-f]{32}$/i.test(clone.provider_id)) {
+    await deleteHeyGenVoice(clone.provider_id);
+  } else if (clone.provider_id) {
+    const response=await cartesia(`/voices/${encodeURIComponent(clone.provider_id)}`,{method:'DELETE'},{userId:user.id,purpose:'clone'});
+    if(!response.ok && response.status!==404) throw new VoiceError('Chưa xóa được giọng. Vui lòng thử lại.',502);
+  }
   const removed=await db.rpc('windi_voice_clone_remove',{p_user:user.id,p_clone:id});
   if(removed.error) throw removed.error;
   return Response.json({success:true});

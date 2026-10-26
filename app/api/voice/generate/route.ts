@@ -16,10 +16,10 @@ async function result(userId: string, job: { id: string; timing_path?: string | 
 export async function POST(request: Request) {
   try {
     const { user } = await identity(request);
-    if (!providerReady()) throw new VoiceError('Windi Clone Pro 2.1 chưa được kết nối.', 503);
+    if (!providerReady()) throw new VoiceError('Dịch vụ giọng nói chưa được kết nối.', 503);
     if (Number(request.headers.get('content-length')) > 100000) throw new VoiceError('Nội dung quá dài.', 413);
     const input = validateSpeech(await (await boundedBody(request)).json());
-    const voice = await resolveVoice(user.id, input.voiceId);
+    const voice = await resolveVoice(user.id, input.voiceId, input.provider);
     const db = writer();
     const { data: job, error } = await db.rpc('windi_voice_reserve', {
       p_user: user.id, p_key: input.requestKey, p_voice: voice.id, p_name: voice.name,
@@ -32,7 +32,7 @@ export async function POST(request: Request) {
       .eq('id', job.id).eq('status', 'reserved').select('id').maybeSingle();
     if (claim.error) throw claim.error;
     if (!claim.data) throw new VoiceError('Yêu cầu này đã được tiếp nhận. Kiểm tra Lịch sử trước khi tạo lại.', 409);
-    const completed = await completeVoiceGeneration(user.id, input, { id: job.id, voice_id: voice.id });
+    const completed = await completeVoiceGeneration(user.id, input, { id: job.id, voice_id: voice.id, provider: input.provider });
     return await result(user.id, completed);
   } catch (error) { return failure(error); }
 }

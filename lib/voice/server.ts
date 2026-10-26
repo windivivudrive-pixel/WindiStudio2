@@ -2,7 +2,8 @@ import 'server-only';
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/server';
 import {voiceDisplayText} from './branding';
-import { CURATED_PUBLIC_VOICES, DEFAULT_WORKFLOW_VOICE_ID, isComparisonVoice, STARTER_VOICES, VOICE_LANGUAGES, VOICE_LIBRARY_LANGUAGES, isSampleLibraryLanguage, voiceLibraryLimit, voiceUseCases, type StudioVoice, type VoiceAccent } from './shared';
+import { CURATED_PUBLIC_VOICES, DEFAULT_WORKFLOW_VOICE_ID, isComparisonVoice, STARTER_VOICES, VOICE_LANGUAGES, VOICE_LIBRARY_LANGUAGES, isSampleLibraryLanguage, voiceLibraryLimit, voiceUseCases, type StudioVoice, type VoiceAccent, type VoiceProvider } from './shared';
+import { heygenReady, synthesizeHeyGen } from './heygen';
 
 export class VoiceError extends Error { constructor(message:string, public status=400) {super(voiceDisplayText(message));} }
 export const bucket = 'windi-voice-audio';
@@ -56,7 +57,7 @@ let freeKeyCursor = 0;
 
 export function mainCartesiaKey() {
   const key = process.env.CARTESIA_API_KEY_MAIN || process.env.CARTESIA_API_KEY || process.env.VITE_CARTESIA_API_KEY;
-  if (!key) throw new VoiceError('Windi Clone Pro 2.1 chưa được cấu hình cho tài khoản trả phí.',503);
+  if (!key) throw new VoiceError('Windi Clone Pro 3.0 chưa được cấu hình cho tài khoản trả phí.',503);
   return key;
 }
 
@@ -69,7 +70,7 @@ export function freeCartesiaKeys() {
 
 function freeCartesiaKey(userId?:string) {
   const keys = freeCartesiaKeys();
-  if (!keys.length) throw new VoiceError('Windi Clone Pro 2.1 chưa được cấu hình cho tài khoản miễn phí.',503);
+  if (!keys.length) throw new VoiceError('Windi Clone Pro 3.0 chưa được cấu hình cho tài khoản miễn phí.',503);
   if (userId) {
     let hash = 0;
     for (const char of userId) hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
@@ -80,7 +81,7 @@ function freeCartesiaKey(userId?:string) {
   return key;
 }
 
-export function providerReady() {return !!(process.env.CARTESIA_API_KEY_MAIN || process.env.CARTESIA_API_KEY || process.env.VITE_CARTESIA_API_KEY || freeCartesiaKeys().length);}
+export function providerReady() {return heygenReady() || !!(process.env.CARTESIA_API_KEY_MAIN || process.env.CARTESIA_API_KEY || process.env.VITE_CARTESIA_API_KEY || freeCartesiaKeys().length);}
 
 async function paidVoiceSubscription(userId:string) {
   const {data,error}=await writer().from('windi_voice_periods').select('id').eq('user_id',userId).neq('plan_id','welcome').lte('starts_at',new Date().toISOString()).gt('ends_at',new Date().toISOString()).limit(1).maybeSingle();
@@ -100,7 +101,7 @@ export async function cartesia(path:string, init:RequestInit={}, options:Cartesi
     if(useMain||![402,429].includes(response.status)||index===keys.length-1)return response;
     await response.body?.cancel();
   }
-  throw new VoiceError('Windi Clone Pro 2.1 tạm thời không khả dụng.',503);
+  throw new VoiceError('Windi Clone Pro 3.0 tạm thời không khả dụng.',503);
 }
 const PUBLIC_VOICE_TARGET_MAX = 12;
 const PREVIEW_CACHE_MS = 60 * 60 * 1000;
@@ -140,25 +141,42 @@ async function catalogPage(language?:string, cursor?:string):Promise<CartesiaCat
 export async function publicVoices():Promise<{voices:StudioVoice[]; source:string}> {
   if(!providerReady()) return {voices:[...CURATED_PUBLIC_VOICES,...STARTER_VOICES],source:'documented'};
   if(catalog && catalog.expires>Date.now()) return {voices:catalog.voices,source:'live'};
-  const pages=await Promise.all(VOICE_LIBRARY_LANGUAGES.map(async language=>({language:language.id,page:await catalogPage(language.id)})));
-  const seen=new Set<string>();
-  const voices:StudioVoice[]=[];
-  for(let index=0;index<PUBLIC_VOICE_TARGET_MAX;index++) {
-    for(const {language,page} of pages) {
-      if(index>=voiceLibraryLimit(language)) continue;
-      const voice=page.voices[index];
-      if(voice&&!seen.has(voice.id)) {
-        seen.add(voice.id);voices.push(voice);
+  let extraVoices: StudioVoice[] = [];
+  try {
+    const pages=await Promise.all(VOICE_LIBRARY_LANGUAGES.map(async language=>({language:language.id,page:await catalogPage(language.id)})));
+    const seen=new Set<string>();
+    for(let index=0;index<PUBLIC_VOICE_TARGET_MAX;index++) {
+      for(const {language,page} of pages) {
+        if(index>=voiceLibraryLimit(language)) continue;
+        const voice=page.voices[index];
+        if(voice&&!seen.has(voice.id)) {
+          seen.add(voice.id);extraVoices.push(voice);
+        }
       }
     }
+  } catch {
+    extraVoices = [...STARTER_VOICES];
   }
   const curatedIds=new Set(CURATED_PUBLIC_VOICES.map(voice=>voice.id));
-  catalog={expires:Date.now()+300000,voices:[...CURATED_PUBLIC_VOICES,...voices.filter(voice=>!curatedIds.has(voice.id))]};
+  catalog={expires:Date.now()+300000,voices:[...CURATED_PUBLIC_VOICES,...extraVoices.filter(voice=>!curatedIds.has(voice.id))]};
   return {voices:catalog.voices,source:'live'};
 }
-export async function publicVoice(id:string) {
+export async function publicVoice(id:string, preferredProvider?:'heygen'|'cartesia') {
   if(isComparisonVoice(id)) return null;
-  return (await publicVoices()).voices.find(voice=>voice.id===id) ?? null;
+  const list = (await publicVoices()).voices;
+  const lower = id.toLowerCase();
+  let found = list.find(v => v.id.toLowerCase() === lower);
+  if (!found) found = list.find(v => v.cartesiaId?.toLowerCase() === lower);
+  if (!found) found = list.find(v => v.heygenId?.toLowerCase() === lower);
+  if (!found) return null;
+
+  if (preferredProvider === 'cartesia' && found.cartesiaId) {
+    return { ...found, id: found.cartesiaId, provider: 'cartesia' as const };
+  }
+  if (preferredProvider === 'heygen' && found.heygenId) {
+    return { ...found, id: found.heygenId, provider: 'heygen' as const };
+  }
+  return found;
 }
 
 export async function voiceAccents(language:string):Promise<VoiceAccent[]> {
@@ -214,9 +232,20 @@ async function storedPreview(path:string) {
 async function createStoredPreview(voice:StudioVoice,path:string) {
   const existing=await storedPreview(path);
   if(existing) return existing;
-  const response=await cartesia('/tts/bytes',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model_id:'sonic-3.6',transcript:previewTranscript(voice.language),voice:voice.id,language:voice.language,output_format:{container:'mp3',sample_rate:44100,bit_rate:128000}})});
-  if(!response.ok) throw new VoiceError('Chưa tạo được bản nghe thử. Vui lòng thử lại.',502);
-  const audio=await response.arrayBuffer();
+  let audio: ArrayBuffer;
+  if(voice.provider === 'heygen' || voice.heygenId || /^[0-9a-f]{32}$/i.test(voice.id)) {
+    const hRes = await synthesizeHeyGen({
+      text: previewTranscript(voice.language),
+      voiceId: voice.heygenId || voice.id,
+      language: voice.language,
+      speed: 1,
+    }, voice.heygenId || voice.id);
+    audio = hRes.mp3.buffer.slice(hRes.mp3.byteOffset, hRes.mp3.byteOffset + hRes.mp3.byteLength);
+  } else {
+    const response=await cartesia('/tts/bytes',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model_id:'sonic-3.6',transcript:previewTranscript(voice.language),voice:voice.id,language:voice.language,output_format:{container:'mp3',sample_rate:44100,bit_rate:128000}})});
+    if(!response.ok) throw new VoiceError('Chưa tạo được bản nghe thử. Vui lòng thử lại.',502);
+    audio=await response.arrayBuffer();
+  }
   if(!audio.byteLength) throw new VoiceError('Bản nghe thử trống. Vui lòng thử lại.',502);
   const {error}=await writer().storage.from(previewBucket).upload(path,audio,{contentType:'audio/mpeg',cacheControl:'31536000',upsert:false});
   if(!error) return audio;
@@ -225,7 +254,7 @@ async function createStoredPreview(voice:StudioVoice,path:string) {
   if(savedByAnotherRequest) return savedByAnotherRequest;
   throw new VoiceError('Chưa lưu được bản nghe thử. Vui lòng thử lại.',503);
 }
-export async function previewPublicVoice(request:Request,id:string) {
+export async function previewPublicVoice(request:Request,id:string,storedOnly=false) {
   const voice=await publicVoice(id);
   if(!voice) throw new VoiceError('Giọng này không có bản nghe thử.',404);
   const cached=previewCache.get(voice.id);
@@ -236,6 +265,7 @@ export async function previewPublicVoice(request:Request,id:string) {
     previewCache.set(voice.id,{expires:Date.now()+PREVIEW_CACHE_MS,audio:stored.slice(0)});
     return {voice,audio:stored};
   }
+  if(storedOnly) throw new VoiceError('Bản nghe thử chưa được lưu.',404);
   let build=previewBuilds.get(path);
   if(!build) {
     if(!canPreview(request)) throw new VoiceError('Bạn đã nghe thử nhiều lần. Vui lòng thử lại sau một phút.',429);
@@ -247,7 +277,7 @@ export async function previewPublicVoice(request:Request,id:string) {
   previewCache.set(voice.id,{expires:Date.now()+PREVIEW_CACHE_MS,audio:audio.slice(0)});
   return {voice,audio};
 }
-export async function resolveVoice(userId:string,id:string) {
+export async function resolveVoice(userId:string,id:string,preferredProvider?:'heygen'|'cartesia') {
   if(isComparisonVoice(id)) throw new VoiceError('Giọng mẫu chỉ để nghe tham khảo. Vui lòng clone giọng của bạn để tạo nội dung.',403);
   const { isVoiceAdmin, providerVoice } = await import('./admin');
   if(await isVoiceAdmin(userId)) return providerVoice(id);
@@ -262,7 +292,7 @@ export async function resolveVoice(userId:string,id:string) {
   if(error) throw error;
   if(data?.is_demo) throw new VoiceError(messages.DEMO_LISTEN_ONLY,403);
   if(data) return {id:data.provider_id,name:data.name};
-  const v=await publicVoice(id);
+  const v=await publicVoice(id,preferredProvider);
   if(!v) throw new VoiceError('Giọng này không khả dụng với tài khoản của bạn.',403);
   return v;
 }

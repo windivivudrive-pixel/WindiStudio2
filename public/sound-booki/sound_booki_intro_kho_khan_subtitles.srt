@@ -1,0 +1,27 @@
+1
+00:00:00,120 --> 00:00:02,200
+Chào mừng bạn đến với Sound Booki -
+
+2
+00:00:02,439 --> 00:00:04,280
+nơi những trang sách trở thành thanh âm,
+
+3
+00:00:04,599 --> 00:00:07,160
+những con chữ khô khan trở nên giàu cảm xúc.
+
+4
+00:00:07,716 --> 00:00:09,240
+Hãy để tâm trí được thả lỏng,
+
+5
+00:00:09,480 --> 00:00:10,679
+đôi tai được lắng nghe và
+
+6
+00:00:10,974 --> 00:00:14,119
+tri thức nhẹ nhàng tìm đến bạn qua từng lời kể.
+
+7
+00:00:14,596 --> 00:00:17,960
+Sound booki chúc bạn có một trải nghiệm nghe sách thật thú vị.

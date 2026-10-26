@@ -9,6 +9,8 @@
     "start": "NODE_OPTIONS='--max-http-header-size=65536' next start",
     "test": "vitest run",
     "test:watch": "vitest",
+    "payment:test": "npm --prefix kits/qr-payment test",
+    "payment:pack": "npm --prefix kits/qr-payment run pack:release",
     "graph": ".local/graphify/bin/graphify",
     "graph:setup": "uv venv .local/graphify && uv pip install --python .local/graphify/bin/python 'graphifyy[sql]' && .local/graphify/bin/graphify install --project --platform codex",
     "graph:build": "npm run graph -- . --code-only && npm run graph -- cluster-only .",
