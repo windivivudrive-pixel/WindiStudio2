@@ -3,6 +3,8 @@ import 'server-only';
 import { pcm16ToMp3, type WordTimestamps } from './api';
 import { VoiceError } from './server';
 import type { VoiceApiInput } from './api';
+import { HEYGEN_EXPRESSIVENESS, HEYGEN_REQUEST_RULE, planHeyGenChunks } from './heygen-chunking';
+import { extractHeyGenChunk } from './heygen-audio';
 
 export function heygenApiKey(): string {
   const key = process.env.HEYGEN_API_KEY || process.env.VITE_HEYGEN_API_KEY;
@@ -18,7 +20,26 @@ export type HeyGenTtsResult = {
   mp3: Buffer;
   timestamps: WordTimestamps;
   duration: number;
+  requestCount: number;
+  rule: string;
+  joins: { seconds: number; sourceOffset: number }[];
 };
+
+const sleep = (milliseconds: number) => new Promise<void>(resolve => setTimeout(resolve, milliseconds));
+let nextRequestStart = 0;
+
+async function requestSlot(deadline: number) {
+  const start = Math.max(Date.now(), nextRequestStart);
+  if (start > deadline - 15000) throw new VoiceError('HeyGen đang bận. Chưa đủ thời gian hoàn tất tài liệu này.', 503);
+  nextRequestStart = start + 2200;
+  if (start > Date.now()) await sleep(start - Date.now());
+}
+
+function remainingTimeout(deadline: number, maximum: number) {
+  const remaining = deadline - Date.now();
+  if (remaining < 1000) throw new VoiceError('HeyGen chưa hoàn tất tài liệu trong thời gian cho phép.', 503);
+  return Math.min(maximum, remaining);
+}
 
 export async function synthesizeHeyGen(
   input: VoiceApiInput,
@@ -27,90 +48,73 @@ export async function synthesizeHeyGen(
 ): Promise<HeyGenTtsResult> {
   const key = heygenApiKey();
   const selectedModel = model || process.env.HEYGEN_TTS_MODEL || 'heygen-voice-1-turbo-free';
-
-  const response = await fetch('https://api.heygen.com/v3/models/audio/tts', {
-    method: 'POST',
-    headers: {
-      'X-Api-Key': key,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      voice_id: providerVoiceId,
-      text: input.text,
-      model: selectedModel,
-      with_timestamps: true,
-    }),
-    cache: 'no-store',
-    signal: AbortSignal.timeout(90000),
-  });
-
-  if (!response.ok) {
-    let errMessage = 'HeyGen TTS không thể tạo âm thanh.';
-    try {
-      const errJson = await response.json();
-      if (errJson?.error?.message) {
-        errMessage = `HeyGen: ${errJson.error.message}`;
+  const chunks = planHeyGenChunks(input.text, input.language);
+  if (!chunks.length) throw new VoiceError('Nội dung cần đọc đang trống.');
+  const deadline = Date.now() + 250000;
+  const audio: Buffer[] = [];
+  const timestamps: WordTimestamps = { words: [], start: [], end: [] };
+  const joins: HeyGenTtsResult['joins'] = [];
+  let duration = 0;
+  let requestCount = 0;
+  for (const chunk of chunks) {
+    let response: Response | undefined;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      await requestSlot(deadline);
+      try {
+        requestCount++;
+        response = await fetch('https://api.heygen.com/v3/models/audio/tts', {
+          method: 'POST',
+          headers: { 'X-Api-Key': key, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ voice_id: providerVoiceId, text: chunk.requestText,
+            language: input.language, model: selectedModel,
+            expressiveness_boost: HEYGEN_EXPRESSIVENESS, with_timestamps: true }),
+          cache: 'no-store', signal: AbortSignal.timeout(remainingTimeout(deadline, 90000)),
+        });
+      } catch {
+        throw new VoiceError('Kết nối HeyGen bị gián đoạn sau khi gửi. Yêu cầu chờ đối soát và không tự tạo lại.', 503);
       }
-    } catch {
-      // ignore
+      if (response.ok || ![429, 503].includes(response.status) || attempt === 2) break;
+      const retryHeader = response.headers.get('Retry-After');
+      const numericRetry = retryHeader === null ? NaN : Number(retryHeader);
+      const retryMs = Number.isFinite(numericRetry) ? Math.max(0, numericRetry * 1000)
+        : retryHeader && Number.isFinite(Date.parse(retryHeader)) ? Math.max(0, Date.parse(retryHeader) - Date.now()) : 2000 * 2 ** attempt;
+      if (Date.now() + retryMs > deadline - 15000) throw new VoiceError('HeyGen đang giới hạn lượt tạo. Vui lòng thử lại sau.', 429);
+      await sleep(retryMs);
     }
-    throw new VoiceError(errMessage, response.status === 402 ? 402 : 502);
-  }
-
-  const result = await response.json();
-  const audioUrl = result?.data?.audio_url;
-  if (!audioUrl) {
-    throw new VoiceError('HeyGen không trả về đường dẫn âm thanh hợp lệ.', 502);
-  }
-
-  const audioRes = await fetch(audioUrl, {
-    cache: 'no-store',
-    signal: AbortSignal.timeout(60000),
-  });
-  if (!audioRes.ok) {
-    throw new VoiceError('Không thể tải file âm thanh từ HeyGen.', 502);
-  }
-  const wavBytes = Buffer.from(await audioRes.arrayBuffer());
-  if (wavBytes.byteLength <= 44) {
-    throw new VoiceError('File âm thanh từ HeyGen rỗng.', 502);
-  }
-
-  // HeyGen returns standard 44.1kHz mono PCM16 WAV.
-  // Bytes 0-43 are WAV RIFF header, bytes 44+ are raw PCM16 samples.
-  const pcm = wavBytes.subarray(44);
-  const mp3 = pcm16ToMp3(pcm);
-
-  // Extract word timestamps
-  const rawWords = Array.isArray(result?.data?.original_words) ? result.data.original_words : [];
-  const words: string[] = [];
-  const start: number[] = [];
-  const end: number[] = [];
-
-  for (const item of rawWords) {
-    if (typeof item?.text === 'string' && Number.isFinite(item?.start_time) && Number.isFinite(item?.end_time)) {
-      words.push(item.text);
-      start.push(Number(item.start_time));
-      end.push(Math.max(Number(item.end_time), Number(item.start_time) + 0.02));
+    if (!response?.ok) {
+      // 5xx other than a documented capacity rejection can mean synthesis happened.
+      if (response && response.status >= 500 && response.status !== 503)
+        throw new VoiceError('HeyGen bị gián đoạn khi tạo. Yêu cầu chờ đối soát và không tự tạo lại.', 503);
+      let message = 'HeyGen chưa thể tạo âm thanh.';
+      try { const error = await response?.json(); if (error?.error?.message) message = String(error.error.message); } catch { /* explicit rejection */ }
+      throw new VoiceError(message, response?.status === 429 ? 429 : response?.status === 402 ? 402 : 502);
     }
-  }
-
-  // Fallback: If no words returned, synthesize approximate timestamps from text
-  if (!words.length) {
-    const textWords = input.text.split(/\s+/).filter(Boolean);
-    const totalDuration = Number(result?.data?.duration) || 1;
-    const wordDur = totalDuration / Math.max(textWords.length, 1);
-    for (let i = 0; i < textWords.length; i++) {
-      words.push(textWords[i]);
-      start.push(i * wordDur);
-      end.push((i + 1) * wordDur);
+    let data: Record<string, unknown>;
+    try { data = (await response.json()).data; }
+    catch { throw new VoiceError('Kết nối HeyGen bị gián đoạn khi nhận kết quả. Yêu cầu chờ đối soát.', 503); }
+    if (!data || typeof data.audio_url !== 'string') throw new VoiceError('HeyGen không trả về đường dẫn âm thanh hợp lệ.', 502);
+    const audioUrl = new URL(data.audio_url);
+    if (audioUrl.protocol !== 'https:') throw new VoiceError('Đường dẫn âm thanh HeyGen không hợp lệ.', 502);
+    let wav: Buffer | undefined;
+    // Download retries reuse the same output URL; they never create another TTS request.
+    for (let attempt = 0; attempt < 2 && !wav; attempt++) {
+      try {
+        const download = await fetch(audioUrl.href, { cache: 'no-store', signal: AbortSignal.timeout(remainingTimeout(deadline, 30000)) });
+        if (download.ok) wav = Buffer.from(await download.arrayBuffer());
+      } catch { /* retry only the completed audio download */ }
     }
+    if (!wav) throw new VoiceError('Tải âm thanh HeyGen bị gián đoạn. Yêu cầu chờ đối soát và không tự tạo lại.', 503);
+    let part: ReturnType<typeof extractHeyGenChunk>;
+    try { part = extractHeyGenChunk(chunk, wav, data); }
+    catch (error) { throw new VoiceError((error as Error).message, 502); }
+    if (chunk.index > 0) joins.push({ seconds: duration, sourceOffset: chunk.sourceStart });
+    audio.push(part.pcm);
+    timestamps.words.push(...part.timestamps.words);
+    timestamps.start.push(...part.timestamps.start.map(time => time + duration));
+    timestamps.end.push(...part.timestamps.end.map(time => time + duration));
+    duration += part.duration;
   }
-
-  return {
-    mp3,
-    timestamps: { words, start, end },
-    duration: Number(result?.data?.duration) || 0,
-  };
+  return { mp3: pcm16ToMp3(Buffer.concat(audio)), timestamps, duration, requestCount, rule: HEYGEN_REQUEST_RULE, joins };
 }
 
 export async function uploadHeyGenAsset(clip: File | Blob | Buffer, filename = 'sample.mp3'): Promise<string> {

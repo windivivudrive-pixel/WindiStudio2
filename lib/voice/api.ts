@@ -9,7 +9,7 @@ import { synthesizeHeyGen } from './heygen';
 export const voiceTimingBucket = 'windi-voice-timing';
 const VOICE_TOKEN_PREFIX = 'windi_voice_';
 const WORKFLOW_TOKEN_PREFIX = 'windi_kit_';
-const MAX_TEXT_LENGTH = 10_000;
+const MAX_TEXT_LENGTH = 5_000;
 
 type AutomationIdentity = {
   userId: string;
@@ -148,7 +148,7 @@ export function validateVoiceApiInput(value: unknown): VoiceApiInput {
     !text || countCredits(text) > MAX_TEXT_LENGTH || !isUUID(voiceId) ||
     !VOICE_LANGUAGES.some((item) => item.id === language) ||
     !Number.isFinite(speed) || speed < 0.6 || speed > 1.5
-  ) throw new VoiceError('Kiểm tra text, voice_id, language và speed. Tối đa 10.000 ký tự.');
+  ) throw new VoiceError('Kiểm tra text, voice_id, language và speed. Tối đa 5.000 ký tự.');
   return { text, voiceId, language, speed, provider };
 }
 
@@ -320,26 +320,12 @@ export async function completeVoiceGeneration(userId: string, input: VoiceApiInp
   let generated: { mp3: Buffer; timestamps: WordTimestamps };
 
   try {
+    // Keep one provider for the whole document; never replace a partially generated
+    // HeyGen document with another provider and silently change the voice/mood.
     if (preferCartesia && cartesiaId) {
-      try {
-        generated = await synthesizeCartesia(userId, input, cartesiaId, job.id);
-      } catch (err) {
-        if (heygenId && !(err instanceof Error && err.message.includes('gián đoạn'))) {
-          generated = await synthesizeWithHeyGen(input, heygenId);
-        } else {
-          throw err;
-        }
-      }
+      generated = await synthesizeCartesia(userId, input, cartesiaId, job.id);
     } else if (heygenId) {
-      try {
-        generated = await synthesizeWithHeyGen(input, heygenId);
-      } catch (err) {
-        if (cartesiaId && !(err instanceof Error && err.message.includes('gián đoạn'))) {
-          generated = await synthesizeCartesia(userId, input, cartesiaId, job.id);
-        } else {
-          throw err;
-        }
-      }
+      generated = await synthesizeWithHeyGen(input, heygenId);
     } else {
       generated = await synthesizeCartesia(userId, input, job.voice_id, job.id);
     }

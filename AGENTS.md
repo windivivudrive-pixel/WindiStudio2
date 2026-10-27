@@ -21,9 +21,15 @@ Rules:
 - Read graphify-out/GRAPH_REPORT.md only for broad architecture review or when query/path/explain do not surface enough context.
 - After modifying code, run `npm run graph:update` to keep the code graph current (AST-only, no API cost). If `graphify-out/` is absent or the local environment has not been initialized, run `npm run graph:setup` then `npm run graph:build`.
 
+## HeyGen Voice
+
+- Khi sửa chia đoạn, request TTS, ghép audio/timestamp hoặc cập nhật thư viện HeyGen, đọc và tuân theo `docs/heygen-tts-rules.md`.
+- Giới hạn free đang áp dụng là 5.000 ký tự/request gồm ngữ cảnh; web nhận tối đa 5.000 ký tự mỗi lần và trả một MP3 cuối.
+
 ## WindiStudio Repo Video
 
 - **Quy trình chuẩn**: Luôn trình 3–5 thẻ idea cho người dùng duyệt trước ➔ Người dùng duyệt idea xong thì viết kịch bản ➔ Thu voice ➔ Dựng Remotion ➔ **Render thẳng video `final.mp4`**.
 - **KHÔNG tạo hoặc khởi chạy Windi Timeline Editor** (không cần `EditorComposition.tsx`, `editor.config.json`, hay server editor port 4318, không dừng lại ở `EDITOR_READY` để chờ duyệt giao diện nữa).
+- **Quy chuẩn phiên âm số phiên bản trong Voiceover**: Tuyệt đối **KHÔNG viết số thập phân dạng `6.1`, `5.5`, `3.7`** trong text voiceover vì TTS sẽ đọc sai tiếng Anh hoặc nuốt chữ. **BẮT BUỘC viết thành chữ tiếng Việt: `6 chấm 1`, `5 chấm 5`, `3 chấm 7`** (ví dụ: `Sol 6 chấm 1`, `Claude Opus 5 chấm 5`, `Terra 6 chấm 1`).
 - **Bàn giao trực tiếp file `final.mp4`** hoàn chỉnh kèm thumbnail `cover.png`, phụ đề `captions.srt`, cập nhật `script.md`, `qa.md`, `episode.json` cho người dùng kiểm tra ngay.
 

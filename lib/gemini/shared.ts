@@ -35,6 +35,8 @@ export function geminiSteps(product: typeof GEMINI_PRODUCTS[number]) { return [
   { title: 'Quét QR, nhận file TXT', text: `Thanh toán ${product.price.toLocaleString('vi-VN')}₫ bằng ứng dụng ngân hàng. Khi hệ thống xác nhận tiền, tải file TXT chứa link kích hoạt ${product.durationMonths} tháng của đơn hàng.` },
   { title: 'Copy link, dán vào trình duyệt', text: 'Mở file TXT, sao chép toàn bộ link và dán vào thanh địa chỉ Chrome hoặc trình duyệt bạn đang dùng. Đăng nhập đúng Google cá nhân muốn nâng cấp.' },
   { title: 'Bấm kích hoạt gói', text: `Kiểm tra Google hiển thị đúng ưu đãi ${product.durationMonths} tháng và tài khoản đủ điều kiện, rồi bấm nhận ưu đãi / kích hoạt theo hướng dẫn trên màn hình.` },
-  { title: 'Thêm phương thức thanh toán', text: 'Dùng thẻ thanh toán quốc tế hoặc ví MoMo (nếu Google hiển thị), chuẩn bị số dư tối thiểu 30.000₫ để xác minh. Khoản tạm giữ/thu xác minh sẽ được giải tỏa hoặc hoàn lại; thời gian tiền về tùy ngân hàng/ví và quy trình của Google.' },
+  product.sku === 'gemini-18m'
+    ? { title: 'Kiểm tra điều kiện ưu đãi', text: 'Gói 18 tháng không yêu cầu thêm thẻ thanh toán hoặc ví điện tử. Kiểm tra tài khoản Google hiển thị đúng ưu đãi 18 tháng trước khi tiếp tục.' }
+    : { title: 'Thêm phương thức thanh toán', text: 'Dùng thẻ thanh toán quốc tế hoặc ví MoMo (nếu Google hiển thị), chuẩn bị số dư tối thiểu 30.000₫ để xác minh. Khoản tạm giữ/thu xác minh sẽ được giải tỏa hoặc hoàn lại; thời gian tiền về tùy ngân hàng/ví và quy trình của Google.' },
   { title: 'Xác nhận 0₫ và bắt đầu sử dụng', text: 'Chỉ xác nhận khi màn hình Google hiển thị 0₫ cho thời gian ưu đãi. Nếu hiện số tiền khác, dừng lại và liên hệ hỗ trợ. Kiểm tra ngày gia hạn, hủy trước ngày đó nếu không muốn bị tính phí tiếp.' },
 ]; }

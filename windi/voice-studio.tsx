@@ -43,7 +43,7 @@ import {
   countCredits,
   formatNumber,
   isComparisonVoice,
-  STARTER_VOICES,
+  isHeyGenLibraryVoice,
   CURATED_PUBLIC_VOICES,
   DEFAULT_STUDIO_VOICE,
   VOICE_LANGUAGES,
@@ -454,7 +454,7 @@ export function VoiceStudio() {
   const { user, isLoading } = useAuth();
   const [tab, setTab] = useState<Tab>("create");
   const [verticalNavigation, setVerticalNavigation] = useState(false);
-  const [voices, setVoices] = useState<StudioVoice[]>([...CURATED_PUBLIC_VOICES, ...STARTER_VOICES]);
+  const [voices, setVoices] = useState<StudioVoice[]>([...CURATED_PUBLIC_VOICES]);
   const [selected, setSelected] = useState<StudioVoice>(
     DEFAULT_STUDIO_VOICE,
   );
@@ -541,7 +541,7 @@ export function VoiceStudio() {
   const activeCloneCount = (account?.clones || []).filter((c) =>
     !c.is_demo && ["ready", "reserved", "pending"].includes(c.status),
   ).length;
-  const allVoices = [...cloneVoices, ...voices].filter(voice => !isComparisonVoice(voice.id));
+  const allVoices = [...cloneVoices, ...voices].filter(voice => isHeyGenLibraryVoice(voice) && !isComparisonVoice(voice.id));
   const currentPlan = VOICE_PLANS.find((p) => p.id === period?.plan_id);
   const canClone = isAdmin || (!!period?.clone_limit && activeCloneCount < period.clone_limit);
   const visibleClones = (account?.clones ?? []).filter(c => !c.is_demo || Date.parse(c.demo_expires_at!) > demoNow);
@@ -1327,7 +1327,7 @@ export function VoiceStudio() {
                   </div>
                 </div>
                 <p id="voice-generate-hint" className="voice-compose-hint" role="status">
-                  {credits > MAX_WEB_GENERATION_CHARACTERS ? "Tối đa 5.000 ký tự mỗi lần. Hãy chia nội dung thành các đoạn ngắn hơn." : !text.trim() ? "Chọn một mẫu hoặc nhập nội dung để bắt đầu." : user && !available ? "Dịch vụ đang kết nối. Vui lòng thử lại sau ít phút." : !isAdmin && user && credits > largestBalance ? <>Bạn chưa đủ credit cho đoạn này. Rút ngắn nội dung hoặc <button onClick={() => setTab("plans")}>xem gói dịch vụ</button>.</> : "Tạo xong, bạn có thể nghe và tải MP3. Credit được hoàn khi yêu cầu thất bại đã xác nhận."}
+                  {credits > MAX_WEB_GENERATION_CHARACTERS ? "Tối đa 5.000 ký tự mỗi lần." : !text.trim() ? "Nhập nội dung; đoạn dài sẽ tự chia theo câu và ghép thành một file MP3." : user && !available ? "Dịch vụ đang kết nối. Vui lòng thử lại sau ít phút." : !isAdmin && user && credits > largestBalance ? <>Bạn chưa đủ credit cho đoạn này. Rút ngắn nội dung hoặc <button onClick={() => setTab("plans")}>xem gói dịch vụ</button>.</> : "Nội dung dài được tự chia theo câu, giữ cùng giọng và ghép thành một file MP3. Quá trình này có thể mất vài phút."}
                 </p>
                 <details className="voice-advanced">
                   <summary><SlidersHorizontal size={15} aria-hidden="true" /> Thông tin cho lập trình viên <ChevronDown size={14} aria-hidden="true" /></summary>
@@ -1376,8 +1376,7 @@ export function VoiceStudio() {
                   <span className="voice-step">VOICE LIBRARY</span>
                   <h2>Tìm tiếng nói cho câu chuyện.</h2>
                   <p>
-                    8 ngôn ngữ mẫu được tuyển chọn. Icon chỉ hiện khi Windi Clone Pro
-                    3.0 có ghi chú giới tính hoặc mục đích sử dụng rõ ràng.
+                    Chọn giọng trong thư viện hoặc giọng riêng bạn đã tạo.
                   </p>
                 </div>
                 <div className="voice-library-actions">

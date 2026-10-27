@@ -2,7 +2,7 @@ import { automationIdentity, createVoiceGeneration, requireIdempotencyKey, valid
 import { boundedBody, failure } from '@/lib/voice/server';
 
 export const runtime = 'nodejs';
-export const maxDuration = 120;
+export const maxDuration = 300;
 
 export async function POST(request: Request) {
   try {

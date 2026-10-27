@@ -2,7 +2,7 @@ export const DEFAULT_WORKFLOW_VOICE_ID = '60cf30cf-dcad-4cb1-b2e9-b6c08a23569e';
 export const VOICE_API_ENABLED = false;
 export const MAX_WEB_GENERATION_CHARACTERS = 5000;
 export const VOICE_PLANS = [
-  { id: 'welcome', name: 'Chào mừng', price_vnd: 0, credits: 1500, clone_limit: 0, duration_days: 7, billing: 'one_time', purchasable: false, description: '1.500 credit miễn phí khi bạn đăng ký.' },
+  { id: 'welcome', name: 'Chào mừng', price_vnd: 0, credits: 3000, clone_limit: 0, duration_days: 7, billing: 'one_time', purchasable: false, description: '3.000 credit miễn phí khi bạn đăng ký.' },
   { id: 'credit_10k', name: '10.000 credit', price_vnd: 39000, credits: 10000, clone_limit: 1, duration_days: 30, billing: 'one_time', purchasable: true, description: 'Gói credit gọn nhẹ để bắt đầu tạo giọng trực tiếp.' },
   { id: 'credit_100k', name: '100.000 credit', price_vnd: 169000, credits: 100000, clone_limit: 5, duration_days: 30, billing: 'one_time', purchasable: true, description: 'Dành cho nhà sáng tạo cần tạo nội dung thường xuyên.' },
   { id: 'credit_1m', name: '1.000.000 credit', price_vnd: 699000, credits: 1000000, clone_limit: 20, duration_days: 30, billing: 'one_time', purchasable: true, description: 'Chỉ dùng tạo trực tiếp trên Voice Studio; API đang tạm ngưng.' },
@@ -52,6 +52,12 @@ export const CURATED_PUBLIC_VOICES: StudioVoice[] = [
   {id:'50d72b4f596b4a50bf23c3547a739615',name:'Ngô Đình',description:'Giọng nam tiếng Việt • ấm áp, tự nhiên',language:'vi',gender:'masculine',kind:'public',provider:'heygen',heygenId:'50d72b4f596b4a50bf23c3547a739615',cartesiaId:'60cf30cf-dcad-4cb1-b2e9-b6c08a23569e'},
   {id:'9baf4ace12dc4c34b2fafa3811dac1a7',name:'Kim Ánh',description:'Giọng nữ tiếng Việt • nhẹ nhàng, sâu lắng',language:'vi',gender:'feminine',kind:'public',provider:'heygen',heygenId:'9baf4ace12dc4c34b2fafa3811dac1a7',cartesiaId:'aac29502-cd10-4767-93c3-196ff83db354'},
   {id:'7915d7fa4f7f4fbb8c6fea99a707524d',name:'Tố My',description:'Giọng nữ tiếng Việt • ngọt ngào, cảm xúc',language:'vi',gender:'feminine',kind:'public',provider:'heygen',heygenId:'7915d7fa4f7f4fbb8c6fea99a707524d',cartesiaId:'467b7271-7d3d-4509-ab95-7cb4be6f5ef3'},
+  // ACTIVE instant clones read from the owner's HeyGen workspace on 2026-10-27.
+  {id:'528ff6a33578494e827fbc7451b9f4b4',name:'Quỳnh Nhi',description:'Giọng clone tiếng Việt',language:'vi',kind:'public',provider:'heygen',heygenId:'528ff6a33578494e827fbc7451b9f4b4'},
+  {id:'c0fe5a980a14451aace8a5d7d3504163',name:'Lữ Trình',description:'Giọng clone tiếng Việt',language:'vi',kind:'public',provider:'heygen',heygenId:'c0fe5a980a14451aace8a5d7d3504163'},
+  {id:'aad4386756084ceb93fe87a70e0bd296',name:'Kim Thoa',description:'Giọng clone tiếng Việt',language:'vi',kind:'public',provider:'heygen',heygenId:'aad4386756084ceb93fe87a70e0bd296'},
+  {id:'7a6eb31448bd466e84e8af7a8e12136f',name:'Thanh Thảo',description:'Giọng clone tiếng Việt',language:'vi',kind:'public',provider:'heygen',heygenId:'7a6eb31448bd466e84e8af7a8e12136f'},
+  {id:'7dc25b191a794ecba206cab6f0c70576',name:'Đình Mạnh',description:'Giọng clone tiếng Việt',language:'vi',kind:'public',provider:'heygen',heygenId:'7dc25b191a794ecba206cab6f0c70576'},
 ];
 export const DEFAULT_STUDIO_VOICE = CURATED_PUBLIC_VOICES[1];
 export const COMPARISON_VOICES: StudioVoice[] = [
@@ -65,6 +71,11 @@ export const COMPARISON_VOICES: StudioVoice[] = [
 export const isComparisonVoice = (id:string) => COMPARISON_VOICES.some(voice=>voice.id===id.toLowerCase());
 export type VoiceProvider = 'heygen' | 'cartesia';
 export type StudioVoice = {id:string; name:string; description:string; language:string; gender?:string; useCases?:VoiceUseCase[]; kind:'public'|'clone'; provider?:VoiceProvider; heygenId?:string; cartesiaId?:string};
+// Existing cloned voices identify their provider by the format used elsewhere in the clone flow.
+export function isHeyGenLibraryVoice(voice:StudioVoice) {
+  if (voice.kind === 'clone') return /^[0-9a-f]{32}$/i.test(voice.id);
+  return voice.provider === 'heygen' && !!voice.heygenId && voice.id.toLowerCase() === voice.heygenId.toLowerCase();
+}
 export type VoiceAccent = {id:string;name:string;language:string;locale:string;isLocaleDefault:boolean;isLocalizable:boolean};
 export type VoicePeriod = {id:string; plan_id:string; credits:number; used_credits:number; clone_limit:number; clones_used:number; starts_at:string; ends_at:string};
 export type VoiceClone = {id:string; provider_id:string|null; name:string; language:string; accent:string|null; status:string; created_at:string;is_demo?:boolean;demo_expires_at?:string|null};

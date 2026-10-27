@@ -163,9 +163,12 @@ export async function publicVoices():Promise<{voices:StudioVoice[]; source:strin
 }
 export async function publicVoice(id:string, preferredProvider?:'heygen'|'cartesia') {
   if(isComparisonVoice(id)) return null;
-  const list = (await publicVoices()).voices;
   const lower = id.toLowerCase();
-  let found = list.find(v => v.id.toLowerCase() === lower);
+  const matches = (voice:StudioVoice) => voice.id.toLowerCase() === lower
+    || voice.cartesiaId?.toLowerCase() === lower || voice.heygenId?.toLowerCase() === lower;
+  let found = CURATED_PUBLIC_VOICES.find(matches);
+  const list = found ? [] : (await publicVoices()).voices;
+  if (!found) found = list.find(v => v.id.toLowerCase() === lower);
   if (!found) found = list.find(v => v.cartesiaId?.toLowerCase() === lower);
   if (!found) found = list.find(v => v.heygenId?.toLowerCase() === lower);
   if (!found) return null;
@@ -279,6 +282,13 @@ export async function previewPublicVoice(request:Request,id:string,storedOnly=fa
 }
 export async function resolveVoice(userId:string,id:string,preferredProvider?:'heygen'|'cartesia') {
   if(isComparisonVoice(id)) throw new VoiceError('Giọng mẫu chỉ để nghe tham khảo. Vui lòng clone giọng của bạn để tạo nội dung.',403);
+  // Publicly approved HeyGen clones must also resolve for admins without a
+  // Cartesia lookup of a HeyGen ID. No customer-owned voice is in this allowlist.
+  const lower = id.toLowerCase();
+  if(CURATED_PUBLIC_VOICES.some(voice => voice.id.toLowerCase() === lower
+    || voice.heygenId?.toLowerCase() === lower || voice.cartesiaId?.toLowerCase() === lower)) {
+    return (await publicVoice(id,preferredProvider))!;
+  }
   const { isVoiceAdmin, providerVoice } = await import('./admin');
   if(await isVoiceAdmin(userId)) return providerVoice(id);
   // A licensed Workflow can use the designated service voice. The provider
