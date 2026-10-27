@@ -17,11 +17,17 @@ export type GeminiAccount = {
   bank: { bank: string; account: string; name: string } | null;
   orders: GeminiOrder[];
 };
-export function parseActivationLinks(value: unknown): string[] {
+export function parseActivationLinks(value: unknown, sku: GeminiSku = 'gemini-3m'): string[] {
   if (typeof value !== 'string' || value.length > 100000) throw new Error('Nhập tối đa 500 link, mỗi dòng một link.');
   const links = [...new Set(value.split(/\r?\n/).map(line => line.trim()).filter(Boolean))];
-  if (!links.length || links.length > 500 || links.some(url => !/^https:\/\/one\.google\.com\/offer\/[A-Za-z0-9_-]{8,128}$/.test(url))) {
-    throw new Error('Chỉ nhận link https://one.google.com/offer/… hợp lệ, tối đa 500 link mỗi lần.');
+  const regex = sku === 'gemini-18m'
+    ? /^https:\/\/(serviceactivation\.link\/subscription\/new\/[A-Za-z0-9_-]{16,255}|one\.google\.com\/offer\/[A-Za-z0-9_-]{8,128})$/
+    : /^https:\/\/one\.google\.com\/offer\/[A-Za-z0-9_-]{8,128}$/;
+  if (!links.length || links.length > 500 || links.some(url => !regex.test(url))) {
+    const example = sku === 'gemini-18m'
+      ? 'https://serviceactivation.link/subscription/new/…'
+      : 'https://one.google.com/offer/…';
+    throw new Error(`Chỉ nhận link ${example} hợp lệ, tối đa 500 link mỗi lần.`);
   }
   return links;
 }

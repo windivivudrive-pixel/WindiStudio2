@@ -25,6 +25,10 @@ beforeEach(() => { state.user = { id: '11111111-1111-4111-8111-111111111111' }; 
 test('inventory parsing accepts only canonical Google offer links and deduplicates', () => {
   expect(parseActivationLinks(' https://one.google.com/offer/ABCDEFGH1234\r\nhttps://one.google.com/offer/ABCDEFGH1234 ')).toHaveLength(1);
   for (const invalid of ['http://one.google.com/offer/ABCDEFGH', 'https://one.google.com.evil/offer/ABCDEFGH', 'https://one.google.com/offer/ABCDEFGH?x=1', 'https://one.google.com/offer/terms-and-conditions/foo', '', null]) expect(() => parseActivationLinks(invalid)).toThrow();
+  const sample18m = 'https://serviceactivation.link/subscription/new/AQCpiIH1uM2A-k7r5Sou1mFNd0jUeAI9qePGZ1U1hiYGJ3LeuXxWTDRUKU_2UTtZJuQzGhsiFShcdt3EvJHmpSbVU9dg8J30rHEH7eDcmLUMVzM7upTMWhMZ0iV3R641L-sjPslXpnG1Jyk6nTHNiKZEmPK5hyesQC4pJU';
+  expect(parseActivationLinks(sample18m, 'gemini-18m')).toEqual([sample18m]);
+  expect(parseActivationLinks('https://one.google.com/offer/ABCDEFGH1234', 'gemini-18m')).toHaveLength(1);
+  expect(() => parseActivationLinks('https://evil.link/subscription/new/12345', 'gemini-18m')).toThrow('serviceactivation.link');
 });
 test('TXT download requires authentication, paid status and owner filter', async () => {
   state.user = null;

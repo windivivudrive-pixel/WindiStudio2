@@ -9,11 +9,11 @@ Trang bán `/gemini` dùng tông xanh dương, cho khách chọn một trong hai
 
 ## Chuẩn bị và mở bán
 
-1. Áp dụng migration nền `20261026151540_gemini_activation_commerce.sql`, sau đó `20261027003556_gemini_product_variants.sql` trên đúng project WindiStudio. Không đẩy mù toàn bộ lịch sử migration của repo. Migration thứ hai giữ đơn/link cũ ở gói 3 tháng, thêm gói 18 tháng ở trạng thái tắt.
+1. Áp dụng migration nền `20261026151540_gemini_activation_commerce.sql`, `20261027003556_gemini_product_variants.sql`, và `20261027050000_gemini_18m_serviceactivation_links.sql` trên đúng project WindiStudio. Migration thứ hai giữ đơn/link cũ ở gói 3 tháng, thêm gói 18 tháng ở trạng thái tắt. Migration thứ ba nới check constraint URL để hỗ trợ link kích hoạt `serviceactivation.link/subscription/new/…` cho kho 18 tháng.
 2. Triển khai web chứa bộ chọn sản phẩm và các API mới. Web cũ vẫn dùng được gói 3 tháng qua RPC tương thích trong thời gian chuyển tiếp.
 3. Cấu hình backend hiện có: `SUPABASE_SERVICE_ROLE_KEY`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SEPAY_API_KEY`, `VOICE_BANK_BIN`, `VOICE_BANK_ACCOUNT`, `VOICE_BANK_NAME`. Không đưa secret vào `NEXT_PUBLIC_`.
 4. SePay trỏ đến `https://<domain>/api/payment-webhook`, xác thực `Authorization: Apikey <SEPAY_API_KEY>`, đúng tài khoản `VOICE_BANK_ACCOUNT`. Cả hai gói dùng mã `WINDI Gxxxxxxxx`. Không dùng Edge Function payment-webhook cũ.
-5. Quản trị ở `/gemini/admin`, dùng danh sách admin server kiểm soát `public.windi_voice_admins`. Chọn **đúng gói 3 hoặc 18 tháng** trước khi nhập link. Mỗi dòng một link `https://one.google.com/offer/<code>` chưa dùng, tối đa 500 link/lần. Nhập hạn kích hoạt thực tế của lô link.
+5. Quản trị ở `/gemini/admin`, dùng danh sách admin server kiểm soát `public.windi_voice_admins`. Chọn **đúng gói 3 hoặc 18 tháng** trước khi nhập link. Gói 3 tháng nhận link `https://one.google.com/offer/<code>`; gói 18 tháng nhận link `https://serviceactivation.link/subscription/new/<code>` (hoặc `https://one.google.com/offer/<code>`). Mỗi dòng một link chưa dùng, tối đa 500 link/lần. Nhập hạn kích hoạt thực tế của lô link.
 6. Link đã có trong bất kỳ kho nào đều bị bỏ qua khi nhập trùng; không đưa link đã bán, đã dùng hoặc link mẫu vào kho. Không đổi phân loại của link đã giữ/giao.
 7. Kiểm chứng thời hạn ưu đãi đúng gói, điều kiện tài khoản, giá 0₫ trên Google và quyền phân phối lô link. Mỗi gói có công tắc mở bán độc lập. Kho trống không bật bán được.
 8. Thử chuyển khoản và callback SePay **thật cho từng mức giá** trước khi quảng bá. Kiểm tra PAID, đúng TXT/link, tải lại và chặn tài khoản khác tải đơn đó.
