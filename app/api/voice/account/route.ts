@@ -29,7 +29,7 @@ export async function GET() {
     client.from('product_entitlements').select('voice_credits,voice_credits_used').eq('user_id',user.id).eq('kind','video_workflow_v1').eq('status','active').limit(1).maybeSingle(),
     client.from('windi_voice_jobs').select('id,voice_name,transcript,credits,status,created_at').eq('user_id',user.id).gte('created_at',voiceHistoryCutoff()).order('created_at',{ascending:false}),
     client.from('windi_voice_orders').select('id,plan_id,amount_vnd,payment_code,status,expires_at,created_at').eq('user_id',user.id).neq('plan_id','welcome').order('created_at',{ascending:false}).limit(10),
-    client.from('windi_voice_orders').select('id').eq('user_id',user.id).eq('status','paid').in('plan_id',['trial','starter','creator','studio']).limit(1),
+    client.from('windi_voice_orders').select('id').eq('user_id',user.id).eq('status','paid').in('plan_id',['trial','starter','creator','studio','credit_10k','credit_100k','credit_1m']).limit(1),
   ]);
   if(cloneError) throw cloneError;
   for(const r of [period,nextPeriod,bonus,jobs,orders,paidClonePlan]) if(r.error) throw r.error;

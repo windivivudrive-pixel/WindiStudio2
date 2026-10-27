@@ -3,7 +3,7 @@ import 'server-only';
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
 import lamejs from '@breezystack/lamejs';
 import { cartesia, resolveVoice, VoiceError, writer } from './server';
-import { DEFAULT_WORKFLOW_VOICE_ID, countCredits, isUUID, VOICE_LANGUAGES, CURATED_PUBLIC_VOICES } from './shared';
+import { DEFAULT_WORKFLOW_VOICE_ID, countCredits, isUUID, VOICE_LANGUAGES, CURATED_PUBLIC_VOICES, VOICE_API_ENABLED } from './shared';
 import { synthesizeHeyGen } from './heygen';
 
 export const voiceTimingBucket = 'windi-voice-timing';
@@ -107,6 +107,7 @@ export async function voiceApiAccess(userId: string): Promise<VoiceApiAccess> {
 }
 
 export async function automationIdentity(request: Request): Promise<AutomationIdentity> {
+  if (!VOICE_API_ENABLED) throw new VoiceError('Voice API đang tạm ngưng. Hãy tạo giọng trực tiếp trên Voice Studio.', 503);
   const authorization = request.headers.get('authorization') ?? '';
   const descriptor = automationTokenDescriptor(authorization);
   const { token, isWorkflowToken } = descriptor;

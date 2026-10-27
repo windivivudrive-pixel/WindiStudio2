@@ -18,7 +18,7 @@ async function request(path: string, init?: RequestInit) {
   if (!response.ok) throw new Error(body.error || "Chưa thể hoàn tất.");
   return body;
 }
-export function VoiceApiTokens({ enabled }: { enabled: boolean }) {
+export function VoiceApiTokens({ enabled, apiEnabled }: { enabled: boolean; apiEnabled: boolean }) {
   const [tokens, setTokens] = useState<Token[]>([]),
     [canCreate, setCanCreate] = useState(false),
     [hasWorkflowLicense, setHasWorkflowLicense] = useState(false),
@@ -89,8 +89,8 @@ export function VoiceApiTokens({ enabled }: { enabled: boolean }) {
         </span>
         <h3>API key WindiStudio</h3>
         <p>
-          Dùng credit của bạn để tạo giọng từ ứng dụng riêng hoặc Windi Workflow.
-          Key đầy đủ chỉ hiện một lần khi tạo. Nếu mất key, hãy tạo key mới.
+          {apiEnabled ? 'Dùng credit của bạn để tạo giọng từ ứng dụng riêng hoặc Windi Workflow.' : 'Voice API đang tạm ngưng cho tất cả gói. Bạn vẫn có thể tạo giọng trực tiếp trong Voice Studio.'}
+          {apiEnabled ? ' Key đầy đủ chỉ hiện một lần khi tạo. Nếu mất key, hãy tạo key mới.' : ' API key cũ được giữ lại nhưng tạm thời không gọi được; bạn vẫn có thể thu hồi key.'}
         </p>
         {hasWorkflowLicense && (
           <p>
@@ -119,7 +119,7 @@ export function VoiceApiTokens({ enabled }: { enabled: boolean }) {
           </button>
         </div>
       )}
-      {enabled && (
+      {enabled && apiEnabled && (
         <div className="voice-token-create">
           <label>
             Tên API key
@@ -155,7 +155,7 @@ export function VoiceApiTokens({ enabled }: { enabled: boolean }) {
                 <strong>{token.name}</strong>
                 <small>
                   {token.token_prefix}••••{token.last_four}
-                  {` · ${token.revoked_at ? 'Đã thu hồi' : 'Đang hoạt động'} · Tạo ${new Date(token.created_at).toLocaleDateString('vi-VN')}`}
+                  {` · ${token.revoked_at ? 'Đã thu hồi' : apiEnabled ? 'Đang hoạt động' : 'API tạm ngưng'} · Tạo ${new Date(token.created_at).toLocaleDateString('vi-VN')}`}
                   {token.last_used_at
                     ? ` · dùng gần nhất ${new Date(token.last_used_at).toLocaleDateString("vi-VN")}`
                     : ""}

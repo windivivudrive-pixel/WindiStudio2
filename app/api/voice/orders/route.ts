@@ -6,7 +6,7 @@ export async function POST(request:Request) {
   if(!paymentConfig()||!providerReady()) throw new VoiceError('Gói dịch vụ chưa mở thanh toán. Vui lòng quay lại sau.',503);
   const {planId,demoCloneId}=await (await boundedBody(request)).json();
   if(!VOICE_PLANS.some(p=>p.id===planId&&p.purchasable)) throw new VoiceError('Gói không hợp lệ.');
-  if(demoCloneId!==undefined&&(!isUUID(demoCloneId)||planId!=='trial'))throw new VoiceError('Giọng nghe thử hoặc gói không hợp lệ.');
+  if(demoCloneId!==undefined&&(!isUUID(demoCloneId)||planId!=='credit_10k'))throw new VoiceError('Giọng nghe thử hoặc gói không hợp lệ.');
   const createOrder=()=>demoCloneId
    ?writer().rpc('windi_voice_demo_order',{p_user:user.id,p_clone:demoCloneId})
    :writer().rpc('windi_voice_order',{p_user:user.id,p_plan:planId});

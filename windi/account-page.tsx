@@ -5,7 +5,7 @@ import {ArrowUpRight,AudioLines,KeyRound,ReceiptText,UserRound} from 'lucide-rea
 import {useAuth} from './auth-context';
 import {VoiceId} from './voice-id';
 import {VoiceApiTokens} from './voice-api-tokens';
-import {VOICE_PLANS,type VoiceAccount} from '@/lib/voice/shared';
+import {VOICE_API_ENABLED,VOICE_PLANS,type VoiceAccount} from '@/lib/voice/shared';
 import type {AccountOrder} from '@/lib/account-orders';
 
 const date=(value?:string|null)=>value?new Date(value).toLocaleString('vi-VN'):'Chưa có dữ liệu';
@@ -38,7 +38,7 @@ function AccountContent({user}:{user:NonNullable<ReturnType<typeof useAuth>['use
     </section>
     <section id="voices" className="account-section"><div className="account-section-title"><span>02 / GIỌNG RIÊNG</span><h2>Giọng của bạn, sẵn sàng dùng.</h2></div><State {...voice}/>{!voice.loading&&!voice.error&&(!voice.data?.clones.length?<p>Bạn chưa có giọng clone. <Link href="/">Tạo giọng đầu tiên →</Link></p>:<div className="account-clones">{voice.data.clones.map(c=><article key={c.id}><AudioLines size={23}/><h3>{c.name}</h3><p>{c.language.toUpperCase()} · {c.status==='ready'?'Sẵn sàng':c.status==='failed'?'Tạo chưa thành công':'Đang xử lý'}</p>{c.status==='ready'&&<VoiceId id={c.provider_id}/>}</article>)}</div>)}<Link href="/">Xem toàn bộ thư viện và Voice ID →</Link></section>
     <Orders/>
-    <section id="api" className="account-section"><div className="account-section-title"><span>04 / KẾT NỐI</span><h2>Mang giọng nói vào ứng dụng.</h2></div><VoiceApiTokens enabled/><CodeExample/></section>
+    <section id="api" className="account-section"><div className="account-section-title"><span>04 / {VOICE_API_ENABLED?'KẾT NỐI':'API TẠM NGƯNG'}</span><h2>Mang giọng nói vào ứng dụng.</h2></div><VoiceApiTokens enabled apiEnabled={VOICE_API_ENABLED}/>{VOICE_API_ENABLED?<CodeExample/>:<p>Voice API đang tạm ngưng cho tất cả gói. Tạo giọng trực tiếp trên Voice Studio vẫn sử dụng bình thường.</p>}</section>
   </div>;
 }
 function Orders(){

@@ -25,8 +25,8 @@ export async function identity(request?:Request) {
   return {user,client};
 }
 const messages:Record<string,string>={
-  INVALID_INPUT:'Kiểm tra nội dung, giọng đọc và tốc độ. Tối đa 10.000 ký tự mỗi lần.',
-  INVALID_TEXT:'Nội dung phải có từ 1 đến 10.000 ký tự.',
+  INVALID_INPUT:'Kiểm tra nội dung, giọng đọc và tốc độ. Tối đa 5.000 ký tự mỗi lần.',
+  INVALID_TEXT:'Nội dung phải có từ 1 đến 5.000 ký tự.',
   INVALID_PLAN:'Gói này không còn khả dụng.',NO_SUBSCRIPTION:'Chọn gói dịch vụ để bắt đầu tạo giọng.',
   INSUFFICIENT_CREDITS:'Credit còn lại không đủ cho nội dung này.',CLONE_LIMIT:'Bạn đã dùng hết hạn mức clone hoặc số giọng được lưu của gói.',
   CLONE_REQUIRES_TRIAL:'Gói Chào mừng dùng được thư viện giọng. Chọn Clone thử đầu tiên để tạo giọng riêng.',

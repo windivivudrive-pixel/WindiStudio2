@@ -1,5 +1,6 @@
 import { createAutomationToken, voiceApiAccess } from '@/lib/voice/api';
 import { boundedBody, failure, identity, VoiceError, writer } from '@/lib/voice/server';
+import { VOICE_API_ENABLED } from '@/lib/voice/shared';
 
 export const runtime = 'nodejs';
 
@@ -19,13 +20,14 @@ export async function GET() {
     return Response.json({
       data: tokens.data,
       access,
-      can_create: access.hasPaidVoicePlan || access.hasWorkflowLicense,
+      can_create: VOICE_API_ENABLED && (access.hasPaidVoicePlan || access.hasWorkflowLicense),
     }, { headers: { 'Cache-Control': 'no-store' } });
   } catch (error) { return failure(error); }
 }
 
 export async function POST(request: Request) {
   try {
+    if (!VOICE_API_ENABLED) throw new VoiceError('Voice API đang tạm ngưng.', 503);
     const { user } = await identity(request);
     const body = await (await boundedBody(request, 10_000)).json() as { name?: unknown };
     const name = typeof body.name === 'string' ? body.name.trim() : '';

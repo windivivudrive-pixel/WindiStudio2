@@ -11,6 +11,7 @@ import {
   X,
 } from "lucide-react";
 import { FeedbackToast } from "./feedback-toast";
+import { VOICE_API_ENABLED } from "@/lib/voice/shared";
 
 type Order = {
   id: string;
@@ -234,7 +235,7 @@ export function VideoKitCommerce() {
           {account.release && <details><summary>Thông tin bản phát hành</summary><p>{account.release.changelog}</p><p style={{overflowWrap:'anywhere'}}>SHA-256 archive nguồn: {account.release.sha256}</p></details>}
           <div className="kit-quickstart">
             <h3>Bắt đầu nhanh</h3>
-            <p>Giải nén bộ cài đầy đủ, mở Cai Windi Windows.cmd trên Windows hoặc Cai Windi.command trên macOS. Nạp Windi Connect Extension ngay trong thư mục vừa giải nén, rồi đăng nhập Flow, ChatGPT hoặc Grok trong trình duyệt đã chọn. Voice tự kết nối theo tài khoản đã mua.</p>
+            <p>Giải nén bộ cài đầy đủ, mở Cai Windi Windows.cmd trên Windows hoặc Cai Windi.command trên macOS. Nạp Windi Connect Extension ngay trong thư mục vừa giải nén, rồi đăng nhập Flow, ChatGPT hoặc Grok trong trình duyệt đã chọn. Voice tự kết nối theo tài khoản khi API hoạt động trở lại.</p>
             <Link className="text-link" href="/video-kits/huong-dan">Xem hướng dẫn làm video đầu tiên →</Link>
             <p>
               Trong Codex hoặc Antigravity, bạn cũng có thể nói: “Dùng Windi làm
@@ -243,12 +244,11 @@ export function VideoKitCommerce() {
           </div>
           <div className="kit-voice-api">
             <h3>
-              <KeyRound size={18} /> Windi Voice API
+              <KeyRound size={18} /> {VOICE_API_ENABLED ? 'Windi Voice API' : 'Windi Voice · API tạm ngưng'}
             </h3>
-            <p>
-              Workflow dùng Clone Pro 3.0. Audio và word
-              timestamp được tạo trong cùng một lần gọi, không chạy Whisper lại.
-            </p>
+            <p>{VOICE_API_ENABLED
+              ? 'Workflow dùng Clone Pro 3.0. Audio và word timestamp được tạo trong cùng một lần gọi, không chạy Whisper lại.'
+              : 'Voice API đang tạm ngưng cho tất cả gói. Credit Workflow của bạn được giữ nguyên; hiện có thể nhập file thu âm riêng.'}</p>
             {account.voiceApi.bonus && (
               <p className="kit-voice-plan">
                 Credit tặng kèm còn {money(Math.max(0, account.voiceApi.bonus.credits - account.voiceApi.bonus.used_credits))} / {money(account.voiceApi.bonus.credits)} · không hết hạn
@@ -263,11 +263,13 @@ export function VideoKitCommerce() {
                 Muốn dùng thêm sau gói Clone? <Link href="/">Mua thêm Windi Voice credit</Link>
               </p>
             )}
-            <p>
-              Bộ cài tự lưu kết nối Voice an toàn trên máy (Windows DPAPI hoặc macOS Keychain). Bạn không cần đăng nhập CLI hoặc dán mã API.
-            </p>
-            <code>windi voice list</code>
-            <code>windi voice generate --voice VOICE_UUID</code>
+            {VOICE_API_ENABLED && <>
+              <p>
+                Bộ cài tự lưu kết nối Voice an toàn trên máy (Windows DPAPI hoặc macOS Keychain). Bạn không cần đăng nhập CLI hoặc dán mã API.
+              </p>
+              <code>windi voice list</code>
+              <code>windi voice generate --voice VOICE_UUID</code>
+            </>}
           </div>
         </div>
       )}
