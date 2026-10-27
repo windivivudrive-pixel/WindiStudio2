@@ -1181,36 +1181,58 @@ export function VoiceStudio() {
         </div>
         </aside>
         <div className="voice-main">
-        <div className="voice-usage">
-          <span>
-            <span className="voice-status-dot" />
-            {isLoading
-              ? "Đang tải tài khoản…"
-              : user
-                ? isAdmin ? "Admin · Windi Clone Pro 3.0" : currentPlan
-                  ? `Gói ${currentPlan.name}`
-                  : workflowBonusRemaining > 0
-                    ? "3K credit từ Video Workflow"
-                    : "Chưa có gói dịch vụ"
-                : "Không gian sáng tạo của bạn"}
-          </span>
-          <div>
+        <div className="voice-usage" role="region" aria-label="Thông tin tài khoản và credit">
+          <div className="voice-usage-status">
+            <span className="voice-status-dot" aria-hidden="true" />
+            <div className="voice-usage-plan-badge">
+              <span className="voice-usage-plan-text">
+                {isLoading
+                  ? "Đang tải tài khoản…"
+                  : user
+                    ? isAdmin
+                      ? "Admin · Windi Clone Pro 3.0"
+                      : currentPlan
+                        ? `Gói ${currentPlan.name}`
+                        : workflowBonusRemaining > 0
+                          ? "3K credit từ Video Workflow"
+                          : "Chưa có gói dịch vụ"
+                    : "Không gian sáng tạo của bạn"}
+              </span>
+            </div>
+          </div>
+          <div className="voice-usage-actions">
             {user && (
-              <>
-                <strong>{isAdmin ? "Quota Windi Clone Pro 3.0" : formatNumber(remaining)}</strong>
-                <span>{isAdmin ? "· quản trị" : "credit còn lại"}</span>
+              <div className="voice-credit-pill" title="Số credit khả dụng">
+                <span className="voice-credit-icon" aria-hidden="true">
+                  <Sparkles size={16} />
+                </span>
+                <div className="voice-credit-body">
+                  <span className="voice-credit-val">
+                    {isAdmin ? "Quota Windi Clone Pro 3.0" : formatNumber(remaining)}
+                  </span>
+                  <span className="voice-credit-label">
+                    {isAdmin ? "quản trị" : "credit còn lại"}
+                  </span>
+                </div>
                 {period && (
-                  <span className="voice-period">
-                    · đến {date(period.ends_at)}
+                  <span className="voice-credit-period" title={`Hạn dùng: ${date(period.ends_at)}`}>
+                    <Clock3 size={13} aria-hidden="true" />
+                    <span>đến {date(period.ends_at)}</span>
                   </span>
                 )}
-              </>
+              </div>
             )}
-            <button onClick={() => setTab("plans")}>
-              {period || workflowBonusRemaining > 0
-                ? "Xem gói"
-                : "Khám phá các gói"}
-              <ArrowRight size={14} />
+            <button
+              type="button"
+              className="voice-plans-btn"
+              onClick={() => setTab("plans")}
+            >
+              <span>
+                {period || workflowBonusRemaining > 0
+                  ? "Xem gói"
+                  : "Khám phá các gói"}
+              </span>
+              <ArrowRight size={15} aria-hidden="true" />
             </button>
           </div>
         </div>
