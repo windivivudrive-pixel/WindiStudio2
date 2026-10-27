@@ -3,22 +3,21 @@ import { describe, expect, it, vi, beforeEach } from 'vitest';
 vi.mock('server-only', () => ({}));
 
 import { CURATED_PUBLIC_VOICES, DEFAULT_STUDIO_VOICE, isUUID, validateSpeech } from '../lib/voice/shared';
-import { publicVoice } from '../lib/voice/server';
+import { publicVoice, resolveVoice } from '../lib/voice/server';
 import { cloneHeyGenVoice, deleteHeyGenVoice, uploadHeyGenAsset, heygenReady } from '../lib/voice/heygen';
 
 describe('HeyGen Voice Integration & Cartesia Backup', () => {
-  it('includes all 5 cloned voices with HeyGen and Cartesia IDs', () => {
-    expect(CURATED_PUBLIC_VOICES).toHaveLength(5);
+  it('includes the 10 verified HeyGen clones and preserves legacy backup IDs', () => {
+    expect(CURATED_PUBLIC_VOICES).toHaveLength(10);
 
     const voiceNames = CURATED_PUBLIC_VOICES.map((v) => v.name);
-    expect(voiceNames).toEqual(['Đức Bảo', 'Minh Dự', 'Ngô Đình', 'Kim Ánh', 'Tố My']);
+    expect(voiceNames).toEqual(['Đức Bảo', 'Minh Dự', 'Ngô Đình', 'Kim Ánh', 'Tố My', 'Quỳnh Nhi', 'Lữ Trình', 'Kim Thoa', 'Thanh Thảo', 'Đình Mạnh']);
 
     for (const voice of CURATED_PUBLIC_VOICES) {
       expect(voice.provider).toBe('heygen');
       expect(voice.heygenId).toBeDefined();
       expect(voice.heygenId).toMatch(/^[0-9a-f]{32}$/i);
-      expect(voice.cartesiaId).toBeDefined();
-      expect(voice.cartesiaId).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
+      if (voice.cartesiaId) expect(voice.cartesiaId).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
       expect(voice.language).toBe('vi');
     }
   });
@@ -41,6 +40,11 @@ describe('HeyGen Voice Integration & Cartesia Backup', () => {
     const ducBaoCartesia = await publicVoice('4499b44b-5180-4d65-9d76-e24405138493');
     expect(ducBaoCartesia).toBeDefined();
     expect(ducBaoCartesia?.name).toBe('Đức Bảo');
+  });
+
+  it('resolves the newly approved HeyGen library voices for users and admins without a Cartesia lookup', async () => {
+    const voice = await resolveVoice('any-library-user', '528ff6a33578494e827fbc7451b9f4b4');
+    expect(voice).toMatchObject({ id: '528ff6a33578494e827fbc7451b9f4b4', name: 'Quỳnh Nhi', provider: 'heygen' });
   });
 
   it('allows specifying preferred provider (heygen or cartesia)', async () => {

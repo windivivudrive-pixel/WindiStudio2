@@ -85,6 +85,8 @@ test("generation input and required Idempotency-Key reject ambiguous requests", 
     }),
   ).toMatchObject({ text: "Xin chào", voiceId: voice });
   expect(() => validateVoiceApiInput({ text: "", voice_id: voice })).toThrow();
+  expect(validateVoiceApiInput({ text: "a".repeat(5000), voice_id: voice }).text).toHaveLength(5000);
+  expect(() => validateVoiceApiInput({ text: "a".repeat(5001), voice_id: voice })).toThrow("5.000 ký tự");
   expect(() =>
     requireIdempotencyKey(new Request("https://example.test")),
   ).toThrow("Idempotency-Key");

@@ -3,7 +3,7 @@ import { boundedBody, audioUrl, failure, identity, providerReady, resolveVoice, 
 import { validateSpeech } from '@/lib/voice/shared';
 
 export const runtime = 'nodejs';
-export const maxDuration = 120;
+export const maxDuration = 300;
 
 async function result(userId: string, job: { id: string; timing_path?: string | null }) {
   return Response.json({
