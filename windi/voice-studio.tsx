@@ -53,6 +53,8 @@ import {
   type VoiceCloneSample,
   VOICE_LIBRARY_LANGUAGES,
   VOICE_PLANS,
+  VOICE_API_ENABLED,
+  MAX_WEB_GENERATION_CHARACTERS,
   type StudioVoice,
   type VoiceAccent,
   type VoiceAccount,
@@ -541,21 +543,14 @@ export function VoiceStudio() {
   ).length;
   const allVoices = [...cloneVoices, ...voices].filter(voice => !isComparisonVoice(voice.id));
   const currentPlan = VOICE_PLANS.find((p) => p.id === period?.plan_id);
-  const trialEligible = account?.trialEligible === true;
-  const freeDemo = !isAdmin && account?.cloneDemo?.eligible === true;
-  const demoRemaining = account?.cloneDemo?.remaining ?? 0;
-  const canClone = isAdmin || (freeDemo ? demoRemaining > 0 : !!period?.clone_limit && activeCloneCount < period.clone_limit);
+  const canClone = isAdmin || (!!period?.clone_limit && activeCloneCount < period.clone_limit);
   const visibleClones = (account?.clones ?? []).filter(c => !c.is_demo || Date.parse(c.demo_expires_at!) > demoNow);
-  const canPurchasePlan = (planId: string) =>
-    planId === "trial"
-      ? trialEligible && (!period || period.plan_id === "welcome")
-      : true;
   const canGenerate =
     !!user &&
     available &&
     (isAdmin || !!period || workflowBonusRemaining > 0) &&
     credits > 0 &&
-    credits <= 10000 &&
+    credits <= MAX_WEB_GENERATION_CHARACTERS &&
     (isAdmin || credits <= largestBalance) &&
     !busy;
 
@@ -973,7 +968,7 @@ export function VoiceStudio() {
     }
   }
   async function purchase(planId: string, demoCloneId?: string) {
-    if (planId === "trial" && !demoCloneId) {
+    if (planId === "credit_10k" && !demoCloneId) {
       demoCloneId = visibleClones.find(c => c.is_demo && c.status === "ready")?.id;
     }
     setBusy(planId);
@@ -1311,9 +1306,9 @@ export function VoiceStudio() {
                   <textarea id="voice-text" value={text} onChange={event => {
                     setText(event.target.value);
                     requestKey.current = null;
-                  }} placeholder="Nhập hoặc dán nội dung vào đây… Giọng đọc sẽ tự điều chỉnh cảm xúc theo lời bạn viết." maxLength={20000} aria-describedby="voice-character-count voice-generate-hint" />
+                  }} placeholder="Nhập hoặc dán nội dung vào đây… Giọng đọc sẽ tự điều chỉnh cảm xúc theo lời bạn viết." maxLength={MAX_WEB_GENERATION_CHARACTERS * 2} aria-describedby="voice-character-count voice-generate-hint" />
                   <div className="voice-script-tools">
-                    <span id="voice-character-count" className={credits > 10000 ? "voice-over-limit" : ""}>{formatNumber(credits)} / 10.000 ký tự</span>
+                    <span id="voice-character-count" className={credits > MAX_WEB_GENERATION_CHARACTERS ? "voice-over-limit" : ""}>{formatNumber(credits)} / {formatNumber(MAX_WEB_GENERATION_CHARACTERS)} ký tự</span>
                     <button disabled={!text || !!busy} onClick={() => { setText(""); requestKey.current = null; }}>Xóa nội dung</button>
                   </div>
                 </div>
@@ -1332,12 +1327,12 @@ export function VoiceStudio() {
                   </div>
                 </div>
                 <p id="voice-generate-hint" className="voice-compose-hint" role="status">
-                  {credits > 10000 ? "Tối đa 10.000 ký tự mỗi lần. Hãy chia nội dung thành các đoạn ngắn hơn." : !text.trim() ? "Chọn một mẫu hoặc nhập nội dung để bắt đầu." : user && !available ? "Dịch vụ đang kết nối. Vui lòng thử lại sau ít phút." : !isAdmin && user && credits > largestBalance ? <>Bạn chưa đủ credit cho đoạn này. Rút ngắn nội dung hoặc <button onClick={() => setTab("plans")}>xem gói dịch vụ</button>.</> : "Tạo xong, bạn có thể nghe và tải MP3. Credit được hoàn khi yêu cầu thất bại đã xác nhận."}
+                  {credits > MAX_WEB_GENERATION_CHARACTERS ? "Tối đa 5.000 ký tự mỗi lần. Hãy chia nội dung thành các đoạn ngắn hơn." : !text.trim() ? "Chọn một mẫu hoặc nhập nội dung để bắt đầu." : user && !available ? "Dịch vụ đang kết nối. Vui lòng thử lại sau ít phút." : !isAdmin && user && credits > largestBalance ? <>Bạn chưa đủ credit cho đoạn này. Rút ngắn nội dung hoặc <button onClick={() => setTab("plans")}>xem gói dịch vụ</button>.</> : "Tạo xong, bạn có thể nghe và tải MP3. Credit được hoàn khi yêu cầu thất bại đã xác nhận."}
                 </p>
                 <details className="voice-advanced">
                   <summary><SlidersHorizontal size={15} aria-hidden="true" /> Thông tin cho lập trình viên <ChevronDown size={14} aria-hidden="true" /></summary>
                   <VoiceId id={selected.id} />
-                  <Link href={`/account?voice=${encodeURIComponent(selected.id)}#api`}>API key và hướng dẫn kết nối <ArrowRight size={14} aria-hidden="true" /></Link>
+              {VOICE_API_ENABLED ? <Link href={`/account?voice=${encodeURIComponent(selected.id)}#api`}>API key và hướng dẫn kết nối <ArrowRight size={14} aria-hidden="true" /></Link> : <p className="voice-hint">API đang tạm ngưng. Bạn vẫn có thể tạo giọng trực tiếp trên Voice Studio.</p>}
                 </details>
               </section>
               <section className="voice-today" aria-labelledby="voice-today-title">
@@ -1530,24 +1525,16 @@ export function VoiceStudio() {
                   </p>
                 </div>
                 <span className="voice-quota">
-                  {freeDemo ? `${demoRemaining} / 2 lượt nghe thử còn lại` : isAdmin ? `${activeCloneCount} giọng · quota Windi Clone Pro 3.0` : period?.clone_limit
-                    ? `${activeCloneCount} / ${period.clone_limit} giọng đang hoạt động` : user ? "Chọn gói để tạo giọng riêng" : "Đăng nhập để tạo giọng nghe thử"}
+                  {isAdmin ? `${activeCloneCount} giọng · quota Windi Clone Pro 3.0` : period?.clone_limit
+                    ? `${activeCloneCount} / ${period.clone_limit} giọng đang hoạt động` : user ? "Mua gói 39.000₫ để mở 1 slot giọng" : "Đăng nhập và mua gói để tạo giọng riêng"}
                 </span>
               </div>
-              {freeDemo && (
+              {user && account && !isAdmin && !period?.clone_limit ? (
                 <div className="voice-clone-unlock">
-                  <div>
-                    <strong>{demoRemaining ? "Tạo giọng nghe thử miễn phí" : "Bạn đã dùng 2 lượt clone miễn phí"}</strong>
-                    <p>{demoRemaining ? "Tải một mẫu ghi âm, tạo giọng rồi nghe 2 đoạn mẫu. Bạn có thể nghe trước khi quyết định sử dụng." : "Bạn vẫn có thể nghe các giọng vừa tạo bên dưới trong thời gian nghe thử."}</p>
-                  </div>
+                  <div><strong>Cần mua gói trước khi tạo giọng</strong><p>Gói 10.000 credit giá 39.000₫ mở 1 slot giọng clone trong 30 ngày.</p></div>
+                  <button className="voice-btn" onClick={() => setTab("plans")}>Xem gói 39.000₫ <ArrowRight size={15} /></button>
                 </div>
-              )}
-              {user && account && !isAdmin && !freeDemo && !period?.clone_limit ? (
-                <div className="voice-clone-unlock">
-                  <div><strong>Chọn gói để tiếp tục clone</strong><p>Gói hiện tại đã hết hạn. Chọn gói trả phí để tạo và sử dụng giọng riêng.</p></div>
-                  <button className="voice-btn" onClick={() => setTab("plans")}>Xem gói dịch vụ <ArrowRight size={15} /></button>
-                </div>
-              ) : freeDemo && !demoRemaining ? null : (
+              ) : (
                 <div className="voice-clone-layout">
                   <form className="voice-clone-form" onSubmit={cloneVoice}>
                     <label>
@@ -1726,7 +1713,7 @@ export function VoiceStudio() {
                       )}{" "}
                       {busy === "clone"
                         ? "Đang clone giọng…"
-                        : freeDemo ? "Tạo giọng nghe thử miễn phí" : "Tạo giọng riêng"}
+                        : "Tạo giọng riêng"}
                     </button>
                   </form>
                   <aside className="voice-clone-guide">
@@ -1822,9 +1809,9 @@ export function VoiceStudio() {
                           <div className="voice-card-actions">
                             {c.is_demo ? heardDemoIds.includes(c.id) ? <div className="voice-demo-offer" role="status">
                               <strong>Ưng giọng này rồi?</strong>
-                              <p>Giữ giọng riêng, nhận 3.000 credit để tạo nội dung trong 14 ngày.</p>
-                              <button className="voice-btn voice-primary" disabled={!!busy || !payments || !available} onClick={() => void purchase("trial", c.id)}>
-                                Sử dụng giọng này chỉ với 39k <ArrowRight size={14} />
+                              <p>Giữ giọng riêng và nhận 10.000 credit để tạo nội dung trong 30 ngày.</p>
+                              <button className="voice-btn voice-primary" disabled={!!busy || !payments || !available} onClick={() => void purchase("credit_10k", c.id)}>
+                                Sử dụng giọng này với gói 39k <ArrowRight size={14} />
                               </button>
                             </div> : <p className="voice-demo-next">Nghe hết một đoạn mẫu để tiếp tục với giọng này.</p> : <button className="voice-btn" onClick={() => choose(cloneVoices.find(v => v.id === c.provider_id)!)}>Sử dụng <ArrowRight size={14} /></button>}
                             <button className="voice-icon-btn" aria-label={`Xóa giọng ${c.name}`} disabled={!!busy} onClick={() => void removeClone(c.id)}><Trash2 size={16} /></button>
@@ -1952,19 +1939,10 @@ export function VoiceStudio() {
               <div className="voice-plans-intro">
                 <span className="voice-step">A LITTLE PLAN. A LOT TO SAY.</span>
                 <h2>Chọn không gian cho tiếng nói của bạn.</h2>
-                <p>
-                  Clone thử mua một lần. Các gói còn lại theo tháng và không tự
-                  động gia hạn.
-                </p>
+                <p>Chọn một trong ba gói credit, thanh toán một lần và không tự động gia hạn. Credit có hiệu lực trong 30 ngày.</p>
               </div>
               <div className="voice-plans-mobile-selector" role="tablist" aria-label="Chọn gói cước">
-                {VOICE_PLANS.filter(
-                  (p) =>
-                    p.id !== "trial" ||
-                    !user ||
-                    account === null ||
-                    trialEligible,
-                ).map((p) => (
+                {VOICE_PLANS.filter((p) => p.purchasable).map((p) => (
                   <button
                     key={p.id}
                     type="button"
@@ -1978,25 +1956,17 @@ export function VoiceStudio() {
                 ))}
               </div>
               <div className="voice-plans">
-                {VOICE_PLANS.filter(
-                  (p) =>
-                    p.id !== "trial" ||
-                    !user ||
-                    account === null ||
-                    trialEligible,
-                ).map((p, i) => {
-                  const featured = p.id === "starter";
+                {VOICE_PLANS.filter((p) => p.purchasable).map((p, i) => {
+                  const featured = p.id === "credit_10k";
                   const isCurrent = currentPlan?.id === p.id;
-                  const canBuy = p.purchasable && canPurchasePlan(p.id);
-                  const upgradeFromTrial =
-                    period?.plan_id === "trial" && p.id === "starter";
+                  const canBuy = p.purchasable;
                   return (
                     <article
                       className={`voice-plan ${featured ? "voice-plan-featured" : ""} ${activePlanId === p.id ? "is-mobile-active-plan" : ""}`}
                       key={p.id}
                     >
                       {featured && (
-                        <span className="voice-popular">DÀNH CHO CREATOR</span>
+                        <span className="voice-popular">DỄ BẮT ĐẦU</span>
                       )}
                       <span className="voice-plan-index">
                         0{i + 1} / {p.id.toUpperCase()}
@@ -2024,17 +1994,15 @@ export function VoiceStudio() {
                         </li>
                         <li>
                           <Check size={15} />
-                          {p.id === "trial"
-                            ? "Gói thử độc lập; Starter vẫn 99.000đ"
+                          {p.id === "credit_1m"
+                            ? "Chỉ tạo trực tiếp trên Voice Studio"
                             : p.clone_limit
                               ? "Xóa giọng để giải phóng slot"
                               : "Không cần thanh toán để bắt đầu"}
                         </li>
                         <li>
                           <Check size={15} />
-                          {p.id === "welcome"
-                            ? "2 lượt clone nghe mẫu · tự xóa trong 20 phút"
-                            : "Windi Clone Pro 3.0 · xuất file MP3"}
+                          Windi Clone Pro 3.0 · xuất file MP3
                         </li>
                         <li>
                           <Check size={15} />
@@ -2065,8 +2033,6 @@ export function VoiceStudio() {
                               : "Gói hiện tại"
                           ) : !p.purchasable ? (
                             "Tự cấp khi đăng ký"
-                          ) : upgradeFromTrial ? (
-                    "Mua sau gói thử · 99.000đ"
                           ) : !canBuy ? (
                             "Chưa đủ điều kiện mua"
                           ) : !payments || !available ? (
@@ -2097,20 +2063,17 @@ export function VoiceStudio() {
               <div className="voice-plan-notes">
                 <p>
                   <strong>Credit tính thế nào?</strong> 1 ký tự = 1 credit, gồm
-                  dấu câu và khoảng trắng trong nội dung. Credit có hiệu lực
-                  theo từng gói và không cộng dồn sang kỳ sau. Bạn có thể mua
-                  trước chu kỳ tiếp theo; gói mới bắt đầu sau khi gói hiện tại
-                  kết thúc.
+                  dấu câu và khoảng trắng. Mỗi gói dùng trong 30 ngày, không tự
+                  gia hạn; nếu mua khi đang có gói, gói mới bắt đầu sau gói hiện
+                  tại và credit không cộng dồn.
                 </p>
                 <p>
-                  <strong>Giọng clone qua tháng mới?</strong> Giọng được giữ
-                  lại. Starter có một slot clone đang hoạt động: bạn giữ giọng
-                  đã tạo ở gói thử, không nhận thêm một giọng clone mới. Gói hết
-                  hạn vẫn có thể tải các audio đã tạo.
+                  <strong>Giọng clone khi gói hết hạn?</strong> Giọng được giữ
+                  lại trong thư viện. Gói hết hạn vẫn có thể tải các audio đã tạo.
                 </p>
               </div>
               <Link className="voice-btn" href="/account">Hồ sơ, đơn hàng và API key →</Link>
-              <VoiceApiTokens enabled={!!user} />
+              <VoiceApiTokens enabled={!!user} apiEnabled={VOICE_API_ENABLED} />
               {!!account?.orders.length && (
                 <>
                   <h3 className="voice-orders-title">Đơn hàng của bạn</h3>

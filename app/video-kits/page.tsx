@@ -29,7 +29,7 @@ export default function Page() {
       <section className="kit-truth-strip">
         <span>1080 × 1920</span>
         <span>Windows & macOS</span>
-        <span>3K Voice API credit</span>
+        <span>Voice API tạm ngưng</span>
         <span>Flow · ChatGPT · Grok</span>
       </section>
       <section id="kit-layouts" className="kit-layout-showcase">
@@ -92,8 +92,8 @@ export default function Page() {
             Grok Imagine tạo video với ảnh ref.
           </p>
           <p>
-            <strong>Voice</strong>Tặng 3.000 credit Windi Voice API, có sẵn
-            word timestamp. Có thể mua thêm hoặc nhập file thu âm riêng.
+            <strong>Voice</strong>Voice API đang tạm ngưng; credit đã có vẫn
+            được giữ nguyên. Tạm thời bạn có thể nhập file thu âm riêng.
           </p>
           <p>
             <strong>Video mẫu</strong>Python, ffmpeg và yt-dlp được kiểm tra ở
