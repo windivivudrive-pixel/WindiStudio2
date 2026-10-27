@@ -1,9 +1,9 @@
 import 'server-only';
 import { createClient } from '@/lib/supabase/server';
 import { VoiceError, writer, paymentConfig } from '@/lib/voice/server';
-import { GEMINI_PRICE } from './shared';
+import { GEMINI_PRICE, geminiProduct, type GeminiProduct } from './shared';
 
-export const geminiOrderColumns = 'id,amount_vnd,status,payment_code,created_at,expires_at,paid_at';
+export const geminiOrderColumns = 'id,product_sku,duration_months,amount_vnd,status,payment_code,created_at,expires_at,paid_at';
 export const privateHeaders = { 'Cache-Control': 'private, no-store', 'Vary': 'Cookie', 'X-Content-Type-Options': 'nosniff' };
 export async function geminiIdentity(request?: Request, optional = false) {
   if (request && request.method !== 'GET') {
@@ -28,18 +28,22 @@ export async function requireGeminiAdmin(request?: Request) {
 export function geminiFailure(error: unknown) {
   const message = String((error as { message?: string })?.message || '');
   const detail = message.includes('GEMINI_OUT_OF_STOCK') ? 'Link vừa hết hàng. Vui lòng quay lại sau.'
-    : message.includes('GEMINI_DISABLED') ? 'Sản phẩm chưa mở bán.' : null;
+    : message.includes('GEMINI_DISABLED') ? 'Sản phẩm chưa mở bán.' : message.includes('GEMINI_INVALID_PRODUCT') ? 'Sản phẩm Gemini không hợp lệ.' : null;
   return Response.json({ error: detail || (error instanceof VoiceError ? error.message : 'Chưa thể hoàn tất. Vui lòng thử lại sau.') }, {
     status: error instanceof VoiceError ? error.status : detail ? 409 : 503, headers: privateHeaders,
   });
 }
+export function selectedGeminiProduct(value: unknown) {
+  try { return geminiProduct(value === undefined || value === null ? 'gemini-3m' : value); }
+  catch { throw new VoiceError('Sản phẩm Gemini không hợp lệ.'); }
+}
 export async function geminiCatalog() {
-  const db = writer();
-  const [settings, stock] = await Promise.all([
-    db.from('windi_gemini_settings').select('enabled,price_vnd').eq('id', true).single(),
-    db.rpc('windi_gemini_stock'),
-  ]);
-  if (settings.error) throw settings.error;
-  if (stock.error) throw stock.error;
-  return { enabled: settings.data.enabled, price: settings.data.price_vnd || GEMINI_PRICE, stock: stock.data as number, bank: paymentConfig() };
+  const result = await writer().rpc('windi_gemini_catalog');
+  if (result.error) throw result.error;
+  const products: GeminiProduct[] = (result.data || []).map(row => ({
+    sku: row.sku, title: row.title, durationMonths: row.duration_months,
+    price: row.price_vnd, enabled: row.enabled, stock: row.stock,
+  }));
+  const legacy = products.find(item => item.sku === 'gemini-3m');
+  return { products, enabled: legacy?.enabled ?? false, price: legacy?.price ?? GEMINI_PRICE, stock: legacy?.stock ?? 0, bank: paymentConfig() };
 }

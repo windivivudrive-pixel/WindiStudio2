@@ -1,72 +1,66 @@
-# Bán link Gemini 3 tháng
+# Bán link Gemini — 3 và 18 tháng
 
-- Trang bán: `/gemini`.
-- Quản trị: `/gemini/admin`, chỉ tài khoản có trong `public.windi_voice_admins` được truy cập (dùng cùng danh sách quản trị hiện có của WindiStudio).
-- Giá: **150.000₫ / link**, cố định ở cả database và ứng dụng.
-- Sản phẩm: link ưu đãi Google One để khách tự kích hoạt trên Google cá nhân đủ điều kiện. Không cấp tài khoản hay thu mật khẩu/thẻ/OTP của khách.
+| Sản phẩm | SKU | Giá mỗi link | Phiên bản điều kiện |
+| --- | --- | --- | --- |
+| Gemini 3 tháng | `gemini-3m` | 150.000₫ | `gemini-3m-2026-10-26` |
+| Gemini 18 tháng | `gemini-18m` | 49.000₫ | `gemini-18m-2026-10-27` |
+
+Trang bán `/gemini` dùng tông xanh dương, cho khách chọn một trong hai sản phẩm. Khách nhận file TXT chứa đúng một link Google One để tự kích hoạt trên Google cá nhân đủ điều kiện. Không cấp tài khoản, không thu mật khẩu/thẻ/OTP của khách.
 
 ## Chuẩn bị và mở bán
 
-1. Áp dụng riêng migration `supabase/migrations/20261026151540_gemini_activation_commerce.sql` vào đúng project WindiStudio. Không chạy toàn bộ migration chưa đồng bộ lên production một cách mù quáng. Migration chỉ thêm bốn bảng và bốn hàm, mặc định **tắt mở bán, kho rỗng**.
-2. Triển khai phiên bản web chứa các route `/api/gemini/*` và phần mở rộng webhook mới.
-3. Giữ cấu hình server hiện có: `SUPABASE_SERVICE_ROLE_KEY`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SEPAY_API_KEY`, `VOICE_BANK_BIN`, `VOICE_BANK_ACCOUNT`, `VOICE_BANK_NAME`. Không dùng service key ở frontend hoặc thêm tiền tố `NEXT_PUBLIC_` cho secret.
-4. Webhook SePay phải trỏ tới `https://<domain>/api/payment-webhook`, xác thực `Authorization: Apikey <SEPAY_API_KEY>`, tài khoản nhận trùng `VOICE_BANK_ACCOUNT`. Route dùng chung cho Voice, Kits và Gemini; mã Gemini dạng `WINDI Gxxxxxxxx`. Không dùng Edge Function `supabase/functions/payment-webhook` cũ cho đơn Gemini.
-5. Vào `/gemini/admin`, dán danh sách **link thật chưa dùng**, mỗi dòng một link. Nhập hạn kích hoạt thực tế của lô link (giờ địa phương trên máy). Chỉ chấp nhận `https://one.google.com/offer/<code>`, không query string, không domain khác; tối đa 500 link/lần. Link trùng không bao giờ được đưa lại vào kho kể cả đã bán.
-6. Kiểm chứng điều kiện chương trình, thời lượng 3 tháng, giá ưu đãi 0₫ và quyền phân phối trước khi bật mở bán. Không nhập link đã sử dụng để kiểm tra kích hoạt vào kho.
-7. Làm một giao dịch thật với SePay trước khi quảng bá rộng. Kiểm tra callback ngân hàng thật, đơn PAID, tải TXT chỉ có một link, tải lại vẫn đúng link, và khách khác không tải được đơn đó.
+1. Áp dụng migration nền `20261026151540_gemini_activation_commerce.sql`, sau đó `20261027003556_gemini_product_variants.sql` trên đúng project WindiStudio. Không đẩy mù toàn bộ lịch sử migration của repo. Migration thứ hai giữ đơn/link cũ ở gói 3 tháng, thêm gói 18 tháng ở trạng thái tắt.
+2. Triển khai web chứa bộ chọn sản phẩm và các API mới. Web cũ vẫn dùng được gói 3 tháng qua RPC tương thích trong thời gian chuyển tiếp.
+3. Cấu hình backend hiện có: `SUPABASE_SERVICE_ROLE_KEY`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SEPAY_API_KEY`, `VOICE_BANK_BIN`, `VOICE_BANK_ACCOUNT`, `VOICE_BANK_NAME`. Không đưa secret vào `NEXT_PUBLIC_`.
+4. SePay trỏ đến `https://<domain>/api/payment-webhook`, xác thực `Authorization: Apikey <SEPAY_API_KEY>`, đúng tài khoản `VOICE_BANK_ACCOUNT`. Cả hai gói dùng mã `WINDI Gxxxxxxxx`. Không dùng Edge Function payment-webhook cũ.
+5. Quản trị ở `/gemini/admin`, dùng danh sách admin server kiểm soát `public.windi_voice_admins`. Chọn **đúng gói 3 hoặc 18 tháng** trước khi nhập link. Mỗi dòng một link `https://one.google.com/offer/<code>` chưa dùng, tối đa 500 link/lần. Nhập hạn kích hoạt thực tế của lô link.
+6. Link đã có trong bất kỳ kho nào đều bị bỏ qua khi nhập trùng; không đưa link đã bán, đã dùng hoặc link mẫu vào kho. Không đổi phân loại của link đã giữ/giao.
+7. Kiểm chứng thời hạn ưu đãi đúng gói, điều kiện tài khoản, giá 0₫ trên Google và quyền phân phối lô link. Mỗi gói có công tắc mở bán độc lập. Kho trống không bật bán được.
+8. Thử chuyển khoản và callback SePay **thật cho từng mức giá** trước khi quảng bá. Kiểm tra PAID, đúng TXT/link, tải lại và chặn tài khoản khác tải đơn đó.
 
-Link ví dụ người dùng cung cấp không được seed vào kho hoặc source. Bản thân định dạng URL không chứng minh ưu đãi còn hạn hay tài khoản đủ điều kiện.
+URL mẫu người dùng gửi không được seed vào source/kho. Dạng URL không chứng minh ưu đãi còn hạn hoặc là gói 18 tháng; chủ shop phải xác minh đúng nội dung lô hàng.
 
-## Dữ liệu và bảo mật
+## Dữ liệu Supabase
 
-- `windi_gemini_settings`: một dòng giá và công tắc mở bán.
-- `windi_gemini_links`: kho URL riêng tư, hạn dùng, cờ khóa.
-- `windi_gemini_orders`: chủ đơn, link giữ riêng, mã chuyển khoản, số tiền, hạn QR, trạng thái, thời điểm thanh toán và phiên bản điều kiện được xác nhận.
-- `windi_gemini_payment_events`: ID giao dịch SePay duy nhất, đơn, số tiền, thời gian, kết quả đối soát. Không lưu toàn bộ payload thông tin ngân hàng không cần thiết.
+- `windi_gemini_products`: SKU, tên gói, số tháng, giá cố định, công tắc mở bán.
+- `windi_gemini_settings`: cấu hình 3 tháng tương thích web cũ; trigger đồng bộ sang products. RPC cấu hình mới đồng bộ ngược cho gói 3 tháng.
+- `windi_gemini_links`: URL riêng tư, SKU, hạn kích hoạt, trạng thái khóa; URL unique toàn bộ hai kho.
+- `windi_gemini_orders`: chủ đơn, SKU, số tháng và giá snapshot, link giữ riêng, mã chuyển khoản, hạn QR, trạng thái, thời gian thanh toán, phiên bản điều kiện.
+- `windi_gemini_payment_events`: ID SePay unique, mã đơn, số tiền, thời điểm chuyển, kết quả. Không lưu toàn bộ payload ngân hàng không cần thiết.
 
-Cả bốn bảng bật RLS, thu hồi quyền `PUBLIC`, `anon`, `authenticated`; chỉ backend service role được đọc/ghi. Cả bốn RPC là `SECURITY INVOKER`, search_path rỗng, chỉ service role được gọi. API xác minh user bằng `auth.getUser()`; không dùng user_metadata để phân quyền. API quản trị dùng danh sách admin lưu trong database.
+Cả năm bảng bật RLS và thu hồi quyền `PUBLIC`, `anon`, `authenticated`; chỉ backend service role truy cập. RPC SECURITY INVOKER, search_path rỗng, chỉ service role thực thi. API xác minh user bằng `auth.getUser()` và kiểm tra admin bằng bảng membership, không tin user_metadata.
 
-Không trả activation URL hoặc inventory ID qua API checkout/account. Route TXT kiểm tra đồng thời ID đơn, chủ sở hữu và PAID; response có `private, no-store`, `nosniff` và tải file `.txt` chứa duy nhất URL + xuống dòng. Các truy vấn database qua service role luôn kiểm tra quyền ở backend trước.
+Ràng buộc database khóa giá/số tháng đúng SKU: 3 tháng = 150.000₫; 18 tháng = 49.000₫. Foreign key `(activation_id, product_sku)` ngăn đơn lấy link sai kho; unique activation_id ngăn giao trùng. Index phục vụ tra cứu người mua, sản phẩm và đơn gần nhất.
 
-## Quy tắc giao hàng
+## API và giao hàng
 
-Tạo đơn giữ một link hợp lệ trong 10 phút; mỗi tài khoản tái sử dụng đơn PENDING chưa hết hạn. Khóa transaction ở database tuần tự hóa thao tác giữ hàng/nhập kho/thanh toán/giải phóng, ràng buộc unique ngăn hai đơn giữ cùng link.
+- `GET /api/gemini/account`: catalog hai gói và 30 đơn gần nhất của user. Catalog công khai qua backend chỉ có tên/giá/số lượng; không có URL hoặc inventory ID.
+- `POST /api/gemini/order`: `{product: "gemini-18m", termsVersion: "gemini-18m-2026-10-27"}`. Backend lấy user từ session, giá từ database, bỏ qua giá/user client gửi. Thiếu product mặc định 3 tháng để tương thích.
+- `GET /api/gemini/download?order=<id>`: kiểm tra ID, chủ sở hữu và PAID. Tên file lấy từ đơn: `Gemini-18-thang-<id>.txt` hoặc `Gemini-3-thang-<id>.txt`; nội dung chỉ URL + xuống dòng, `private, no-store`, `nosniff`.
+- `GET /api/gemini/admin?product=gemini-18m`: lọc đơn/kho theo SKU; vẫn trả catalog để chọn gói.
+- `POST /api/gemini/admin`: action `import` hoặc `settings`, luôn kèm `product` đang quản lý.
 
-Link hết hạn hoặc sắp hết hạn trong 10 phút không bán cho đơn mới. API stock giải phóng link của đơn PENDING hết hạn trước khi đếm kho/tạo đơn. Đơn PAID và đơn cần đối soát giữ link, không tự đưa lại vào kho.
+Giữ một link trong 5 phút. Một user có thể giữ đơn riêng cho mỗi SKU; tạo lại đơn cùng SKU trả về đơn PENDING còn hạn. Khóa transaction chung tuần tự hóa giữ hàng, nhập, trả hàng và thanh toán. `pg_cron` chạy stock RPC mỗi 30 giây để đánh dấu đơn chờ đã quá hạn và trả link về kho; các lần đọc tồn kho và tạo đơn cũng dọn đơn quá hạn ngay trong transaction.
 
-Chỉ xác nhận PAID khi webhook hợp lệ, đúng ngân hàng nhận, tiền vào, đúng mã, **đúng 150.000₫**, thời điểm chuyển khoản thuộc hạn QR và link còn hiệu lực. Chuyển thiếu/thừa tiền, timestamp cũ, callback đến khi đơn đã hết hạn hoặc đã giải phóng link đều không giao tự động. Không cộng dồn nhiều lần chuyển. Giao dịch trùng ID không giao lần hai; ID đã dùng ở đơn khác bị bỏ qua.
+Hết hạn chưa thanh toán giải phóng đúng link; PAID và đơn đối soát giữ nguyên link. Link hết hạn hoặc còn dưới 10 phút không dùng cho đơn mới. Tắt một gói chặn đơn mới của gói đó; đơn đã tạo còn hạn và quyền tải đã mua vẫn hoạt động.
 
-Nếu khách chuyển lần hai cho đơn PAID, giữ nguyên quyền tải và ghi event cần đối soát cho khoản tiền phát sinh. Không thu hồi file đã giao.
+Webhook chỉ PAID khi tiền vào, đúng ngân hàng/mã, đúng số tiền snapshot của đơn, đúng hạn QR và link còn hiệu lực. Callback lặp không giao lần hai; ID giao dịch của đơn khác bị bỏ qua. Không cộng nhiều lần chuyển tiền. Chuyển thiếu/thừa, cũ/muộn hoặc link lỗi chuyển đối soát. Khoản chuyển thêm cho đơn PAID không thu hồi quyền tải đã giao.
 
-Tắt mở bán chặn đơn mới; webhook và tải lại của đơn đã thanh toán vẫn hoạt động. Đơn đã tạo còn hạn vẫn được xử lý.
+## Ngoại lệ và nội dung Google
 
-## Đối soát ngoại lệ
+Đối soát `UNDERPAID`, `OVERPAID`, `REVIEW_REQUIRED` bằng giao dịch ngân hàng thật trước khi hỗ trợ. Không đổi PAID từ trình duyệt hoặc gửi callback giả lên production. Hoàn tiền/đổi link cần xử lý thủ công, không reset đơn hay xóa link đã giao để bán lại.
 
-Trang quản trị hiển thị 100 đơn và 100 mã kho mới nhất, không hiển thị activation URL. Tra cứu toàn bộ dữ liệu trong Supabase nếu cần.
+Trang hướng dẫn tự đổi giá và số tháng theo sản phẩm: QR → TXT → copy link → nhận đúng ưu đãi → thêm phương thức thanh toán → chỉ xác nhận khi Google hiện 0₫. Chuẩn bị thẻ quốc tế hoặc MoMo có số dư 30.000₫; MoMo tùy Google hiển thị. Số tiền xác minh thực tế và thời gian giải tỏa/hoàn lại tùy Google/ngân hàng, không hứa hoàn ngay. Nhắc khách kiểm tra ngày gia hạn trên Google.
 
-- `UNDERPAID`, `OVERPAID`, `REVIEW_REQUIRED`: kiểm tra giao dịch thật tại ngân hàng/SePay bằng payment_code và event trước khi hỗ trợ khách. Không đổi PAID từ trình duyệt hay dùng callback giả trên production.
-- `EXPIRED`: nếu khách đã chuyển, kiểm tra trước khi yêu cầu tạo đơn khác. Kho đã có thể cấp link đó cho đơn mới; không giao link từ đơn cũ.
-- Hoàn tiền và đổi link cần đối soát thủ công; chưa có nút hoàn tiền hoặc cấp lại tự động. Không reset trạng thái hay xóa đơn đã giao để tái bán link.
-- Cần ngừng bán một link lỗi: đặt `disabled=true` trên dòng link trong Supabase. Nếu đã giữ cho một đơn, liên hệ khách/đối soát; callback không giao link bị khóa.
-- Google từ chối ưu đãi: khách gửi mã đơn và ảnh thông báo đã che thông tin nhạy cảm; kiểm tra điều kiện tài khoản và lô link. Không cam kết mọi tài khoản đều dùng được.
+Nguồn chính thức: [Google One dùng thử](https://support.google.com/googleone/answer/9155746?hl=vi), [phương thức thanh toán Việt Nam](https://support.google.com/googleplay/answer/2651410?co=GENIE.CountryCode%3DVN&hl=vi), [khoản xác minh và hoàn lại](https://support.google.com/googlepay/answer/12651770?hl=vi).
 
-## Nội dung hướng dẫn Google
-
-Trang có đủ 5 bước: thanh toán QR → tải TXT/copy link vào trình duyệt → kích hoạt gói → thêm phương thức xác thực → xác nhận chỉ khi hiển thị 0₫. 30.000₫ là số dư đề xuất; không cam kết mức giữ tiền cố định. MoMo/ZaloPay tùy phương thức Google hiển thị, không đảm bảo cho mọi checkout web.
-
-Nguồn chính thức:
-- https://support.google.com/googleone/answer/9155746?hl=vi
-- https://support.google.com/googleone/answer/16476811?hl=vi
-- https://support.google.com/googleplay/answer/2651410?co=GENIE.CountryCode%3DVN&hl=vi
-- https://one.google.com/offer/terms-and-conditions/3-month-unbranded-AIP-2024
-
-## Kiểm thử
+## Kiểm chứng
 
 ```sh
-npx vitest run tests/gemini-commerce-postgres.test.ts tests/gemini-commerce-api.test.ts tests/voice-v1-api.test.ts
+npx vitest run tests/gemini-commerce-postgres.test.ts tests/gemini-commerce-api.test.ts tests/voice-v1-api.test.ts tests/video-kit-installer.test.ts
 npx tsc --noEmit
 npm run build
 npm run graph:update
 ```
 
-PGlite kiểm chứng SQL, quyền, cấp hàng, idempotency và rollback. Đây là PostgreSQL một kết nối, không chứng minh contention thực tế giữa nhiều process production. Cần test giao dịch/callback thật trước khi gọi thanh toán hoàn toàn đã được kiểm chứng.
+PGlite kiểm tra nâng cấp bảo toàn đơn PAID cũ, tách SKU/kho, khóa giá/thời hạn, callback, expiry, RLS và API ownership/admin. PGlite một kết nối không thay thế kiểm thử contention hoặc giao dịch thật trên production.

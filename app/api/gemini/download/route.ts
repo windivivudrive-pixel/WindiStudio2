@@ -8,14 +8,14 @@ export async function GET(request: Request) {
     const id = new URL(request.url).searchParams.get('order');
     if (!isUUID(id)) throw new VoiceError('Mã đơn không hợp lệ.');
     const db = writer();
-    const order = await db.from('windi_gemini_orders').select('activation_id').eq('id', id).eq('user_id', user!.id).eq('status', 'PAID').maybeSingle();
+    const order = await db.from('windi_gemini_orders').select('activation_id,product_sku,duration_months').eq('id', id).eq('user_id', user!.id).eq('status', 'PAID').maybeSingle();
     if (order.error) throw order.error;
     if (!order.data?.activation_id) throw new VoiceError('File chỉ được mở cho đơn đã thanh toán của bạn.', 404);
-    const link = await db.from('windi_gemini_links').select('activation_url').eq('id', order.data.activation_id).single();
+    const link = await db.from('windi_gemini_links').select('activation_url').eq('id', order.data.activation_id).eq('product_sku', order.data.product_sku || 'gemini-3m').single();
     if (link.error) throw link.error;
     return new Response(`${link.data.activation_url}\n`, { headers: {
       ...privateHeaders, 'Content-Type': 'text/plain; charset=utf-8',
-      'Content-Disposition': `attachment; filename="Gemini-3-thang-${id}.txt"`,
+      'Content-Disposition': `attachment; filename="Gemini-${order.data.duration_months || 3}-thang-${id}.txt"`,
       'Referrer-Policy': 'no-referrer',
     } });
   } catch (error) { return geminiFailure(error); }
