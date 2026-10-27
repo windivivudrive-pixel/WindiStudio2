@@ -25,7 +25,7 @@ export async function POST(request: Request) {
     const db = writer();
     if (body?.action === 'import') {
       let urls: string[];
-      try { urls = parseActivationLinks(body.links); } catch (error) { throw new VoiceError((error as Error).message); }
+      try { urls = parseActivationLinks(body.links, product.sku); } catch (error) { throw new VoiceError((error as Error).message); }
       const validUntil = Date.parse(body.validUntil);
       if (!Number.isFinite(validUntil) || validUntil <= Date.now() + 600000) throw new VoiceError('Hạn sử dụng link phải cách hiện tại hơn 10 phút.');
       const result = await db.rpc('windi_gemini_import', { p_urls: urls, p_valid_until: new Date(validUntil).toISOString(), p_sku: product.sku });

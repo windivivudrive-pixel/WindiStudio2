@@ -24,6 +24,7 @@ beforeAll(async () => {
     insert into auth.users values('${alice}'),('${bob}'),('${charlie}');`);
   await db.exec(await readFile(new URL('../supabase/migrations/20261026151540_gemini_activation_commerce.sql', import.meta.url), 'utf8'));
   await db.exec(await readFile(new URL('../supabase/migrations/20261027003556_gemini_product_variants.sql', import.meta.url), 'utf8'));
+  await db.exec(await readFile(new URL('../supabase/migrations/20261027050000_gemini_18m_serviceactivation_links.sql', import.meta.url), 'utf8'));
 }, 20000);
 afterAll(async () => { await db?.close(); });
 
@@ -169,3 +170,11 @@ test('upgrading preserves an existing paid 3-month order, inventory URL and sale
     expect((await upgrade.query<{activation_url:string}>('select activation_url from public.windi_gemini_links where id=$1',[old.activation_id])).rows[0].activation_url).toBe('https://one.google.com/offer/LEGACYPRESERVED001');
   } finally {await upgrade.close();}
 },20000);
+
+test('serviceactivation.link for 18-month variant can be imported and stored', async () => {
+  const serviceUrl = 'https://serviceactivation.link/subscription/new/AQCpiIH1uM2A-k7r5Sou1mFNd0jUeAI9qePGZ1U1hiYGJ3LeuXxWTDRUKU_2UTtZJuQzGhsiFShcdt3EvJHmpSbVU9dg8J30rHEH7eDcmLUMVzM7upTMWhMZ0iV3R641L-sjPslXpnG1Jyk6nTHNiKZEmPK5hyesQC4pJU';
+  const importResult = await db.query<{added:number}>("select public.windi_gemini_import($1::text[],now()+interval '10 days','gemini-18m') as added", [[serviceUrl]]);
+  expect(importResult.rows[0].added).toBe(1);
+  const row = (await db.query<{activation_url:string;product_sku:string}>('select activation_url,product_sku from public.windi_gemini_links where activation_url=$1', [serviceUrl])).rows[0];
+  expect(row).toEqual({ activation_url: serviceUrl, product_sku: 'gemini-18m' });
+});
