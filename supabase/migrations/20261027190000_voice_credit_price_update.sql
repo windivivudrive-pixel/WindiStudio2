@@ -7,8 +7,8 @@ where id in ('trial','starter','creator','studio');
 insert into public.windi_voice_plans(id,name,price_vnd,credits,clone_limit,duration_days,active)
 values
   ('credit_10k','10.000 credit',39000,10000,1,30,true),
-  ('credit_100k','100.000 credit',169000,100000,5,30,true),
-  ('credit_1m','1.000.000 credit',699000,1000000,20,30,true)
+  ('credit_100k','100.000 credit',169000,100000,2,30,true),
+  ('credit_1m','1.000.000 credit',699000,1000000,5,30,true)
 on conflict (id) do update set
   name=excluded.name, price_vnd=excluded.price_vnd, credits=excluded.credits,
   clone_limit=excluded.clone_limit, duration_days=excluded.duration_days, active=true;
