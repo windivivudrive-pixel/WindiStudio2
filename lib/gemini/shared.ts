@@ -21,7 +21,7 @@ export function parseActivationLinks(value: unknown, sku: GeminiSku = 'gemini-3m
   if (typeof value !== 'string' || value.length > 100000) throw new Error('Nhập tối đa 500 link, mỗi dòng một link.');
   const links = [...new Set(value.split(/\r?\n/).map(line => line.trim()).filter(Boolean))];
   const regex = sku === 'gemini-18m'
-    ? /^https:\/\/(serviceactivation\.link\/subscription\/new\/[A-Za-z0-9_-]{16,255}|one\.google\.com\/offer\/[A-Za-z0-9_-]{8,128})$/
+    ? /^https:\/\/serviceactivation\.link\/subscription\/new\/[A-Za-z0-9_-]{16,512}={0,2}$/
     : /^https:\/\/one\.google\.com\/offer\/[A-Za-z0-9_-]{8,128}$/;
   if (!links.length || links.length > 500 || links.some(url => !regex.test(url))) {
     const example = sku === 'gemini-18m'
