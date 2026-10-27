@@ -543,9 +543,7 @@ export function VoiceStudio() {
   ).length;
   const allVoices = [...cloneVoices, ...voices].filter(voice => !isComparisonVoice(voice.id));
   const currentPlan = VOICE_PLANS.find((p) => p.id === period?.plan_id);
-  const freeDemo = !isAdmin && account?.cloneDemo?.eligible === true;
-  const demoRemaining = account?.cloneDemo?.remaining ?? 0;
-  const canClone = isAdmin || (freeDemo ? demoRemaining > 0 : !!period?.clone_limit && activeCloneCount < period.clone_limit);
+  const canClone = isAdmin || (!!period?.clone_limit && activeCloneCount < period.clone_limit);
   const visibleClones = (account?.clones ?? []).filter(c => !c.is_demo || Date.parse(c.demo_expires_at!) > demoNow);
   const canGenerate =
     !!user &&
@@ -1527,24 +1525,16 @@ export function VoiceStudio() {
                   </p>
                 </div>
                 <span className="voice-quota">
-                  {freeDemo ? `${demoRemaining} / 2 lượt nghe thử còn lại` : isAdmin ? `${activeCloneCount} giọng · quota Windi Clone Pro 3.0` : period?.clone_limit
-                    ? `${activeCloneCount} / ${period.clone_limit} giọng đang hoạt động` : user ? "Chọn gói để tạo giọng riêng" : "Đăng nhập để tạo giọng nghe thử"}
+                  {isAdmin ? `${activeCloneCount} giọng · quota Windi Clone Pro 3.0` : period?.clone_limit
+                    ? `${activeCloneCount} / ${period.clone_limit} giọng đang hoạt động` : user ? "Mua gói 39.000₫ để mở 1 slot giọng" : "Đăng nhập và mua gói để tạo giọng riêng"}
                 </span>
               </div>
-              {freeDemo && (
+              {user && account && !isAdmin && !period?.clone_limit ? (
                 <div className="voice-clone-unlock">
-                  <div>
-                    <strong>{demoRemaining ? "Tạo giọng nghe thử miễn phí" : "Bạn đã dùng 2 lượt clone miễn phí"}</strong>
-                    <p>{demoRemaining ? "Tải một mẫu ghi âm, tạo giọng rồi nghe 2 đoạn mẫu. Bạn có thể nghe trước khi quyết định sử dụng." : "Bạn vẫn có thể nghe các giọng vừa tạo bên dưới trong thời gian nghe thử."}</p>
-                  </div>
+                  <div><strong>Cần mua gói trước khi tạo giọng</strong><p>Gói 10.000 credit giá 39.000₫ mở 1 slot giọng clone trong 30 ngày.</p></div>
+                  <button className="voice-btn" onClick={() => setTab("plans")}>Xem gói 39.000₫ <ArrowRight size={15} /></button>
                 </div>
-              )}
-              {user && account && !isAdmin && !freeDemo && !period?.clone_limit ? (
-                <div className="voice-clone-unlock">
-                  <div><strong>Chọn gói để tiếp tục clone</strong><p>Gói hiện tại đã hết hạn. Chọn gói trả phí để tạo và sử dụng giọng riêng.</p></div>
-                  <button className="voice-btn" onClick={() => setTab("plans")}>Xem gói dịch vụ <ArrowRight size={15} /></button>
-                </div>
-              ) : freeDemo && !demoRemaining ? null : (
+              ) : (
                 <div className="voice-clone-layout">
                   <form className="voice-clone-form" onSubmit={cloneVoice}>
                     <label>
@@ -1723,7 +1713,7 @@ export function VoiceStudio() {
                       )}{" "}
                       {busy === "clone"
                         ? "Đang clone giọng…"
-                        : freeDemo ? "Tạo giọng nghe thử miễn phí" : "Tạo giọng riêng"}
+                        : "Tạo giọng riêng"}
                     </button>
                   </form>
                   <aside className="voice-clone-guide">
