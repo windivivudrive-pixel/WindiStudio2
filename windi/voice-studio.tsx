@@ -2002,9 +2002,7 @@ export function VoiceStudio() {
                         </li>
                         <li>
                           <Check size={15} />
-                          {p.id === "welcome"
-                            ? "2 lượt clone nghe mẫu · tự xóa trong 20 phút"
-                            : "Windi Clone Pro 3.0 · xuất file MP3"}
+                          Windi Clone Pro 3.0 · xuất file MP3
                         </li>
                         <li>
                           <Check size={15} />
