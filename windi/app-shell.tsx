@@ -23,6 +23,9 @@ const nav: NavItem[] = [
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname=usePathname();
+  const loginHref = pathname && pathname !== '/login'
+    ? `/login?next=${encodeURIComponent(pathname)}`
+    : '/login';
   const navItems = nav;
   const [open, setOpen] = useState(false);
   const [studioMenuOpen, setStudioMenuOpen] = useState(false);
@@ -176,7 +179,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               )}
             </div>
           ) : (
-            <Link href="/login" className="login-nav-btn" aria-label="Đăng nhập">
+            <Link href={loginHref} className="login-nav-btn" aria-label="Đăng nhập">
               <LogIn size={14} /> Đăng nhập
             </Link>
           )}
@@ -237,7 +240,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               </button>
             </div>
           ) : (
-            <Link onClick={() => setOpen(false)} href="/login">
+            <Link onClick={() => setOpen(false)} href={loginHref}>
               <LogIn size={15} /> Đăng nhập
             </Link>
           )}
