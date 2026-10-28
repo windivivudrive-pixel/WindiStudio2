@@ -306,12 +306,16 @@ export async function resolveVoice(userId:string,id:string,preferredProvider?:'h
   if(!v) throw new VoiceError('Giọng này không khả dụng với tài khoản của bạn.',403);
   return v;
 }
-export async function audioUrl(userId:string,jobId:string,download=false) {
+export async function audioUrl(userId:string,jobId:string,download=false,knownStoragePath?:string) {
   const db=writer();
-  const {data:job,error}=await db.from('windi_voice_jobs').select('storage_path,status').eq('user_id',userId).eq('id',jobId).maybeSingle();
-  if(error) throw error;
-  if(!job?.storage_path || job.status!=='ready') throw new VoiceError('File âm thanh chưa sẵn sàng.',404);
-  const {data,error:signError}=await db.storage.from(bucket).createSignedUrl(job.storage_path,600,download?{download:'windi-voice.mp3'}:undefined);
+  let storagePath=knownStoragePath;
+  if(!storagePath) {
+    const {data:job,error}=await db.from('windi_voice_jobs').select('storage_path,status').eq('user_id',userId).eq('id',jobId).maybeSingle();
+    if(error) throw error;
+    if(!job?.storage_path || job.status!=='ready') throw new VoiceError('File âm thanh chưa sẵn sàng.',404);
+    storagePath=job.storage_path;
+  }
+  const {data,error:signError}=await db.storage.from(bucket).createSignedUrl(storagePath,600,download?{download:'windi-voice.mp3'}:undefined);
   if(signError) throw signError;
   return data.signedUrl;
 }

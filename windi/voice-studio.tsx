@@ -469,7 +469,9 @@ export function VoiceStudio() {
   const [text, setText] = useState("");
   const [language, setLanguage] = useState("vi");
   const [speed, setSpeed] = useState(1);
-  const [activePlanId, setActivePlanId] = useState<string>(VOICE_PLANS[1]?.id || VOICE_PLANS[0]?.id || "starter");
+  const [activePlanId, setActivePlanId] = useState<string>(
+    VOICE_PLANS.find((p) => p.id === "credit_100k")?.id || "credit_100k",
+  );
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
   const [gender, setGender] = useState("all");
@@ -481,6 +483,9 @@ export function VoiceStudio() {
   const voicePickerRef = useRef<HTMLDialogElement>(null);
   const previewRequest = useRef(0);
   const [audio, setAudio] = useState<{ url: string; id: string } | null>(null);
+  const [playingJobId, setPlayingJobId] = useState<string | null>(null);
+  const jobAudioRef = useRef<HTMLAudioElement>(null);
+  const jobUrls = useRef(new Map<string, string>());
   const [previewingId, setPreviewingId] = useState("");
   const [previewLoadingId, setPreviewLoadingId] = useState("");
   const [cloneName, setCloneName] = useState("");
@@ -731,6 +736,10 @@ export function VoiceStudio() {
       });
     };
   }, [catalogLoading, voices]);
+  function stopJobAudio() {
+    jobAudioRef.current?.pause();
+    setPlayingJobId(null);
+  }
   function stopPreview() {
     previewRequest.current += 1;
     previewAudioRef.current?.pause();
@@ -739,6 +748,7 @@ export function VoiceStudio() {
   }
   function choose(v: StudioVoice) {
     stopPreview();
+    stopJobAudio();
     setSelected(v);
     setTab("create");
     setNotice(`Đã chọn giọng ${v.name}.`);
@@ -750,6 +760,7 @@ export function VoiceStudio() {
       return;
     }
     stopPreview();
+    stopJobAudio();
     const requestId = previewRequest.current;
     setPreviewLoadingId(voice.id);
     setError("");
@@ -825,6 +836,7 @@ export function VoiceStudio() {
     const wasPlaying = demoPlaying === key;
     stopPreview();
     stopDemoPreview();
+    stopJobAudio();
     if (wasPlaying) return;
     const requestId = demoPreviewRequest.current;
     setDemoLoading(key);
@@ -875,29 +887,78 @@ export function VoiceStudio() {
           requestKey: requestKey.current.key,
         }),
       );
+      stopPreview();
+      stopDemoPreview();
+      jobUrls.current.set(result.id, result.url);
       setAudio(result);
+      setPlayingJobId(result.id);
       requestKey.current = null;
-      setNotice("Âm thanh đã sẵn sàng. Bạn có thể nghe và tải MP3.");
+      setNotice("Âm thanh đã sẵn sàng và đang tự động phát.");
+      const player = jobAudioRef.current;
+      if (player) {
+        player.src = result.url;
+        player.currentTime = 0;
+        void player.play().catch(() => {});
+      }
     } catch (e) {
       setError((e as Error).message);
       if ((e as Error).message.includes("hoàn lại")) requestKey.current = null;
     } finally {
       setBusy("");
-      await refresh();
+      void refresh();
     }
   }
   async function listen(id: string) {
+    stopPreview();
+    stopDemoPreview();
+    const player = jobAudioRef.current;
+
+    // Toggle pause if clicking on the one currently playing
+    if (playingJobId === id && player) {
+      player.pause();
+      setPlayingJobId(null);
+      return;
+    }
+
+    // If audio is already loaded and paused: play directly without refetching
+    if (audio?.id === id && player) {
+      player.currentTime = 0;
+      setPlayingJobId(id);
+      void player.play().catch(() => {});
+      return;
+    }
+
     setBusy(id);
     setError("");
     try {
-      const result = await api<{ url: string }>(`audio?id=${id}`);
-      setAudio({ id, url: result.url });
+      let url = jobUrls.current.get(id);
+      if (!url) {
+        const result = await api<{ url: string }>(`audio?id=${id}`);
+        url = result.url;
+        jobUrls.current.set(id, url);
+      }
+      setAudio({ id, url });
+      setPlayingJobId(id);
+      if (player) {
+        player.src = url;
+        player.currentTime = 0;
+        void player.play().catch(() => {});
+      }
     } catch (e) {
       setError((e as Error).message);
     } finally {
       setBusy("");
     }
   }
+  useEffect(() => {
+    if (audio?.url && jobAudioRef.current && playingJobId === audio.id) {
+      const player = jobAudioRef.current;
+      if (player.src !== audio.url) {
+        player.src = audio.url;
+      }
+      void player.play().catch(() => {});
+    }
+  }, [audio, playingJobId]);
   async function cloneVoice(event: React.FormEvent) {
     event.preventDefault();
     if (!clip || !consent || busy || clipChecking || clipDuration === null) return;
@@ -1376,7 +1437,20 @@ export function VoiceStudio() {
                         </div>
                         {job.status === "ready" ? (
                           <div className="voice-today-actions">
-                            <button className="voice-btn" disabled={!!busy} onClick={() => void listen(job.id)}><Play size={15} /> Nghe</button>
+                            <button
+                              className={`voice-btn ${playingJobId === job.id ? "voice-primary" : ""}`}
+                              disabled={!!busy && busy !== job.id}
+                              onClick={() => void listen(job.id)}
+                            >
+                              {busy === job.id ? (
+                                <LoaderCircle size={15} className="voice-spin" />
+                              ) : playingJobId === job.id ? (
+                                <Pause size={15} />
+                              ) : (
+                                <Play size={15} />
+                              )}
+                              {busy === job.id ? "Đang tải…" : playingJobId === job.id ? "Dừng" : "Nghe"}
+                            </button>
                             <a className="voice-btn" href={`/api/voice/audio?id=${job.id}&download=1`} download="windi-voice.mp3" target="_blank" rel="noreferrer"><ArrowDownToLine size={15} /> Tải MP3</a>
                           </div>
                         ) : (
@@ -1894,12 +1968,18 @@ export function VoiceStudio() {
                         </div>
                         {j.status === "ready" && (
                           <button
-                            className="voice-btn"
-                            disabled={!!busy}
+                            className={`voice-btn ${playingJobId === j.id ? "voice-primary" : ""}`}
+                            disabled={!!busy && busy !== j.id}
                             onClick={() => void listen(j.id)}
                           >
-                            <Play size={15} />
-                            Nghe / tải
+                            {busy === j.id ? (
+                              <LoaderCircle size={15} className="voice-spin" />
+                            ) : playingJobId === j.id ? (
+                              <Pause size={15} />
+                            ) : (
+                              <Play size={15} />
+                            )}
+                            {busy === j.id ? "Đang tải…" : playingJobId === j.id ? "Dừng" : "Nghe / tải"}
                           </button>
                         )}
                       </article>
@@ -1914,11 +1994,20 @@ export function VoiceStudio() {
                           </div>
                           <audio
                             key={audio.url}
+                            ref={jobAudioRef}
                             src={audio.url}
                             controls
                             autoPlay
-                            preload="metadata"
+                            preload="auto"
                             aria-label="Bản ghi đã tạo"
+                            onPlay={() => setPlayingJobId(audio.id)}
+                            onPause={() => {
+                              if (playingJobId === audio.id) setPlayingJobId(null);
+                            }}
+                            onEnded={() => setPlayingJobId(null)}
+                            onCanPlay={(e) => {
+                              void e.currentTarget.play().catch(() => {});
+                            }}
                             onError={() =>
                               setError(
                                 "Liên kết nghe đã hết hạn hoặc không tải được. Mở lại bản ghi từ Lịch sử.",
@@ -1938,7 +2027,10 @@ export function VoiceStudio() {
                           <button
                             className="voice-icon-btn"
                             aria-label="Đóng trình nghe"
-                            onClick={() => setAudio(null)}
+                            onClick={() => {
+                              stopJobAudio();
+                              setAudio(null);
+                            }}
                           >
                             <X size={17} />
                           </button>
@@ -1978,7 +2070,7 @@ export function VoiceStudio() {
               </div>
               <div className="voice-plans">
                 {VOICE_PLANS.filter((p) => p.purchasable).map((p, i) => {
-                  const featured = p.id === "credit_10k";
+                  const featured = p.id === "credit_100k";
                   const isCurrent = currentPlan?.id === p.id;
                   const canBuy = p.purchasable;
                   return (
@@ -1987,7 +2079,7 @@ export function VoiceStudio() {
                       key={p.id}
                     >
                       {featured && (
-                        <span className="voice-popular">DỄ BẮT ĐẦU</span>
+                        <span className="voice-popular">PHỔ BIẾN NHẤT</span>
                       )}
                       <span className="voice-plan-index">
                         0{i + 1} / {p.id.toUpperCase()}
@@ -2137,10 +2229,20 @@ export function VoiceStudio() {
             </div>
             <audio
               key={audio.url}
+              ref={jobAudioRef}
               src={audio.url}
               controls
-              preload="metadata"
+              autoPlay
+              preload="auto"
               aria-label="Bản ghi đã tạo"
+              onPlay={() => setPlayingJobId(audio.id)}
+              onPause={() => {
+                if (playingJobId === audio.id) setPlayingJobId(null);
+              }}
+              onEnded={() => setPlayingJobId(null)}
+              onCanPlay={(e) => {
+                void e.currentTarget.play().catch(() => {});
+              }}
               onError={() =>
                 setError(
                   "Liên kết nghe đã hết hạn hoặc không tải được. Mở lại bản ghi từ Lịch sử.",
@@ -2160,7 +2262,10 @@ export function VoiceStudio() {
             <button
               className="voice-icon-btn"
               aria-label="Đóng trình nghe"
-              onClick={() => setAudio(null)}
+              onClick={() => {
+                stopJobAudio();
+                setAudio(null);
+              }}
             >
               <X size={17} />
             </button>

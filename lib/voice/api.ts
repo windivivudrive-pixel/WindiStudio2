@@ -343,18 +343,16 @@ export async function completeVoiceGeneration(userId: string, input: VoiceApiInp
 
   const audioPath = `${userId}/${job.id}.mp3`;
   const timingPath = `${userId}/${job.id}.json`;
-  const audioUpload = await db.storage.from('windi-voice-audio').upload(audioPath, generated.mp3, { contentType: 'audio/mpeg', upsert: false });
-  if (audioUpload.error) {
+  const [audioUpload, timingUpload] = await Promise.all([
+    db.storage.from('windi-voice-audio').upload(audioPath, generated.mp3, { contentType: 'audio/mpeg', upsert: false }),
+    db.storage.from(voiceTimingBucket).upload(timingPath, JSON.stringify(generated.timestamps), { contentType: 'application/json', upsert: false }),
+  ]);
+  if (audioUpload.error || timingUpload.error) {
+    if (!audioUpload.error) await db.storage.from('windi-voice-audio').remove([audioPath]);
+    if (!timingUpload.error) await db.storage.from(voiceTimingBucket).remove([timingPath]);
     const refund = await db.rpc('windi_voice_finish', { p_job: job.id, p_success: false });
     if (refund.error) throw refund.error;
-    throw new VoiceError('Chưa lưu được âm thanh. Credit đã được hoàn lại.', 503);
-  }
-  const timingUpload = await db.storage.from(voiceTimingBucket).upload(timingPath, JSON.stringify(generated.timestamps), { contentType: 'application/json', upsert: false });
-  if (timingUpload.error) {
-    await db.storage.from('windi-voice-audio').remove([audioPath]);
-    const refund = await db.rpc('windi_voice_finish', { p_job: job.id, p_success: false });
-    if (refund.error) throw refund.error;
-    throw new VoiceError('Chưa lưu được timestamp. Credit đã được hoàn lại.', 503);
+    throw new VoiceError(audioUpload.error ? 'Chưa lưu được âm thanh. Credit đã được hoàn lại.' : 'Chưa lưu được timestamp. Credit đã được hoàn lại.', 503);
   }
   const metadata = await db.from('windi_voice_jobs').update({ timing_path: timingPath, provider_context_id: job.id }).eq('id', job.id).eq('status', 'pending');
   if (metadata.error) {
