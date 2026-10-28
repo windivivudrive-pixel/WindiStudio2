@@ -5,10 +5,10 @@ import { validateSpeech } from '@/lib/voice/shared';
 export const runtime = 'nodejs';
 export const maxDuration = 300;
 
-async function result(userId: string, job: { id: string; timing_path?: string | null }) {
+async function result(userId: string, job: { id: string; storage_path?: string | null; timing_path?: string | null }) {
   return Response.json({
     id: job.id,
-    url: await audioUrl(userId, job.id),
+    url: await audioUrl(userId, job.id, false, job.storage_path || undefined),
     timestamps_url: job.timing_path ? `/api/voice/timestamps?id=${job.id}` : null,
   }, { headers: { 'Cache-Control': 'no-store' } });
 }
