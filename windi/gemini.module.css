@@ -7,6 +7,45 @@
 @media(max-width:380px){.page{padding-inline:16px}.hero h1{font-size:39px}.heroActions{align-items:stretch;flex-direction:column}.trustline{gap:12px;font-size:9px}.productVisual{padding-inline:22px}.topline>a:last-child{display:none}.offer{padding:20px}.eyebrow{font-size:9px}.orderList article>.secondary{padding:8px}.sourceLinks{gap:15px}}
 @media(prefers-reduced-motion:reduce){.page *{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 
+/* Use more of the available viewport and make the purchase details easier to scan. */
+.page{max-width:1440px}
+.purchaseSection{gap:clamp(48px,5vw,72px)}
+.planPicker legend{font-size:13px}
+.planChoice{min-height:88px;padding:14px 16px;gap:12px}
+.planChoice input{width:19px;height:19px}
+.planChoice strong{font-size:17px}
+.planChoice small{font-size:12px}
+.argonFeature{padding:26px 28px}
+.argonFeatureHeading span{font-size:10px}
+.argonFeatureHeading h3{font-size:clamp(23px,2.4vw,32px)}
+.proBenefits{padding:20px 22px}
+.proBenefits h3{font-size:14px}
+.proBenefits li{font-size:12px;line-height:1.75}
+.proBenefits>small{font-size:10px}
+.offerTop{font-size:11px}
+.stock{font-size:11px}
+.price{font-size:clamp(48px,5vw,68px)}
+.priceCaption{font-size:12px}
+.conditions{font-size:12px}
+.conditions>strong{font-size:13px}
+.accept{font-size:12px;line-height:1.75}
+.offerFoot{font-size:10px}
+.supportLink{font-size:11px}
+@media(max-width:760px){
+  .page{max-width:none;padding-inline:20px}
+  .purchaseSection{gap:35px}
+  .purchaseSection>.offer{max-width:760px;padding:25px}
+}
+@media(max-width:560px){
+  .planPicker{grid-template-columns:1fr}
+  .planChoice{min-height:72px}
+  .argonFeature{padding:20px}
+}
+@media(max-width:380px){
+  .page{padding-inline:16px}
+  .purchaseSection>.offer{padding:20px}
+}
+
 .visualRings{position:absolute;inset:0;overflow:hidden;border-radius:inherit;z-index:-1;pointer-events:none}
 @media(max-width:560px){:global(body):has(.page) :global(.site-header){gap:10px}:global(body):has(.page) :global(.site-header-logo){max-width:105px}:global(body):has(.page) :global(.header-actions){min-width:0}}
 @media(max-width:420px){:global(body):has(.page) :global(.site-header-logo){max-width:clamp(80px,25vw,105px)}:global(body):has(.page) :global(.header-actions)>button,:global(body):has(.page) :global(.login-nav-btn){width:44px;min-width:44px;min-height:44px;padding:0;justify-content:center}:global(body):has(.page) :global(.login-nav-btn){font-size:0;gap:0}:global(body):has(.page) :global(.login-nav-btn)>svg{width:18px;height:18px}.conditions,.accept{font-size:11px}.steps p{font-size:12px}}
@@ -41,6 +80,10 @@
 @media(max-width:560px){.proBenefits ul{grid-template-columns:1fr}.proBenefits{padding:15px}}
 @media(max-width:560px){.argonFeature{padding:17px}}
 @media(max-width:760px){.purchaseGuide h2 br{display:none}.purchaseGuide .steps p{font-size:12px}.purchaseGuide .steps li{padding:19px 0}.purchaseSection{gap:30px}.purchaseSection>.offer{max-width:none}}
+
+/* The plan card was still capped at 790px by a later legacy rule. */
+.page{max-width:none;padding-inline:clamp(24px,4vw,80px)}
+.purchaseSection>.offer{max-width:none;margin-inline:0}
 
 .planPicker{margin:0 0 22px;padding:0;border:0;display:grid;grid-template-columns:1fr 1fr;gap:10px;min-width:0}
 .planPicker legend{font-size:11px;font-weight:700;margin-bottom:12px}
