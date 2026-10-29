@@ -54,6 +54,7 @@ import {
   type VoiceCloneSample,
   VOICE_LIBRARY_LANGUAGES,
   VOICE_PLANS,
+  VOICE_PLAN_ORIGINAL_PRICES,
   VOICE_API_ENABLED,
   MAX_WEB_GENERATION_CHARACTERS,
   type StudioVoice,
@@ -270,6 +271,17 @@ const voiceComparisons = [
     sampleText:
       "Đêm đã về khuya, xung quanh bốn bề im phăng phắc. Cánh cửa gỗ cọt kẹt tự hé mở, và từ góc cầu thang tối tăm... một bóng đen từ từ bước xuống.",
   },
+  {
+    id: "dinh-manh",
+    title: "Đình Mạnh · Kể chuyện",
+    voiceId: "7dc25b191a794ecba206cab6f0c70576",
+    voiceName: "Đình Mạnh",
+    style: "Kể chuyện · đọc sách",
+    other: "/voice-comparisons/other/dinh-manh.mp3",
+    pro: "/api/voice/preview?id=7dc25b191a794ecba206cab6f0c70576&version=v2-curated-20261029&storedOnly=1",
+    gender: "masculine",
+    sampleText: "Con đường dẫn đến ngôi nhà cũ nằm nép mình giữa hai hàng cây.",
+  },
 ] as const;
 
 const comparisonWave = [
@@ -295,10 +307,10 @@ function VoiceComparisonShowcase() {
       aria-labelledby="voice-compare-title"
     >
       <div className="voice-compare-compact-head">
-        <h2 id="voice-compare-title">Nghe thử 5 giọng mẫu</h2>
+        <h2 id="voice-compare-title">Nghe thử 6 giọng mẫu</h2>
         <details className="voice-sample-info">
           <summary>Về giọng mẫu</summary>
-          <p>Windi không sở hữu bản quyền 5 giọng mẫu. Các mẫu chỉ để nghe tham khảo, không dùng để tạo nội dung mới hoặc cấp quyền sử dụng cá nhân hay thương mại. Hãy clone giọng của chính bạn để sử dụng.</p>
+          <p>Windi không sở hữu bản quyền 5 giọng mẫu trước đó. Các mẫu chỉ để nghe tham khảo, không dùng để tạo nội dung mới hoặc cấp quyền sử dụng cá nhân hay thương mại. Hãy clone giọng của chính bạn để sử dụng.</p>
         </details>
       </div>
       <div className="voice-compare-list">
@@ -2020,6 +2032,8 @@ export function VoiceStudio() {
                       </span>
                       <h3>{p.name}</h3>
                       <p>{p.description}</p>
+                      <div className="voice-price-original">Giá niêm yết <s>{formatNumber(VOICE_PLAN_ORIGINAL_PRICES[p.id])}đ</s></div>
+                      <div className="voice-price-label">Giá ưu đãi</div>
                       <div className="voice-price">
                         {p.price_vnd ? formatNumber(p.price_vnd) : "Miễn phí"}
                         <span>

@@ -32,14 +32,15 @@ beforeAll(async () => {
       values ('${user}','credit_100k',269000,100000,5,30);
   `);
   await db.exec(await readFile('supabase/migrations/20261027190000_voice_credit_price_update.sql', 'utf8'));
+  await db.exec(await readFile('supabase/migrations/20261029034400_voice_launch_credit_discounts.sql', 'utf8'));
 });
 afterAll(() => db.close());
 
 test('new and existing customers see three matching purchasable prices', async () => {
   const expected = [
     { id: 'credit_10k', price_vnd: 39000, credits: 10000, clone_limit: 1 },
-    { id: 'credit_100k', price_vnd: 169000, credits: 100000, clone_limit: 5 },
-    { id: 'credit_1m', price_vnd: 699000, credits: 1000000, clone_limit: 20 },
+    { id: 'credit_100k', price_vnd: 139000, credits: 100000, clone_limit: 2 },
+    { id: 'credit_1m', price_vnd: 599000, credits: 1000000, clone_limit: 5 },
   ];
   const fields = ({ id, price_vnd, credits, clone_limit }: typeof expected[number]) => ({ id, price_vnd, credits, clone_limit });
   expect(VOICE_PLANS.filter(plan => plan.purchasable).map(fields)).toEqual(expected);
@@ -50,7 +51,7 @@ test('new and existing customers see three matching purchasable prices', async (
 test('a stale pending price is replaced while historical purchase terms remain intact', async () => {
   const old = (await db.query<{ id: string; expires_at: Date }>('select id,expires_at from public.windi_voice_orders')).rows[0];
   const fresh = (await db.query<{ id: string; amount_vnd: number }>('select * from public.windi_voice_order($1,$2)', [user, 'credit_100k'])).rows[0];
-  expect(fresh.amount_vnd).toBe(169000);
+  expect(fresh.amount_vnd).toBe(139000);
   expect(fresh.id).not.toBe(old.id);
   expect((await db.query('select status,amount_vnd,expires_at from public.windi_voice_orders where id=$1', [old.id])).rows[0]).toEqual({ status: 'expired', amount_vnd: 269000, expires_at: old.expires_at });
   expect((await db.query<{ id: string }>('select * from public.windi_voice_order($1,$2)', [user, 'credit_100k'])).rows[0].id).toBe(fresh.id);

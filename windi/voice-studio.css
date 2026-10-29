@@ -606,3 +606,6 @@ html[data-theme=dark] .voice-picker select { color-scheme: dark; }
   .voice-compare-play-btn > strong { display:none; }
   .voice-compare-play-btn { flex:none; width:40px; justify-content:center; }
 }
+
+/* Reference price and current offer for the three credit bundles. */
+.voice-price-original{font-size:12px;line-height:1.5;color:var(--muted);margin-bottom:5px}.voice-price-original s{text-decoration-thickness:1px}.voice-price-label{font-size:10px;font-weight:700;color:var(--green);letter-spacing:.05em;text-transform:uppercase}
