@@ -58,6 +58,8 @@ export const CURATED_PUBLIC_VOICES: StudioVoice[] = [
   {id:'aad4386756084ceb93fe87a70e0bd296',name:'Kim Thoa',description:'Giọng clone tiếng Việt',language:'vi',kind:'public',provider:'heygen',heygenId:'aad4386756084ceb93fe87a70e0bd296'},
   {id:'7a6eb31448bd466e84e8af7a8e12136f',name:'Thanh Thảo',description:'Giọng clone tiếng Việt',language:'vi',kind:'public',provider:'heygen',heygenId:'7a6eb31448bd466e84e8af7a8e12136f'},
   {id:'7dc25b191a794ecba206cab6f0c70576',name:'Đình Mạnh',description:'Giọng clone tiếng Việt',language:'vi',kind:'public',provider:'heygen',heygenId:'7dc25b191a794ecba206cab6f0c70576'},
+  {id:'8589f5c2d1c54e2ba554d15511963014',name:'Thích Tâm Tuệ',description:'Giọng tiếng Việt • podcast chữa lành',language:'vi',kind:'public',provider:'heygen',heygenId:'8589f5c2d1c54e2ba554d15511963014'},
+  {id:'253a627ca6134472b1fac9798a8e3398',name:'Thùy Tâm',description:'Giọng tiếng Việt • talkshow tâm sự',language:'vi',kind:'public',provider:'heygen',heygenId:'253a627ca6134472b1fac9798a8e3398'},
 ];
 export const DEFAULT_STUDIO_VOICE = CURATED_PUBLIC_VOICES[1];
 export const COMPARISON_VOICES: StudioVoice[] = [
@@ -76,6 +78,7 @@ export function isHeyGenLibraryVoice(voice:StudioVoice) {
   if (voice.kind === 'clone') return /^[0-9a-f]{32}$/i.test(voice.id);
   return voice.provider === 'heygen' && !!voice.heygenId && voice.id.toLowerCase() === voice.heygenId.toLowerCase();
 }
+export const isProLibraryVoice = isHeyGenLibraryVoice;
 export type VoiceAccent = {id:string;name:string;language:string;locale:string;isLocaleDefault:boolean;isLocalizable:boolean};
 export type VoicePeriod = {id:string; plan_id:string; credits:number; used_credits:number; clone_limit:number; clones_used:number; starts_at:string; ends_at:string};
 export type VoiceClone = {id:string; provider_id:string|null; name:string; language:string; accent:string|null; status:string; created_at:string;is_demo?:boolean;demo_expires_at?:string|null};
@@ -85,11 +88,26 @@ export type VoiceAccount = {isAdmin?:boolean;period:VoicePeriod|null;nextPeriod?
 export const countCredits = (text:string) => Array.from(text.normalize('NFC').trim()).length;
 export const formatNumber = (n:number) => new Intl.NumberFormat('vi-VN').format(n);
 export const isUUID = (value:unknown): value is string => typeof value === 'string' && (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value) || /^[0-9a-f]{32}$/i.test(value));
+
+/**
+ * Chuẩn hóa số phiên bản và số thập phân dạng dấu chấm trong tiếng Việt (ví dụ: 3.0 -> 3 chấm 0, 5.1 -> 5 chấm 1, 6.1 -> 6 chấm 1).
+ * Giữ nguyên các định dạng phân cách hàng nghìn (10.000, 1.000.000) để không đọc sai tiền tệ/số lượng lớn.
+ */
+export function normalizeSpeechNumbers(text: string, language = 'vi'): string {
+  if (!text || (language && language !== 'vi')) return text;
+  return text.replace(/(?<!\d)(\d+(?:\.\d+)+)(?!\d)/g, (match) => {
+    if (/^\d{1,3}(?:\.\d{3})+$/.test(match)) {
+      return match;
+    }
+    return match.replace(/\./g, ' chấm ');
+  });
+}
+
 export function validateSpeech(body:Record<string,unknown>) {
   if (typeof body.text!=='string' || !isUUID(body.requestKey) || !isUUID(body.voiceId)) throw new Error('INVALID_INPUT');
-  const text=body.text.normalize('NFC').trim();
-  const characters=countCredits(text);
   const language=String(body.language ?? 'vi');
+  const text=normalizeSpeechNumbers(body.text.normalize('NFC').trim(), language);
+  const characters=countCredits(text);
   const speed=Number(body.speed ?? 1);
   const provider = body.provider === 'cartesia' ? ('cartesia' as const) : ('heygen' as const);
   if (!characters || characters>MAX_WEB_GENERATION_CHARACTERS || !Number.isFinite(speed) || speed<0.6 || speed>1.5 || !VOICE_LANGUAGES.some(l=>l.id===language)) throw new Error('INVALID_INPUT');

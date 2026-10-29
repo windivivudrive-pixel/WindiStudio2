@@ -43,7 +43,8 @@ import {
   countCredits,
   formatNumber,
   isComparisonVoice,
-  isHeyGenLibraryVoice,
+  isProLibraryVoice,
+  normalizeSpeechNumbers,
   CURATED_PUBLIC_VOICES,
   DEFAULT_STUDIO_VOICE,
   VOICE_LANGUAGES,
@@ -275,13 +276,8 @@ const comparisonWave = [
   9, 17, 12, 25, 31, 18, 36, 23, 15, 29, 20, 12, 26, 18, 8,
 ];
 
-function VoiceComparisonShowcase({
-  onClone,
-}: {
-  onClone: () => void;
-}) {
+function VoiceComparisonShowcase() {
   const [playing, setPlaying] = useState("");
-  const [activeSampleIndex, setActiveSampleIndex] = useState(0);
   const audioRefs = useRef<Record<string, HTMLAudioElement | null>>({});
   function toggle(key: string) {
     const current = audioRefs.current[key];
@@ -298,74 +294,22 @@ function VoiceComparisonShowcase({
       id="voice-comparison"
       aria-labelledby="voice-compare-title"
     >
-      <div className="voice-compare-intro">
-        <div>
-          <span className="voice-compare-kicker">
-            <Sparkles size={14} /> 5 BÀI NGHE THỰC TẾ
-          </span>
-          <h2 id="voice-compare-title">
-            Giọng giống thôi chưa đủ.
-            <br />
-            <span>Người nghe cần cảm thấy nó.</span>
-          </h2>
-          <p>
-            Windi Clone Pro 3.0 kết hợp chất giọng riêng với khả năng đọc ngữ cảnh để
-            lời thoại tự tìm nhịp điệu, ngữ điệu và sắc thái phù hợp.
-          </p>
-        </div>
-        <div className="voice-compare-proof">
-          <strong>01 → 05</strong>
-          <span>
-            Nghe A/B.
-            <br />
-            Tự cảm nhận khác biệt.
-          </span>
-        </div>
-      </div>
-      <div className="voice-compare-points" aria-label="Điểm nổi bật">
-        <span>
-          <Check size={14} /> Bắt sắc thái từ lời thoại
-        </span>
-        <span>
-          <Check size={14} /> Giữ nhận diện chất giọng
-        </span>
-        <span>
-          <Check size={14} /> Sẵn sàng cho nhiều format
-        </span>
-      </div>
-      <section className="voice-usage-note" aria-labelledby="voice-sample-rights-title">
-        <h3 id="voice-sample-rights-title">Lưu ý về 5 giọng mẫu</h3>
-        <p>
-          Windi không sở hữu bản quyền đối với 5 giọng mẫu này. Các mẫu chỉ được
-          cung cấp để nghe và tham khảo chất lượng dịch vụ, không hỗ trợ tạo
-          nội dung mới bằng các giọng này và không cấp quyền sử dụng chúng cho
-          nội dung cá nhân hoặc thương mại. Vui lòng clone giọng nói của chính bạn để
-          sử dụng cho nội dung của mình.
-        </p>
-      </section>
-      <div className="voice-compare-mobile-pills" role="tablist" aria-label="Chọn bài nghe thực tế">
-        {voiceComparisons.map((sample, idx) => (
-          <button
-            key={sample.id}
-            type="button"
-            role="tab"
-            aria-selected={activeSampleIndex === idx}
-            className={`voice-compare-pill ${activeSampleIndex === idx ? "is-active" : ""}`}
-            onClick={() => setActiveSampleIndex(idx)}
-          >
-            <span>0{idx + 1}</span> {sample.title}
-          </button>
-        ))}
+      <div className="voice-compare-compact-head">
+        <h2 id="voice-compare-title">Nghe thử 5 giọng mẫu</h2>
+        <details className="voice-sample-info">
+          <summary>Về giọng mẫu</summary>
+          <p>Windi không sở hữu bản quyền 5 giọng mẫu. Các mẫu chỉ để nghe tham khảo, không dùng để tạo nội dung mới hoặc cấp quyền sử dụng cá nhân hay thương mại. Hãy clone giọng của chính bạn để sử dụng.</p>
+        </details>
       </div>
       <div className="voice-compare-list">
         {voiceComparisons.map((sample, index) => {
           return (
-            <article className={`voice-compare-row ${activeSampleIndex === index ? "is-mobile-active" : ""}`} key={sample.id}>
+            <article className="voice-compare-row" key={sample.id}>
               <div className="voice-compare-name">
                 <span>0{index + 1}</span>
                 <div>
                   <h3>{sample.title}</h3>
-                  <p>Tiêu chí nghe: {sample.style}</p>
+
                 </div>
               </div>
               {(
@@ -387,7 +331,7 @@ function VoiceComparisonShowcase({
                   >
                     <div>
                       <span>{side.label}</span>
-                      {side.kind === "pro" && <small>CONTEXT-AWARE</small>}
+
                     </div>
                     <audio
                       ref={(node) => {
@@ -426,26 +370,6 @@ function VoiceComparisonShowcase({
           );
         })}
       </div>
-      <div className="voice-compare-cta">
-        <div>
-          <strong>Đừng để một kịch bản hay bị giọng đọc phẳng kéo tụt.</strong>
-          <span>
-            Clone một lần. Dùng chất giọng của bạn cho những câu chuyện tiếp
-            theo.
-          </span>
-        </div>
-        <button
-          className="voice-btn voice-primary"
-          type="button"
-          onClick={onClone}
-        >
-          Tạo giọng Windi Clone Pro 3.0 <ArrowRight size={16} />
-        </button>
-      </div>
-      <p className="voice-compare-note">
-        Các bản demo được phát trực tiếp để bạn tự đánh giá. Kết quả thực tế phụ
-        thuộc chất lượng mẫu thu, giọng nguồn và nội dung lời thoại.
-      </p>
     </section>
   );
 }
@@ -546,7 +470,7 @@ export function VoiceStudio() {
   const activeCloneCount = (account?.clones || []).filter((c) =>
     !c.is_demo && ["ready", "reserved", "pending"].includes(c.status),
   ).length;
-  const allVoices = [...cloneVoices, ...voices].filter(voice => isHeyGenLibraryVoice(voice) && !isComparisonVoice(voice.id));
+  const allVoices = [...cloneVoices, ...voices].filter(voice => isProLibraryVoice(voice) && !isComparisonVoice(voice.id));
   const currentPlan = VOICE_PLANS.find((p) => p.id === period?.plan_id);
   const canClone = isAdmin || (!!period?.clone_limit && activeCloneCount < period.clone_limit);
   const visibleClones = (account?.clones ?? []).filter(c => !c.is_demo || Date.parse(c.demo_expires_at!) > demoNow);
@@ -713,7 +637,7 @@ export function VoiceStudio() {
     // Warm only saved samples: entering the page must never generate paid audio.
     for (const voice of vietnamese) {
       if (previewUrls.current.has(voice.id) || previewPreloads.current.has(voice.id)) continue;
-      const pending = fetch(`/api/voice/preview?id=${encodeURIComponent(voice.id)}&storedOnly=1`, { cache: "force-cache", signal: controller.signal })
+      const pending = fetch(`/api/voice/preview?id=${encodeURIComponent(voice.id)}&version=v2-curated-20261029&storedOnly=1`, { cache: "force-cache", signal: controller.signal })
         .then(async response => {
           if (!response.ok) return undefined;
           const blob = await response.blob();
@@ -775,7 +699,7 @@ export function VoiceStudio() {
           url = comparisonMatch.pro;
         } else {
           const response = await fetch(
-            `/api/voice/preview?id=${encodeURIComponent(voice.id)}`,
+            `/api/voice/preview?id=${encodeURIComponent(voice.id)}&version=v2-curated-20261029`,
             { cache: "force-cache" },
           );
           if (!response.ok) {
@@ -871,8 +795,12 @@ export function VoiceStudio() {
     setBusy("generate");
     setError("");
     setNotice("");
+    const processedText = normalizeSpeechNumbers(text.normalize("NFC").trim(), language);
+    if (processedText !== text) {
+      setText(processedText);
+    }
     const payload = JSON.stringify({
-      text: text.normalize("NFC").trim(),
+      text: processedText,
       voiceId: selected.id,
       language,
       speed,
@@ -1166,17 +1094,7 @@ export function VoiceStudio() {
           <span className="voice-art-note">made to be felt ↗</span>
         </div>
       </div>
-      <VoiceComparisonShowcase
-        onClone={() => {
-          setTab("clone");
-          requestAnimationFrame(() =>
-            document.getElementById("voice-panel")?.scrollIntoView({
-              behavior: "smooth",
-              block: "start",
-            }),
-          );
-        }}
-      />
+      <VoiceComparisonShowcase />
       <section className="voice-workspace">
         <div className="voice-titlebar">
           <span>
@@ -1234,11 +1152,6 @@ export function VoiceStudio() {
               )}
             </button>
           ))}
-        </div>
-        <div className="voice-sidebar-help">
-          <Headphones size={22} aria-hidden="true" />
-          <strong>Đầu tiên, thử một câu.</strong>
-          <p>Chọn nội dung mẫu hoặc viết lời của bạn. Nghe kết quả rồi tải về.</p>
         </div>
         </aside>
         <div className="voice-main">
@@ -1337,7 +1250,7 @@ export function VoiceStudio() {
                 <div className="voice-compose-heading">
                   <div>
                     <h2 id="voice-compose-title">Tạo âm thanh từ văn bản</h2>
-                    <p>Chọn giọng bên dưới, rồi nhập nội dung bạn muốn đọc.</p>
+
                   </div>
                   <span className="voice-output-format"><Music2 size={15} aria-hidden="true" /> MP3</span>
                 </div>
@@ -1386,12 +1299,38 @@ export function VoiceStudio() {
                 </div>
                 <div className="voice-script">
                   <label htmlFor="voice-text">Nội dung cần đọc</label>
-                  <textarea id="voice-text" value={text} onChange={event => {
-                    setText(event.target.value);
-                    requestKey.current = null;
-                  }} placeholder="Nhập hoặc dán nội dung vào đây… Giọng đọc sẽ tự điều chỉnh cảm xúc theo lời bạn viết." maxLength={MAX_WEB_GENERATION_CHARACTERS * 2} aria-describedby="voice-character-count voice-generate-hint" />
+                  <textarea
+                    id="voice-text"
+                    value={text}
+                    onChange={event => {
+                      setText(event.target.value);
+                      requestKey.current = null;
+                    }}
+                    onBlur={() => {
+                      const normalized = normalizeSpeechNumbers(text, language);
+                      if (normalized !== text) {
+                        setText(normalized);
+                        requestKey.current = null;
+                      }
+                    }}
+                    placeholder="Nhập hoặc dán nội dung vào đây… Giọng đọc sẽ tự điều chỉnh cảm xúc theo lời bạn viết."
+                    maxLength={MAX_WEB_GENERATION_CHARACTERS * 2}
+                    aria-describedby="voice-character-count voice-generate-hint"
+                  />
                   <div className="voice-script-tools">
                     <span id="voice-character-count" className={credits > MAX_WEB_GENERATION_CHARACTERS ? "voice-over-limit" : ""}>{formatNumber(credits)} / {formatNumber(MAX_WEB_GENERATION_CHARACTERS)} ký tự</span>
+                    {normalizeSpeechNumbers(text, language) !== text && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setText(normalizeSpeechNumbers(text, language));
+                          requestKey.current = null;
+                        }}
+                        title="Tự động đổi các số như 3.0, 5.1 thành 3 chấm 0, 5 chấm 1"
+                      >
+                        <Sparkles size={13} aria-hidden="true" /> Đổi số phiên bản (3.0 ➔ 3 chấm 0)
+                      </button>
+                    )}
                     <button disabled={!text || !!busy} onClick={() => { setText(""); requestKey.current = null; }}>Xóa nội dung</button>
                   </div>
                 </div>
@@ -1412,11 +1351,6 @@ export function VoiceStudio() {
                 <p id="voice-generate-hint" className="voice-compose-hint" role="status">
                   {credits > MAX_WEB_GENERATION_CHARACTERS ? "Tối đa 5.000 ký tự mỗi lần." : !text.trim() ? "Nhập nội dung; đoạn dài sẽ tự chia theo câu và ghép thành một file MP3." : user && !available ? "Dịch vụ đang kết nối. Vui lòng thử lại sau ít phút." : !isAdmin && user && credits > largestBalance ? <>Bạn chưa đủ credit cho đoạn này. Rút ngắn nội dung hoặc <button onClick={() => setTab("plans")}>xem gói dịch vụ</button>.</> : "Nội dung dài được tự chia theo câu, giữ cùng giọng và ghép thành một file MP3. Quá trình này có thể mất vài phút."}
                 </p>
-                <details className="voice-advanced">
-                  <summary><SlidersHorizontal size={15} aria-hidden="true" /> Thông tin cho lập trình viên <ChevronDown size={14} aria-hidden="true" /></summary>
-                  <VoiceId id={selected.id} />
-              {VOICE_API_ENABLED ? <Link href={`/account?voice=${encodeURIComponent(selected.id)}#api`}>API key và hướng dẫn kết nối <ArrowRight size={14} aria-hidden="true" /></Link> : <p className="voice-hint">API đang tạm ngưng. Bạn vẫn có thể tạo giọng trực tiếp trên Voice Studio.</p>}
-                </details>
               </section>
               <section className="voice-today" aria-labelledby="voice-today-title">
                 <div className="voice-today-heading">
@@ -1460,7 +1394,7 @@ export function VoiceStudio() {
                     ))}
                   </div>
                 ) : (
-                  <p className="voice-today-empty">Các bản ghi tạo trong hôm nay sẽ xuất hiện tại đây. Lịch sử được giữ tối đa 7 ngày.</p>
+                  <p className="voice-today-empty">Các bản ghi của bạn sẽ xuất hiện tại đây.</p>
                 )}
               </section>
             </>

@@ -3,7 +3,7 @@ import 'server-only';
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
 import lamejs from '@breezystack/lamejs';
 import { cartesia, resolveVoice, VoiceError, writer } from './server';
-import { DEFAULT_WORKFLOW_VOICE_ID, countCredits, isUUID, VOICE_LANGUAGES, CURATED_PUBLIC_VOICES, VOICE_API_ENABLED } from './shared';
+import { DEFAULT_WORKFLOW_VOICE_ID, countCredits, isUUID, VOICE_LANGUAGES, CURATED_PUBLIC_VOICES, VOICE_API_ENABLED, normalizeSpeechNumbers } from './shared';
 import { synthesizeHeyGen } from './heygen';
 
 export const voiceTimingBucket = 'windi-voice-timing';
@@ -139,9 +139,10 @@ export async function automationIdentity(request: Request): Promise<AutomationId
 export function validateVoiceApiInput(value: unknown): VoiceApiInput {
   if (!value || typeof value !== 'object') throw new VoiceError('Nội dung yêu cầu không hợp lệ.');
   const body = value as Record<string, unknown>;
-  const text = typeof body.text === 'string' ? body.text.normalize('NFC').trim() : '';
-  const voiceId = typeof body.voice_id === 'string' ? body.voice_id : typeof body.voiceId === 'string' ? body.voiceId : '';
   const language = typeof body.language === 'string' ? body.language : 'vi';
+  const rawText = typeof body.text === 'string' ? body.text.normalize('NFC').trim() : '';
+  const text = normalizeSpeechNumbers(rawText, language);
+  const voiceId = typeof body.voice_id === 'string' ? body.voice_id : typeof body.voiceId === 'string' ? body.voiceId : '';
   const speed = body.speed === undefined ? 1 : Number(body.speed);
   const provider = body.provider === 'cartesia' ? ('cartesia' as const) : ('heygen' as const);
   if (
@@ -214,7 +215,7 @@ export function parseCartesiaSse(payload: string) {
 export function cartesiaTtsPayload(input: VoiceApiInput, providerVoiceId: string, contextId: string) {
   return {
     model_id: 'sonic-3.6',
-    transcript: input.text,
+    transcript: normalizeSpeechNumbers(input.text, input.language),
     voice: { mode: 'id', id: providerVoiceId },
     language: input.language,
     output_format: { container: 'raw', encoding: 'pcm_s16le', sample_rate: 44100 },

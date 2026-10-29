@@ -532,3 +532,77 @@ html[data-theme=dark] .voice-picker select { color-scheme: dark; }
   .voice-picker { max-height: calc(100dvh - 16px); overflow-y: auto; }
   .voice-picker-results { overflow: visible; }
 }
+
+/* Keep the editor and recent conversions together, followed by the listening gallery. */
+.voice-workspace + .voice-compare { margin: 28px 0 0; }
+.voice-compare-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; padding: 20px; }
+.voice-compare-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-content: start; gap: 10px; padding: 16px; border: 1px solid #ffffff1b; border-radius: 9px; background: #ffffff06; min-width: 0; }
+.voice-compare-name { grid-column: 1 / -1; min-width: 0; padding: 2px 2px 6px; }
+.voice-compare-name > div, .voice-compare-side { min-width: 0; }
+.voice-compare-side > div > span { line-height: 1.5; }
+.voice-compare-side small { white-space: nowrap; }
+@media (max-width: 600px) {
+  .voice-workspace + .voice-compare { margin-top: 22px; }
+  .voice-compare-list { gap: 8px; padding: 12px; }
+  .voice-compare-row, .voice-compare-row.is-mobile-active { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; padding: 10px; }
+  .voice-compare-name { grid-column: auto; align-items: flex-start; gap: 8px; }
+  .voice-compare-name h3 { font-size: 12px; overflow-wrap: anywhere; }
+  .voice-compare-name p { font-size: 9px; }
+  .voice-compare-side { padding: 10px; }
+  .voice-compare-side > div { min-height: 28px; align-items: flex-start; }
+  .voice-compare-side small { display: none; }
+  .voice-compare-play-btn { min-height: 40px; grid-template-columns: 32px minmax(0, 1fr); }
+  .voice-compare-play-btn .voice-compare-wave { display: none; }
+  .voice-compare-play-btn > strong { white-space: normal; }
+}
+
+/* Compact listening shelf and a focused writing workspace. */
+.voice-compare { margin: 0 0 20px; }
+.voice-compare-compact-head { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:16px 20px 0; }
+.voice-compare-compact-head h2 { margin:0; font-size:16px; line-height:1.4; }
+.voice-sample-info { position:relative; color:#d3ddda; font-size:11px; }
+.voice-sample-info summary { cursor:pointer; text-decoration:underline; text-underline-offset:3px; padding:8px 0; }
+.voice-sample-info p { max-width:480px; line-height:1.7; }
+.voice-compare-list { padding:12px 20px 18px; border:0; gap:8px; }
+.voice-compare-row { grid-template-columns:minmax(130px,1fr) repeat(2,minmax(0,auto)); align-items:center; padding:8px 10px; gap:8px; }
+.voice-compare-name { grid-column:auto; padding:0; gap:8px; }
+.voice-compare-name h3 { margin:0; font-size:11px; }
+.voice-compare-side { padding:0; border:0; background:none; }
+.voice-compare-side > div { margin:0 0 3px; }
+.voice-compare-side > div > span { font-size:8px; }
+.voice-compare-play-btn { display:flex; width:auto; min-height:36px; gap:6px; }
+.voice-compare-play-btn > i { width:30px; height:30px; }
+.voice-compare-play-btn .voice-compare-wave { display:none; }
+.voice-compare-play-btn > strong { font-size:9px; }
+.voice-heading { margin-bottom:16px; }
+.voice-heading h1 { font-size:28px; margin:5px 0; }
+.voice-header-art { display:none; }
+.voice-sidebar-help { display:none; }
+.voice-composer { padding:20px 26px; }
+.voice-toolbar { margin:16px 0; }
+.voice-script textarea { min-height:280px; }
+.voice-compose-hint { margin-top:10px; }
+@media(max-width:900px) {
+  .voice-sidebar .voice-tabs { display:flex; overflow-x:auto; }
+  .voice-sidebar .voice-tabs button { flex:0 0 auto; min-height:44px; flex-direction:row; white-space:nowrap; }
+}
+@media(max-width:600px) {
+  .voice-compare-compact-head { padding:12px 12px 0; align-items:flex-start; }
+  .voice-compare-compact-head h2 { font-size:14px; }
+  .voice-compare-list { padding:10px 12px 14px; }
+  .voice-compare-row, .voice-compare-row.is-mobile-active { grid-template-columns:minmax(0,1fr); padding:10px; }
+  .voice-compare-name { min-height:35px; }
+  .voice-compare-side { padding:0; }
+  .voice-compare-side > div { min-height:0; }
+  .voice-compare-play-btn { min-height:40px; }
+  .voice-sidebar .voice-tabs { grid-template-columns:none; }
+  .voice-sidebar .voice-tabs button { min-height:44px; }
+  .voice-composer { padding:16px; }
+  .voice-script textarea { min-height:220px; }
+}
+@media(max-width:600px) {
+  .voice-compare-side { display:flex; align-items:center; justify-content:space-between; gap:4px; }
+  .voice-compare-side > div { margin:0; }
+  .voice-compare-play-btn > strong { display:none; }
+  .voice-compare-play-btn { flex:none; width:40px; justify-content:center; }
+}

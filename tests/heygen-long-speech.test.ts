@@ -108,7 +108,7 @@ test('multi-request synthesis encodes once, removes overlap words and offsets ti
   await vi.runAllTimersAsync();
   const result = await promise;
   expect(requests.length).toBeGreaterThan(1);
-  expect(requests.every(request => String(request.text).length <= 5000 && request.expressiveness_boost === 0.6 && request.with_timestamps === true && request.language === 'vi' && request.model === 'heygen-voice-1-turbo-free')).toBe(true);
+  expect(requests.every(request => String(request.text).length <= 5000 && request.expressiveness_boost === 0.8 && request.with_timestamps === true && request.language === 'vi' && request.model === 'heygen-voice-1-turbo-free')).toBe(true);
   expect(result.timestamps.words).toEqual(text.split(/\s+/u));
   expect(result.duration).toBeLessThan(100);
   expect(result.joins).toHaveLength(requests.length - 1);

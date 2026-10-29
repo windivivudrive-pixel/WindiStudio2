@@ -1,6 +1,6 @@
 # Quy tắc tạo âm thanh dài bằng HeyGen
 
-Rule hiện tại: `heygen-free-5000-sentences-v3`, cập nhật 2026-10-27.
+Rule hiện tại: `heygen-free-5000-sentences-v4`, cập nhật 2026-10-29.
 
 ## Giới hạn và nguồn xác minh
 
@@ -19,7 +19,7 @@ Nguồn: [Speech guide](https://developers.heygen.com/docs/voices/heygen-voice-s
 3. Chỉ khi một câu dài hơn giới hạn: ngắt tại dấu phẩy/chấm phẩy/hai chấm/xuống dòng, rồi ranh giới từ. Chỉ cắt theo ký tự nếu một từ tự nó quá dài; không tách surrogate pair.
 4. Giữ `sourceStart`, `sourceEnd` và `text` cho từng đoạn. Phần `text` nối lại phải khớp nguồn; không bỏ câu, không lặp câu. Khoảng trắng cuối không cần một request chỉ đọc khoảng trắng.
 5. Lấy câu hoặc mệnh đề cuối từ đoạn trước làm ngữ cảnh, tối đa 160 ký tự kể cả newline. Đặt nó ở đầu request rồi cắt khỏi audio bằng timestamp thật. Không kéo ngữ cảnh qua ranh giới đoạn trắng. Nếu câu/mệnh đề trước quá dài thì bỏ ngữ cảnh.
-6. Giữ cùng `voice_id`, model, `language`, `expressiveness_boost: 0.6` và `with_timestamps: true` cho toàn bộ tài liệu. Các biện pháp này giảm thay đổi cách đọc nhưng **không bảo đảm mood giống tuyệt đối** giữa các lần suy luận.
+6. Giữ cùng `voice_id`, model, `language`, `expressiveness_boost: 0.8` và `with_timestamps: true` cho toàn bộ tài liệu. Các biện pháp này giảm thay đổi cách đọc nhưng **không bảo đảm mood giống tuyệt đối** giữa các lần suy luận.
 
 Mã nguồn: `lib/voice/heygen-chunking.ts`. Khi đổi thuật toán, tăng version của rule và cập nhật kiểm tra bảo toàn nguồn/giới hạn/ranh giới câu.
 
@@ -50,6 +50,7 @@ Mã nguồn: `lib/voice/heygen-audio.ts`, `lib/voice/heygen.ts`.
 - Đọc `GET /v3/models/audio/voices?type=private&limit=100`, theo `next_token` nếu còn trang. Chỉ nhận `ACTIVE` + `instant` cho model free.
 - Danh sách công khai là allowlist đã được chủ dự án yêu cầu công khai trong `CURATED_PUBLIC_VOICES`; không tự công khai toàn bộ private workspace trong API website. Giọng riêng của khách chỉ xuất hiện cho đúng chủ giọng.
 - Lần đồng bộ 2026-10-27 đã xác minh thêm: Quỳnh Nhi, Lữ Trình, Kim Thoa, Thanh Thảo, Đình Mạnh. Không đoán giới tính/giọng điệu nếu API không cung cấp.
+- Ngày 2026-10-29 đã xác minh Thích Tâm Tuệ và Thùy Tâm là giọng instant ACTIVE; chủ dự án xác nhận tên hiển thị Thích Tâm Tuệ.
 - Các giọng mới không có ID backup được xác minh thì để trống backup. Luôn phân giải được ID mới trong backend, không chỉ thêm vào UI.
 
 ## Kiểm tra bắt buộc khi thay đổi
@@ -77,3 +78,7 @@ Mã nguồn: `lib/voice/heygen-audio.ts`, `lib/voice/heygen.ts`.
 
 - Giới hạn nhập web và Voice API giảm còn 5.000 ký tự mỗi lần; backend chia đoạn vẫn giữ mức trần 5.000 ký tự/request tính cả ngữ cảnh.
 - Mặc định HeyGen là `expressiveness_boost: 0.6` và `with_timestamps: true` trong mọi request. Bằng chứng audio v2 được tạo với cấu hình cũ `expressiveness_boost: 0.5`; chưa chạy lại mẫu dài trực tiếp với 0.6.
+
+### Thay đổi cấu hình phiên bản `heygen-free-5000-sentences-v4`
+
+- Theo yêu cầu chủ dự án, mọi request HeyGen mặc định dùng `expressiveness_boost: 0.8`.

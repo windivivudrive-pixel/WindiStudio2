@@ -7,11 +7,11 @@ import { publicVoice, resolveVoice } from '../lib/voice/server';
 import { cloneHeyGenVoice, deleteHeyGenVoice, uploadHeyGenAsset, heygenReady } from '../lib/voice/heygen';
 
 describe('HeyGen Voice Integration & Cartesia Backup', () => {
-  it('includes the 10 verified HeyGen clones and preserves legacy backup IDs', () => {
-    expect(CURATED_PUBLIC_VOICES).toHaveLength(10);
+  it('includes the verified HeyGen clones and preserves legacy backup IDs', () => {
+    expect(CURATED_PUBLIC_VOICES).toHaveLength(12);
 
     const voiceNames = CURATED_PUBLIC_VOICES.map((v) => v.name);
-    expect(voiceNames).toEqual(['Đức Bảo', 'Minh Dự', 'Ngô Đình', 'Kim Ánh', 'Tố My', 'Quỳnh Nhi', 'Lữ Trình', 'Kim Thoa', 'Thanh Thảo', 'Đình Mạnh']);
+    expect(voiceNames).toEqual(['Đức Bảo', 'Minh Dự', 'Ngô Đình', 'Kim Ánh', 'Tố My', 'Quỳnh Nhi', 'Lữ Trình', 'Kim Thoa', 'Thanh Thảo', 'Đình Mạnh', 'Thích Tâm Tuệ', 'Thùy Tâm']);
 
     for (const voice of CURATED_PUBLIC_VOICES) {
       expect(voice.provider).toBe('heygen');

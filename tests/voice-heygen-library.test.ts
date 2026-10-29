@@ -11,8 +11,8 @@ test('the public library endpoint returns the curated HeyGen voices only', async
   const result = await response.json();
   expect(response.status).toBe(200);
   expect(result.voices).toEqual(CURATED_PUBLIC_VOICES);
-  expect(result.voices).toHaveLength(10);
-  expect(result.voices.map((voice: StudioVoice) => voice.name)).toEqual(expect.arrayContaining(['Quỳnh Nhi', 'Lữ Trình', 'Kim Thoa', 'Thanh Thảo', 'Đình Mạnh']));
+  expect(result.voices).toHaveLength(12);
+  expect(result.voices.map((voice: StudioVoice) => voice.name)).toEqual(expect.arrayContaining(['Quỳnh Nhi', 'Lữ Trình', 'Kim Thoa', 'Thanh Thảo', 'Đình Mạnh', 'Thích Tâm Tuệ', 'Thùy Tâm']));
   expect(STARTER_VOICES.some(voice => result.voices.some((item: StudioVoice) => item.id === voice.id))).toBe(false);
 });
 

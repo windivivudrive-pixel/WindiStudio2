@@ -1,8 +1,8 @@
 /** Contract: docs/heygen-tts-rules.md. Offsets are UTF-16 source offsets. */
-export const HEYGEN_REQUEST_RULE = 'heygen-free-5000-sentences-v3';
+export const HEYGEN_REQUEST_RULE = 'heygen-free-5000-sentences-v4';
 export const HEYGEN_REQUEST_CHARACTER_LIMIT = 5000;
 export const HEYGEN_CONTEXT_CHARACTER_LIMIT = 160;
-export const HEYGEN_EXPRESSIVENESS = 0.6;
+export const HEYGEN_EXPRESSIVENESS = 0.8;
 
 export type HeyGenChunk = {
   index: number;

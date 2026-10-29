@@ -3,6 +3,7 @@ import 'server-only';
 import { pcm16ToMp3, type WordTimestamps } from './api';
 import { VoiceError } from './server';
 import type { VoiceApiInput } from './api';
+import { normalizeSpeechNumbers } from './shared';
 import { HEYGEN_EXPRESSIVENESS, HEYGEN_REQUEST_RULE, planHeyGenChunks } from './heygen-chunking';
 import { extractHeyGenChunk } from './heygen-audio';
 
@@ -48,7 +49,8 @@ export async function synthesizeHeyGen(
 ): Promise<HeyGenTtsResult> {
   const key = heygenApiKey();
   const selectedModel = model || process.env.HEYGEN_TTS_MODEL || 'heygen-voice-1-turbo-free';
-  const chunks = planHeyGenChunks(input.text, input.language);
+  const normalizedText = normalizeSpeechNumbers(input.text, input.language);
+  const chunks = planHeyGenChunks(normalizedText, input.language);
   if (!chunks.length) throw new VoiceError('Nội dung cần đọc đang trống.');
   const deadline = Date.now() + 250000;
   const audio: Buffer[] = [];

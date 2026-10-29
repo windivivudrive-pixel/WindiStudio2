@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import {voiceDisplayText} from './branding';
 import { CURATED_PUBLIC_VOICES, DEFAULT_WORKFLOW_VOICE_ID, isComparisonVoice, STARTER_VOICES, VOICE_LANGUAGES, VOICE_LIBRARY_LANGUAGES, isSampleLibraryLanguage, voiceLibraryLimit, voiceUseCases, type StudioVoice, type VoiceAccent, type VoiceProvider } from './shared';
 import { heygenReady, synthesizeHeyGen } from './heygen';
+import { CURATED_PREVIEW_SCRIPTS, CURATED_PREVIEW_VERSION } from './preview-scripts';
 
 export class VoiceError extends Error { constructor(message:string, public status=400) {super(voiceDisplayText(message));} }
 export const bucket = 'windi-voice-audio';
@@ -221,7 +222,7 @@ function canPreview(request:Request) {
   if(current.count>=PREVIEW_MAX_PER_WINDOW) return false;
   current.count+=1;return true;
 }
-function previewStoragePath(voice:StudioVoice) {return `${PREVIEW_PATH_VERSION}/${voice.id}.mp3`;}
+function previewStoragePath(voice:StudioVoice) {return `${CURATED_PREVIEW_SCRIPTS[voice.id] ? CURATED_PREVIEW_VERSION : PREVIEW_PATH_VERSION}/${voice.id}.mp3`;}
 async function storedPreview(path:string) {
   const {data,error}=await writer().storage.from(previewBucket).download(path);
   if(!error&&data) {
@@ -238,7 +239,7 @@ async function createStoredPreview(voice:StudioVoice,path:string) {
   let audio: ArrayBuffer;
   if(voice.provider === 'heygen' || voice.heygenId || /^[0-9a-f]{32}$/i.test(voice.id)) {
     const hRes = await synthesizeHeyGen({
-      text: previewTranscript(voice.language),
+      text: CURATED_PREVIEW_SCRIPTS[voice.id] || previewTranscript(voice.language),
       voiceId: voice.heygenId || voice.id,
       language: voice.language,
       speed: 1,
