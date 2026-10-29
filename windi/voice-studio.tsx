@@ -218,7 +218,7 @@ const voiceComparisons = [
     voiceName: "Chữa Lành",
     style: "Ấm áp · chậm rãi · giàu khoảng lặng",
     other: "/voice-comparisons/other/chua%20lanh.MP3",
-    pro: "/voice-comparisons/clone-pro/chua%20lanh.wav",
+    pro: "/voice-comparisons/clone-pro/chua-lanh-moi.wav",
     gender: "feminine",
     sampleText:
       "Có những ngày, chúng ta chỉ cần chậm lại một chút. Pha một tách trà, mở cửa sổ, và lắng nghe thành phố đang thức giấc. Câu chuyện hôm nay bắt đầu từ một khoảnh khắc rất đỗi bình thường như thế.",

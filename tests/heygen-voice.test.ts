@@ -11,7 +11,7 @@ describe('HeyGen Voice Integration & Cartesia Backup', () => {
     expect(CURATED_PUBLIC_VOICES).toHaveLength(12);
 
     const voiceNames = CURATED_PUBLIC_VOICES.map((v) => v.name);
-    expect(voiceNames).toEqual(['Đức Bảo', 'Minh Dự', 'Ngô Đình', 'Kim Ánh', 'Tố My', 'Quỳnh Nhi', 'Lữ Trình', 'Kim Thoa', 'Thanh Thảo', 'Đình Mạnh', 'Thích Tâm Tuệ', 'Thùy Tâm']);
+    expect(voiceNames).toEqual(['Đức Bảo', 'Minh Dự', 'Ngô Đình', 'Kim Ánh', 'Tố My', 'Quỳnh Nhi', 'Lữ Trình', 'Kim Thoa', 'Thanh Thảo', 'Đình Mạnh', 'Thích Nhân Tâm', 'Thùy Tâm']);
 
     for (const voice of CURATED_PUBLIC_VOICES) {
       expect(voice.provider).toBe('heygen');

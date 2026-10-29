@@ -69,7 +69,7 @@ export async function synthesizeHeyGen(
           headers: { 'X-Api-Key': key, 'Content-Type': 'application/json' },
           body: JSON.stringify({ voice_id: providerVoiceId, text: chunk.requestText,
             language: input.language, model: selectedModel,
-            expressiveness_boost: HEYGEN_EXPRESSIVENESS, with_timestamps: true }),
+            expressiveness_boost: providerVoiceId.toLowerCase() === "ff68799fc9c6495d9ce1524e530b2ebf" ? 1 : HEYGEN_EXPRESSIVENESS, with_timestamps: true }),
           cache: 'no-store', signal: AbortSignal.timeout(remainingTimeout(deadline, 90000)),
         });
       } catch {

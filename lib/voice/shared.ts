@@ -60,7 +60,7 @@ export const CURATED_PUBLIC_VOICES: StudioVoice[] = [
   {id:'aad4386756084ceb93fe87a70e0bd296',name:'Kim Thoa',description:'Giọng clone tiếng Việt',language:'vi',kind:'public',provider:'heygen',heygenId:'aad4386756084ceb93fe87a70e0bd296'},
   {id:'7a6eb31448bd466e84e8af7a8e12136f',name:'Thanh Thảo',description:'Giọng clone tiếng Việt',language:'vi',kind:'public',provider:'heygen',heygenId:'7a6eb31448bd466e84e8af7a8e12136f'},
   {id:'7dc25b191a794ecba206cab6f0c70576',name:'Đình Mạnh',description:'Giọng clone tiếng Việt',language:'vi',kind:'public',provider:'heygen',heygenId:'7dc25b191a794ecba206cab6f0c70576'},
-  {id:'8589f5c2d1c54e2ba554d15511963014',name:'Thích Tâm Tuệ',description:'Giọng tiếng Việt • podcast chữa lành',language:'vi',kind:'public',provider:'heygen',heygenId:'8589f5c2d1c54e2ba554d15511963014'},
+  {id:'ff68799fc9c6495d9ce1524e530b2ebf',name:'Thích Nhân Tâm',description:'Giọng tiếng Việt • podcast chữa lành',language:'vi',kind:'public',provider:'heygen',heygenId:'ff68799fc9c6495d9ce1524e530b2ebf'},
   {id:'253a627ca6134472b1fac9798a8e3398',name:'Thùy Tâm',description:'Giọng tiếng Việt • talkshow tâm sự',language:'vi',kind:'public',provider:'heygen',heygenId:'253a627ca6134472b1fac9798a8e3398'},
 ];
 export const DEFAULT_STUDIO_VOICE = CURATED_PUBLIC_VOICES[1];
