@@ -3,8 +3,8 @@ export const VOICE_API_ENABLED = false;
 export const MAX_WEB_GENERATION_CHARACTERS = 5000;
 export const VOICE_PLANS = [
   { id: 'welcome', name: 'Chào mừng', price_vnd: 0, credits: 3000, clone_limit: 0, duration_days: 7, billing: 'one_time', purchasable: false, description: '3.000 credit miễn phí khi bạn đăng ký.' },
-  { id: 'credit_10k', name: '10.000 credit', price_vnd: 39000, credits: 10000, clone_limit: 1, duration_days: 30, billing: 'one_time', purchasable: true, description: 'Gói credit gọn nhẹ để bắt đầu tạo giọng trực tiếp.' },
-  { id: 'credit_100k', name: '100.000 credit', price_vnd: 139000, credits: 100000, clone_limit: 2, duration_days: 30, billing: 'one_time', purchasable: true, description: 'Dành cho nhà sáng tạo cần tạo nội dung thường xuyên.' },
+  { id: 'credit_10k', name: '10.000 credit', price_vnd: 29000, credits: 10000, clone_limit: 1, duration_days: 30, billing: 'one_time', purchasable: true, description: 'Gói credit gọn nhẹ để bắt đầu tạo giọng trực tiếp.' },
+  { id: 'credit_100k', name: '100.000 credit', price_vnd: 99000, credits: 100000, clone_limit: 2, duration_days: 30, billing: 'one_time', purchasable: true, description: 'Dành cho nhà sáng tạo cần tạo nội dung thường xuyên.' },
   { id: 'credit_1m', name: '1.000.000 credit', price_vnd: 599000, credits: 1000000, clone_limit: 5, duration_days: 30, billing: 'one_time', purchasable: true, description: 'Chỉ dùng tạo trực tiếp trên Voice Studio; API đang tạm ngưng.' },
   // Keep retired plan definitions for displaying historical orders and periods.
   { id: 'trial', name: 'Clone thử đầu tiên', price_vnd: 39000, credits: 3000, clone_limit: 1, duration_days: 14, billing: 'one_time', purchasable: false, description: 'Gói cũ.' },

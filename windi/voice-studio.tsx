@@ -1567,13 +1567,13 @@ export function VoiceStudio() {
                 </div>
                 <span className="voice-quota">
                   {isAdmin ? `${activeCloneCount} giọng · quota Windi Clone Pro 3.0` : period?.clone_limit
-                    ? `${activeCloneCount} / ${period.clone_limit} giọng đang hoạt động` : user ? "Mua gói 39.000₫ để mở 1 slot giọng" : "Đăng nhập và mua gói để tạo giọng riêng"}
+                    ? `${activeCloneCount} / ${period.clone_limit} giọng đang hoạt động` : user ? "Mua gói 29.000₫ để mở 1 slot giọng" : "Đăng nhập và mua gói để tạo giọng riêng"}
                 </span>
               </div>
               {user && account && !isAdmin && !period?.clone_limit ? (
                 <div className="voice-clone-unlock">
-                  <div><strong>Cần mua gói trước khi tạo giọng</strong><p>Gói 10.000 credit giá 39.000₫ mở 1 slot giọng clone trong 30 ngày.</p></div>
-                  <button className="voice-btn" onClick={() => setTab("plans")}>Xem gói 39.000₫ <ArrowRight size={15} /></button>
+                  <div><strong>Cần mua gói trước khi tạo giọng</strong><p>Gói 10.000 credit giá 29.000₫ mở 1 slot giọng clone trong 30 ngày.</p></div>
+                  <button className="voice-btn" onClick={() => setTab("plans")}>Xem gói 29.000₫ <ArrowRight size={15} /></button>
                 </div>
               ) : (
                 <div className="voice-clone-layout">
