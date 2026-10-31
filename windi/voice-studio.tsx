@@ -3,7 +3,7 @@
 import { VoiceAdminPanel } from './voice-admin-panel';
 import { VoiceId } from './voice-id';
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import {
   AudioLines,
   ArrowDownToLine,
@@ -385,7 +385,7 @@ function VoiceComparisonShowcase() {
   );
 }
 
-export function VoiceStudio() {
+export function VoiceStudio({ children }: { children?: ReactNode }) {
   const { user, isLoading } = useAuth();
   const [tab, setTab] = useState<Tab>("create");
   const [verticalNavigation, setVerticalNavigation] = useState(false);
@@ -1049,10 +1049,10 @@ export function VoiceStudio() {
       <div className="voice-heading">
         <div>
           <span className="voice-eyebrow">
-            <span /> WINDI AUDIO LAB
+            <span /> VOICE STUDIO · WINDI AUDIO LAB
           </span>
-          <h1>Voice Studio</h1>
-          <p>Giọng clone như thật. Cảm xúc tự động theo ngữ cảnh.</p>
+          <h1>Clone giọng, tạo voice AI giàu cảm xúc</h1>
+          <p>Giữ chất giọng riêng, chuyển văn bản thành giọng nói tiếng Việt có ngữ điệu theo ngữ cảnh cho video, podcast và kể chuyện.</p>
         </div>
         <div className="voice-header-art" aria-hidden="true">
           <div className="voice-tape">
@@ -1080,7 +1080,7 @@ export function VoiceStudio() {
         </div>
       </div>
       <VoiceComparisonShowcase />
-      <section className="voice-workspace">
+      <section className="voice-workspace" id="voice-workspace" aria-label="Phòng thu Voice Studio">
         <div className="voice-titlebar">
           <span>
             <AudioLines size={15} /> voice_studio.exe
@@ -2157,6 +2157,7 @@ export function VoiceStudio() {
         </div>
         </div>
       </section>
+      {children}
       <div className="voice-bottom-note">
         <span>
           <ShieldCheck size={15} /> Giọng riêng tư. Credit rõ ràng.

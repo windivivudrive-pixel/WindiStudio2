@@ -609,3 +609,47 @@ html[data-theme=dark] .voice-picker select { color-scheme: dark; }
 
 /* Reference price and current offer for the three credit bundles. */
 .voice-price-original{font-size:12px;line-height:1.5;color:var(--muted);margin-bottom:5px}.voice-price-original s{text-decoration-thickness:1px}.voice-price-label{font-size:10px;font-weight:700;color:var(--green);letter-spacing:.05em;text-transform:uppercase}
+
+/* Public product guide stays below the studio and renders without JavaScript. */
+.voice-heading > div:first-child { min-width: 0; }
+.voice-heading h1 { max-width: 36ch; letter-spacing: -.04em; text-wrap: balance; }
+.voice-heading p { max-width: 82ch; }
+#voice-workspace, #voice-comparison { scroll-margin-top: 96px; }
+.voice-guide { margin-top: 64px; }
+.voice-guide h2 { margin: 12px 0 16px; font-size: clamp(21px, 2.2vw, 29px); line-height: 1.4; letter-spacing: -.04em; text-wrap: balance; }
+.voice-guide p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.9; }
+.voice-guide-heading { max-width: 760px; }
+.voice-guide-features { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 32px; margin-top: 32px; }
+.voice-guide-features article { border-top: 1px solid color-mix(in srgb, var(--border) 35%, transparent); padding-top: 20px; }
+.voice-guide-number { font-size: 11px; font-weight: 700; color: var(--muted); }
+.voice-guide h3 { margin: 14px 0 10px; font-size: 16px; line-height: 1.5; }
+.voice-guide-workflow { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); gap: 48px; margin-block: 48px; padding: 32px; background: var(--surface); border: 1px solid color-mix(in srgb, var(--border) 35%, transparent); border-radius: 10px; }
+.voice-guide-workflow h2 { margin-top: 0; }
+.voice-guide-link { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; font-size: 13px; font-weight: 700; text-underline-offset: 4px; }
+.voice-guide-workflow ol { display: grid; gap: 20px; padding-left: 22px; margin: 0; }
+.voice-guide-workflow li { padding-left: 8px; }
+.voice-guide-workflow li::marker { color: var(--muted); font-size: 12px; }
+.voice-guide-workflow strong { display: block; margin-bottom: 4px; font-size: 14px; }
+.voice-guide-faq { max-width: 960px; }
+.voice-guide-faq .voice-guide-heading { margin-bottom: 24px; }
+.voice-guide-faq details { border-top: 1px solid color-mix(in srgb, var(--border) 35%, transparent); }
+.voice-guide-faq details:last-of-type { border-bottom: 1px solid color-mix(in srgb, var(--border) 35%, transparent); }
+.voice-guide-faq summary { cursor: pointer; padding: 20px 4px; font-size: 14px; font-weight: 700; line-height: 1.7; }
+.voice-guide-faq summary:focus-visible { outline: 3px solid var(--blue); outline-offset: 4px; }
+.voice-guide-faq details p { padding: 0 24px 22px; max-width: 85ch; }
+.voice-guide .voice-guide-related { margin-top: 24px; }
+.voice-guide-related a, .voice-guide-link { text-decoration: underline; text-underline-offset: 4px; }
+@media (max-width: 900px) {
+  .voice-guide-features { gap: 22px; }
+  .voice-guide-workflow { grid-template-columns: minmax(0, 1fr); gap: 20px; }
+}
+@media (max-width: 600px) {
+  .voice-heading h1 { font-size: 25px; line-height: 1.35; }
+  .voice-heading p { max-width: 100%; }
+  .voice-eyebrow { font-size: 9px; letter-spacing: .08em; }
+  .voice-guide { margin-top: 44px; }
+  .voice-guide-features { grid-template-columns: minmax(0, 1fr); gap: 24px; margin-top: 24px; }
+  .voice-guide-workflow { margin-block: 32px; padding: 22px 18px; }
+  .voice-guide-faq summary { padding-block: 16px; }
+  .voice-guide-faq details p { padding-inline: 4px; }
+}

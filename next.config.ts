@@ -1,6 +1,9 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
+  async redirects() {
+    return [{ source: '/voice-studio', destination: '/', permanent: true }];
+  },
   env: {
     // Existing Vite names continue to work while deployments move to NEXT_PUBLIC_ names.
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.VITE_SUPABASE_URL,
