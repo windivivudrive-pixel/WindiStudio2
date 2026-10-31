@@ -58,7 +58,6 @@ import {
   VOICE_API_ENABLED,
   MAX_WEB_GENERATION_CHARACTERS,
   type StudioVoice,
-  type VoiceAccent,
   type VoiceAccount,
   type VoiceOrder,
 } from "@/lib/voice/shared";
@@ -425,10 +424,6 @@ export function VoiceStudio() {
   const [previewingId, setPreviewingId] = useState("");
   const [previewLoadingId, setPreviewLoadingId] = useState("");
   const [cloneName, setCloneName] = useState("");
-  const [cloneLanguage, setCloneLanguage] = useState("vi");
-  const [cloneAccent, setCloneAccent] = useState("");
-  const [cloneAccents, setCloneAccents] = useState<VoiceAccent[]>([]);
-  const [accentLoading, setAccentLoading] = useState(false);
   const [clip, setClip] = useState<File | null>(null);
   const [clipUrl, setClipUrl] = useState("");
   const [clipDuration, setClipDuration] = useState<number | null>(null);
@@ -464,9 +459,10 @@ export function VoiceStudio() {
   const workflowBonusRemaining = account?.bonus
     ? account.bonus.voice_credits - account.bonus.voice_credits_used
     : 0;
-  const planRemaining = period ? period.credits - period.used_credits : 0;
+  const planBalances = (account?.periods ?? (period ? [period] : [])).map(p => Math.max(0, p.credits - p.used_credits));
+  const planRemaining = planBalances.reduce((sum, balance) => sum + balance, 0);
   const remaining = planRemaining + workflowBonusRemaining;
-  const largestBalance = Math.max(planRemaining, workflowBonusRemaining);
+  const largestBalance = Math.max(0, ...planBalances, workflowBonusRemaining);
   const credits = countCredits(text);
   const cloneVoices: StudioVoice[] = (account?.clones || [])
     .filter((c) => c.status === "ready" && c.provider_id && !c.is_demo)
@@ -555,27 +551,6 @@ export function VoiceStudio() {
     }
     setClipUrl("");
   }, [clip]);
-  useEffect(() => {
-    if (tab !== "clone" || !user || !available) return;
-    let current = true;
-    setAccentLoading(true);
-    setCloneAccent("");
-    void api<{ accents: VoiceAccent[] }>(
-      `accents?language=${encodeURIComponent(cloneLanguage)}`,
-    )
-      .then((data) => {
-        if (current) setCloneAccents(data.accents);
-      })
-      .catch(() => {
-        if (current) setCloneAccents([]);
-      })
-      .finally(() => {
-        if (current) setAccentLoading(false);
-      });
-    return () => {
-      current = false;
-    };
-  }, [available, cloneLanguage, tab, user]);
   useEffect(() => {
     if (checkout && !dialogRef.current?.open) dialogRef.current?.showModal();
     if (!checkout && dialogRef.current?.open) dialogRef.current.close();
@@ -914,8 +889,7 @@ export function VoiceStudio() {
     form.set("clip", clip);
     form.set("durationMs", String(Math.round(clipDuration * 1000)));
     form.set("name", cloneName);
-    form.set("language", cloneLanguage);
-    if (cloneAccent) form.set("accent", cloneAccent);
+    form.set("language", "vi");
     form.set("consent", "true");
     form.set("requestKey", cloneKey.current);
     try {
@@ -928,13 +902,12 @@ export function VoiceStudio() {
       setClipDuration(null);
       if (clipInputRef.current) clipInputRef.current.value = "";
       setCloneName("");
-      setCloneAccent("");
       setConsent(false);
       cloneKey.current = null;
       created = true;
     } catch (e) {
       setError((e as Error).message);
-      if ((e as Error).message.includes("hoàn lại")) cloneKey.current = null;
+      if ((e as Error).message.includes("hoàn lại") || (e as Error).message.includes("Hệ thống quá tải")) cloneKey.current = null;
     } finally {
       setBusy("");
       await refresh();
@@ -1174,7 +1147,9 @@ export function VoiceStudio() {
               <span className="voice-usage-plan-text">
                 {isLoading
                   ? "Đang tải tài khoản…"
-                  : user
+                  : user && !account
+                    ? (accountError ? "Không tải được tài khoản" : "Đang tải tài khoản…")
+                    : user
                     ? isAdmin
                       ? "Admin · Windi Clone Pro 3.0"
                       : currentPlan
@@ -1194,16 +1169,16 @@ export function VoiceStudio() {
                 </span>
                 <div className="voice-credit-body">
                   <span className="voice-credit-val">
-                    {isAdmin ? "Quota Windi Clone Pro 3.0" : formatNumber(remaining)}
+                    {!account ? (accountError ? "Không tải được" : "Đang tải…") : isAdmin ? "Quota Windi Clone Pro 3.0" : formatNumber(remaining)}
                   </span>
                   <span className="voice-credit-label">
                     {isAdmin ? "quản trị" : "credit còn lại"}
                   </span>
                 </div>
                 {period && (
-                  <span className="voice-credit-period" title={`Hạn dùng: ${date(period.ends_at)}`}>
+                  <span className="voice-credit-period" title={(account?.periods?.length ?? 0) > 1 ? "Các gói có hạn dùng riêng" : `Hạn dùng: ${date(period.ends_at)}`}>
                     <Clock3 size={13} aria-hidden="true" />
-                    <span>đến {date(period.ends_at)}</span>
+                    <span>{(account?.periods?.length ?? 0) > 1 ? "nhiều hạn dùng" : `đến ${date(period.ends_at)}`}</span>
                   </span>
                 )}
               </div>
@@ -1361,7 +1336,7 @@ export function VoiceStudio() {
                   </div>
                 </div>
                 <p id="voice-generate-hint" className="voice-compose-hint" role="status">
-                  {credits > MAX_WEB_GENERATION_CHARACTERS ? "Tối đa 5.000 ký tự mỗi lần." : !text.trim() ? "Nhập nội dung; đoạn dài sẽ tự chia theo câu và ghép thành một file MP3." : user && !available ? "Dịch vụ đang kết nối. Vui lòng thử lại sau ít phút." : !isAdmin && user && credits > largestBalance ? <>Bạn chưa đủ credit cho đoạn này. Rút ngắn nội dung hoặc <button onClick={() => setTab("plans")}>xem gói dịch vụ</button>.</> : "Nội dung dài được tự chia theo câu, giữ cùng giọng và ghép thành một file MP3. Quá trình này có thể mất vài phút."}
+                  {credits > MAX_WEB_GENERATION_CHARACTERS ? "Tối đa 5.000 ký tự mỗi lần." : !text.trim() ? "Nhập nội dung; đoạn dài sẽ tự chia theo câu và ghép thành một file MP3." : user && !available ? "Dịch vụ đang kết nối. Vui lòng thử lại sau ít phút." : !isAdmin && user && account && credits > largestBalance ? <>Bạn chưa đủ credit cho đoạn này. Rút ngắn nội dung hoặc <button onClick={() => setTab("plans")}>xem gói dịch vụ</button>.</> : "Nội dung dài được tự chia theo câu, giữ cùng giọng và ghép thành một file MP3. Quá trình này có thể mất vài phút."}
                 </p>
               </section>
               <section className="voice-today" aria-labelledby="voice-today-title">
@@ -1591,49 +1566,7 @@ export function VoiceStudio() {
                         }}
                       />
                     </label>
-                    <label>
-                      Ngôn ngữ mẫu
-                      <select
-                        value={cloneLanguage}
-                        onChange={(e) => {
-                          setCloneLanguage(e.target.value);
-                          cloneKey.current = null;
-                        }}
-                      >
-                        {VOICE_LANGUAGES.map((l) => (
-                          <option key={l.id} value={l.id}>
-                            {l.name}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                    <label>
-                      Vùng giọng (không bắt buộc)
-                      <select
-                        value={cloneAccent}
-                        disabled={accentLoading || !cloneAccents.length}
-                        onChange={(e) => {
-                          setCloneAccent(e.target.value);
-                          cloneKey.current = null;
-                        }}
-                      >
-                        <option value="">
-                          {accentLoading
-                            ? "Đang tải vùng giọng…"
-                            : cloneAccents.length
-                              ? "Tự nhận theo mẫu ghi âm"
-                              : "Tự nhận theo mẫu ghi âm"}
-                        </option>
-                        {cloneAccents.map((accent) => (
-                          <option key={accent.id} value={accent.id}>
-                            {accent.name} · {accent.locale}
-                          </option>
-                        ))}
-                      </select>
-                      <span className="voice-field-hint">
-                        Để mặc định nếu bạn chưa chắc. Chất giọng dựa trên mẫu ghi âm của bạn.
-                      </span>
-                    </label>
+                    <div className="voice-field-hint">Ngôn ngữ mẫu: Tiếng Việt</div>
                     <label className="voice-upload">
                       <Upload size={30} />
                       <strong>
@@ -1683,6 +1616,9 @@ export function VoiceStudio() {
                         }}
                       />
                     </label>
+                    {user && account && !isAdmin && !!period?.clone_limit && !canClone && (
+                      <p role="status">Hệ thống quá tải, vui lòng thử lại sau.</p>
+                    )}
                     {clipChecking && (
                       <span className="voice-field-hint">Đang kiểm tra thời lượng file…</span>
                     )}
@@ -2125,8 +2061,7 @@ export function VoiceStudio() {
                 <p>
                   <strong>Credit tính thế nào?</strong> 1 ký tự = 1 credit, gồm
                   dấu câu và khoảng trắng. Mỗi gói dùng trong 30 ngày, không tự
-                  gia hạn; nếu mua khi đang có gói, gói mới bắt đầu sau gói hiện
-                  tại và credit không cộng dồn.
+                  gia hạn. Gói mới có thể sử dụng ngay sau khi thanh toán; mỗi gói có hạn dùng riêng. Mỗi lần tạo sử dụng credit từ một gói đủ số dư.
                 </p>
                 <p>
                   <strong>Giọng clone khi gói hết hạn?</strong> Giọng được giữ

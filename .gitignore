@@ -41,8 +41,12 @@
 # The website's SePay webhook imports this shared payment module.
 # Desktop apps, video renderers and other kits remain local.
 !/kits/
-/kits/*
-!/kits/qr-payment/
+/kits/international/
+/kits/local-dubbing-app/
+/kits/video-starter/
+/kits/watch/
+/kits/windi-cut/
+/kits/windistudio-repo-video/
 
 # Legacy downloadable tool source is not part of the Next.js application.
 # Published product ZIPs are delivered from Supabase Storage.

@@ -48,8 +48,12 @@ videos/
 /windi/*.mp4
 /windi/*.mov
 /windi/*.webm
-/kits/*
-!/kits/qr-payment/
+/kits/international/
+/kits/local-dubbing-app/
+/kits/video-starter/
+/kits/watch/
+/kits/windi-cut/
+/kits/windistudio-repo-video/
 /docs/channel/
 /docs/research/
 /docs/local-dubbing-app-spec.md

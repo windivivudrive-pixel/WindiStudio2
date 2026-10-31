@@ -1,6 +1,8 @@
 import {beforeEach,expect,test,vi} from 'vitest';
 vi.mock('server-only',()=>({}));
 const state=vi.hoisted(()=>({identity:vi.fn(),writer:vi.fn(),cartesia:vi.fn(),providerReady:vi.fn(),resolveVoice:vi.fn(),resolveCloneAccent:vi.fn(),voiceAccents:vi.fn(),audioUrl:vi.fn(),paymentConfig:vi.fn(),previewPublicVoice:vi.fn()}));
+const heygen=vi.hoisted(()=>({ready:vi.fn(),clone:vi.fn()}));
+vi.mock('../lib/voice/heygen',async(importOriginal)=>({...await importOriginal<typeof import('../lib/voice/heygen')>(),heygenReady:heygen.ready,cloneHeyGenVoice:heygen.clone}));
 vi.mock('../lib/voice/server',async(importOriginal)=>({...await importOriginal<typeof import('../lib/voice/server')>(),...state}));
 import {POST as generate} from '../app/api/voice/generate/route';
 import {POST as clone} from '../app/api/voice/clone/route';
@@ -20,6 +22,7 @@ function sse(withTiming=true) {
 }
 beforeEach(()=>{
  vi.resetAllMocks();
+ heygen.ready.mockReturnValue(true); heygen.clone.mockResolvedValue('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa');
  state.identity.mockResolvedValue({user:{id:uid}});state.providerReady.mockReturnValue(true);state.resolveVoice.mockResolvedValue({id,name:'Voice'});state.resolveCloneAccent.mockResolvedValue(null);state.voiceAccents.mockResolvedValue([]);state.audioUrl.mockResolvedValue('https://example.test/signed');
  rpc=vi.fn().mockImplementation(async(name)=>({data:name==='windi_voice_reserve'||name==='windi_voice_clone_reserve'?{id,status:'reserved'}:null,error:null}));
  upload=vi.fn().mockResolvedValue({error:null});claim=vi.fn().mockResolvedValue({data:{id},error:null});
@@ -108,36 +111,28 @@ test('clone rejects a sample longer than 60 seconds before reserving a slot',asy
  expect(response.status).toBe(400);expect(await response.json()).toEqual(expect.objectContaining({error:expect.stringContaining('tối đa 60 giây')}));
  expect(rpc).not.toHaveBeenCalled();expect(state.cartesia).not.toHaveBeenCalled();
 });
-test('clone validates, persists, and sends current private-voice metadata to Cartesia',async()=>{
- const form=new FormData();form.set('clip',new File(['test'],'voice.mp3',{type:'audio/mpeg'}));form.set('name','My voice');form.set('requestKey',id);form.set('language','vi');form.set('accent','northern-vietnamese');form.set('consent','true');form.set('durationMs','30000');
- state.resolveCloneAccent.mockResolvedValue('northern-vietnamese');state.cartesia.mockResolvedValue(new Response(JSON.stringify({id}),{headers:{'Content-Type':'application/json'}}));
+test('clones Vietnamese with HeyGen and ignores accent and alternate provider requests',async()=>{
+ const form=new FormData();form.set('clip',new File(['test'],'voice.mp3',{type:'audio/mpeg'}));form.set('name','My voice');form.set('requestKey',id);form.set('language','vi');form.set('accent','north');form.set('provider','cartesia');form.set('consent','true');form.set('durationMs','30000');
  const response=await clone(new Request('http://localhost/api/voice/clone',{method:'POST',body:form}));
-  expect(response.status).toBe(200);expect(state.resolveCloneAccent).toHaveBeenCalledWith('vi','northern-vietnamese');
-  expect(rpc).toHaveBeenCalledWith('windi_voice_clone_reserve',{p_user:uid,p_key:id,p_name:'My voice',p_language:'vi',p_accent:'northern-vietnamese'});
-  const upstream=state.cartesia.mock.calls[0][1].body as FormData;
-  expect(upstream.get('language')).toBe('vi');expect(upstream.get('enhance')).toBeNull();
-  expect(upstream.get('accent')).toBe('northern-vietnamese');expect(upstream.get('access')).toBe('private');
+ expect(response.status).toBe(200);expect(heygen.clone).toHaveBeenCalledOnce();expect(state.cartesia).not.toHaveBeenCalled();
+ expect(rpc).toHaveBeenCalledWith('windi_voice_clone_reserve',{p_user:uid,p_key:id,p_name:'My voice',p_language:'vi',p_accent:null});
 });
-test('clone failures release the reserved slot and return an actionable retry message',async()=>{
- const form=new FormData();form.set('clip',new File(['test'],'voice.mp3',{type:'audio/mpeg'}));form.set('name','My voice');form.set('requestKey',id);form.set('language','vi');form.set('consent','true');form.set('durationMs','30000');
- state.cartesia.mockRejectedValue(new Error('timeout'));
- const response=await clone(new Request('http://localhost/api/voice/clone',{method:'POST',body:form}));
- expect(response.status).toBe(503);expect(await response.json()).toEqual(expect.objectContaining({error:expect.stringContaining('Lượt clone đã được hoàn lại')}));
- expect(rpc).toHaveBeenCalledWith('windi_voice_clone_finish',{p_clone:id,p_provider:null});
+test('rejects non-Vietnamese samples before reserving',async()=>{
+ const form=new FormData();form.set('clip',new File(['test'],'voice.mp3'));form.set('name','My voice');form.set('requestKey',id);form.set('language','en');form.set('consent','true');form.set('durationMs','30000');
+ expect((await clone(new Request('http://localhost/api/voice/clone',{method:'POST',body:form}))).status).toBe(400);expect(rpc).not.toHaveBeenCalled();expect(heygen.clone).not.toHaveBeenCalled();
 });
-test('clone provider rejections refund before surfacing sample guidance',async()=>{
- const form=new FormData();form.set('clip',new File(['test'],'voice.mp3',{type:'audio/mpeg'}));form.set('name','My voice');form.set('requestKey',id);form.set('language','vi');form.set('consent','true');form.set('durationMs','30000');
- state.cartesia.mockResolvedValue(new Response(JSON.stringify({message:'invalid clip'}),{status:422,headers:{'Content-Type':'application/json'}}));
+test('HeyGen errors release the slot without switching providers',async()=>{
+ const form=new FormData();form.set('clip',new File(['test'],'voice.mp3'));form.set('name','My voice');form.set('requestKey',id);form.set('language','vi');form.set('consent','true');form.set('durationMs','30000');
+ heygen.clone.mockRejectedValue(new VoiceError('Dịch vụ gián đoạn',502));
  const response=await clone(new Request('http://localhost/api/voice/clone',{method:'POST',body:form}));
- expect(response.status).toBe(502);expect(await response.json()).toEqual(expect.objectContaining({error:expect.stringContaining('Mẫu giọng chưa phù hợp')}));
- expect(rpc).toHaveBeenCalledWith('windi_voice_clone_finish',{p_clone:id,p_provider:null});
+ expect(response.status).toBe(503);expect(await response.json()).toEqual({error:'Hệ thống quá tải, vui lòng thử lại sau.'});
+ expect(rpc).toHaveBeenCalledWith('windi_voice_clone_finish',{p_clone:id,p_provider:null});expect(state.cartesia).not.toHaveBeenCalled();
 });
-test('Cartesia plan restriction is reported accurately and refunds the clone slot',async()=>{
- const form=new FormData();form.set('clip',new File(['test'],'voice.mp3',{type:'audio/mpeg'}));form.set('name','My voice');form.set('requestKey',id);form.set('language','vi');form.set('consent','true');form.set('durationMs','30000');
- state.cartesia.mockResolvedValue(new Response(JSON.stringify({error_code:'plan_upgrade_required',message:'upgrade',request_id:'provider-request'}),{status:402,headers:{'Content-Type':'application/json'}}));
+test('clone limit returns the overload message',async()=>{
+ const form=new FormData();form.set('clip',new File(['test'],'voice.mp3'));form.set('name','My voice');form.set('requestKey',id);form.set('language','vi');form.set('consent','true');form.set('durationMs','30000');
+ rpc.mockResolvedValueOnce({data:null,error:{message:'CLONE_LIMIT'}});
  const response=await clone(new Request('http://localhost/api/voice/clone',{method:'POST',body:form}));
- expect(response.status).toBe(502);expect(await response.json()).toEqual(expect.objectContaining({error:expect.stringContaining('gói API hiện tại')}));
- expect(rpc).toHaveBeenCalledWith('windi_voice_clone_finish',{p_clone:id,p_provider:null});
+ expect(response.status).toBe(503);expect(await response.json()).toEqual({error:'Hệ thống quá tải, vui lòng thử lại sau.'});expect(heygen.clone).not.toHaveBeenCalled();
 });
 test('accent catalog is private to the signed-in studio user and language-scoped',async()=>{
  state.voiceAccents.mockResolvedValue([{id:'northern-vietnamese',name:'Northern Vietnamese',language:'vi',locale:'vi-VN',isLocaleDefault:true,isLocalizable:false}]);
@@ -147,11 +142,12 @@ test('accent catalog is private to the signed-in studio user and language-scoped
 });
 function webhook(body:unknown,token='Apikey test-webhook-secret'){return new Request('http://localhost/api/voice/payment-webhook',{method:'POST',headers:{'Content-Type':'application/json',Authorization:token},body:JSON.stringify(body)});}
 function orderRequest(planId:string){return new Request('http://localhost/api/voice/orders',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({planId})});}
-test('welcome credit cannot be bought and the one-time clone trial is purchasable',async()=>{
+test('welcome and retired trial cannot be bought, current bundles are purchasable',async()=>{
  expect((await createOrder(orderRequest('welcome'))).status).toBe(400);
  expect(rpc).not.toHaveBeenCalled();
- expect((await createOrder(orderRequest('trial'))).status).toBe(200);
- expect(rpc).toHaveBeenCalledWith('windi_voice_order',{p_user:uid,p_plan:'trial'});
+ expect((await createOrder(orderRequest('trial'))).status).toBe(400);
+ expect((await createOrder(orderRequest('credit_100k'))).status).toBe(200);
+ expect(rpc).toHaveBeenCalledWith('windi_voice_order',{p_user:uid,p_plan:'credit_100k'});
 });
 const transaction={id:1,transferType:'in',accountNumber:'1234',transferAmount:69000,content:'WV1234567890ABCDEF'};
 test('webhook rejects spoofed authentication and ignores outbound/wrong-account transfers',async()=>{

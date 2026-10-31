@@ -86,7 +86,7 @@ export type VoicePeriod = {id:string; plan_id:string; credits:number; used_credi
 export type VoiceClone = {id:string; provider_id:string|null; name:string; language:string; accent:string|null; status:string; created_at:string;is_demo?:boolean;demo_expires_at?:string|null};
 export type VoiceJob = {id:string; voice_name:string; transcript:string; credits:number; status:string; created_at:string};
 export type VoiceOrder = {id:string; plan_id:string; amount_vnd:number; payment_code:string; status:string; expires_at:string;created_at?:string;paid_at?:string|null;demo_clone_id?:string|null};
-export type VoiceAccount = {isAdmin?:boolean;period:VoicePeriod|null;nextPeriod?:Pick<VoicePeriod,'plan_id'|'starts_at'|'ends_at'>|null; bonus?:{voice_credits:number;voice_credits_used:number}|null; clones:VoiceClone[]; jobs:VoiceJob[]; orders:VoiceOrder[]};
+export type VoiceAccount = {isAdmin?:boolean;period:VoicePeriod|null;periods?:VoicePeriod[];nextPeriod?:Pick<VoicePeriod,'plan_id'|'starts_at'|'ends_at'>|null; bonus?:{voice_credits:number;voice_credits_used:number}|null; clones:VoiceClone[]; jobs:VoiceJob[]; orders:VoiceOrder[]};
 export const countCredits = (text:string) => Array.from(text.normalize('NFC').trim()).length;
 export const formatNumber = (n:number) => new Intl.NumberFormat('vi-VN').format(n);
 export const isUUID = (value:unknown): value is string => typeof value === 'string' && (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value) || /^[0-9a-f]{32}$/i.test(value));
