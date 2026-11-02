@@ -16,7 +16,7 @@ type NavItem = { href: string; label: string; items?: { href: string; label: str
 const nav: NavItem[] = [
   { href: '/', label: 'Voice Studio' },
   { href: '/video-kits', label: 'Video Kits' },
-  { href: '/gemini', label: 'Gemini' },
+  { href: '/cua-hang', label: 'Cửa hàng' },
   { href: '/discover', label: 'Công cụ' },
   { href: '/news', label: 'Tin tức' },
 ];

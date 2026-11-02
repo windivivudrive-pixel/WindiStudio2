@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { ArrowDown, ArrowDownToLine, ArrowRight, CheckCircle2, ChevronDown, Copy, FileText, Loader2, LockKeyhole, QrCode, RefreshCw, ShieldCheck, Sparkles, X } from 'lucide-react';
+import { ArrowDown, ArrowDownToLine, ArrowRight, CheckCircle2, Copy, FileText, Loader2, LockKeyhole, QrCode, RefreshCw, ShieldCheck, Sparkles, X } from 'lucide-react';
 import { GEMINI_PRODUCTS, geminiProduct, geminiSteps, type GeminiSku, type GeminiAccount, type GeminiOrder } from '@/lib/gemini/shared';
 import styles from './gemini.module.css';
 
@@ -12,6 +12,7 @@ const statusLabels: Record<string, string> = { PAID: 'Đã thanh toán', PENDING
 const support = 'https://www.facebook.com/profile.php?id=61594238790213';
 
 export function GeminiShop() {
+  const [catalogProduct, setCatalogProduct] = useState<string | null>(null);
   const [account, setAccount] = useState<GeminiAccount | null>(null);
   const [selectedSku, setSelectedSku] = useState<GeminiSku>('gemini-3m');
   const [loading, setLoading] = useState(true);
@@ -84,70 +85,77 @@ export function GeminiShop() {
   function closeCheckout() { dialog.current?.close(); setOrder(null); }
   const pending = account?.orders.find(item => (item.product_sku || 'gemini-3m') === selectedSku && item.status === 'PENDING' && Date.parse(item.expires_at) > now);
   const canBuy = availableProduct?.enabled && account?.bank && (availableProduct.stock > 0 || pending);
+  const stockLabel = loading ? 'Đang kiểm tra' : !account || !availableProduct ? 'Chưa kết nối' : !availableProduct.enabled ? 'Chưa mở bán' : availableProduct.stock > 0 ? 'Còn hàng' : pending ? 'Đã giữ link cho bạn' : 'Hết hàng';
   const seconds = order ? Math.min(300, Math.max(0, Math.ceil((Date.parse(order.expires_at) - now) / 1000))) : 0;
   const price = availableProduct?.price ?? selectedProduct.price;
   const checkoutMonths = order?.duration_months || 3;
 
   return <main className={styles.page}>
-    <div className={styles.topline}><Link href="/">WindiStudio</Link><span>/</span><span>Google Gemini</span><a href="#huong-dan">Hướng dẫn kích hoạt <ArrowDown size={13} aria-hidden="true" /></a></div>
-    <section className={styles.hero} aria-labelledby="gemini-title">
-      <div className={styles.heroCopy}>
-        <span className={styles.eyebrow}><span /> MỘT LINK. THÊM NHIỀU Ý TƯỞNG.</span>
-        <h1 id="gemini-title">Thêm Gemini.<br /><em>Mở thêm ý tưởng.</em></h1>
-        <p className={styles.lead}>Nâng cấp trải nghiệm AI trên chính tài khoản Google của bạn. Chọn link kích hoạt ưu đãi <strong>3 hoặc 18 tháng</strong>, bắt đầu từ một lần quét QR.</p>
-        <div className={styles.heroActions}><a href="#mua-ngay" className={styles.primary}>Chọn gói Gemini <ArrowRight size={18} aria-hidden="true" /></a><a href="#huong-dan" className={styles.secondary}>Cách sử dụng <ArrowDown size={16} aria-hidden="true" /></a></div>
-        <div className={styles.trustline}><span><ShieldCheck size={16} aria-hidden="true" /> Dùng Google cá nhân</span><span><FileText size={16} aria-hidden="true" /> Giao link qua file TXT</span></div>
-      </div>
-      <div className={styles.productVisual} aria-label={`Gói Gemini ${selectedProduct.durationMonths} tháng, kích hoạt trên Google cá nhân`}>
-        <div className={styles.visualRings} aria-hidden="true"><div className={styles.orbitOne} /><div className={styles.orbitTwo} /></div>
-        <div className={styles.visualLabel}><span className={styles.tinyDot} /> YOUR NEXT IDEA STARTS HERE</div>
-        <div className={styles.sparkle}><Sparkles size={96} strokeWidth={1.25} aria-hidden="true" /></div>
-        <div className={styles.productName}>Gemini<span>by Google</span></div>
-        <div className={styles.visualBottom}><span>LINK KÍCH HOẠT<br /><strong>Trên Google của bạn</strong></span><strong className={styles.duration}>{String(selectedProduct.durationMonths).padStart(2, '0')}<span>THÁNG</span></strong></div>
-        <div className={styles.fileTag}><FileText size={22} aria-hidden="true" /><div>gemini-{selectedProduct.durationMonths}-thang.txt<small>Một đơn hàng · Một link riêng</small></div><CheckCircle2 size={19} aria-hidden="true" /></div>
-      </div>
+    <div className={styles.topline}><Link href="/">WindiStudio</Link><span>/</span><span>Cửa hàng số</span>{!catalogProduct && <a href="#san-pham">Sản phẩm <ArrowDown size={13} aria-hidden="true" /></a>}</div>
+    {!catalogProduct && <>
+    <section className={styles.catalog} id="san-pham" aria-labelledby="catalog-title">
+      <div className={styles.catalogHeading}><h1 id="catalog-title">Sản phẩm</h1></div>
+      <div className={styles.catalogGrid}>{[
+        { id: 'google', icon: 'google/4285F4', name: 'Gemini Pro 3 tháng', image: '/gemini-products/gemini-3-thang.png', type: 'AI & SÁNG TẠO', description: 'Gói kích hoạt 3 tháng' },
+        { id: 'chatgpt', icon: 'openai/ffffff', name: 'ChatGPT 1 tháng chính chủ', image: '/gemini-products/chatgpt-1-thang.png', type: 'AI & CÔNG VIỆC', description: 'Trợ lý AI cho mỗi ngày' },
+        { id: 'claude', icon: 'claude/D97757', name: 'Claude 1 tháng chính chủ', image: '/gemini-products/claude-1-thang.png', type: 'AI & SÁNG TẠO', description: 'Cùng suy nghĩ và sáng tạo' },
+        { id: 'youtube', icon: 'youtube/FF0033', name: 'YouTube Premium 1 tháng', image: '/gemini-products/youtube-1-thang.png', type: 'GIẢI TRÍ', description: 'Video và âm nhạc' },
+      ].map(item => <button key={item.id} className={styles.catalogCard} onClick={() => { setCatalogProduct(item.id); setSelectedSku('gemini-3m'); setAccepted(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }} aria-label={'Xem ' + item.name + ', ' + (item.id === 'google' ? stockLabel : 'Hết hàng')}>
+        <span className={styles.cardArt}><img className={styles.productThumbnail} src={item.image} alt="" /></span>
+        <span className={styles.cardBody}><small>{item.type}</small><strong>{item.name}</strong><span>{item.description}</span><span className={styles.cardBottom}><b className={item.id === 'google' && stockLabel === 'Còn hàng' ? styles.inStock : undefined}>{item.id === 'google' ? stockLabel : 'Hết hàng'}</b><ArrowRight size={18} aria-hidden="true" /></span></span>
+      </button>)}</div>
     </section>
-
-    <div className={styles.featureStrip}><span><QrCode aria-hidden="true" /> Thanh toán QR tự động</span><span><ArrowDownToLine aria-hidden="true" /> Nhận TXT sau xác nhận tiền</span><span><LockKeyhole aria-hidden="true" /> Không cần gửi mật khẩu Google</span></div>
-
+    </>}
+    {catalogProduct && <button className={styles.backToCatalog} onClick={() => { setCatalogProduct(null); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>← Quay lại sản phẩm</button>}
+    {catalogProduct && <section className={styles.detailIntro} id="chi-tiet"><div><span className={styles.eyebrow}>CHI TIẾT SẢN PHẨM</span><h2>{catalogProduct === 'google' ? 'Google Gemini · 3 tháng' : ({ chatgpt: 'ChatGPT 1 tháng chính chủ', claude: 'Claude 1 tháng chính chủ', youtube: 'YouTube Premium 1 tháng' } as Record<string, string>)[catalogProduct]}</h2><p>{catalogProduct === 'google' ? 'Link kích hoạt trên tài khoản Google cá nhân của bạn.' : 'Sản phẩm hiện đã hết hàng. Thông tin chi tiết sẽ được cập nhật khi mở bán trở lại.'}</p></div><span className={catalogProduct === 'google' && stockLabel === 'Còn hàng' ? styles.inStock : styles.soldOut}>{catalogProduct === 'google' ? stockLabel : 'Hết hàng'}</span></section>}
+    {catalogProduct && catalogProduct !== 'google' && <img className={styles.detailThumbnail} src={'/gemini-products/' + catalogProduct + '-1-thang.png'} alt="" />}
+    {catalogProduct === 'google' && <>
     <section className={styles.purchaseSection} id="mua-ngay" aria-label="Chọn gói Gemini và hướng dẫn kích hoạt">
+      <img className={styles.detailThumbnail} src="/gemini-products/gemini-3-thang.png" alt="Gemini Pro 3 tháng" />
       <div className={styles.offer}>
         <fieldset className={styles.planPicker} disabled={busy}>
           <legend>Chọn thời hạn sử dụng</legend>
-          {GEMINI_PRODUCTS.map(product => <label key={product.sku} className={`${styles.planChoice} ${selectedSku === product.sku ? styles.planSelected : ''}`}>
+          {GEMINI_PRODUCTS.filter(product => product.sku === 'gemini-3m').map(product => <label key={product.sku} className={`${styles.planChoice} ${selectedSku === product.sku ? styles.planSelected : ''}`}>
             <input type="radio" name="gemini-product" value={product.sku} checked={selectedSku === product.sku} onChange={() => { setSelectedSku(product.sku); setAccepted(false); setError(''); setNotice(''); }} />
-            <span><strong>{product.durationMonths} tháng</strong><small className={styles.planPrice}>{money(account?.products?.find(item => item.sku === product.sku)?.price ?? product.price)}₫ / link</small></span>
+            <span><strong>{product.durationMonths} tháng</strong><small className={styles.planPrice}>{money(account?.products?.find(item => item.sku === product.sku)?.price ?? product.price)}₫ / link{product.originalPrice > product.price && <> <del>{money(account?.products?.find(item => item.sku === product.sku)?.originalPrice ?? product.originalPrice)}₫</del></>}</small></span>
           </label>)}
         </fieldset>
         <section className={styles.argonFeature} aria-labelledby="argon-feature-title" aria-live="polite">
           <div className={styles.argonFeatureHeading}><Sparkles size={24} aria-hidden="true" /><div><span>ĐIỂM KHÁC BIỆT NỔI BẬT</span><h3 id="argon-feature-title">{selectedSku === 'gemini-3m' ? 'Có Gemini 4 Argon trong Antigravity' : 'Không có Gemini 4 Argon trong Antigravity'}</h3></div></div>
         </section>
         <section className={styles.proBenefits} aria-labelledby="pro-benefits-title">
-          <h3 id="pro-benefits-title">Quyền lợi Google AI Pro trên cả hai gói</h3>
+          <h3 id="pro-benefits-title">Quyền lợi gói Google AI Pro</h3>
           <ul>
             <li><CheckCircle2 size={16} aria-hidden="true" /><span><strong>5 TB dung lượng tổng</strong> dùng chung cho Google Drive, Gmail và Google Photos.</span></li>
-            <li><CheckCircle2 size={16} aria-hidden="true" /><span>Quyền truy cập <strong>Gemini 4 Argon</strong> trong Gemini và Deep Research, cùng giới hạn sử dụng cao hơn.</span></li>
+            <li><CheckCircle2 size={16} aria-hidden="true" /><span>Quyền truy cập <strong>Gemini 4 Argon</strong> trong Gemini, Deep Research và Antigravity.</span></li>
             <li><CheckCircle2 size={16} aria-hidden="true" /><span>Gemini tích hợp trong Gmail, Docs, Vids và các ứng dụng Google được hỗ trợ.</span></li>
             <li><CheckCircle2 size={16} aria-hidden="true" /><span>Thêm quyền sử dụng Google Flow và Gemini Notebook.</span></li>
           </ul>
           <small>Một số tính năng có thể phụ thuộc quốc gia, tài khoản và điều kiện của Google.</small>
         </section>
-        <div className={styles.offerTop}><span>GEMINI · {selectedProduct.durationMonths} THÁNG</span><span className={styles.stock}>{loading ? 'Đang kiểm tra' : !account ? 'Chưa kết nối' : !availableProduct?.enabled ? 'Chưa mở bán' : availableProduct.stock > 0 ? 'Có sẵn' : pending ? 'Đã giữ link cho bạn' : 'Tạm hết link'}</span></div>
-        <p className={styles.price}>{money(price)}<span>₫</span></p><p className={styles.priceCaption}>Thanh toán một lần cho một link kích hoạt.</p>
+        <div className={styles.offerTop}><span>GEMINI · {selectedProduct.durationMonths} THÁNG</span><span className={stockLabel === 'Còn hàng' ? styles.inStock : styles.stock}>{stockLabel}</span></div>
+        <p className={styles.price}>{money(price)}<span>₫</span></p><p className={styles.priceCaption}>{(availableProduct?.originalPrice ?? selectedProduct.originalPrice) > price && <><del>Giá gốc {money(availableProduct?.originalPrice ?? selectedProduct.originalPrice)}₫</del> · </>}Thanh toán một lần cho một link kích hoạt.</p>
+      </div>
+      <div className={styles.purchaseActions}>
         <div className={styles.conditions}>
-          <strong>Đọc trước khi mua</strong>
-          {selectedSku === 'gemini-3m' ? <>
-            <p>Chuẩn bị <strong>thẻ thanh toán quốc tế hoặc ví MoMo</strong>, có sẵn <strong>tối thiểu 30.000₫</strong> trong tài khoản để xác minh phương thức thanh toán với Google. Chỉ dùng MoMo khi Google hiển thị tùy chọn này.</p>
-            <p>Google có thể tạm giữ hoặc thu một khoản nhỏ để xác minh. Khoản xác minh sẽ được <strong>giải tỏa hoặc hoàn lại</strong>; thời gian tiền về tùy ngân hàng/ví và quy trình của Google, có thể không ngay lập tức. Số tiền xác minh thực tế do Google quyết định.</p>
-            <p className={styles.verificationNote}>30.000₫ là số dư cần chuẩn bị, tách biệt với giá mua link {money(price)}₫. Chỉ xác nhận khi Google hiển thị ưu đãi <strong>0₫</strong>; kiểm tra ngày gia hạn sau {selectedProduct.durationMonths} tháng.</p>
-          </> : <p>Gói 18 tháng <strong>không yêu cầu thêm thẻ thanh toán hoặc ví điện tử</strong>. Hãy kiểm tra Google hiển thị đúng ưu đãi 18 tháng và xem ngày gia hạn trước khi xác nhận.</p>}
+          <strong>Lưu ý quan trọng trước khi mua</strong>
+          <ul>
+          <li><strong>Gói không bảo hành.</strong></li>
+          <li>Chuẩn bị <strong>thẻ hoặc ví MoMo</strong> để thêm làm phương thức thanh toán theo lựa chọn Google hiển thị.</li>
+          <li><strong>Mỗi link chỉ dùng một lần.</strong> Khi mở link, link có thể được gắn với tài khoản Google đang đăng nhập, kể cả khi bạn chưa hoàn tất đăng ký. Sau khi mở link, không hỗ trợ đổi hoặc hoàn trả.</li>
+          <li>Hãy đăng nhập đúng tài khoản cần nâng cấp trước khi mở link. Tài khoản đang có ưu đãi Pro 18 tháng không dùng được gói này. Nếu Google báo tài khoản không có ưu đãi nhưng vẫn có thể đăng ký, hãy dừng lại: tiếp tục có thể làm link bị sử dụng hoặc mất hiệu lực.</li>
+          <li>Một phương thức thanh toán có thể chỉ dùng được cho một tài khoản và một lần nhận ưu đãi. Tài khoản từng mất gói có thể thử nhận lại; kết quả phụ thuộc vào điều kiện Google hiển thị.</li>
+          <li>Link được kiểm tra chưa sử dụng trước khi bán và không bán lại. Link chưa dùng có thể giữ đến ngày <strong>01/01/2027</strong>, thời điểm chương trình kết thúc theo thông tin nhà cung cấp.</li>
+          <li>Nếu nút “Dùng thử” không phản hồi, thử thay phần đầu địa chỉ <strong>one.google.com/offer/</strong> bằng <strong>one.google.com/partner-eft-onboard/</strong>, giữ nguyên phần còn lại của link.</li>
+          <li>Chỉ xác nhận khi Google hiển thị ưu đãi <strong>0₫</strong> và đúng thời hạn. Sau khi kích hoạt thành công, bạn có thể hủy gia hạn để tránh bị tính phí kỳ tiếp theo; gói đã nhận tiếp tục đến hết thời hạn hiển thị trong tài khoản Google.</li>
+          </ul>
         </div>
-        <label className={styles.accept}><input type="checkbox" checked={accepted} onChange={event => setAccepted(event.target.checked)} /><span>{selectedSku === 'gemini-3m' ? 'Tôi đã đọc yêu cầu về thẻ/MoMo và số dư xác minh, hiểu cần tự kích hoạt và kiểm tra ngày gia hạn tại Google.' : 'Tôi đã đọc điều kiện gói 18 tháng, hiểu cần tự kích hoạt và kiểm tra ngày gia hạn tại Google.'}</span></label>
+        <label className={styles.accept}><input type="checkbox" checked={accepted} onChange={event => setAccepted(event.target.checked)} /><span>{selectedSku === 'gemini-3m' ? 'Tôi đã đọc điều kiện sử dụng link, phương thức thanh toán và chính sách sau khi mở link; tôi sẽ tự kích hoạt và kiểm tra ngày gia hạn tại Google.' : 'Tôi đã đọc điều kiện gói 18 tháng, hiểu cần tự kích hoạt và kiểm tra ngày gia hạn tại Google.'}</span></label>
         {loading ? <button className={styles.primary} disabled>Đang kiểm tra cửa hàng…</button>
-          : !account ? <button className={styles.primary} onClick={() => { setLoading(true); void refresh().catch(reason => setError(reason.message)).finally(() => setLoading(false)); }}>Thử kết nối lại <RefreshCw size={17} aria-hidden="true" /></button>
-          : !canBuy ? <button className={styles.primary} disabled>{!availableProduct?.enabled ? 'Đang chuẩn bị mở bán' : !account.bank ? 'Thanh toán đang được chuẩn bị' : 'Tạm hết link kích hoạt'}</button>
-          : !account.authenticated ? <Link className={styles.primary} href="/login?next=%2Fgemini">Đăng nhập để mua <ArrowRight size={18} aria-hidden="true" /></Link>
-          : <button ref={buyButton} className={styles.primary} disabled={busy || !accepted} onClick={() => void buy()}>{busy ? <Loader2 className={styles.spinner} size={18} aria-hidden="true" /> : <QrCode size={18} aria-hidden="true" />}{pending ? 'Tiếp tục thanh toán QR' : `Mua ngay · ${money(price)}₫`}</button>}
+          : !account || !availableProduct ? <button className={styles.primary} onClick={() => { setLoading(true); void refresh().catch(reason => setError(reason.message)).finally(() => setLoading(false)); }}>Thử kết nối lại <RefreshCw size={17} aria-hidden="true" /></button>
+          : !canBuy ? <button className={styles.primary} disabled>{!availableProduct.enabled ? 'Đang chuẩn bị mở bán' : !account.bank ? 'Thanh toán đang được chuẩn bị' : 'Hết hàng'}</button>
+          : !account.authenticated ? <Link className={styles.primary} href="/login?next=%2Fcua-hang">Đăng nhập để mua <ArrowRight size={18} aria-hidden="true" /></Link>
+          : <button ref={buyButton} className={styles.primary} disabled={busy || !accepted} onClick={() => void buy()}>{busy ? <Loader2 className={styles.spinner} size={18} aria-hidden="true" /> : <QrCode size={18} aria-hidden="true" />}{pending ? 'Tiếp tục thanh toán QR' : 'Mua ngay · ' + money(price) + '₫'}</button>}
         <small className={styles.offerFoot}><ShieldCheck size={14} aria-hidden="true" /> Chỉ giao link sau khi hệ thống xác nhận tiền.</small>
         <a href={support} target="_blank" rel="noopener noreferrer" className={styles.supportLink}>Cần kiểm tra điều kiện? Liên hệ WindiStudio <ArrowRight size={13} aria-hidden="true" /></a>
         {!order && error && <p className={styles.error} role="alert">{error}</p>}{!order && notice && <p className={styles.notice} role="status">{notice}</p>}
@@ -165,15 +173,9 @@ export function GeminiShop() {
 
 
 
-    {account?.authenticated && account.orders.length > 0 && <section className={styles.orders} aria-labelledby="orders-title"><div className={styles.sectionHeading}><div><span className={styles.eyebrow}>LƯU TRONG TÀI KHOẢN CỦA BẠN</span><h2 id="orders-title">Đơn Gemini của tôi</h2></div><button className={styles.secondary} onClick={() => void refresh().catch(reason => setError(reason.message))}><RefreshCw size={16} aria-hidden="true" /> Cập nhật</button></div><div className={styles.orderList}>{account.orders.map(item => <article key={item.id}><FileText size={22} aria-hidden="true" /><div><strong>Gemini {item.duration_months || 3} tháng · {item.payment_code}</strong><small>{date(item.created_at)} · {money(item.amount_vnd)}₫</small><span>{item.status === 'PENDING' && Date.parse(item.expires_at) <= now ? 'Hết hạn' : statusLabels[item.status] || item.status}</span></div>{item.status === 'PAID' ? <button className={styles.secondary} disabled={busy} onClick={() => void download(item)}><ArrowDownToLine size={16} aria-hidden="true" /> Tải TXT</button> : <button className={styles.secondary} onClick={() => { setError(''); setNotice(''); setOrder(item); }}>Xem đơn <ArrowRight size={16} aria-hidden="true" /></button>}</article>)}</div><small className={styles.smallPrint}>Hiển thị 30 đơn gần nhất. Khi cần tra cứu đơn cũ hơn, liên hệ hỗ trợ kèm mã chuyển khoản.</small></section>}
+    </>}
 
-    <section className={styles.faq} aria-labelledby="faq-title"><span className={styles.eyebrow}>TRƯỚC KHI BẮT ĐẦU</span><h2 id="faq-title">Bạn có thể đang thắc mắc.</h2>{[
-      ['Tôi sẽ nhận tài khoản hay link kích hoạt?', 'Bạn nhận file TXT chứa một link ưu đãi. Bạn tự đăng nhập Google cá nhân và kích hoạt trên Google. WindiStudio không yêu cầu mật khẩu Google, thông tin thẻ hoặc mã OTP của bạn.'],
-      ['Giá mua link và bước xác nhận 0₫ khác nhau thế nào?', `Giá mua link tại WindiStudio là ${money(price)}₫ cho gói ${selectedProduct.durationMonths} tháng. 0₫ là số tiền Google hiển thị cho thời gian ưu đãi nếu tài khoản đủ điều kiện. Hai bước thanh toán này tách biệt; hãy đọc kỹ số tiền và ngày thu phí tiếp theo tại Google.`],
-      ['Cần chuẩn bị gì để xác minh với Google?', selectedSku === 'gemini-18m' ? 'Gói 18 tháng không yêu cầu thêm thẻ thanh toán hoặc ví điện tử. Hãy kiểm tra Google hiển thị đúng ưu đãi 18 tháng trước khi xác nhận.' : 'Với gói 3 tháng, chuẩn bị thẻ thanh toán quốc tế hoặc ví MoMo có tối thiểu 30.000₫. MoMo chỉ dùng được khi Google hiển thị tùy chọn này. Khoản xác minh thực tế tùy Google, không cố định ở 30.000₫. Khoản tạm giữ/thu xác minh sẽ được giải tỏa hoặc hoàn lại; thời gian tiền về phụ thuộc ngân hàng/ví và có thể không ngay lập tức.'],
-      ['Đã chuyển khoản nhưng chưa nhận file?', 'Giữ trang thanh toán mở hoặc quay lại Đơn Gemini của tôi. Hệ thống tự cập nhật sau khi nhận thông báo ngân hàng. Chuyển sai số tiền, sai nội dung hoặc sau hạn QR cần được hỗ trợ đối soát; đừng chuyển thêm một lần nữa.'],
-      ['Link không kích hoạt được thì làm gì?', 'Dừng xác nhận nếu Google không hiển thị đúng thời hạn gói đã mua hoặc số tiền khác 0₫. Liên hệ WindiStudio kèm mã đơn và ảnh thông báo đã che thông tin nhạy cảm để kiểm tra link và điều kiện tài khoản.'],
-    ].map(([title, text]) => <details key={title}><summary>{title}<ChevronDown size={18} aria-hidden="true" /></summary><p>{text}</p></details>)}<p className={styles.sourceLinks}><a href="https://support.google.com/googlepay/answer/12651770?hl=vi" target="_blank" rel="noopener noreferrer">Khoản xác minh và hoàn tiền Google ↗</a><a href="https://support.google.com/googleone/answer/9155746?hl=vi" target="_blank" rel="noopener noreferrer">Điều kiện dùng thử Google One ↗</a><a href="https://support.google.com/googleplay/answer/2651410?co=GENIE.CountryCode%3DVN&hl=vi" target="_blank" rel="noopener noreferrer">Phương thức thanh toán Google ↗</a></p></section>
+    {account?.authenticated && account.orders.length > 0 && <section className={styles.orders} aria-labelledby="orders-title"><div className={styles.sectionHeading}><div><span className={styles.eyebrow}>LƯU TRONG TÀI KHOẢN CỦA BẠN</span><h2 id="orders-title">Đơn Gemini của tôi</h2></div><button className={styles.secondary} onClick={() => void refresh().catch(reason => setError(reason.message))}><RefreshCw size={16} aria-hidden="true" /> Cập nhật</button></div><div className={styles.orderList}>{account.orders.map(item => <article key={item.id}><FileText size={22} aria-hidden="true" /><div><strong>Gemini {item.duration_months || 3} tháng · {item.payment_code}</strong><small>{date(item.created_at)} · {money(item.amount_vnd)}₫</small><span>{item.status === 'PENDING' && Date.parse(item.expires_at) <= now ? 'Hết hạn' : statusLabels[item.status] || item.status}</span></div>{item.status === 'PAID' ? <button className={styles.secondary} disabled={busy} onClick={() => void download(item)}><ArrowDownToLine size={16} aria-hidden="true" /> Tải TXT</button> : <button className={styles.secondary} onClick={() => { setError(''); setNotice(''); setOrder(item); }}>Xem đơn <ArrowRight size={16} aria-hidden="true" /></button>}</article>)}</div><small className={styles.smallPrint}>Hiển thị 30 đơn gần nhất. Khi cần tra cứu đơn cũ hơn, liên hệ hỗ trợ kèm mã chuyển khoản.</small></section>}
 
     <dialog ref={dialog} className={styles.checkout} aria-labelledby="checkout-title" onClose={() => { setOrder(null); buyButton.current?.focus(); }}>
       {order && <><header><span><LockKeyhole size={15} aria-hidden="true" /> ĐƠN GEMINI {checkoutMonths} THÁNG</span><button aria-label="Đóng thanh toán" onClick={closeCheckout}><X size={20} aria-hidden="true" /></button></header><div className={styles.checkoutBody}>

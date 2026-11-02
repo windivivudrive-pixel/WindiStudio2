@@ -38,11 +38,16 @@ export function selectedGeminiProduct(value: unknown) {
   catch { throw new VoiceError('Sản phẩm Gemini không hợp lệ.'); }
 }
 export async function geminiCatalog() {
-  const result = await writer().rpc('windi_gemini_catalog');
+  const [result, originalPrices] = await Promise.all([
+    writer().rpc('windi_gemini_catalog'),
+    writer().from('windi_gemini_products').select('sku,original_price_vnd'),
+  ]);
   if (result.error) throw result.error;
+  if (originalPrices.error) throw originalPrices.error;
+  const originalPriceBySku = new Map((originalPrices.data || []).map(row => [row.sku, row.original_price_vnd]));
   const products: GeminiProduct[] = (result.data || []).map(row => ({
     sku: row.sku, title: row.title, durationMonths: row.duration_months,
-    price: row.price_vnd, enabled: row.enabled, stock: row.stock,
+    price: row.price_vnd, originalPrice: originalPriceBySku.get(row.sku) ?? row.price_vnd, enabled: row.enabled, stock: row.stock,
   }));
   const legacy = products.find(item => item.sku === 'gemini-3m');
   return { products, enabled: legacy?.enabled ?? false, price: legacy?.price ?? GEMINI_PRICE, stock: legacy?.stock ?? 0, bank: paymentConfig() };

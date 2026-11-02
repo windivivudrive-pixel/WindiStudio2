@@ -1,6 +1,6 @@
 export const GEMINI_PRODUCTS = [
-  { sku: 'gemini-3m', title: 'Gemini 3 tháng', durationMonths: 3, price: 150000, termsVersion: 'gemini-3m-2026-10-26' },
-  { sku: 'gemini-18m', title: 'Gemini 18 tháng', durationMonths: 18, price: 49000, termsVersion: 'gemini-18m-2026-10-27' },
+  { sku: 'gemini-3m', title: 'Gemini 3 tháng', durationMonths: 3, price: 69000, originalPrice: 150000, termsVersion: 'gemini-3m-2026-10-26' },
+  { sku: 'gemini-18m', title: 'Gemini 18 tháng', durationMonths: 18, price: 49000, originalPrice: 49000, termsVersion: 'gemini-18m-2026-10-27' },
 ] as const;
 export type GeminiSku = typeof GEMINI_PRODUCTS[number]['sku'];
 export const GEMINI_PRICE = GEMINI_PRODUCTS[0].price;
@@ -10,7 +10,7 @@ export function geminiProduct(value: unknown = 'gemini-3m') {
   if (!product) throw new Error('Sản phẩm Gemini không hợp lệ.');
   return product;
 }
-export type GeminiProduct = { sku: GeminiSku; title: string; durationMonths: number; price: number; enabled: boolean; stock: number };
+export type GeminiProduct = { sku: GeminiSku; title: string; durationMonths: number; price: number; originalPrice: number; enabled: boolean; stock: number };
 export type GeminiOrder = { id: string; product_sku: GeminiSku; duration_months: number; amount_vnd: number; status: string; payment_code: string; created_at: string; expires_at: string; paid_at: string | null };
 export type GeminiAccount = {
   authenticated: boolean; enabled: boolean; stock: number; price: number; products: GeminiProduct[];
@@ -37,6 +37,6 @@ export function geminiSteps(product: typeof GEMINI_PRODUCTS[number]) { return [
   { title: 'Bấm kích hoạt gói', text: `Kiểm tra Google hiển thị đúng ưu đãi ${product.durationMonths} tháng và tài khoản đủ điều kiện, rồi bấm nhận ưu đãi / kích hoạt theo hướng dẫn trên màn hình.` },
   product.sku === 'gemini-18m'
     ? { title: 'Kiểm tra điều kiện ưu đãi', text: 'Gói 18 tháng không yêu cầu thêm thẻ thanh toán hoặc ví điện tử. Kiểm tra tài khoản Google hiển thị đúng ưu đãi 18 tháng trước khi tiếp tục.' }
-    : { title: 'Thêm phương thức thanh toán', text: 'Dùng thẻ thanh toán quốc tế hoặc ví MoMo (nếu Google hiển thị), chuẩn bị số dư tối thiểu 30.000₫ để xác minh. Khoản tạm giữ/thu xác minh sẽ được giải tỏa hoặc hoàn lại; thời gian tiền về tùy ngân hàng/ví và quy trình của Google.' },
-  { title: 'Xác nhận 0₫ và bắt đầu sử dụng', text: 'Chỉ xác nhận khi màn hình Google hiển thị 0₫ cho thời gian ưu đãi. Nếu hiện số tiền khác, dừng lại và liên hệ hỗ trợ. Kiểm tra ngày gia hạn, hủy trước ngày đó nếu không muốn bị tính phí tiếp.' },
+    : { title: 'Thêm phương thức thanh toán', text: 'Thêm thẻ hoặc ví MoMo vào phương thức thanh toán theo lựa chọn Google hiển thị.' },
+  { title: 'Xác nhận 0₫ và bắt đầu sử dụng', text: 'Chỉ xác nhận khi màn hình Google hiển thị 0₫ cho thời gian ưu đãi. Nếu hiện số tiền khác, dừng lại và liên hệ hỗ trợ. Sau khi kích hoạt thành công, bạn có thể hủy gia hạn; gói tiếp tục đến hết thời hạn hiển thị trong tài khoản Google.' },
 ]; }

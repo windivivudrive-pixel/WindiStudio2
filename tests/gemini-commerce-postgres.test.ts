@@ -8,7 +8,7 @@ const bob = '22222222-2222-4222-8222-222222222222';
 const charlie = '33333333-3333-4333-8333-333333333333';
 type Order = { id: string; activation_id: string | null; payment_code: string; status: string; paid_at: string | null };
 async function checkout(user = alice) { return (await db.query<Order>('select * from public.windi_gemini_order($1)', [user])).rows[0]; }
-async function pay(order: Order, gateway: string, amount = 150000, time?: string) {
+async function pay(order: Order, gateway: string, amount = 69000, time?: string) {
   return (await db.query<{ result: string }>('select public.windi_gemini_pay($1,$2,$3,coalesce($4::timestamptz,now())) as result', [order.payment_code, gateway, amount, time || null])).rows[0].result;
 }
 async function seed(prefix: string, n = 1) {
@@ -25,6 +25,7 @@ beforeAll(async () => {
   await db.exec(await readFile(new URL('../supabase/migrations/20261026151540_gemini_activation_commerce.sql', import.meta.url), 'utf8'));
   await db.exec(await readFile(new URL('../supabase/migrations/20261027003556_gemini_product_variants.sql', import.meta.url), 'utf8'));
   await db.exec(await readFile(new URL('../supabase/migrations/20261027050000_gemini_18m_serviceactivation_links.sql', import.meta.url), 'utf8'));
+  await db.exec(await readFile(new URL('../supabase/migrations/20261102100145_gemini_3m_sale_price.sql', import.meta.url), 'utf8'));
 }, 20000);
 afterAll(async () => { await db?.close(); });
 
@@ -57,8 +58,8 @@ test('exact payment delivers once; repeated callbacks cannot spend or overwrite 
 });
 test('underpayments hold inventory for review and never unlock download', async () => {
   const b = await checkout(bob);
-  expect(await pay(b, 'gateway-short', 149999)).toBe('underpaid');
-  expect(await pay(b, 'gateway-short', 150000)).toBe('underpaid');
+  expect(await pay(b, 'gateway-short', 68999)).toBe('underpaid');
+  expect(await pay(b, 'gateway-short', 69000)).toBe('underpaid');
   const row = (await db.query<Order>('select * from public.windi_gemini_orders where id=$1', [b.id])).rows[0];
   expect(row.status).toBe('UNDERPAID'); expect(row.paid_at).toBeNull(); expect(row.activation_id).toBe(b.activation_id);
 });
@@ -76,8 +77,8 @@ test('expiry releases the reserved link; late payment cannot deliver the reassig
 test('overpayment and stale transaction timestamps never grant a link', async () => {
   await seed('REVIEW', 2);
   const a = await checkout(alice), c = await checkout(charlie);
-  expect(await pay(a, 'gateway-over', 150001)).toBe('overpaid');
-  expect(await pay(c, 'gateway-stale', 150000, '2020-01-01T00:00:00Z')).toBe('review');
+  expect(await pay(a, 'gateway-over', 69001)).toBe('overpaid');
+  expect(await pay(c, 'gateway-stale', 69000, '2020-01-01T00:00:00Z')).toBe('review');
 });
 test('duplicate imports do not resell links; expired inventory is excluded', async () => {
   const [url] = await seed('DEDUP');
@@ -103,9 +104,11 @@ test('RLS and explicit grants block all client roles, including default-grant en
   await db.exec('reset role');
 });
 
-test('18-month catalog stays separate from legacy 3-month inventory and pricing', async () => {
+test('18-month catalog stays separate from the discounted 3-month product and original price', async () => {
   const initial = await db.query<{sku:string;price_vnd:number;duration_months:number;enabled:boolean;stock:number}>('select * from public.windi_gemini_catalog()');
-  expect(initial.rows.map(p => [p.sku,p.duration_months,p.price_vnd])).toEqual([['gemini-3m',3,150000],['gemini-18m',18,49000]]);
+  expect(initial.rows.map(p => [p.sku,p.duration_months,p.price_vnd])).toEqual([['gemini-3m',3,69000],['gemini-18m',18,49000]]);
+  const originalPrices = await db.query<{sku:string;original_price_vnd:number}>('select sku,original_price_vnd from public.windi_gemini_products order by duration_months');
+  expect(originalPrices.rows).toEqual([{sku:'gemini-3m',original_price_vnd:150000},{sku:'gemini-18m',original_price_vnd:49000}]);
   expect(initial.rows[1].enabled).toBe(false);
   await expect(db.query('select * from public.windi_gemini_order($1,$2)',[alice,'gemini-18m'])).rejects.toThrow('GEMINI_DISABLED');
   await db.query("select public.windi_gemini_import($1::text[],now()+interval '10 days','gemini-18m')",[[
@@ -163,10 +166,13 @@ test('upgrading preserves an existing paid 3-month order, inventory URL and sale
     const old=(await upgrade.query<Order>('select * from public.windi_gemini_order($1)',[alice])).rows[0];
     await upgrade.query('select public.windi_gemini_pay($1,$2,150000,now())',[old.payment_code,'legacy-paid']);
     await upgrade.exec(await readFile(new URL('../supabase/migrations/20261027003556_gemini_product_variants.sql', import.meta.url),'utf8'));
+    await upgrade.exec(await readFile(new URL('../supabase/migrations/20261102100145_gemini_3m_sale_price.sql', import.meta.url),'utf8'));
     const row=(await upgrade.query<Order & {product_sku:string;duration_months:number;amount_vnd:number}>('select * from public.windi_gemini_orders where id=$1',[old.id])).rows[0];
     expect(row).toMatchObject({id:old.id,activation_id:old.activation_id,status:'PAID',product_sku:'gemini-3m',duration_months:3,amount_vnd:150000});
     const products=(await upgrade.query<{sku:string;enabled:boolean}>('select sku,enabled from public.windi_gemini_products order by duration_months')).rows;
     expect(products).toEqual([{sku:'gemini-3m',enabled:true},{sku:'gemini-18m',enabled:false}]);
+    const catalog=(await upgrade.query<{sku:string;price_vnd:number;original_price_vnd:number}>('select sku,price_vnd,original_price_vnd from public.windi_gemini_products order by duration_months')).rows;
+    expect(catalog).toEqual([{sku:'gemini-3m',price_vnd:69000,original_price_vnd:150000},{sku:'gemini-18m',price_vnd:49000,original_price_vnd:49000}]);
     expect((await upgrade.query<{activation_url:string}>('select activation_url from public.windi_gemini_links where id=$1',[old.activation_id])).rows[0].activation_url).toBe('https://one.google.com/offer/LEGACYPRESERVED001');
   } finally {await upgrade.close();}
 },20000);

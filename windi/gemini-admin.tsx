@@ -49,7 +49,7 @@ export function GeminiAdmin() {
   }
   const refreshing = loading || data?.selectedProduct !== selectedSku;
   return <main className={`${styles.page} ${styles.admin}`}>
-    <Link href="/gemini" className={styles.secondary}><ArrowLeft size={16} aria-hidden="true" /> Trang bán Gemini</Link>
+    <Link href="/cua-hang" className={styles.secondary}><ArrowLeft size={16} aria-hidden="true" /> Cửa hàng</Link>
     <h1>Kho link Gemini</h1><p>Chọn đúng sản phẩm trước khi nhập link. Hai gói có kho riêng, giá riêng và công tắc mở bán riêng.</p>
     {error && <p className={styles.error} role="alert">{error}</p>}{notice && <p className={styles.notice} role="status">{notice}</p>}
     {data && <fieldset className={styles.planPicker} disabled={busy} style={{ marginTop: 25 }}><legend>Sản phẩm đang quản lý</legend>{GEMINI_PRODUCTS.map(item => <label key={item.sku} className={`${styles.planChoice} ${selectedSku === item.sku ? styles.planSelected : ''}`}><input type="radio" name="admin-gemini-product" value={item.sku} checked={selectedSku === item.sku} onChange={() => setSelectedSku(item.sku)} /><span><strong>{item.title}</strong><small>{item.price.toLocaleString('vi-VN')}₫ / link</small></span></label>)}</fieldset>}
