@@ -156,3 +156,10 @@
 .catalogCard:disabled{cursor:not-allowed;opacity:.7}
 .catalogCard:disabled:hover{transform:none;border-color:#383940}
 .catalogCard:disabled .cardBottom svg{visibility:hidden}
+.mockArt{width:100%;height:100%;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:13px;padding:26px;background:radial-gradient(circle at 82% 30%,#39506a,#121722 65%);color:#fff}
+.mockArt small{font-size:9px;letter-spacing:.14em;color:#c8cedb}
+.mockArt strong{font-size:clamp(20px,2.1vw,34px);line-height:1.12;letter-spacing:-.04em}
+.mockArt>span{font-size:9px;letter-spacing:.08em;border:1px solid #ffffff65;border-radius:20px;padding:6px 10px}
+.mockArt.capcut{background:radial-gradient(circle at 80% 25%,#41485c,#111219 65%)}
+.mockArt.cursor{background:radial-gradient(circle at 80% 25%,#3d4a63,#10131c 65%)}
+.mockArt.gamma{background:radial-gradient(circle at 80% 25%,#6735a6,#1a102c 65%)}

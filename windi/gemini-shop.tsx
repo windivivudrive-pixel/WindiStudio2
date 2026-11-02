@@ -100,8 +100,12 @@ export function GeminiShop() {
         { id: 'chatgpt', icon: 'openai/ffffff', name: 'ChatGPT 1 tháng chính chủ', image: '/gemini-products/chatgpt-1-thang.png', type: 'AI & CÔNG VIỆC', description: 'Trợ lý AI cho mỗi ngày' },
         { id: 'claude', icon: 'claude/D97757', name: 'Claude 1 tháng chính chủ', image: '/gemini-products/claude-1-thang.png', type: 'AI & SÁNG TẠO', description: 'Cùng suy nghĩ và sáng tạo' },
         { id: 'youtube', icon: 'youtube/FF0033', name: 'YouTube Premium 1 tháng', image: '/gemini-products/youtube-1-thang.png', type: 'GIẢI TRÍ', description: 'Video và âm nhạc' },
+        { id: 'elevenlabs', icon: '', name: 'ElevenLabs Creator 1 tháng', image: '/gemini-products/elevenlabs-1-thang.png', type: 'GIỌNG NÓI AI', description: 'Công cụ sáng tạo giọng nói' },
+        { id: 'capcut', icon: '', name: 'CapCut Pro 1 năm', image: '/gemini-products/capcut-1-nam.png', type: 'CHỈNH SỬA VIDEO', description: 'Công cụ biên tập video' },
+        { id: 'cursor', icon: '', name: 'Cursor Pro 1 tháng', image: '/gemini-products/cursor-1-thang.png', type: 'LẬP TRÌNH', description: 'Công cụ lập trình với AI' },
+        { id: 'gamma', icon: '', name: 'Gamma AI 6 tháng', image: '/gemini-products/gamma-6-thang.png', type: 'THUYẾT TRÌNH', description: 'Công cụ tạo bài thuyết trình' },
       ].map(item => <button key={item.id} className={styles.catalogCard} disabled={item.id !== 'google'} onClick={() => { setCatalogProduct(item.id); setSelectedSku('gemini-3m'); setAccepted(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }} aria-label={'Xem ' + item.name + ', ' + (item.id === 'google' ? stockLabel : 'Hết hàng')}>
-        <span className={styles.cardArt}><img className={styles.productThumbnail} src={item.image} alt="" /></span>
+        <span className={styles.cardArt}>{item.image ? <img className={styles.productThumbnail} src={item.image} alt="" /> : <span className={[styles.mockArt, styles[item.id]].join(" ")}><small>CREATIVE TOOLS</small><strong>{item.name}</strong><span>SẢN PHẨM THAM KHẢO</span></span>}</span>
         <span className={styles.cardBody}><small>{item.type}</small><strong>{item.name}</strong><span>{item.description}</span><span className={styles.cardBottom}><b className={item.id === 'google' && stockLabel === 'Còn hàng' ? styles.inStock : undefined}>{item.id === 'google' ? stockLabel : 'Hết hàng'}</b><ArrowRight size={18} aria-hidden="true" /></span></span>
       </button>)}</div>
     </section>
@@ -117,7 +121,7 @@ export function GeminiShop() {
           <legend>Chọn thời hạn sử dụng</legend>
           {GEMINI_PRODUCTS.filter(product => product.sku === 'gemini-3m').map(product => <label key={product.sku} className={`${styles.planChoice} ${selectedSku === product.sku ? styles.planSelected : ''}`}>
             <input type="radio" name="gemini-product" value={product.sku} checked={selectedSku === product.sku} onChange={() => { setSelectedSku(product.sku); setAccepted(false); setError(''); setNotice(''); }} />
-            <span><strong>{product.durationMonths} tháng</strong><small className={styles.planPrice}>{money(account?.products?.find(item => item.sku === product.sku)?.price ?? product.price)}₫ / link{product.originalPrice > product.price && <> <del>{money(account?.products?.find(item => item.sku === product.sku)?.originalPrice ?? product.originalPrice)}₫</del></>}</small></span>
+            <span><strong>{product.durationMonths} tháng</strong></span>
           </label>)}
         </fieldset>
         <section className={styles.argonFeature} aria-labelledby="argon-feature-title" aria-live="polite">
