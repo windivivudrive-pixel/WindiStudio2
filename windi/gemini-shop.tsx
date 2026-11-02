@@ -100,7 +100,7 @@ export function GeminiShop() {
         { id: 'chatgpt', icon: 'openai/ffffff', name: 'ChatGPT 1 tháng chính chủ', image: '/gemini-products/chatgpt-1-thang.png', type: 'AI & CÔNG VIỆC', description: 'Trợ lý AI cho mỗi ngày' },
         { id: 'claude', icon: 'claude/D97757', name: 'Claude 1 tháng chính chủ', image: '/gemini-products/claude-1-thang.png', type: 'AI & SÁNG TẠO', description: 'Cùng suy nghĩ và sáng tạo' },
         { id: 'youtube', icon: 'youtube/FF0033', name: 'YouTube Premium 1 tháng', image: '/gemini-products/youtube-1-thang.png', type: 'GIẢI TRÍ', description: 'Video và âm nhạc' },
-      ].map(item => <button key={item.id} className={styles.catalogCard} onClick={() => { setCatalogProduct(item.id); setSelectedSku('gemini-3m'); setAccepted(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }} aria-label={'Xem ' + item.name + ', ' + (item.id === 'google' ? stockLabel : 'Hết hàng')}>
+      ].map(item => <button key={item.id} className={styles.catalogCard} disabled={item.id !== 'google'} onClick={() => { setCatalogProduct(item.id); setSelectedSku('gemini-3m'); setAccepted(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }} aria-label={'Xem ' + item.name + ', ' + (item.id === 'google' ? stockLabel : 'Hết hàng')}>
         <span className={styles.cardArt}><img className={styles.productThumbnail} src={item.image} alt="" /></span>
         <span className={styles.cardBody}><small>{item.type}</small><strong>{item.name}</strong><span>{item.description}</span><span className={styles.cardBottom}><b className={item.id === 'google' && stockLabel === 'Còn hàng' ? styles.inStock : undefined}>{item.id === 'google' ? stockLabel : 'Hết hàng'}</b><ArrowRight size={18} aria-hidden="true" /></span></span>
       </button>)}</div>

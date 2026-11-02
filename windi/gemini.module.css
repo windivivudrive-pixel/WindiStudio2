@@ -153,3 +153,6 @@
 @media(min-width:901px){.purchaseSection>.purchaseActions{grid-column:1 / -1}.purchaseSection>.detailThumbnail{position:static}}
 .catalog{border-top:0;padding-top:42px}
 .catalogHeading h1{margin:0;font-size:clamp(30px,3.4vw,42px);line-height:1.2;letter-spacing:-.05em}
+.catalogCard:disabled{cursor:not-allowed;opacity:.7}
+.catalogCard:disabled:hover{transform:none;border-color:#383940}
+.catalogCard:disabled .cardBottom svg{visibility:hidden}
