@@ -1,6 +1,6 @@
 import { beforeEach, expect, test, vi } from 'vitest';
 vi.mock('server-only', () => ({}));
-const state = vi.hoisted(() => ({ user: { id: '11111111-1111-4111-8111-111111111111' } as { id: string } | null, paid: false, owner: true, admin: false, sku: 'gemini-3m', rpc: vi.fn(), orderQueries: [] as unknown[][] }));
+const state = vi.hoisted(() => ({ user: { id: '11111111-1111-4111-8111-111111111111' } as { id: string } | null, paid: false, owner: true, admin: false, dynamicProduct: false, sku: 'gemini-3m', rpc: vi.fn(), orderQueries: [] as unknown[][] }));
 vi.mock('@/lib/supabase/server', () => ({ createClient: async () => ({ auth: { getUser: async () => ({ data: { user: state.user }, error: null }) } }) }));
 vi.mock('@/lib/voice/server', () => {
   class VoiceError extends Error { constructor(message: string, public status = 400) { super(message); } }
@@ -9,7 +9,7 @@ vi.mock('@/lib/voice/server', () => {
     writer: () => ({ rpc: state.rpc, from: (table: string) => {
       const filters: unknown[][] = [];
       const query = { select: vi.fn().mockReturnThis(), eq: (key: string, value: unknown) => { filters.push([key, value]); return query; },
-        maybeSingle: async () => { state.orderQueries = filters; return { data: table === 'windi_voice_admins' ? state.admin ? { user_id: state.user?.id } : null : table === 'windi_gemini_orders' && state.paid && state.owner ? { activation_id: 'private-inventory-id', product_sku: state.sku, duration_months: state.sku === 'gemini-18m' ? 18 : 3 } : null, error: null }; },
+        maybeSingle: async () => { state.orderQueries = filters; return { data: table === 'windi_gemini_products' && state.dynamicProduct ? {sku:'new-chatgpt-1m',title:'ChatGPT',duration_months:1,delivery_mode:'manual',terms_version:'shop-v1'} : table === 'windi_voice_admins' ? state.admin ? { user_id: state.user?.id } : null : table === 'windi_gemini_orders' && state.paid && state.owner ? { activation_id: 'private-inventory-id', product_sku: state.sku, duration_months: state.sku === 'gemini-18m' ? 18 : 3 } : null, error: null }; },
         single: async () => ({ data: table === 'windi_gemini_links' ? { activation_url: 'https://one.google.com/offer/PRIVATEPAIDLINK' } : { id: 'order', status: 'PENDING' }, error: null }),
       }; return query;
     } }),
@@ -21,7 +21,7 @@ import { POST as order } from '../app/api/gemini/order/route';
 import { POST as admin } from '../app/api/gemini/admin/route';
 import { parseSepayPaymentCode, processSepayWebhook } from '../lib/payments/sepay';
 const id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
-beforeEach(() => { state.user = { id: '11111111-1111-4111-8111-111111111111' }; state.paid = false; state.owner = true; state.admin = false; state.sku = 'gemini-3m'; state.rpc.mockReset().mockResolvedValue({ data: 'paid', error: null }); });
+beforeEach(() => { state.user = { id: '11111111-1111-4111-8111-111111111111' }; state.paid = false; state.owner = true; state.admin = false; state.dynamicProduct = false; state.sku = 'gemini-3m'; state.rpc.mockReset().mockResolvedValue({ data: 'paid', error: null }); });
 test('inventory parsing accepts only canonical Google offer links and deduplicates', () => {
   expect(parseActivationLinks(' https://one.google.com/offer/ABCDEFGH1234\r\nhttps://one.google.com/offer/ABCDEFGH1234 ')).toHaveLength(1);
   for (const invalid of ['http://one.google.com/offer/ABCDEFGH', 'https://one.google.com.evil/offer/ABCDEFGH', 'https://one.google.com/offer/ABCDEFGH?x=1', 'https://one.google.com/offer/terms-and-conditions/foo', '', null]) expect(() => parseActivationLinks(invalid)).toThrow();
@@ -117,4 +117,36 @@ test('managed settings require admin and can open without imported links', async
   expect((await admin(request())).status).toBe(200);
   expect(state.rpc).toHaveBeenCalledWith('windi_gemini_product_settings', { p_sku: 'gemini-managed-6m', p_enabled: true });
   expect(state.rpc).not.toHaveBeenCalledWith('windi_gemini_stock', expect.anything());
+});
+
+test('only admins can edit prices; validate amounts before calling the price RPC', async () => {
+  const post = (price: unknown = 229000, originalPrice: unknown = 250000, origin = 'http://localhost') => new Request('http://localhost/api/gemini/admin', { method: 'POST', headers: { origin, 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'pricing', product: 'gemini-managed-6m', price, originalPrice }) });
+  expect((await admin(post())).status).toBe(403);
+  state.admin = true;
+  expect((await admin(post(229000,250000,'https://evil.example'))).status).toBe(403);
+  for (const [price,original] of [[0,1000],[1.5,1000],['229000',250000],[229000,200000],[100000001,100000001]]) expect((await admin(post(price,original))).status).toBe(400);
+  expect(state.rpc).not.toHaveBeenCalled();
+  expect((await admin(post())).status).toBe(200);
+  expect(state.rpc).toHaveBeenCalledWith('windi_gemini_product_pricing', { p_sku: 'gemini-managed-6m', p_price: 229000, p_original_price: 250000 });
+});
+
+test('admin can create and edit a full product, with authentication and validation', async () => {
+  const details={title:'New ChatGPT',durationMonths:1,price:229000,originalPrice:229000,category:'AI',description:'Account',benefits:['One month'],warrantyStatus:'unspecified',warranty:'',notes:'Read before buying',thumbnail:'/gemini-products/chatgpt-1-thang-acc-cap-san.png',published:false,deliveryMode:'manual'};
+  const post=(extra: object={})=>new Request('http://localhost/api/gemini/admin',{method:'POST',headers:{origin:'http://localhost','Content-Type':'application/json'},body:JSON.stringify({action:'create',product:'new-chatgpt-1m',details,...extra})});
+  expect((await admin(post())).status).toBe(403);expect(state.rpc).not.toHaveBeenCalled();
+  state.admin=true;
+  expect((await admin(post({details:{...details,warrantyStatus:'included'}}))).status).toBe(400);expect(state.rpc).not.toHaveBeenCalled();
+  expect((await admin(post())).status).toBe(201);
+  expect(state.rpc).toHaveBeenCalledWith('windi_shop_save_product',{p_sku:'new-chatgpt-1m',p_details:details,p_create:true});
+  expect((await admin(post({action:'save-product'}))).status).toBe(200);
+  expect(state.rpc).toHaveBeenLastCalledWith('windi_shop_save_product',{p_sku:'new-chatgpt-1m',p_details:details,p_create:false});
+});
+
+test('checkout resolves a newly created database product without adding a hardcoded SKU',async()=>{
+ state.dynamicProduct=true;
+ const request=(termsVersion:string)=>new Request('http://localhost/api/gemini/order',{method:'POST',headers:{origin:'http://localhost','Content-Type':'application/json'},body:JSON.stringify({product:'new-chatgpt-1m',termsVersion,amount:1})});
+ expect((await order(request('wrong'))).status).toBe(400);expect(state.rpc).not.toHaveBeenCalled();
+ state.rpc.mockResolvedValueOnce({data:{id:'order'},error:null});
+ expect((await order(request('shop-v1'))).status).toBe(201);
+ expect(state.rpc).toHaveBeenCalledWith('windi_gemini_order',{p_sku:'new-chatgpt-1m',p_user:state.user!.id});
 });

@@ -5,7 +5,7 @@ export async function POST(request: Request) {
   try {
     const user = await geminiIdentity(request);
     const body = await (await boundedBody(request, 2000)).json().catch(() => { throw new VoiceError('Dữ liệu không hợp lệ.'); });
-    const product = selectedGeminiProduct(body?.product);
+    const product = await selectedGeminiProduct(body?.product);
     if (body?.termsVersion !== product.termsVersion) throw new VoiceError('Vui lòng xác nhận điều kiện kích hoạt trước khi mua.');
     if (!paymentConfig()) throw new VoiceError('Thanh toán chưa được cấu hình.', 503);
     const db = writer();

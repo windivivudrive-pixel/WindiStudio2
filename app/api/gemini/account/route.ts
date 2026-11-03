@@ -18,6 +18,6 @@ export async function GET() {
       const urls = new Map((paid.data || []).map(order => { const link = byId.get(order.activation_id); return [order.id, link && link.product_sku === order.product_sku ? link.activation_url : null]; }));
       orders = (result.data || []).map(order => ({ ...order, activation_url: urls.get(order.id) ?? null }));
     }
-    return Response.json({ ...catalog, authenticated: !!user, orders }, { headers: privateHeaders });
+    return Response.json({ ...catalog, products: catalog.products.filter(product => product.published), authenticated: !!user, orders }, { headers: privateHeaders });
   } catch (error) { return geminiFailure(error); }
 }

@@ -5,7 +5,7 @@ export const GEMINI_PRODUCTS = [
   { sku: 'gemini-managed-12m', title: 'Nâng chính chủ 12 tháng', durationMonths: 12, price: 329000, originalPrice: 329000, termsVersion: 'gemini-managed-2026-11-03' },
   { sku: 'gemini-managed-24m', title: 'Nâng chính chủ 24 tháng', durationMonths: 24, price: 599000, originalPrice: 599000, termsVersion: 'gemini-managed-2026-11-03' },
 ] as const;
-export type GeminiSku = typeof GEMINI_PRODUCTS[number]['sku'];
+export type GeminiSku = string;
 export const GEMINI_PRICE = GEMINI_PRODUCTS[0].price;
 export const GEMINI_TERMS_VERSION = GEMINI_PRODUCTS[0].termsVersion;
 export function geminiProduct(value: unknown = 'gemini-3m') {
@@ -13,8 +13,8 @@ export function geminiProduct(value: unknown = 'gemini-3m') {
   if (!product) throw new Error('Sản phẩm Gemini không hợp lệ.');
   return product;
 }
-export type GeminiProduct = { sku: GeminiSku; title: string; durationMonths: number; price: number; originalPrice: number; enabled: boolean; stock: number };
-export type GeminiOrder = { id: string; product_sku: GeminiSku; duration_months: number; amount_vnd: number; status: string; payment_code: string; created_at: string; expires_at: string; paid_at: string | null; activation_url?: string | null };
+export type GeminiProduct = { sku: GeminiSku; title: string; durationMonths: number; price: number; originalPrice: number; enabled: boolean; stock: number; description?: string; category?: string; benefits?: string[]; warrantyStatus?: 'included' | 'none' | 'unspecified'; warranty?: string; notes?: string; thumbnail?: string; published?: boolean; deliveryMode?: 'manual' | 'link'; termsVersion?: string; priceConfirmed?: boolean };
+export type GeminiOrder = { id: string; product_sku: GeminiSku; duration_months: number; amount_vnd: number; status: string; payment_code: string; created_at: string; expires_at: string; paid_at: string | null; activation_url?: string | null; delivery_mode?: 'manual' | 'link'; product_title?: string };
 export type GeminiAccount = {
   authenticated: boolean; enabled: boolean; stock: number; price: number; products: GeminiProduct[];
   bank: { bank: string; account: string; name: string } | null;
@@ -34,7 +34,7 @@ export function parseActivationLinks(value: unknown, sku: GeminiSku = 'gemini-3m
   }
   return links;
 }
-export function geminiSteps(product: typeof GEMINI_PRODUCTS[number]) { return [
+export function geminiSteps(product: { sku: GeminiSku; durationMonths: number; price: number }) { return [
   { title: 'Quét QR, nhận link', text: `Thanh toán ${product.price.toLocaleString('vi-VN')}₫ bằng ứng dụng ngân hàng. Khi hệ thống xác nhận tiền, link kích hoạt ${product.durationMonths} tháng sẽ hiện trong đơn hàng.` },
   { title: 'Copy link, dán vào trình duyệt', text: 'Sao chép link và dán vào thanh địa chỉ Chrome hoặc trình duyệt bạn đang dùng. Đăng nhập đúng Google cá nhân muốn nâng cấp.' },
   { title: 'Bấm kích hoạt gói', text: `Kiểm tra Google hiển thị đúng ưu đãi ${product.durationMonths} tháng và tài khoản đủ điều kiện, rồi bấm nhận ưu đãi / kích hoạt theo hướng dẫn trên màn hình.` },

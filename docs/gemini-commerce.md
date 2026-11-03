@@ -64,3 +64,19 @@ npm run graph:update
 ```
 
 PGlite kiểm tra nâng cấp bảo toàn đơn PAID cũ, tách SKU/kho, khóa giá/thời hạn, callback, expiry, RLS và API ownership/admin. PGlite một kết nối không thay thế kiểm thử contention hoặc giao dịch thật trên production.
+
+### Quản lý kho và giá
+
+`/gemini/admin` hiển thị các gói, tồn kho, phương thức bàn giao và trạng thái mở bán. Chọn **Quản lý** để nhập link, xem đơn, sửa giá bán/giá gốc hoặc bật/tắt gói. Giá là số nguyên VNĐ (1.000–100.000.000); giá gốc không thấp hơn giá bán.
+
+Giá lưu qua RPC `windi_gemini_product_pricing`, chỉ `service_role` được gọi; API kiểm tra quyền admin và origin trước khi ghi. RPC dùng cùng advisory lock với tạo đơn. Cửa hàng đọc giá từ catalog; QR và webhook dùng `amount_vnd` đã chốt trên đơn. Đơn đang chờ được tiếp tục với giá cũ đến hết hạn, kể cả khi admin đổi giá. Đơn tạo sau đó dùng giá mới. Không sửa số tiền đơn cũ.
+
+Migration: `20261103223506_gemini_inventory_pricing.sql`. Kiểm thử giá mới cho cả gói link và gói admin, giữ giá đơn đang chờ, đối soát sai số tiền và từ chối sửa giá trái quyền tại `tests/gemini-managed-checkout.test.ts` và `tests/gemini-commerce-api.test.ts`.
+
+### Sản phẩm chung, nội dung và thumbnail
+
+Trang `/gemini/admin` nay quản lý toàn bộ danh mục, có **Thêm sản phẩm** và biểu mẫu sửa tên, mã, danh mục, thời hạn, giá bán/giá gốc, mô tả, lợi ích, chính sách bảo hành, lưu ý và thumbnail. Thumbnail nhận đường dẫn HTTPS hoặc upload PNG/JPEG/WebP tối đa 5 MB, lưu ở bucket công khai `shop-thumbnails`; chỉ API đã kiểm tra admin được upload. Tệp có tên ngẫu nhiên, không ghi đè ảnh cũ.
+
+Sản phẩm mới mặc định là nháp và tắt nhận đơn; hình thức giao hàng là admin bàn giao. Bật hiển thị rồi mở bán để nhận QR. Giá và nội dung chưa biết của sản phẩm tham khảo được đánh dấu chưa xác nhận; không dùng giá nội bộ làm giá công bố. ChatGPT `chatgpt-ready-1m` có giá 229.000đ, thumbnail riêng, chưa mở nhận thanh toán và chưa công bố bảo hành.
+
+Migration `20261103224422_shop_product_management.sql` bổ sung metadata và hình thức bàn giao; tái sử dụng hệ thống đơn/QR/SePay. Đơn chốt tên, hình thức bàn giao và giá lúc tạo. Đơn link Gemini cũ tiếp tục dùng kho link; đơn giao thủ công chỉ được xác nhận khi webhook khớp số tiền. Mã, thời hạn và hình thức bàn giao của sản phẩm đã tạo không được đổi trong biểu mẫu để giữ đúng lịch sử đơn hàng.
