@@ -14,7 +14,12 @@ export async function GET(request: Request) {
     ]);
     if (links.error) throw links.error;
     if (orders.error) throw orders.error;
-    return Response.json({ ...catalog, selectedProduct: product.sku, links: links.data, orders: orders.data }, { headers: privateHeaders });
+    const ids = [...new Set((orders.data || []).filter(order => order.status === 'PAID' && order.activation_id).map(order => order.activation_id as string))];
+    const assigned = ids.length ? await db.from('windi_gemini_links').select('id,activation_url').eq('product_sku', product.sku).in('id', ids) : { data: [], error: null };
+    if (assigned.error) throw assigned.error;
+    const urls = new Map((assigned.data || []).map(link => [link.id, link.activation_url]));
+    const orderRows = (orders.data || []).map(order => ({ ...order, activation_url: order.status === 'PAID' && order.activation_id ? urls.get(order.activation_id) ?? null : null }));
+    return Response.json({ ...catalog, selectedProduct: product.sku, links: links.data, orders: orderRows }, { headers: privateHeaders });
   } catch (error) { return geminiFailure(error); }
 }
 export async function POST(request: Request) {

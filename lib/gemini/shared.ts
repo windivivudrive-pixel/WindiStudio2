@@ -11,7 +11,7 @@ export function geminiProduct(value: unknown = 'gemini-3m') {
   return product;
 }
 export type GeminiProduct = { sku: GeminiSku; title: string; durationMonths: number; price: number; originalPrice: number; enabled: boolean; stock: number };
-export type GeminiOrder = { id: string; product_sku: GeminiSku; duration_months: number; amount_vnd: number; status: string; payment_code: string; created_at: string; expires_at: string; paid_at: string | null };
+export type GeminiOrder = { id: string; product_sku: GeminiSku; duration_months: number; amount_vnd: number; status: string; payment_code: string; created_at: string; expires_at: string; paid_at: string | null; activation_url?: string | null };
 export type GeminiAccount = {
   authenticated: boolean; enabled: boolean; stock: number; price: number; products: GeminiProduct[];
   bank: { bank: string; account: string; name: string } | null;
@@ -32,8 +32,8 @@ export function parseActivationLinks(value: unknown, sku: GeminiSku = 'gemini-3m
   return links;
 }
 export function geminiSteps(product: typeof GEMINI_PRODUCTS[number]) { return [
-  { title: 'Quét QR, nhận file TXT', text: `Thanh toán ${product.price.toLocaleString('vi-VN')}₫ bằng ứng dụng ngân hàng. Khi hệ thống xác nhận tiền, tải file TXT chứa link kích hoạt ${product.durationMonths} tháng của đơn hàng.` },
-  { title: 'Copy link, dán vào trình duyệt', text: 'Mở file TXT, sao chép toàn bộ link và dán vào thanh địa chỉ Chrome hoặc trình duyệt bạn đang dùng. Đăng nhập đúng Google cá nhân muốn nâng cấp.' },
+  { title: 'Quét QR, nhận link', text: `Thanh toán ${product.price.toLocaleString('vi-VN')}₫ bằng ứng dụng ngân hàng. Khi hệ thống xác nhận tiền, link kích hoạt ${product.durationMonths} tháng sẽ hiện trong đơn hàng.` },
+  { title: 'Copy link, dán vào trình duyệt', text: 'Sao chép link và dán vào thanh địa chỉ Chrome hoặc trình duyệt bạn đang dùng. Đăng nhập đúng Google cá nhân muốn nâng cấp.' },
   { title: 'Bấm kích hoạt gói', text: `Kiểm tra Google hiển thị đúng ưu đãi ${product.durationMonths} tháng và tài khoản đủ điều kiện, rồi bấm nhận ưu đãi / kích hoạt theo hướng dẫn trên màn hình.` },
   product.sku === 'gemini-18m'
     ? { title: 'Kiểm tra điều kiện ưu đãi', text: 'Gói 18 tháng không yêu cầu thêm thẻ thanh toán hoặc ví điện tử. Kiểm tra tài khoản Google hiển thị đúng ưu đãi 18 tháng trước khi tiếp tục.' }
