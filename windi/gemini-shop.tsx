@@ -13,10 +13,10 @@ const date = (value: string) => new Date(value).toLocaleString('vi-VN');
 const statusLabels: Record<string, string> = { PAID: 'Đã thanh toán', PENDING: 'Chờ thanh toán', EXPIRED: 'Hết hạn', UNDERPAID: 'Chuyển thiếu tiền', OVERPAID: 'Chuyển thừa tiền', REVIEW_REQUIRED: 'Cần đối soát', REFUNDED: 'Đã hoàn tiền' };
 const support = 'https://www.facebook.com/profile.php?id=61594238790213';
 
-export function GeminiShop() {
-  const [catalogProduct, setCatalogProduct] = useState<string | null>(null);
+export function GeminiShop({ initialProduct = null }: { initialProduct?: 'google-managed' | null }) {
+  const [catalogProduct, setCatalogProduct] = useState<string | null>(initialProduct);
   const [account, setAccount] = useState<GeminiAccount | null>(null);
-  const [selectedSku, setSelectedSku] = useState<GeminiSku>('gemini-3m');
+  const [selectedSku, setSelectedSku] = useState<GeminiSku>(initialProduct === 'google-managed' ? 'gemini-managed-6m' : 'gemini-3m');
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [accepted, setAccepted] = useState(false);
@@ -94,13 +94,13 @@ export function GeminiShop() {
         { id: 'capcut', icon: '', name: 'CapCut Pro 1 năm', image: '/gemini-products/capcut-1-nam.png', type: 'CHỈNH SỬA VIDEO', description: 'Công cụ biên tập video' },
         { id: 'cursor', icon: '', name: 'Cursor Pro 1 tháng', image: '/gemini-products/cursor-1-thang.png', type: 'LẬP TRÌNH', description: 'Công cụ lập trình với AI' },
         { id: 'gamma', icon: '', name: 'Gamma AI 6 tháng', image: '/gemini-products/gamma-6-thang.png', type: 'THUYẾT TRÌNH', description: 'Công cụ tạo bài thuyết trình' },
-      ].map(item => <button key={item.id} className={styles.catalogCard} disabled={!['google', 'google-managed'].includes(item.id)} onClick={() => { setCatalogProduct(item.id); setSelectedSku(item.id === 'google-managed' ? 'gemini-managed-6m' : 'gemini-3m'); setAccepted(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }} aria-label={'Xem ' + item.name + ', ' + (item.id === 'google' ? stockLabel : item.id === 'google-managed' ? (account?.products.some(product => isManagedGemini(product.sku) && product.enabled) ? 'Từ 189.000₫' : 'Hết hàng') : 'Hết hàng')}>
+      ].map(item => item.id === 'google-managed' ? <Link key={item.id} className={styles.catalogCard} href="/cua-hang/gemini-dai-han" aria-label="Xem Gemini Pro nâng chính chủ"><span className={styles.cardArt}><img className={styles.productThumbnail} src={item.image} alt="" /></span><span className={styles.cardBody}><small>{item.type}</small><strong>{item.name}</strong><span>{item.description}</span><span className={styles.cardBottom}><b>{account?.products.some(product => isManagedGemini(product.sku) && product.enabled) ? 'Từ 189.000₫' : 'Hết hàng'}</b><ArrowRight size={18} aria-hidden="true" /></span></span></Link> : <button key={item.id} className={styles.catalogCard} disabled={!['google', 'google-managed'].includes(item.id)} onClick={() => { setCatalogProduct(item.id); setSelectedSku(item.id === 'google-managed' ? 'gemini-managed-6m' : 'gemini-3m'); setAccepted(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }} aria-label={'Xem ' + item.name + ', ' + (item.id === 'google' ? stockLabel : item.id === 'google-managed' ? (account?.products.some(product => isManagedGemini(product.sku) && product.enabled) ? 'Từ 189.000₫' : 'Hết hàng') : 'Hết hàng')}>
         <span className={styles.cardArt}>{item.image ? <img className={styles.productThumbnail} src={item.image} alt="" /> : <span className={[styles.mockArt, styles[item.id]].join(" ")}><small>CREATIVE TOOLS</small><strong>{item.name}</strong><span>SẢN PHẨM THAM KHẢO</span></span>}</span>
         <span className={styles.cardBody}><small>{item.type}</small><strong>{item.name}</strong><span>{item.description}</span><span className={styles.cardBottom}><b className={item.id === 'google' && stockLabel === 'Còn hàng' ? styles.inStock : undefined}>{item.id === 'google' ? stockLabel : item.id === 'google-managed' ? (account?.products.some(product => isManagedGemini(product.sku) && product.enabled) ? 'Từ 189.000₫' : 'Hết hàng') : 'Hết hàng'}</b><ArrowRight size={18} aria-hidden="true" /></span></span>
       </button>)}</div>
     </section>
     </>}
-    {catalogProduct && <button className={styles.backToCatalog} onClick={() => { setCatalogProduct(null); setSelectedSku('gemini-3m'); setAccepted(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>← Quay lại sản phẩm</button>}
+    {catalogProduct && (initialProduct ? <Link className={styles.backToCatalog} href="/cua-hang">← Quay lại sản phẩm</Link> : <button className={styles.backToCatalog} onClick={() => { setCatalogProduct(null); setSelectedSku('gemini-3m'); setAccepted(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>← Quay lại sản phẩm</button>)}
     {catalogProduct && catalogProduct !== 'google-managed' && <section className={styles.detailIntro} id="chi-tiet"><div><span className={styles.eyebrow}>CHI TIẾT SẢN PHẨM</span><h2>{catalogProduct === 'google' ? 'Google Gemini · 3 tháng' : ({ chatgpt: 'ChatGPT 1 tháng chính chủ', claude: 'Claude 1 tháng chính chủ', youtube: 'YouTube Premium 1 tháng' } as Record<string, string>)[catalogProduct]}</h2><p>{catalogProduct === 'google' ? 'Link kích hoạt trên tài khoản Google cá nhân của bạn.' : 'Sản phẩm hiện đã hết hàng. Thông tin chi tiết sẽ được cập nhật khi mở bán trở lại.'}</p></div><span className={catalogProduct === 'google' && stockLabel === 'Còn hàng' ? styles.inStock : styles.soldOut}>{catalogProduct === 'google' ? stockLabel : 'Hết hàng'}</span></section>}
     {catalogProduct && !['google', 'google-managed'].includes(catalogProduct) && <img className={styles.detailThumbnail} src={'/gemini-products/' + catalogProduct + '-1-thang.png'} alt="" />}
     {catalogProduct === 'google-managed' && !order && error && <p className={styles.error} role="alert">{error}</p>}
