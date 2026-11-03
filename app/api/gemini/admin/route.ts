@@ -1,5 +1,5 @@
 import { boundedBody, VoiceError, writer } from '@/lib/voice/server';
-import { parseActivationLinks } from '@/lib/gemini/shared';
+import { isManagedGemini, parseActivationLinks } from '@/lib/gemini/shared';
 import { geminiCatalog, geminiFailure, privateHeaders, requireGeminiAdmin, selectedGeminiProduct } from '@/lib/gemini/server';
 export const runtime = 'nodejs';
 export async function GET(request: Request) {
@@ -29,6 +29,7 @@ export async function POST(request: Request) {
     const product = selectedGeminiProduct(body?.product);
     const db = writer();
     if (body?.action === 'import') {
+      if (isManagedGemini(product.sku)) throw new VoiceError('Gói nâng chính chủ được admin xử lý sau thanh toán.');
       let urls: string[];
       try { urls = parseActivationLinks(body.links, product.sku); } catch (error) { throw new VoiceError((error as Error).message); }
       const validUntil = Date.parse(body.validUntil);
@@ -38,7 +39,7 @@ export async function POST(request: Request) {
       return Response.json({ added: result.data, skipped: urls.length - result.data }, { headers: privateHeaders });
     }
     if (body?.action === 'settings' && typeof body.enabled === 'boolean') {
-      if (body.enabled) {
+      if (body.enabled && !isManagedGemini(product.sku)) {
         const stock = await db.rpc('windi_gemini_stock', { p_sku: product.sku });
         if (stock.error) throw stock.error;
         if (!stock.data) throw new VoiceError('Nhập link còn hạn trước khi mở bán.');

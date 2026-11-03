@@ -28,7 +28,7 @@ export async function requireGeminiAdmin(request?: Request) {
 export function geminiFailure(error: unknown) {
   const message = String((error as { message?: string })?.message || '');
   const detail = message.includes('GEMINI_OUT_OF_STOCK') ? 'Link vừa hết hàng. Vui lòng quay lại sau.'
-    : message.includes('GEMINI_DISABLED') ? 'Sản phẩm chưa mở bán.' : message.includes('GEMINI_INVALID_PRODUCT') ? 'Sản phẩm Gemini không hợp lệ.' : null;
+    : message.includes('GEMINI_DISABLED') ? 'Sản phẩm đã hết hàng.' : message.includes('GEMINI_INVALID_PRODUCT') ? 'Sản phẩm Gemini không hợp lệ.' : null;
   return Response.json({ error: detail || (error instanceof VoiceError ? error.message : 'Chưa thể hoàn tất. Vui lòng thử lại sau.') }, {
     status: error instanceof VoiceError ? error.status : detail ? 409 : 503, headers: privateHeaders,
   });

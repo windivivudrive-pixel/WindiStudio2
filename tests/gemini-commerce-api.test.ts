@@ -27,7 +27,7 @@ test('inventory parsing accepts only canonical Google offer links and deduplicat
   for (const invalid of ['http://one.google.com/offer/ABCDEFGH', 'https://one.google.com.evil/offer/ABCDEFGH', 'https://one.google.com/offer/ABCDEFGH?x=1', 'https://one.google.com/offer/terms-and-conditions/foo', '', null]) expect(() => parseActivationLinks(invalid)).toThrow();
   const sample18m = 'https://serviceactivation.link/subscription/new/AQCpiIH1uM2A-k7r5Sou1mFNd0jUeAI9qePGZ1U1hiYGJ3LeuXxWTDRUKU_2UTtZJuQzGhsiFShcdt3EvJHmpSbVU9dg8J30rHEH7eDcmLUMVzM7upTMWhMZ0iV3R641L-sjPslXpnG1Jyk6nTHNiKZEmPK5hyesQC4pJU';
   expect(parseActivationLinks(sample18m, 'gemini-18m')).toEqual([sample18m]);
-  expect(parseActivationLinks('https://one.google.com/offer/ABCDEFGH1234', 'gemini-18m')).toHaveLength(1);
+  expect(() => parseActivationLinks('https://one.google.com/offer/ABCDEFGH1234', 'gemini-18m')).toThrow();
   expect(() => parseActivationLinks('https://evil.link/subscription/new/12345', 'gemini-18m')).toThrow('serviceactivation.link');
 });
 test('TXT download requires authentication, paid status and owner filter', async () => {
@@ -96,9 +96,9 @@ test('TXT filename follows the paid order, independently of the currently select
 test('authorized stock imports are bound to the 18-month SKU', async () => {
   state.admin=true;state.rpc.mockResolvedValueOnce({data:1,error:null});
   const validUntil=new Date(Date.now()+86400000).toISOString();
-  const response=await admin(new Request('http://localhost/api/gemini/admin',{method:'POST',headers:{origin:'http://localhost','Content-Type':'application/json'},body:JSON.stringify({action:'import',product:'gemini-18m',links:'https://one.google.com/offer/EIGHTEENSTOCK01',validUntil})}));
+  const response=await admin(new Request('http://localhost/api/gemini/admin',{method:'POST',headers:{origin:'http://localhost','Content-Type':'application/json'},body:JSON.stringify({action:'import',product:'gemini-18m',links:'https://serviceactivation.link/subscription/new/EIGHTEENSTOCK0001',validUntil})}));
   expect(response.status).toBe(200);expect(await response.json()).toEqual({added:1,skipped:0});
-  expect(state.rpc).toHaveBeenCalledWith('windi_gemini_import',{p_urls:['https://one.google.com/offer/EIGHTEENSTOCK01'],p_valid_until:validUntil,p_sku:'gemini-18m'});
+  expect(state.rpc).toHaveBeenCalledWith('windi_gemini_import',{p_urls:['https://serviceactivation.link/subscription/new/EIGHTEENSTOCK0001'],p_valid_until:validUntil,p_sku:'gemini-18m'});
 });
 test('admin enables only the selected product after stock and offer checks', async () => {
   state.admin=true;state.rpc.mockResolvedValue({data:1,error:null});
@@ -108,4 +108,13 @@ test('admin enables only the selected product after stock and offer checks', asy
   expect((await admin(post(true))).status).toBe(200);
   expect(state.rpc).toHaveBeenCalledWith('windi_gemini_stock',{p_sku:'gemini-18m'});
   expect(state.rpc).toHaveBeenCalledWith('windi_gemini_product_settings',{p_sku:'gemini-18m',p_enabled:true});
+});
+
+test('managed settings require admin and can open without imported links', async () => {
+  const request = () => new Request('http://localhost/api/gemini/admin', { method: 'POST', headers: { origin: 'http://localhost', 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'settings', product: 'gemini-managed-6m', enabled: true }) });
+  expect((await admin(request())).status).toBe(403);
+  state.admin = true;
+  expect((await admin(request())).status).toBe(200);
+  expect(state.rpc).toHaveBeenCalledWith('windi_gemini_product_settings', { p_sku: 'gemini-managed-6m', p_enabled: true });
+  expect(state.rpc).not.toHaveBeenCalledWith('windi_gemini_stock', expect.anything());
 });

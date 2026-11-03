@@ -1,6 +1,9 @@
 export const GEMINI_PRODUCTS = [
   { sku: 'gemini-3m', title: 'Gemini 3 tháng', durationMonths: 3, price: 69000, originalPrice: 150000, termsVersion: 'gemini-3m-2026-10-26' },
   { sku: 'gemini-18m', title: 'Gemini 18 tháng', durationMonths: 18, price: 49000, originalPrice: 49000, termsVersion: 'gemini-18m-2026-10-27' },
+  { sku: 'gemini-managed-6m', title: 'Nâng chính chủ 6 tháng', durationMonths: 6, price: 189000, originalPrice: 189000, termsVersion: 'gemini-managed-2026-11-03' },
+  { sku: 'gemini-managed-12m', title: 'Nâng chính chủ 12 tháng', durationMonths: 12, price: 329000, originalPrice: 329000, termsVersion: 'gemini-managed-2026-11-03' },
+  { sku: 'gemini-managed-24m', title: 'Nâng chính chủ 24 tháng', durationMonths: 24, price: 599000, originalPrice: 599000, termsVersion: 'gemini-managed-2026-11-03' },
 ] as const;
 export type GeminiSku = typeof GEMINI_PRODUCTS[number]['sku'];
 export const GEMINI_PRICE = GEMINI_PRODUCTS[0].price;
@@ -40,3 +43,5 @@ export function geminiSteps(product: typeof GEMINI_PRODUCTS[number]) { return [
     : { title: 'Thêm phương thức thanh toán', text: 'Thêm thẻ hoặc ví MoMo vào phương thức thanh toán theo lựa chọn Google hiển thị.' },
   { title: 'Xác nhận 0₫ và bắt đầu sử dụng', text: 'Chỉ xác nhận khi màn hình Google hiển thị 0₫ cho thời gian ưu đãi. Nếu hiện số tiền khác, dừng lại và liên hệ hỗ trợ. Sau khi kích hoạt thành công, bạn có thể hủy gia hạn; gói tiếp tục đến hết thời hạn hiển thị trong tài khoản Google.' },
 ]; }
+
+export const isManagedGemini = (sku: string) => ['gemini-managed-6m', 'gemini-managed-12m', 'gemini-managed-24m'].includes(sku);
