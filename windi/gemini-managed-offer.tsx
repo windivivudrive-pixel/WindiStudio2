@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { GEMINI_PRODUCTS, isManagedGemini, type GeminiSku, type GeminiAccount } from '@/lib/gemini/shared';
-import { CheckCircle2 } from 'lucide-react';
+import { CheckCircle2, Sparkles } from 'lucide-react';
 import styles from './gemini.module.css';
 
 const plans = GEMINI_PRODUCTS.filter(item => isManagedGemini(item.sku));
@@ -17,6 +17,9 @@ export function GeminiManagedOffer({ sku, onSelect, account, busy, accepted, onA
       <span className={styles.eyebrow}>GEMINI PRO · NÂNG CHÍNH CHỦ</span>
       <h2>Nâng Cấp Gemini Dài Hạn</h2>
       <p>Nâng trực tiếp trên tài khoản Google của bạn, kèm <strong>1 tháng YouTube Premium</strong>. Thanh toán QR để đăng ký nâng cấp.</p>
+      <section className={styles.argonFeature} aria-labelledby="managed-argon-feature-title">
+        <div className={styles.argonFeatureHeading}><Sparkles size={24} aria-hidden="true" /><div><span>ĐIỂM KHÁC BIỆT NỔI BẬT</span><h3 id="managed-argon-feature-title">Có Gemini 4 Argon trong Antigravity</h3></div></div>
+      </section>
       <section className={styles.proBenefits} aria-labelledby="managed-benefits-title">
         <h3 id="managed-benefits-title">Quyền lợi gói Google AI Pro</h3>
         <ul>
