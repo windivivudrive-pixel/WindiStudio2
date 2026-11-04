@@ -13,7 +13,7 @@ export function geminiProduct(value: unknown = 'gemini-3m') {
   if (!product) throw new Error('Sản phẩm Gemini không hợp lệ.');
   return product;
 }
-export type GeminiProduct = { sku: GeminiSku; title: string; durationMonths: number; price: number; originalPrice: number; enabled: boolean; stock: number; description?: string; category?: string; benefits?: string[]; warrantyStatus?: 'included' | 'none' | 'unspecified'; warranty?: string; notes?: string; thumbnail?: string; published?: boolean; deliveryMode?: 'manual' | 'link'; termsVersion?: string; priceConfirmed?: boolean };
+export type GeminiProduct = { sku: GeminiSku; title: string; durationMonths: number; price: number; originalPrice: number; enabled: boolean; stock: number; description?: string; category?: string; benefits?: string[]; warrantyStatus?: 'included' | 'none' | 'unspecified'; warranty?: string; notes?: string; thumbnail?: string; published?: boolean; deliveryMode?: 'manual' | 'link'; termsVersion?: string; priceConfirmed?: boolean; archivedAt?: string | null };
 export type GeminiOrder = { id: string; product_sku: GeminiSku; duration_months: number; amount_vnd: number; status: string; payment_code: string; created_at: string; expires_at: string; paid_at: string | null; activation_url?: string | null; delivery_mode?: 'manual' | 'link'; product_title?: string };
 export type GeminiAccount = {
   authenticated: boolean; enabled: boolean; stock: number; price: number; products: GeminiProduct[];

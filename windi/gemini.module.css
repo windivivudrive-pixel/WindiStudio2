@@ -182,3 +182,5 @@
 /* Reserve two text lines so product names and prices align without clipping. */
 .cardBody>strong{line-height:1.45;min-height:2.9em;overflow-wrap:anywhere}
 .cardBody>.cardDescription{line-height:1.65;min-height:3.3em;overflow-wrap:anywhere}
+
+.archiveToggle{display:flex;align-items:center;gap:8px;margin-top:22px;font-size:12px;color:var(--g-muted)}.inventoryTable td:last-child{white-space:nowrap}.inventoryTable td:last-child .secondary+.secondary{margin-left:6px}@media(max-width:760px){.inventoryTable td:last-child{grid-column:1/-1;display:flex;justify-content:flex-end;gap:8px}.inventoryTable td:last-child .secondary+.secondary{margin-left:0}}

@@ -44,6 +44,12 @@ export async function POST(request: Request) {
       }
       return Response.json({ sku: body.product }, { status: body.action === 'create' ? 201 : 200, headers: privateHeaders });
     }
+    if (body?.action === 'archive-product' || body?.action === 'restore-product') {
+      if (typeof body.product !== 'string' || !/^[a-z0-9][a-z0-9-]{2,79}$/.test(body.product)) throw new VoiceError('Mã sản phẩm không hợp lệ.');
+      const result = await writer().rpc('windi_shop_archive_product', { p_sku: body.product, p_archive: body.action === 'archive-product' });
+      if (result.error) throw result.error;
+      return Response.json({ sku: body.product, archived: body.action === 'archive-product' }, { headers: privateHeaders });
+    }
     const product = await selectedGeminiProduct(body?.product);
     const db = writer();
     if (body?.action === 'pricing') {

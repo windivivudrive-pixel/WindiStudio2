@@ -18,6 +18,7 @@ export function GeminiAdmin() {
   const [links, setLinks] = useState('');
   const [validUntil, setValidUntil] = useState('');
   const [creating, setCreating] = useState(false);
+  const [showArchived, setShowArchived] = useState(false);
   const [editorRevision, setEditorRevision] = useState(0);
   const [verified, setVerified] = useState(false);
   const [error, setError] = useState('');
@@ -56,6 +57,21 @@ export function GeminiAdmin() {
     } catch (reason) { setError((reason as Error).message); }
     finally { setBusy(false); }
   }
+  async function archiveProduct(sku: string, title: string, restore: boolean) {
+    if (busy) return;
+    if (!restore && !window.confirm(`Xóa “${title}” khỏi cửa hàng và danh sách sản phẩm? Đơn cũ vẫn được giữ và bạn có thể khôi phục sản phẩm.`)) return;
+    setBusy(true); setError(''); setNotice('');
+    try {
+      const response = await fetch('/api/gemini/admin', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: restore ? 'restore-product' : 'archive-product', product: sku }) });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Chưa thể cập nhật sản phẩm.');
+      const nextSku = !restore && sku === selectedSku ? data?.products.find(item => item.sku !== sku && !item.archivedAt)?.sku ?? sku : selectedSku;
+      if (nextSku !== selectedSku) setSelectedSku(nextSku);
+      await load(nextSku);
+      setNotice(restore ? `Đã khôi phục ${title} dưới dạng nháp, chưa mở bán.` : `Đã xóa ${title}. Bạn có thể khôi phục trong mục sản phẩm đã xóa.`);
+    } catch (reason) { setError((reason as Error).message); }
+    finally { setBusy(false); }
+  }
   const refreshing = loading || data?.selectedProduct !== selectedSku;
   return <main className={`${styles.page} ${styles.admin}`}>
     <Link href="/cua-hang" className={styles.secondary}><ArrowLeft size={16} aria-hidden="true" /> Cửa hàng</Link>
@@ -63,8 +79,9 @@ export function GeminiAdmin() {
     {error && <p className={styles.error} role="alert">{error}</p>}{notice && <p className={styles.notice} role="status">{notice}</p>}
     {data && <button className={styles.primary} disabled={busy} onClick={() => setCreating(true)}><PackagePlus size={18} aria-hidden="true" /> Thêm sản phẩm</button>}
     {data && creating && <ShopProductEditor onBusyChange={setBusy} onCancel={() => setCreating(false)} onSaved={async sku => { setCreating(false); setSelectedSku(sku); await load(sku); setNotice('Đã tạo sản phẩm. Chọn mở bán khi đã sẵn sàng giao hàng.'); }} />}
-    {data && !creating && <div className={`${styles.tableWrap} ${styles.inventoryTable}`}><table><caption>Danh mục sản phẩm · chọn gói để quản lý</caption><thead><tr><th>Sản phẩm</th><th>Giá bán</th><th>Kho / giao hàng</th><th>Mở bán</th><th>Thao tác</th></tr></thead><tbody>{data.products.map(item => <tr key={item.sku} aria-selected={selectedSku === item.sku}><td><strong>{item.title}</strong></td><td>{item.priceConfirmed === false ? 'Chưa đặt giá' : item.price.toLocaleString('vi-VN') + '₫'}</td><td>{item.deliveryMode === 'manual' ? 'Admin bàn giao' : `${item.stock} link sẵn sàng`}</td><td>{!item.published ? 'Bản nháp' : item.enabled ? 'Đang mở' : 'Đang tắt'}</td><td><button className={styles.secondary} disabled={busy || selectedSku === item.sku} onClick={() => { setSelectedSku(item.sku); document.getElementById('product-editor')?.scrollIntoView({behavior:'smooth'}); }}>{selectedSku === item.sku ? 'Đang chọn' : 'Quản lý'}</button></td></tr>)}</tbody></table></div>}
-    {!data ? loading ? <p role="status">Đang xác minh quyền quản trị…</p> : <><Link href="/login?next=%2Fgemini%2Fadmin" className={styles.primary}>Đăng nhập quản trị</Link><button className={styles.secondary} onClick={() => void load(selectedSku).catch(reason => setError(reason.message))}>Thử lại</button></> : creating ? null : <>
+    {data && !creating && <label className={styles.archiveToggle}><input type="checkbox" checked={showArchived} onChange={event => setShowArchived(event.target.checked)} /> Hiện sản phẩm đã xóa</label>}
+    {data && !creating && <div className={`${styles.tableWrap} ${styles.inventoryTable}`}><table><caption>Danh mục sản phẩm · chọn gói để quản lý</caption><thead><tr><th>Sản phẩm</th><th>Giá bán</th><th>Kho / giao hàng</th><th>Mở bán</th><th>Thao tác</th></tr></thead><tbody>{data.products.filter(item => showArchived ? !!item.archivedAt : !item.archivedAt).map(item => <tr key={item.sku} aria-selected={selectedSku === item.sku}><td><strong>{item.title}</strong></td><td>{item.priceConfirmed === false ? 'Chưa đặt giá' : item.price.toLocaleString('vi-VN') + '₫'}</td><td>{item.deliveryMode === 'manual' ? 'Admin bàn giao' : `${item.stock} link sẵn sàng`}</td><td>{item.archivedAt ? 'Đã xóa' : !item.published ? 'Bản nháp' : item.enabled ? 'Đang mở' : 'Đang tắt'}</td><td><button className={styles.secondary} disabled={busy || !!item.archivedAt || selectedSku === item.sku} onClick={() => { setSelectedSku(item.sku); document.getElementById('product-editor')?.scrollIntoView({behavior:'smooth'}); }}>{selectedSku === item.sku ? 'Đang chọn' : 'Quản lý'}</button>{' '}<button className={styles.secondary} disabled={busy} onClick={() => void archiveProduct(item.sku, item.title, !!item.archivedAt)}>{item.archivedAt ? 'Khôi phục' : 'Xóa'}</button></td></tr>)}</tbody></table></div>}
+    {!data ? loading ? <p role="status">Đang xác minh quyền quản trị…</p> : <><Link href="/login?next=%2Fgemini%2Fadmin" className={styles.primary}>Đăng nhập quản trị</Link><button className={styles.secondary} onClick={() => void load(selectedSku).catch(reason => setError(reason.message))}>Thử lại</button></> : creating || !active || !!active.archivedAt ? null : <>
       <div id="product-editor" style={{scrollMarginTop:100}} />
       {refreshing && <p role="status">Đang tải kho {product.title}…</p>}
       <div className={styles.adminStats}><div><strong>{managed ? 'Admin' : active?.stock ?? 0}</strong><span>{managed ? 'Bàn giao sau thanh toán' : `Link ${product.durationMonths} tháng sẵn sàng bán`}</span></div><div><strong>{active?.enabled ? 'Đang mở' : 'Đang tắt'}</strong><span>Trạng thái {product.title}</span></div><div><strong>{data.bank ? 'Đã kết nối' : 'Chưa cấu hình'}</strong><span>Thanh toán QR</span></div></div>

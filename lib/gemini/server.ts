@@ -59,7 +59,7 @@ export async function geminiCatalog() {
     warranty: originalPriceBySku.get(row.sku)?.warranty ?? '', notes: originalPriceBySku.get(row.sku)?.notes ?? '',
     thumbnail: originalPriceBySku.get(row.sku)?.thumbnail ?? '', published: originalPriceBySku.get(row.sku)?.published ?? true,
     deliveryMode: originalPriceBySku.get(row.sku)?.delivery_mode ?? 'link', termsVersion: originalPriceBySku.get(row.sku)?.terms_version ?? 'shop-v1',
-    priceConfirmed: originalPriceBySku.get(row.sku)?.price_confirmed ?? true, enabled: row.enabled, stock: row.stock,
+    priceConfirmed: originalPriceBySku.get(row.sku)?.price_confirmed ?? true, archivedAt: originalPriceBySku.get(row.sku)?.archived_at ?? null, enabled: row.enabled, stock: row.stock,
   }));
   const legacy = products.find(item => item.sku === 'gemini-3m');
   return { products, enabled: legacy?.enabled ?? false, price: legacy?.price ?? GEMINI_PRICE, stock: legacy?.stock ?? 0, bank: paymentConfig() };

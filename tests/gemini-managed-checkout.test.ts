@@ -11,7 +11,7 @@ const pay = async (o: Order, gateway: string, amount = o.amount_vnd) => (await d
 beforeAll(async () => {
   db = new PGlite();
   await db.exec(`create role anon; create role authenticated; create role service_role bypassrls; create schema auth; create table auth.users(id uuid primary key); insert into auth.users values('${user}');`);
-  for (const migration of ['20261026151540_gemini_activation_commerce', '20261027003556_gemini_product_variants', '20261027041208_gemini_five_minute_reservations', '20261102100145_gemini_3m_sale_price', '20261103133204_gemini_managed_checkout', '20261103223506_gemini_inventory_pricing', '20261103224422_shop_product_management']) {
+  for (const migration of ['20261026151540_gemini_activation_commerce', '20261027003556_gemini_product_variants', '20261027041208_gemini_five_minute_reservations', '20261102100145_gemini_3m_sale_price', '20261103133204_gemini_managed_checkout', '20261103223506_gemini_inventory_pricing', '20261103224422_shop_product_management', '20261104021451_shop_archive_product']) {
     await db.exec(await readFile(new URL(`../supabase/migrations/${migration}.sql`, import.meta.url), 'utf8'));
   }
 }, 30000);
@@ -103,4 +103,22 @@ test('ChatGPT is in the catalog at 229k, while products without prices stay unav
   expect(rows.find(r=>r.sku==='chatgpt-ready-1m')).toMatchObject({price_vnd:229000,published:true,price_confirmed:true});
   expect(rows.find(r=>r.sku==='claude-1m')).toMatchObject({published:true,price_confirmed:false});
   await expect(db.exec("set role authenticated; select public.windi_shop_save_product('hack-product','{}',true)")).rejects.toThrow('permission denied');await db.exec('reset role');
+});
+
+test('archive hides a product while existing pending and paid orders remain valid; restore stays closed', async () => {
+  const sku='archive-test-1m';
+  await db.query('select public.windi_shop_save_product($1,$2,true)',[sku,JSON.stringify({...newDetails,published:true})]);
+  await settings(sku,true);
+  const pending=await order(sku);
+  await db.query('select public.windi_shop_archive_product($1,true)',[sku]);
+  const removed=(await db.query<{archived_at:string|null;enabled:boolean;published:boolean}>('select archived_at,enabled,published from public.windi_gemini_products where sku=$1',[sku])).rows[0];
+  expect(removed.archived_at).not.toBeNull();expect(removed.enabled).toBe(false);expect(removed.published).toBe(false);
+  await expect(order(sku)).rejects.toThrow('GEMINI_DISABLED');
+  expect(await pay(pending,'archive-pending-payment')).toBe('paid');
+  await expect(db.query('update public.windi_gemini_products set published=true where sku=$1',[sku])).rejects.toThrow();
+  await db.query('select public.windi_shop_archive_product($1,false)',[sku]);
+  const restored=(await db.query<{archived_at:string|null;enabled:boolean;published:boolean}>('select archived_at,enabled,published from public.windi_gemini_products where sku=$1',[sku])).rows[0];
+  expect(restored).toEqual({archived_at:null,enabled:false,published:false});
+  expect((await db.query<{status:string}>('select status from public.windi_gemini_orders where id=$1',[pending.id])).rows[0].status).toBe('PAID');
+  await expect(db.exec("set role anon; select public.windi_shop_archive_product('archive-test-1m',true)")).rejects.toThrow('permission denied'); await db.exec('reset role');
 });

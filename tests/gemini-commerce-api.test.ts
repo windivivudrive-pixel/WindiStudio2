@@ -150,3 +150,15 @@ test('checkout resolves a newly created database product without adding a hardco
  expect((await order(request('shop-v1'))).status).toBe(201);
  expect(state.rpc).toHaveBeenCalledWith('windi_gemini_order',{p_sku:'new-chatgpt-1m',p_user:state.user!.id});
 });
+
+test('archive and restore require admin and use the exact requested product', async () => {
+  const post=(action:string,product='chatgpt-ready-1m',origin='http://localhost')=>new Request('http://localhost/api/gemini/admin',{method:'POST',headers:{origin,'Content-Type':'application/json'},body:JSON.stringify({action,product})});
+  expect((await admin(post('archive-product'))).status).toBe(403);expect(state.rpc).not.toHaveBeenCalled();
+  state.admin=true;
+  expect((await admin(post('archive-product','chatgpt-ready-1m','https://evil.example'))).status).toBe(403);
+  expect((await admin(post('archive-product','invalid sku'))).status).toBe(400);expect(state.rpc).not.toHaveBeenCalled();
+  expect((await admin(post('archive-product'))).status).toBe(200);
+  expect(state.rpc).toHaveBeenLastCalledWith('windi_shop_archive_product',{p_sku:'chatgpt-ready-1m',p_archive:true});
+  expect((await admin(post('restore-product'))).status).toBe(200);
+  expect(state.rpc).toHaveBeenLastCalledWith('windi_shop_archive_product',{p_sku:'chatgpt-ready-1m',p_archive:false});
+});
