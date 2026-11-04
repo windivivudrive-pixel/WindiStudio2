@@ -23,6 +23,11 @@ export type GeminiAccount = {
 export function parseActivationLinks(value: unknown, sku: GeminiSku = 'gemini-3m'): string[] {
   if (typeof value !== 'string' || value.length > 100000) throw new Error('Nhập tối đa 500 link, mỗi dòng một link.');
   const links = [...new Set(value.split(/\r?\n/).map(line => line.trim()).filter(Boolean))];
+  if (isManagedGemini(sku)) {
+    const prefix = sku === 'gemini-managed-6m' ? 'GEM6-' : sku === 'gemini-managed-12m' ? 'GEM12-' : 'GEM24-';
+    if (!links.length || links.length > 500 || links.some(code => !new RegExp(`^${prefix}[A-Z0-9]{16,128}$`).test(code))) throw new Error(`Chỉ nhận mã ${prefix} hợp lệ, tối đa 500 mã mỗi lần.`);
+    return links;
+  }
   const regex = sku === 'gemini-18m'
     ? /^https:\/\/serviceactivation\.link\/subscription\/new\/[A-Za-z0-9_-]{16,512}={0,2}$/
     : /^https:\/\/one\.google\.com\/offer\/[A-Za-z0-9_-]{8,128}$/;

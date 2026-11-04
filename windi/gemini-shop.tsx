@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { ArrowDown, ArrowRight, CheckCircle2, Copy, FileText, Loader2, LockKeyhole, QrCode, RefreshCw, ShieldCheck, Sparkles, X } from 'lucide-react';
-import { GEMINI_PRODUCTS, isManagedGemini, geminiProduct, geminiSteps, type GeminiSku, type GeminiAccount, type GeminiOrder } from '@/lib/gemini/shared';
+import { GEMINI_PRODUCTS, isManagedGemini, geminiProduct, geminiSteps, type GeminiSku, type GeminiAccount, type GeminiOrder, type GeminiProduct } from '@/lib/gemini/shared';
 import styles from './gemini.module.css';
 import { GeminiManagedOffer } from './gemini-managed-offer';
 import { ShopProductInfo } from './shop-product-info';
@@ -14,10 +14,10 @@ const date = (value: string) => new Date(value).toLocaleString('vi-VN');
 const statusLabels: Record<string, string> = { PAID: 'Đã thanh toán', PENDING: 'Chờ thanh toán', EXPIRED: 'Hết hạn', UNDERPAID: 'Chuyển thiếu tiền', OVERPAID: 'Chuyển thừa tiền', REVIEW_REQUIRED: 'Cần đối soát', REFUNDED: 'Đã hoàn tiền' };
 const support = 'https://www.facebook.com/profile.php?id=61594238790213';
 
-export function GeminiShop({ initialProduct = null }: { initialProduct?: 'google-managed' | null }) {
+export function GeminiShop({ initialProduct = null, initialSku, initialProducts = null }: { initialProduct?: 'google-managed' | 'google' | 'product' | null; initialSku?: string; initialProducts?: GeminiProduct[] | null }) {
   const [catalogProduct, setCatalogProduct] = useState<string | null>(initialProduct);
-  const [account, setAccount] = useState<GeminiAccount | null>(null);
-  const [selectedSku, setSelectedSku] = useState<GeminiSku>(initialProduct === 'google-managed' ? 'gemini-managed-6m' : 'gemini-3m');
+  const [account, setAccount] = useState<GeminiAccount | null>(initialProducts ? { products: initialProducts, authenticated: false, enabled: false, stock: 0, price: 0, bank: null, orders: [] } : null);
+  const [selectedSku, setSelectedSku] = useState<GeminiSku>(initialSku || (initialProduct === 'google-managed' ? 'gemini-managed-6m' : 'gemini-3m'));
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [accepted, setAccepted] = useState(false);
@@ -95,31 +95,33 @@ export function GeminiShop({ initialProduct = null }: { initialProduct?: 'google
       <div className={styles.catalogHeading}><h1 id="catalog-title">Sản phẩm</h1></div>
       <div className={styles.catalogGrid}>
         {catalogCards.map(card => {
-          if (card.kind === 'managed') return <Link key="gemini-managed" className={styles.catalogCard} href="/cua-hang/gemini-dai-han"><span className={styles.cardArt}><img className={styles.productThumbnail} src={managedProducts?.[0].thumbnail || '/gemini-products/gemini-chinh-chu.png'} alt="" /></span><span className={styles.cardBody}><small>AI &amp; CÔNG VIỆC</small><strong>Gemini Pro nâng chính chủ</strong><span className={styles.cardDescription}>6 / 12 / 24 tháng · + 1 tháng YouTube Premium</span><span className={styles.catalogPrice}>{managedFrom}</span><span className={styles.cardBottom}><b className={managedProducts?.some(product => product.enabled) ? styles.inStock : undefined}>{managedProducts?.some(product => product.enabled) ? 'Còn hàng' : 'Hết hàng'}</b><ArrowRight size={18} aria-hidden="true" /></span></span></Link>;
+          if (card.kind === 'managed') return <Link key="gemini-managed" className={styles.catalogCard} href="/cua-hang/gemini-dai-han"><span className={styles.cardArt}><img className={styles.productThumbnail} src={managedProducts?.[0].thumbnail || '/gemini-products/gemini-chinh-chu.png'} alt="" /></span><span className={styles.cardBody}><small>AI &amp; CÔNG VIỆC</small><strong>Gemini Pro nâng chính chủ</strong><span className={styles.cardDescription}>6 / 12 / 24 tháng · + 1 tháng YouTube Premium</span><span className={styles.catalogPrice}>{managedFrom}</span><span className={styles.cardBottom}><b className={managedProducts?.some(product => product.enabled && product.stock > 0) ? styles.inStock : undefined}>{managedProducts?.some(product => product.enabled && product.stock > 0) ? 'Còn hàng' : 'Hết hàng'}</b><ArrowRight size={18} aria-hidden="true" /></span></span></Link>;
           const product = card.product;
           const mockup = mockupSkus.has(product.sku);
-          return <button key={product.sku} className={styles.catalogCard} disabled={mockup} onClick={() => { setSelectedSku(product.sku); setCatalogProduct(product.sku === 'gemini-3m' ? 'google' : 'product'); setAccepted(false); setError(''); window.scrollTo({top:0,behavior:'smooth'}); }}>
+          const cardContent = <>
             <span className={styles.cardArt}>{product.thumbnail ? <img className={styles.productThumbnail} src={product.thumbnail} alt="" /> : <span className={styles.mockArt}><strong>{product.title}</strong></span>}</span>
             <span className={styles.cardBody}><small>{product.category}</small><strong>{product.title}</strong><span className={styles.cardDescription}>{product.description || (product.sku === 'gemini-3m' ? 'Nâng cấp chính chủ' : '')}</span>{!mockup && <span className={styles.catalogPrice}>{product.priceConfirmed !== false && product.originalPrice > product.price && <del>{money(product.originalPrice)}₫</del>} {product.priceConfirmed === false ? 'Đang cập nhật giá' : money(product.price) + '₫'}</span>}<span className={styles.cardBottom}><b className={!mockup && product.enabled && product.stock > 0 ? styles.inStock : undefined}>{mockup ? 'Hết hàng' : !product.enabled ? 'Chưa mở bán' : product.stock > 0 ? 'Còn hàng' : 'Hết hàng'}</b><ArrowRight size={18} aria-hidden="true" /></span></span>
-          </button>;
+          </>;
+          return mockup ? <button key={product.sku} className={styles.catalogCard} disabled>{cardContent}</button> : <Link key={product.sku} className={styles.catalogCard} href={`/cua-hang/${encodeURIComponent(product.sku)}`}>{cardContent}</Link>;
         })}
       </div>
-      {loading && <p role="status">Đang tải sản phẩm…</p>}
+      {loading && !account && <p role="status">Đang tải sản phẩm…</p>}
       {!loading && !account && <p className={styles.error} role="alert">{error || 'Chưa tải được cửa hàng. Vui lòng tải lại trang.'}</p>}
     </section>
     </>}
     {catalogProduct && (initialProduct ? <Link className={styles.backToCatalog} href="/cua-hang">← Quay lại sản phẩm</Link> : <button className={styles.backToCatalog} onClick={() => { setCatalogProduct(null); setSelectedSku('gemini-3m'); setAccepted(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>← Quay lại sản phẩm</button>)}
+    {catalogProduct && catalogProduct !== 'google-managed' && !availableProduct && !loading && <p className={styles.error} role="alert">{error || 'Sản phẩm không tồn tại hoặc hiện không được hiển thị.'}</p>}
     {catalogProduct && catalogProduct !== 'google-managed' && availableProduct && <section className={styles.detailIntro}><div><span className={styles.eyebrow}>CHI TIẾT SẢN PHẨM</span><h2>{availableProduct.title}</h2><p>{availableProduct.description}</p></div><span className={availableProduct.enabled && availableProduct.stock > 0 ? styles.inStock : styles.soldOut}>{!availableProduct.enabled ? 'Chưa mở bán' : availableProduct.stock > 0 ? 'Còn hàng' : 'Hết hàng'}</span></section>}
     {catalogProduct === 'product' && availableProduct && <section className={styles.genericOffer}>
       <div>{availableProduct.thumbnail && <img className={styles.detailThumbnail} src={availableProduct.thumbnail} alt={availableProduct.title} />}</div>
       <div className={styles.offer}><p className={styles.price}>{availableProduct.priceConfirmed === false ? 'Đang cập nhật giá' : money(price)}{availableProduct.priceConfirmed !== false && <span>₫</span>}</p>{availableProduct.priceConfirmed !== false && availableProduct.originalPrice > price && <p><del>{money(availableProduct.originalPrice)}₫</del></p>}<p>Thời hạn: {availableProduct.durationMonths} tháng · {availableProduct.deliveryMode === 'manual' ? 'Admin bàn giao sau thanh toán' : 'Link tự động từ kho'}</p><ShopProductInfo product={availableProduct} />
       <label className={styles.accept}><input type="checkbox" checked={accepted} onChange={event=>setAccepted(event.target.checked)} /><span>Tôi đã đọc lợi ích, chính sách bảo hành và lưu ý trước khi mua.</span></label>
-      {!availableProduct.enabled || !availableProduct.stock ? <button className={styles.primary} disabled>{availableProduct.enabled ? 'Hết hàng' : 'Chưa mở bán'}</button> : !account?.bank ? <button className={styles.primary} disabled>Thanh toán chưa sẵn sàng</button> : !account.authenticated ? <Link className={styles.primary} href="/login?next=%2Fcua-hang">Đăng nhập để mua</Link> : <button className={styles.primary} disabled={busy || !accepted} onClick={()=>void buy()}>{busy?'Đang tạo đơn…':`Thanh toán QR · ${money(price)}₫`}</button>}
+      {loading ? <button className={styles.primary} disabled>Đang kiểm tra cửa hàng…</button> : !availableProduct.enabled || !availableProduct.stock ? <button className={styles.primary} disabled>{availableProduct.enabled ? 'Hết hàng' : 'Chưa mở bán'}</button> : !account?.bank ? <button className={styles.primary} disabled>Thanh toán chưa sẵn sàng</button> : !account.authenticated ? <Link className={styles.primary} href={`/login?next=${encodeURIComponent(`/cua-hang/${selectedSku}`)}`}>Đăng nhập để mua</Link> : <button className={styles.primary} disabled={busy || !accepted} onClick={()=>void buy()}>{busy?'Đang tạo đơn…':`Thanh toán QR · ${money(price)}₫`}</button>}
       {!order && error && <p className={styles.error} role="alert">{error}</p>}
       </div>
     </section>}
     {catalogProduct === 'google-managed' && !order && error && <p className={styles.error} role="alert">{error}</p>}
-    {catalogProduct === 'google-managed' && <GeminiManagedOffer sku={selectedSku} onSelect={sku => { setSelectedSku(sku); setAccepted(false); }} account={account} busy={busy} accepted={accepted} onAccept={setAccepted} onBuy={() => void buy()} />}
+    {catalogProduct === 'google-managed' && <GeminiManagedOffer loading={loading} hasPending={!!pending} sku={selectedSku} onSelect={sku => { setSelectedSku(sku); setAccepted(false); }} account={account} busy={busy} accepted={accepted} onAccept={setAccepted} onBuy={() => void buy()} />}
     {catalogProduct === 'google' && <>
     <section className={styles.purchaseSection} id="mua-ngay" aria-label="Chọn gói Gemini và hướng dẫn kích hoạt">
       <div><img className={styles.detailThumbnail} src={availableProduct?.thumbnail || "/gemini-products/gemini-3-thang.png"} alt={selectedProduct.title} />{availableProduct && <ShopProductInfo product={availableProduct} />}</div>
@@ -132,13 +134,13 @@ export function GeminiShop({ initialProduct = null }: { initialProduct?: 'google
           </label>)}
         </fieldset>
         <section className={styles.argonFeature} aria-labelledby="argon-feature-title" aria-live="polite">
-          <div className={styles.argonFeatureHeading}><Sparkles size={24} aria-hidden="true" /><div><span>ĐIỂM KHÁC BIỆT NỔI BẬT</span><h3 id="argon-feature-title">{selectedSku === 'gemini-3m' ? 'Có Gemini 4 Argon trong Antigravity' : 'Không có Gemini 4 Argon trong Antigravity'}</h3></div></div>
+          <div className={styles.argonFeatureHeading}><Sparkles size={24} aria-hidden="true" /><div><span>CẬP NHẬT ANTIGRAVITY</span><h3 id="argon-feature-title"><del>Có Gemini 4 Argon trong Antigravity</del></h3><p>Google vừa cập nhật: gói 3 tháng không còn Argon 4 trong Antigravity. Hiện chỉ còn Opus 5.5 và Sonnet 5.5.</p></div></div>
         </section>
         {!availableProduct?.benefits?.length && <section className={styles.proBenefits} aria-labelledby="pro-benefits-title">
           <h3 id="pro-benefits-title">Quyền lợi gói Google AI Pro</h3>
           <ul>
             <li><CheckCircle2 size={16} aria-hidden="true" /><span><strong>5 TB dung lượng tổng</strong> dùng chung cho Google Drive, Gmail và Google Photos.</span></li>
-            <li><CheckCircle2 size={16} aria-hidden="true" /><span>Quyền truy cập <strong>Gemini 4 Argon</strong> trong Gemini, Deep Research và Antigravity.</span></li>
+            <li><CheckCircle2 size={16} aria-hidden="true" /><span>Sử dụng Gemini và Deep Research theo tính năng hiển thị trên tài khoản của bạn.</span></li>
             <li><CheckCircle2 size={16} aria-hidden="true" /><span>Gemini tích hợp trong Gmail, Docs, Vids và các ứng dụng Google được hỗ trợ.</span></li>
             <li><CheckCircle2 size={16} aria-hidden="true" /><span>Thêm quyền sử dụng Google Flow và Gemini Notebook.</span></li>
           </ul>
@@ -165,7 +167,7 @@ export function GeminiShop({ initialProduct = null }: { initialProduct?: 'google
         {loading ? <button className={styles.primary} disabled>Đang kiểm tra cửa hàng…</button>
           : !account || !availableProduct ? <button className={styles.primary} onClick={() => { setLoading(true); void refresh().catch(reason => setError(reason.message)).finally(() => setLoading(false)); }}>Thử kết nối lại <RefreshCw size={17} aria-hidden="true" /></button>
           : !canBuy ? <button className={styles.primary} disabled>{!availableProduct.enabled ? 'Đang chuẩn bị mở bán' : !account.bank ? 'Thanh toán đang được chuẩn bị' : 'Hết hàng'}</button>
-          : !account.authenticated ? <Link className={styles.primary} href="/login?next=%2Fcua-hang">Đăng nhập để mua <ArrowRight size={18} aria-hidden="true" /></Link>
+          : !account.authenticated ? <Link className={styles.primary} href={`/login?next=${encodeURIComponent(`/cua-hang/${selectedSku}`)}`}>Đăng nhập để mua <ArrowRight size={18} aria-hidden="true" /></Link>
           : <button ref={buyButton} className={styles.primary} disabled={busy || !accepted} onClick={() => void buy()}>{busy ? <Loader2 className={styles.spinner} size={18} aria-hidden="true" /> : <QrCode size={18} aria-hidden="true" />}{pending ? 'Tiếp tục thanh toán QR' : 'Mua ngay · ' + money(price) + '₫'}</button>}
         <small className={styles.offerFoot}><ShieldCheck size={14} aria-hidden="true" /> Chỉ giao link sau khi hệ thống xác nhận tiền.</small>
         <a href={support} target="_blank" rel="noopener noreferrer" className={styles.supportLink}>Cần kiểm tra điều kiện? Liên hệ WindiStudio <ArrowRight size={13} aria-hidden="true" /></a>

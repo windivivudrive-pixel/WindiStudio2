@@ -62,10 +62,10 @@ export async function POST(request: Request) {
       return Response.json({ price, originalPrice }, { headers: privateHeaders });
     }
     if (body?.action === 'import') {
-      if (isManagedGemini(product.sku) || ('deliveryMode' in product && product.deliveryMode === 'manual')) throw new VoiceError('Gói nâng chính chủ được admin xử lý sau thanh toán.');
+      if (!isManagedGemini(product.sku) && ('deliveryMode' in product && product.deliveryMode === 'manual')) throw new VoiceError('Gói nâng chính chủ được admin xử lý sau thanh toán.');
       let urls: string[];
       try { urls = parseActivationLinks(body.links, product.sku); } catch (error) { throw new VoiceError((error as Error).message); }
-      const validUntil = Date.parse(body.validUntil);
+      const validUntil = isManagedGemini(product.sku) && !body.validUntil ? Date.parse('9999-12-31T00:00:00Z') : Date.parse(body.validUntil);
       if (!Number.isFinite(validUntil) || validUntil <= Date.now() + 600000) throw new VoiceError('Hạn sử dụng link phải cách hiện tại hơn 10 phút.');
       const result = await db.rpc('windi_gemini_import', { p_urls: urls, p_valid_until: new Date(validUntil).toISOString(), p_sku: product.sku });
       if (result.error) throw result.error;
