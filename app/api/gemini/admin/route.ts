@@ -15,6 +15,11 @@ export async function GET(request: Request) {
     ]);
     if (links.error) throw links.error;
     if (orders.error) throw orders.error;
+    for (const item of catalog.products.filter(item => isManagedGemini(item.sku))) {
+      const actualStock = await db.rpc('windi_gemini_stock', { p_sku: item.sku });
+      if (actualStock.error) throw actualStock.error;
+      item.stock = actualStock.data;
+    }
     const linkIds = (links.data || []).map(link => link.id);
     const reservations = linkIds.length ? await db.from('windi_gemini_orders').select('activation_id,status').eq('product_sku', product.sku).in('activation_id', linkIds) : { data: [], error: null };
     if (reservations.error) throw reservations.error;
