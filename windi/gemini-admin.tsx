@@ -77,7 +77,7 @@ export function GeminiAdmin() {
   return <main className={`${styles.page} ${styles.admin}`}>
     <Link href="/cua-hang" className={styles.secondary}><ArrowLeft size={16} aria-hidden="true" /> Cửa hàng</Link>
     <h1>Quản lý sản phẩm & kho</h1><p>Quản lý giá, tồn kho, trạng thái mở bán và đơn hàng theo từng gói. Thêm sản phẩm, chỉnh nội dung, thumbnail và chính sách trước khi mở bán.</p>
-    {error && <p className={styles.error} role="alert">{error}</p>}{notice && <p className={styles.notice} role="status">{notice}</p>}
+    {(error || notice) && <div className={styles.adminToast} role={error ? 'alert' : 'status'}><span>{error || notice}</span><button type="button" onClick={() => { setError(''); setNotice(''); }} aria-label="Đóng thông báo">×</button></div>}
     {data && <button className={styles.primary} disabled={busy} onClick={() => setCreating(true)}><PackagePlus size={18} aria-hidden="true" /> Thêm sản phẩm</button>}
     {data && creating && <ShopProductEditor onBusyChange={setBusy} onCancel={() => setCreating(false)} onSaved={async sku => { setCreating(false); setSelectedSku(sku); await load(sku); setNotice('Đã tạo sản phẩm. Chọn mở bán khi đã sẵn sàng giao hàng.'); }} />}
     {data && !creating && <label className={styles.archiveToggle}><input type="checkbox" checked={showArchived} onChange={event => setShowArchived(event.target.checked)} /> Hiện sản phẩm đã xóa</label>}

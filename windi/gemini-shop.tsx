@@ -134,7 +134,7 @@ export function GeminiShop({ initialProduct = null, initialSku, initialProducts 
           </label>)}
         </fieldset>
         <section className={styles.argonFeature} aria-labelledby="argon-feature-title" aria-live="polite">
-          <div className={styles.argonFeatureHeading}><Sparkles size={24} aria-hidden="true" /><div><span>CẬP NHẬT ANTIGRAVITY</span><h3 id="argon-feature-title"><del>Có Gemini 4 Argon trong Antigravity</del></h3><p>Google vừa cập nhật: gói 3 tháng không còn Argon 4 trong Antigravity. Hiện chỉ còn Opus 5.5 và Sonnet 5.5.</p></div></div>
+          <div className={styles.argonFeatureHeading}><Sparkles size={24} aria-hidden="true" /><div><span>ĐIỂM KHÁC BIỆT NỔI BẬT</span><h3 id="argon-feature-title">Có Argon 4 trong Antigravity</h3></div></div>
         </section>
         {!availableProduct?.benefits?.length && <section className={styles.proBenefits} aria-labelledby="pro-benefits-title">
           <h3 id="pro-benefits-title">Quyền lợi gói Google AI Pro</h3>

@@ -185,3 +185,5 @@
 
 .archiveToggle{display:flex;align-items:center;gap:8px;margin-top:22px;font-size:12px;color:var(--g-muted)}.inventoryTable td:last-child{white-space:nowrap}.inventoryTable td:last-child .secondary+.secondary{margin-left:6px}@media(max-width:760px){.inventoryTable td:last-child{grid-column:1/-1;display:flex;justify-content:flex-end;gap:8px}.inventoryTable td:last-child .secondary+.secondary{margin-left:0}}
 .argonFeatureHeading h3 del{color:var(--g-muted);text-decoration-thickness:2px}.argonFeatureHeading p{margin:12px 0 0;color:var(--g-ink);font-size:13px;line-height:1.7}
+
+.adminToast{position:fixed;z-index:1000;right:20px;bottom:20px;display:flex;align-items:flex-start;gap:18px;width:min(440px,calc(100vw - 32px));padding:18px 20px;background:#14251c;color:#e9fff0;border:1px solid #4dbb77;border-radius:12px;box-shadow:0 12px 36px #0008;font-size:14px;line-height:1.6}.adminToast span{flex:1}.adminToast button{border:0;background:transparent;color:inherit;font-size:24px;line-height:1;cursor:pointer}.adminToast button:focus-visible{outline:2px solid #fff;outline-offset:3px}@media(max-width:600px){.adminToast{right:16px;bottom:16px}}
