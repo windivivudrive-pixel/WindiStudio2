@@ -61,6 +61,17 @@
 /scripts/generate_sound_booki_voice.mjs
 /scripts/verify-qr-payment-package.mjs
 
+# Telegram shop is maintained locally and deployed separately from Git.
+/app/api/telegram/
+/app/api/cron/telegram-delivery/
+/lib/telegram/
+/lib/payments/nowpayments.ts
+/docs/telegram-store-bot.md
+/supabase/migrations/20261104234200_telegram_shop_orders.sql
+/supabase/migrations/20261104235427_telegram_bulk_orders.sql
+/tests/telegram-*.test.ts
+/tests/nowpayments.test.ts
+
 # Dependencies, builds, caches and deployment state at any depth.
 node_modules/
 .local/
