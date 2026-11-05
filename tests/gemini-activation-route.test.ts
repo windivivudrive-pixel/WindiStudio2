@@ -22,6 +22,10 @@ describe('activation response safety', () => {
     try {
       const data = await (await POST(request({ action: 'history', cdkey: key }))).json();
       expect(data.tasks.map((item: { failureReason: string | null }) => item.failureReason)).toEqual(['credentials', 'twofa', null, null]);
+      expect(data.tasks[0].providerMessage).toBeNull();
+      expect(data.tasks[1].providerMessage).toBe('2FA code invalid');
+      expect(data.tasks[2].providerMessage).toBeNull();
+      expect(data.tasks[3].providerMessage).toBeNull();
       expect(JSON.stringify(data)).not.toContain('secret@example.com');
     } finally { vi.unstubAllGlobals(); }
   });
