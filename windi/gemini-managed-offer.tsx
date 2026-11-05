@@ -1,4 +1,5 @@
 'use client';
+import { optimizedThumbnail } from '@/lib/gemini/thumbnail';
 
 import Link from 'next/link';
 import { GEMINI_PRODUCTS, isManagedGemini, type GeminiSku, type GeminiAccount } from '@/lib/gemini/shared';
@@ -15,7 +16,7 @@ export function GeminiManagedOffer({ sku, onSelect, account, busy, accepted, onA
   const available = current?.enabled === true && ((current?.stock ?? 0) > 0 || hasPending);
   const ready = !!account?.bank && available;
   return <section className={styles.managedOffer} aria-label="Gemini Pro nâng chính chủ">
-    <div className={styles.managedVisual}><img src={current?.thumbnail || "/gemini-products/gemini-chinh-chu.png"} alt="Gemini Pro nâng chính chủ 6, 12, 24 tháng, kèm 1 tháng YouTube Premium" /><span>MÃ NÂNG CẤP CHÍNH CHỦ</span></div>
+    <div className={styles.managedVisual}><img src={optimizedThumbnail(current?.thumbnail || "/gemini-products/gemini-chinh-chu.png")} alt="Gemini Pro nâng chính chủ 6, 12, 24 tháng, kèm 1 tháng YouTube Premium" /><span>MÃ NÂNG CẤP CHÍNH CHỦ</span></div>
     <div className={styles.managedDetails}>
       <span className={styles.eyebrow}>GEMINI PRO · NÂNG CHÍNH CHỦ</span>
       <h2>{current?.title || 'Nâng Cấp Gemini Dài Hạn'}</h2>

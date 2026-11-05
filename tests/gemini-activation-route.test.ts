@@ -16,16 +16,14 @@ describe('activation response safety', () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(Response.json({ success: true, tasks: [
       { ...task, message: '密码错误 secret@example.com' },
       { ...task, message: '2FA code invalid' },
+      { ...task, message: '登录：未找到身份验证器(Google Authenticator)选项' },
       { ...task, message: 'unknown error secret@example.com' },
       { ...task, status: 'Running', message: '密码错误' },
     ] })));
     try {
       const data = await (await POST(request({ action: 'history', cdkey: key }))).json();
-      expect(data.tasks.map((item: { failureReason: string | null }) => item.failureReason)).toEqual(['credentials', 'twofa', null, null]);
-      expect(data.tasks[0].providerMessage).toBeNull();
-      expect(data.tasks[1].providerMessage).toBe('2FA code invalid');
-      expect(data.tasks[2].providerMessage).toBeNull();
-      expect(data.tasks[3].providerMessage).toBeNull();
+      expect(data.tasks.map((item: { failureReason: string | null }) => item.failureReason)).toEqual(['credentials', 'twofa', 'authenticator_missing', null, null]);
+      expect(JSON.stringify(data)).not.toContain('身份验证器');
       expect(JSON.stringify(data)).not.toContain('secret@example.com');
     } finally { vi.unstubAllGlobals(); }
   });
