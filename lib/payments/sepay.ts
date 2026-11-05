@@ -2,7 +2,6 @@ import 'server-only';
 
 import { readSepayWebhook, PaymentError } from '../../kits/qr-payment/src/sepay.js';
 import { paymentConfig, VoiceError, writer } from '@/lib/voice/server';
-import { deliverPaidTelegramOrder, deliverPaidTelegramBatch } from '@/lib/telegram/delivery';
 
 function missingTransactionTimeArgument(error: unknown) {
   const detail = error as { code?: string; message?: string } | null;
@@ -12,7 +11,7 @@ function missingTransactionTimeArgument(error: unknown) {
 export function parseSepayPaymentCode(content: unknown) {
   const raw = String(content ?? '').toUpperCase();
   const matches = [
-    ...[...raw.matchAll(/\bWINDI\s*([VKGT])\s*([A-Z0-9]{8})\b/g)].map((match) => ({ kind: match[1] === 'G' ? 'gemini' as const : match[1] === 'T' ? 'telegram' as const : match[1] === 'K' ? 'kit' as const : 'voice' as const, code: `WINDI ${match[1]}${match[2]}` })),
+    ...[...raw.matchAll(/\bWINDI\s*([VKG])\s*([A-Z0-9]{8})\b/g)].map((match) => ({ kind: match[1] === 'G' ? 'gemini' as const : match[1] === 'K' ? 'kit' as const : 'voice' as const, code: `WINDI ${match[1]}${match[2]}` })),
     ...[...raw.matchAll(/\bWINDI\s*([A-Z0-9]{8})\b/g)].map((match) => ({ kind: 'voice' as const, code: `WINDI ${match[1]}` })),
     ...[...raw.matchAll(/\bWST\s*([A-Z0-9]{8})\b/g)].map((match) => ({ kind: 'voice' as const, code: `WST ${match[1]}` })),
     ...[...raw.matchAll(/\bWV[A-F0-9]{16}\b/g)].map((match) => ({ kind: 'voice' as const, code: match[0] })),
@@ -36,20 +35,6 @@ export async function processSepayWebhook(request: Request) {
   if (!reference) return { success: true, status: 'ignored' };
 
   const db = writer();
-  if (reference.kind === 'telegram') {
-    const result = await db.rpc('windi_telegram_batch_pay', { p_code: reference.code, p_gateway: String(body.id), p_amount: Number(body.transferAmount), p_paid_at: transfer.paidAt });
-    if (result.error) throw result.error;
-    if (result.data === 'paid' && process.env.TELEGRAM_SHOP_CHECKOUT_ENABLED === 'true') {
-      try {
-        const batch = await db.from('windi_telegram_orders').select('id').eq('payment_code', reference.code).single();
-        if (batch.error) throw batch.error;
-        const items = await db.from('windi_gemini_orders').select('payment_code').eq('telegram_batch_id', batch.data.id);
-        if (items.error) throw items.error;
-        await deliverPaidTelegramBatch((items.data || []).map(item => item.payment_code));
-      } catch { /* delivery recovery retries paid items */ }
-    }
-    return { success: true, status: result.data };
-  }
   if (reference.kind === 'gemini') {
     const result = await db.rpc('windi_gemini_pay', {
       p_code: reference.code,
@@ -58,9 +43,6 @@ export async function processSepayWebhook(request: Request) {
       p_paid_at: transfer.paidAt,
     });
     if (result.error) throw result.error;
-    if (result.data === 'paid' && process.env.TELEGRAM_SHOP_CHECKOUT_ENABLED === 'true') {
-      try { await deliverPaidTelegramOrder(reference.code); } catch { /* paid order stays queued for recovery */ }
-    }
     return { success: true, status: result.data };
   }
   if (reference.kind === 'kit') {

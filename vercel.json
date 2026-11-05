@@ -5,10 +5,6 @@
     {
       "path": "/api/cron/voice-history-retention",
       "schedule": "15 17 * * *"
-    },
-    {
-      "path": "/api/cron/telegram-delivery",
-      "schedule": "30 17 * * *"
     }
   ]
 }
