@@ -289,6 +289,16 @@ Nhờ Admin hỗ trợ nâng cấp gói Gemini giúp mình nhé!`;
                   <figcaption>Màn hình thông báo Xác minh 2 bước đã bật thành công.</figcaption>
                 </figure>
               </div>
+              <div style={{ marginTop: '16px' }}>
+                <figure className={styles.stepVisual}>
+                  <img
+                    src="/gemini-guide/step6-kiem-tra-2fa.webp"
+                    alt="Màn hình xác minh 2 bước đã bật, hiển thị nút Turn off 2-Step Verification"
+                    loading="lazy"
+                  />
+                  <figcaption>Sau khi bật thành công, trang cài đặt sẽ hiển thị nút tắt Xác minh 2 bước như hình.</figcaption>
+                </figure>
+              </div>
             </div>
           </div>
         </section>
