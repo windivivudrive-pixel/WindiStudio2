@@ -13,8 +13,9 @@ const rejectionMessages: Record<string, string> = {
 };
 const respond = (body: object, status = 200) => Response.json(body, { status, headers });
 const validKey = (s: unknown): s is string => typeof s === 'string' && /^(GEM6|GEM12|GEM24)-[A-Z0-9]{16,128}$/.test(s);
-function failureReason(message: unknown): 'credentials' | 'twofa' | 'authenticator_missing' | null {
+function failureReason(message: unknown): 'credentials' | 'twofa' | 'authenticator_missing' | 'payment_profile' | null {
   if (typeof message !== 'string') return null;
+  if (/关闭所有付款资料后重试/.test(message)) return 'payment_profile';
   if (/(?:未找到|找不到|没有|不存在).{0,25}(?:身份验证器|驗證器|authenticator)|(?:authenticator|身份验证器).{0,30}(?:not found|unavailable|未找到|找不到)/i.test(message)) return 'authenticator_missing';
   if (/(?:二次验证(?:码)?错误|验证码错误|验证代码错误|两步验证(?:码)?错误|2fa.{0,25}(?:incorrect|invalid|wrong|failed|错误|无效)|(?:incorrect|invalid|wrong).{0,20}(?:2fa|verification code|authenticator)|(?:mã|khóa).{0,20}(?:2fa|xác thực).{0,20}(?:sai|không đúng))/i.test(message)) return 'twofa';
   if (/(?:密码.{0,12}(?:错误|不正确|无效)|账号或密码错误|用户名或密码错误|(?:incorrect|wrong|invalid).{0,20}(?:password|credentials)|password.{0,20}(?:incorrect|wrong|invalid)|mật khẩu.{0,20}(?:sai|không đúng))/i.test(message)) return 'credentials';

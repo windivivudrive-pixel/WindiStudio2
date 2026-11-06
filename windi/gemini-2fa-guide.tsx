@@ -70,7 +70,7 @@ Nhờ Admin hỗ trợ nâng cấp gói Gemini giúp mình nhé!`;
 
         <div className={styles.heroActions}>
           <a
-            href="https://myaccount.google.com/two-step-verification"
+            href="https://myaccount.google.com/signinoptions/twosv"
             target="_blank"
             rel="noopener noreferrer"
             className={styles.btnPrimary}
@@ -171,12 +171,12 @@ Nhờ Admin hỗ trợ nâng cấp gói Gemini giúp mình nhé!`;
                   <p className={styles.stepDesc}>
                     Truy cập trang bảo mật Google tại{' '}
                     <a
-                      href="https://myaccount.google.com/two-step-verification"
+                      href="https://myaccount.google.com/signinoptions/twosv"
                       target="_blank"
                       rel="noopener noreferrer"
                       style={{ color: '#8fb5ff', textDecoration: 'underline' }}
                     >
-                      myaccount.google.com/two-step-verification
+                      myaccount.google.com/signinoptions/twosv
                     </a>
                     . Cuộn xuống phần <strong>Thêm các bước thứ hai để xác minh danh tính</strong> → chọn mục <strong>Ứng dụng Authenticator</strong> (Authenticator app) → Bấm <strong>+ Thiết lập ứng dụng xác thực</strong>.
                   </p>
@@ -323,12 +323,12 @@ Nhờ Admin hỗ trợ nâng cấp gói Gemini giúp mình nhé!`;
                   <p className={styles.stepDesc}>
                     Mở trang{' '}
                     <a
-                      href="https://myaccount.google.com/two-step-verification"
+                      href="https://myaccount.google.com/signinoptions/twosv"
                       target="_blank"
                       rel="noopener noreferrer"
                       style={{ color: '#8fb5ff', textDecoration: 'underline' }}
                     >
-                      myaccount.google.com/two-step-verification
+                      myaccount.google.com/signinoptions/twosv
                     </a>
                     . Cuộn xuống phần <strong>Mã dự phòng (Backup codes)</strong> và bấm vào mũi tên bên phải.
                   </p>
@@ -400,7 +400,7 @@ Nhờ Admin hỗ trợ nâng cấp gói Gemini giúp mình nhé!`;
               Lấy Mẫu Tin Nhắn Gửi Admin →
             </button>
             <a
-              href="https://myaccount.google.com/two-step-verification"
+              href="https://myaccount.google.com/signinoptions/twosv"
               target="_blank"
               rel="noopener noreferrer"
               className={styles.btnSecondary}

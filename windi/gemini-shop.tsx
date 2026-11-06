@@ -9,13 +9,15 @@ import styles from './gemini.module.css';
 import { GeminiManagedOffer } from './gemini-managed-offer';
 import { ShopProductInfo } from './shop-product-info';
 import { GeminiManagedDelivery } from './gemini-managed-delivery';
+import type { RecentPurchase } from '@/lib/gemini/recent-purchases';
+import { RecentPurchases } from './recent-purchases';
 
 const money = (value: number) => new Intl.NumberFormat('vi-VN').format(value);
 const date = (value: string) => new Date(value).toLocaleString('vi-VN');
 const statusLabels: Record<string, string> = { PAID: 'Đã thanh toán', PENDING: 'Chờ thanh toán', EXPIRED: 'Hết hạn', UNDERPAID: 'Chuyển thiếu tiền', OVERPAID: 'Chuyển thừa tiền', REVIEW_REQUIRED: 'Cần đối soát', REFUNDED: 'Đã hoàn tiền' };
 const support = 'https://www.facebook.com/profile.php?id=61594238790213';
 
-export function GeminiShop({ initialProduct = null, initialSku, initialProducts = null }: { initialProduct?: 'google-managed' | 'google' | 'product' | null; initialSku?: string; initialProducts?: GeminiProduct[] | null }) {
+export function GeminiShop({ initialProduct = null, initialSku, initialProducts = null, recentPurchases = [] }: { initialProduct?: 'google-managed' | 'google' | 'product' | null; initialSku?: string; initialProducts?: GeminiProduct[] | null; recentPurchases?: RecentPurchase[] }) {
   const [catalogProduct, setCatalogProduct] = useState<string | null>(initialProduct);
   const [account, setAccount] = useState<GeminiAccount | null>(initialProducts ? { products: initialProducts, authenticated: false, enabled: false, stock: 0, price: 0, bank: null, orders: [] } : null);
   const [selectedSku, setSelectedSku] = useState<GeminiSku>(initialSku || (initialProduct === 'google-managed' ? 'gemini-managed-6m' : 'gemini-3m'));
@@ -91,6 +93,7 @@ export function GeminiShop({ initialProduct = null, initialSku, initialProducts 
 
   return <main className={styles.page}>
     <div className={styles.topline}><Link href="/">WindiStudio</Link><span>/</span><span>Cửa hàng số</span>{!catalogProduct && <a href="#san-pham">Sản phẩm <ArrowDown size={13} aria-hidden="true" /></a>}</div>
+    {!catalogProduct && <RecentPurchases purchases={recentPurchases} />}
     {!catalogProduct && <>
     <section className={styles.catalog} id="san-pham" aria-labelledby="catalog-title">
       <div className={styles.catalogHeading}><h1 id="catalog-title">Sản phẩm</h1></div>

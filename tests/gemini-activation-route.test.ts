@@ -17,14 +17,17 @@ describe('activation response safety', () => {
       { ...task, message: '密码错误 secret@example.com' },
       { ...task, message: '2FA code invalid' },
       { ...task, message: '登录：未找到身份验证器(Google Authenticator)选项' },
+      { ...task, message: '订阅24: 请关闭所有付款资料后重试 secret@example.com' },
+      { ...task, message: '无法关闭付款资料，请联系支持' },
       { ...task, message: 'unknown error secret@example.com' },
       { ...task, status: 'Running', message: '密码错误' },
     ] })));
     try {
       const data = await (await POST(request({ action: 'history', cdkey: key }))).json();
-      expect(data.tasks.map((item: { failureReason: string | null }) => item.failureReason)).toEqual(['credentials', 'twofa', 'authenticator_missing', null, null]);
+      expect(data.tasks.map((item: { failureReason: string | null }) => item.failureReason)).toEqual(['credentials', 'twofa', 'authenticator_missing', 'payment_profile', null, null, null]);
       expect(JSON.stringify(data)).not.toContain('身份验证器');
       expect(JSON.stringify(data)).not.toContain('secret@example.com');
+      expect(JSON.stringify(data)).not.toContain('付款资料');
     } finally { vi.unstubAllGlobals(); }
   });
 });
